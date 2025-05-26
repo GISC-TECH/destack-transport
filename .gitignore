@@ -1,0 +1,29 @@
+# Binários compilados
+/tmp
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+destack-api
+
+# Arquivos de teste
+*.test
+*.out
+
+# Arquivos de log
+logs/
+*.log
+
+# Ambiente de desenvolvimento
+.env
+app.env
+.DS_Store
+.idea/
+.vscode/
+
+# Diretório vendor
+vendor/
+
+# Arquivos temporários
+tmp/
