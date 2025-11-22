@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: destack_postgres_local
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: destack_db
+      POSTGRES_USER: destack_user
+      POSTGRES_PASSWORD: destack_local_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+      - ./backups:/backups:ro  # Backups disponíveis no container
+    ports:
+      - "5433:5432"  # Porta diferente da produção
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U destack_user -d destack_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - destack_local
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: destack_redis_local
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data_local:/data
+    ports:
+      - "6380:6379"  # Porta diferente da produção
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - destack_local
+
+  # Django Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: destack_web_local
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Aguardando PostgreSQL...' &&
+        while ! nc -z postgres 5432; do sleep 1; done &&
+        echo 'PostgreSQL disponível!' &&
+        echo 'Aplicando migrações...' &&
+        python manage.py migrate --noinput &&
+        echo 'Criando superusuário se não existir...' &&
+        python manage.py shell -c \"
+from django.contrib.auth import get_user_model;
+User = get_user_model();
+if not User.objects.filter(username='admin').exists():
+    User.objects.create_superuser('admin', 'admin@destack.local', 'admin123')
+    print('Superusuário criado: admin/admin123')
+else:
+    print('Superusuário já existe')
+\" &&
+        echo 'Coletando arquivos estáticos...' &&
+        python manage.py collectstatic --noinput &&
+        echo 'Iniciando servidor de desenvolvimento...' &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app  # Código local montado (hot reload)
+      - static_volume_local:/app/staticfiles_collected
+      - media_volume_local:/app/mediafiles
+    ports:
+      - "8001:8000"  # Acessível em http://localhost:8001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - destack_local
+
+  # Celery Worker (opcional - descomente se necessário)
+  # celery_worker:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.local
+  #   container_name: destack_celery_local
+  #   restart: unless-stopped
+  #   command: celery -A core worker -l info
+  #   env_file:
+  #     - .env.local
+  #   volumes:
+  #     - .:/app
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #   networks:
+  #     - destack_local
+
+  # Celery Beat (opcional - descomente se necessário)
+  # celery_beat:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.local
+  #   container_name: destack_beat_local
+  #   restart: unless-stopped
+  #   command: celery -A core beat -l info
+  #   env_file:
+  #     - .env.local
+  #   volumes:
+  #     - .:/app
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #   networks:
+  #     - destack_local
+
+volumes:
+  postgres_data_local:
+    driver: local
+  redis_data_local:
+    driver: local
+  static_volume_local:
+    driver: local
+  media_volume_local:
+    driver: local
+
+networks:
+  destack_local:
+    driver: bridge

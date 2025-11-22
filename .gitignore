@@ -78,7 +78,9 @@ celerybeat.pid
 # Backup files
 *.bak
 *.backup
-*.sql
+backups/*.sql
+backups/*.dump
+!backups/.gitkeep  # Manter pasta backups no repo
 
 # Logs
 logs/

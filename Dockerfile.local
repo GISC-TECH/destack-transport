@@ -1,0 +1,47 @@
+# Dockerfile para Desenvolvimento Local
+FROM python:3.11-slim
+
+# Variáveis de ambiente
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# Instalar dependências do sistema
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    libpq5 \
+    gcc \
+    curl \
+    netcat-traditional \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Atualizar pip
+RUN pip install --upgrade pip
+
+# Copiar requirements e instalar dependências Python
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Instalar dependências adicionais para desenvolvimento
+RUN pip install \
+    ipython \
+    ipdb \
+    django-debug-toolbar \
+    django-extensions
+
+# Copiar código da aplicação
+COPY . .
+
+# Criar diretórios necessários
+RUN mkdir -p /app/staticfiles_collected /app/mediafiles /app/logs
+
+# Expor porta
+EXPOSE 8000
+
+# Comando padrão (será sobrescrito pelo docker-compose)
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
