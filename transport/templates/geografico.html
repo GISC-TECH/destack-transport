@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Geográfico{% endblock %}
+{% block header_page_title %}Painel Geográfico{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Container para o gráfico de Rotas UF */
+    #rotasUfChartContainer { 
+        height: 450px; /* Altura ajustável conforme necessidade */
+        width: 100%; 
+        position: relative; /* Para mensagens de sobreposição */
+    }
+    .table th, .table td { vertical-align: middle; }
+    .pagination .page-link { cursor: pointer; }
+    .chart-message-overlay { /* Estilo para mensagem sobre o gráfico */
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        border-radius: 5px;
+        z-index: 10; /* Para ficar sobre o canvas, se necessário */
+        text-align: center;
+        border: 1px solid #eee;
+    }
+    .border-left-verde { 
+        border-left: 4px solid var(--verde-primario);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item active" aria-current="page">Painel Geográfico</li>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4 border-left-verde">
+    <div class="card-header text-white" style="background-color: var(--verde-primario);">
+        <i class="fas fa-filter me-2"></i>Filtros
+    </div>
+    <div class="card-body">
+        <form id="filterFormGeo" class="row g-3">
+            <div class="col-md-4">
+                <label for="data_inicio_geo" class="form-label">Data Inicial</label>
+                <input type="date" class="form-control" id="data_inicio_geo" name="data_inicio">
+            </div>
+            <div class="col-md-4">
+                <label for="data_fim_geo" class="form-label">Data Final</label>
+                <input type="date" class="form-control" id="data_fim_geo" name="data_fim">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="button" class="btn btn-success w-100" id="applyFiltersGeoBtn">
+                    <i class="fas fa-filter me-2"></i>Filtrar Dados Geográficos
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4 g-4">
+    <div class="col-lg-7">
+        <div class="card shadow h-100">
+            <div class="card-header text-white" style="background-color: var(--verde-primario);">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Fluxo de Rotas por UF (Top 10 - Contagem)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="rotasUfChartContainer"> 
+                    {# O JS irá inserir o <canvas id="rotasUfChart"> ou uma mensagem aqui #}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow h-100">
+            <div class="card-header text-white" style="background-color: var(--verde-primario);">
+                <span>Top Origens</span>
+                <button type="button" class="btn btn-sm btn-outline-success" id="exportTopOrigensBtn" title="Exportar Top Origens">
+                    <i class="fas fa-download"></i> CSV
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover table-striped mb-0" id="topOrigensTable">
+                        <thead>
+                            <tr>
+                                <th>Município</th>
+                                <th>UF</th>
+                                <th class="text-end">CT-es</th>
+                                <th class="text-end">Valor (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-origens-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer py-2">
+                <nav aria-label="Paginação Top Origens">
+                    <ul class="pagination pagination-sm justify-content-center mb-0" id="top-origens-pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4 g-4">
+    <div class="col-lg-6">
+        <div class="card shadow h-100">
+            <div class="card-header text-white" style="background-color: var(--verde-primario);">
+                <span>Top Destinos</span>
+                <button type="button" class="btn btn-sm btn-outline-success" id="exportTopDestinosBtn" title="Exportar Top Destinos">
+                    <i class="fas fa-download"></i> CSV
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover table-striped mb-0" id="topDestinosTable">
+                        <thead>
+                            <tr>
+                                <th>Município</th>
+                                <th>UF</th>
+                                <th class="text-end">CT-es</th>
+                                <th class="text-end">Valor (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-destinos-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer py-2">
+                <nav aria-label="Paginação Top Destinos">
+                    <ul class="pagination pagination-sm justify-content-center mb-0" id="top-destinos-pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow h-100">
+            <div class="card-header text-white" style="background-color: var(--verde-primario);">
+                <span>Rotas Frequentes</span>
+                <button type="button" class="btn btn-sm btn-outline-success" id="exportRotasFrequentesBtn" title="Exportar Rotas Frequentes">
+                    <i class="fas fa-download"></i> CSV
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover table-striped mb-0" id="rotasFrequentesTable">
+                        <thead>
+                            <tr>
+                                <th>Origem</th>
+                                <th>Destino</th>
+                                <th class="text-end">CT-es</th>
+                                <th class="text-end">Valor (R$)</th>
+                                <th class="text-end">KM Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rotas-frequentes-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer py-2">
+                <nav aria-label="Paginação Rotas Frequentes">
+                    <ul class="pagination pagination-sm justify-content-center mb-0" id="rotas-frequentes-pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# Chart.js pode ser incluído em base.html ou aqui se necessário #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="{% static 'js/geografico.js' %}"></script>
+{% endblock %}
