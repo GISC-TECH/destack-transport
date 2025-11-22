@@ -47,6 +47,7 @@ db.sqlite3-journal
 .env
 .env.local
 .env.*.local
+app.env
 
 # IDE
 .vscode/
@@ -67,6 +68,8 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 htmlcov/
+*.test
+*.out
 
 # Celery
 celerybeat-schedule
@@ -95,3 +98,13 @@ tmp/
 temp/
 Novo*.txt
 *.broken
+
+# Binários compilados
+*.exe
+*.exe~
+*.dll
+*.dylib
+destack-api
+
+# Diretório vendor
+vendor/
