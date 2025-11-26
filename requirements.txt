@@ -29,3 +29,4 @@ redis
 django-redis
 gunicorn
 dj-database-url
+openpyxl

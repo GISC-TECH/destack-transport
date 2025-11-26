@@ -9,7 +9,12 @@ import tempfile
 import hashlib
 import shutil
 import traceback
-from io import StringIO
+from io import StringIO, BytesIO
+import openpyxl
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
 from django.utils import timezone
 import logging
@@ -493,6 +498,13 @@ class RelatorioAPIView(APIView):
         try:
             # Decodifica e parseia os filtros JSON
             filtros = json.loads(filtros_json) if filtros_json else {}
+            
+            # Mescla parâmetros soltos da query string no dicionário de filtros
+            # Isso permite chamadas como ?tipo=ctes&data_inicio=2023-01-01 sem usar JSON
+            for key, value in params.items():
+                if key not in ['tipo', 'formato', 'filtros'] and key not in filtros:
+                    filtros[key] = value
+                    
         except json.JSONDecodeError:
             return Response({"error": "Formato de 'filtros' inválido. Deve ser um objeto JSON válido (URL encoded)."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -532,12 +544,12 @@ class RelatorioAPIView(APIView):
                  return self._gerar_csv(dados, filename)
             elif formato == 'json':
                  return Response(dados)
-            # elif formato == 'xlsx':
-            #    # Implementar geração de XLSX (requer openpyxl ou similar)
-            #    return Response({"error": "Formato XLSX não implementado."}, status=501)
-            # elif formato == 'pdf':
-            #    # Implementar geração de PDF (requer reportlab, weasyprint ou similar)
-            #    return Response({"error": "Formato PDF não implementado."}, status=501)
+            elif formato == 'xlsx':
+                filename = f"relatorio_{tipo}_{timezone.now().strftime('%Y%m%d')}.xlsx"
+                return self._gerar_xlsx(dados, filename)
+            elif formato == 'pdf':
+                filename = f"relatorio_{tipo}_{timezone.now().strftime('%Y%m%d')}.pdf"
+                return self._gerar_pdf(dados, filename)
             else:
                  return Response({"error": f"Formato '{formato}' não suportado."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -935,5 +947,85 @@ class RelatorioAPIView(APIView):
         writer.writerows(dados)
 
         response = HttpResponse(output.getvalue(), content_type='text/csv; charset=utf-8') # Adiciona charset
+        response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
+        return response
+
+    # --- Método Auxiliar para Gerar XLSX ---
+    def _gerar_xlsx(self, dados, nome_arquivo):
+        """Gera arquivo Excel (XLSX) a partir de uma lista de dicts."""
+        if not dados or not isinstance(dados, list):
+             if isinstance(dados, dict) and 'message' in dados:
+                return Response(dados, status=status.HTTP_501_NOT_IMPLEMENTED)
+             return Response({"error": "Formato de dados inválido para gerar XLSX."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if len(dados) == 0:
+             return Response({"message": "Nenhum dado encontrado."}, status=status.HTTP_204_NO_CONTENT)
+
+        # Cria workbook e sheet
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Relatório"
+
+        # Cabeçalhos
+        if isinstance(dados[0], dict):
+            headers = list(dados[0].keys())
+            ws.append(headers)
+            
+            # Dados
+            for item in dados:
+                ws.append([str(item.get(h, '')) for h in headers])
+
+        # Salva em buffer
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
+        return response
+
+    # --- Método Auxiliar para Gerar PDF ---
+    def _gerar_pdf(self, dados, nome_arquivo):
+        """Gera arquivo PDF a partir de uma lista de dicts."""
+        if not dados or not isinstance(dados, list):
+             if isinstance(dados, dict) and 'message' in dados:
+                return Response(dados, status=status.HTTP_501_NOT_IMPLEMENTED)
+             return Response({"error": "Formato de dados inválido para gerar PDF."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if len(dados) == 0:
+             return Response({"message": "Nenhum dado encontrado."}, status=status.HTTP_204_NO_CONTENT)
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+        elements = []
+        styles = getSampleStyleSheet()
+
+        # Título
+        elements.append(Paragraph(f"Relatório: {nome_arquivo}", styles['Title']))
+        elements.append(Spacer(1, 12))
+
+        # Tabela
+        if isinstance(dados[0], dict):
+            headers = list(dados[0].keys())
+            # Trunca texto longo e converte para string
+            data = [headers] + [[str(item.get(h, ''))[:50] for h in headers] for item in dados]
+
+            t = Table(data)
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 0), (-1, -1), 8), # Fonte menor para caber
+            ]))
+            elements.append(t)
+
+        doc.build(elements)
+        buffer.seek(0)
+
+        response = HttpResponse(buffer.read(), content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
         return response

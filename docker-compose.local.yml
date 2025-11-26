@@ -13,11 +13,11 @@ services:
       POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     volumes:
       - postgres_data_local:/var/lib/postgresql/data
-      - ./backups:/backups:ro  # Backups disponíveis no container
+      - ./backups:/backups:ro # Backups disponíveis no container
     ports:
-      - "5433:5432"  # Porta diferente da produção
+      - "5433:5432" # Porta diferente da produção
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U destack_user -d destack_db"]
+      test: [ "CMD-SHELL", "pg_isready -U destack_user -d destack_db" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,9 +33,9 @@ services:
     volumes:
       - redis_data_local:/data
     ports:
-      - "6380:6379"  # Porta diferente da produção
+      - "6380:6379" # Porta diferente da produção
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -57,15 +57,7 @@ services:
         echo 'Aplicando migrações...' &&
         python manage.py migrate --noinput &&
         echo 'Criando superusuário se não existir...' &&
-        python manage.py shell -c \"
-from django.contrib.auth import get_user_model;
-User = get_user_model();
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@destack.local', 'admin123')
-    print('Superusuário criado: admin/admin123')
-else:
-    print('Superusuário já existe')
-\" &&
+        python manage.py shell -c \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@destack.local', 'admin123') if not User.objects.filter(username='admin').exists() else print('Superusuário já existe')\" &&
         echo 'Coletando arquivos estáticos...' &&
         python manage.py collectstatic --noinput &&
         echo 'Iniciando servidor de desenvolvimento...' &&
@@ -74,11 +66,11 @@ else:
     env_file:
       - .env.local
     volumes:
-      - .:/app  # Código local montado (hot reload)
+      - .:/app # Código local montado (hot reload)
       - static_volume_local:/app/staticfiles_collected
       - media_volume_local:/app/mediafiles
     ports:
-      - "8001:8000"  # Acessível em http://localhost:8001
+      - "8001:8000" # Acessível em http://localhost:8001
     depends_on:
       postgres:
         condition: service_healthy
@@ -86,7 +78,6 @@ else:
         condition: service_healthy
     networks:
       - destack_local
-
   # Celery Worker (opcional - descomente se necessário)
   # celery_worker:
   #   build:
