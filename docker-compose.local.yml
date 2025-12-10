@@ -78,6 +78,25 @@ services:
         condition: service_healthy
     networks:
       - destack_local
+  # Frontend React (Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: destack_frontend_local
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://web:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Evita sobrescrever node_modules
+    ports:
+      - "8002:8000" # Frontend acessível em http://localhost:8002
+    depends_on:
+      - web
+    networks:
+      - destack_local
+
   # Celery Worker (opcional - descomente se necessário)
   # celery_worker:
   #   build:
@@ -114,6 +133,37 @@ services:
   #   networks:
   #     - destack_local
 
+  # EGS XML Collector - Robot para coleta automatica de XMLs
+  scraper:
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    container_name: destack_scraper_local
+    restart: unless-stopped
+    environment:
+      # EGS Sistemas
+      - EGS_BASE_URL=https://app.egssistemas.com.br
+      - EGS_LOGIN_URL=https://app.egssistemas.com.br/login
+      - EGS_USERNAME=DESTACK
+      - EGS_PASSWORD=1234567
+      - EGS_ACCESS_KEY=57226
+      # Destack API
+      - DESTACK_API_URL=http://web:8000/api
+      - DESTACK_USERNAME=admin
+      - DESTACK_PASSWORD=admin123
+      # Collector
+      - COLLECT_INTERVAL_MINUTES=60
+      - DAYS_LOOKBACK=7
+      - LOG_LEVEL=INFO
+      - SELENIUM_HEADLESS=true
+    volumes:
+      - scraper_data_local:/app/data
+      - scraper_logs_local:/app/logs
+    depends_on:
+      - web
+    networks:
+      - destack_local
+
 volumes:
   postgres_data_local:
     driver: local
@@ -122,6 +172,10 @@ volumes:
   static_volume_local:
     driver: local
   media_volume_local:
+    driver: local
+  scraper_data_local:
+    driver: local
+  scraper_logs_local:
     driver: local
 
 networks:

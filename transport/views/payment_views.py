@@ -3,7 +3,7 @@
 # Imports padrão
 import re
 from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 # Imports Django
 from django.http import HttpResponse
@@ -37,7 +37,13 @@ from ..models import (  # Modelos usados pelos ViewSets
     CTeModalRodoviario, # Usado nos filtros/cálculos
     CTeMotorista, # Usado nos filtros/cálculos
     CTePrestacaoServico, # Usado nos filtros/cálculos
-    CTeVeiculoRodoviario # Usado nos filtros/cálculos
+    CTeVeiculoRodoviario, # Usado nos filtros/cálculos
+    # MDF-e relacionados para buscar veículos/condutores
+    MDFeDocumento,
+    MDFeDocumentosVinculados,
+    MDFeModalRodoviario,
+    MDFeVeiculoTracao,
+    MDFeCondutor,
 )
 # Funções utilitárias de outros módulos (se necessário)
 # Ex: from ..utils import format_currency
@@ -153,16 +159,28 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
     def gerar(self, request):
         """
         Endpoint para gerar registros de pagamentos agregados em lote.
+
+        Usa dados do MDF-e para identificar veículos agregados, pois os CT-es
+        não possuem informações de veículos no XML (apenas RNTRC).
+
+        Tipos de proprietário no MDF-e (prop_tp):
+        - 0: TAC - Agregado
+        - 1: TAC - Independente
+        - 2: Outros
+
         Parâmetros no body:
         - data_inicio: Data inicial para filtrar CT-es (YYYY-MM-DD)
         - data_fim: Data final para filtrar CT-es (YYYY-MM-DD)
         - percentual: Percentual de repasse (opcional, padrão: 25%)
-        - data_prevista: Data prevista para pagamento (opcional, padrão: hoje - YYYY-MM-DD)
+        - data_prevista: Data prevista para pagamento (opcional, padrão: hoje)
+        - tipo_veiculo: Tipo de proprietário do veículo (opcional, padrão: '0' = Agregado)
+                       Valores: '0' (Agregado), '1' (Independente), '2' (Outros), 'todos'
         """
         data_inicio = request.data.get('data_inicio')
         data_fim = request.data.get('data_fim')
         percentual = request.data.get('percentual', 25.0)
         data_prevista_str = request.data.get('data_prevista', date.today().isoformat())
+        tipo_veiculo = request.data.get('tipo_veiculo', '0')  # Padrão: Agregado
 
         if not data_inicio or not data_fim:
             return Response({"error": "Parâmetros data_inicio e data_fim são obrigatórios"},
@@ -177,55 +195,69 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
             return Response({"error": f"Parâmetro inválido: {e}"},
                            status=status.HTTP_400_BAD_REQUEST)
 
-        # Buscar CT-es válidos, com veículo agregado, no período, que ainda não têm pagamento
+        # Buscar CT-es válidos no período que ainda não têm pagamento
         ctes_sem_pagamento = CTeDocumento.objects.filter(
             Q(identificacao__data_emissao__date__gte=data_inicio) &
             Q(identificacao__data_emissao__date__lte=data_fim) &
             Q(processado=True) &
-            Q(protocolo__codigo_status=100) & # Autorizado
-            ~Q(cancelamento__c_stat=135) & # Não cancelado
-            Q(modal_rodoviario__veiculos__tipo_proprietario='02') & # Veículo Agregado
-            ~Exists(PagamentoAgregado.objects.filter(cte=OuterRef('pk'))) # Sem pagamento existente
+            Q(protocolo__codigo_status=100) &  # Autorizado
+            ~Q(cancelamento__c_stat=135) &  # Não cancelado
+            ~Exists(PagamentoAgregado.objects.filter(cte=OuterRef('pk')))  # Sem pagamento existente
         ).select_related(
-            'prestacao', 'identificacao', 'modal_rodoviario' # Seleciona dados relacionados
-        ).prefetch_related(
-            'modal_rodoviario__veiculos', 'modal_rodoviario__motoristas' # Prefetch dados ManyToMany
-        ).distinct() # Garante que cada CT-e apareça uma vez
+            'prestacao', 'identificacao'
+        ).distinct()
 
-        contador = {'criados': 0, 'erros': 0, 'avisos': 0}
+        contador = {'criados': 0, 'erros': 0, 'avisos': 0, 'sem_mdfe': 0, 'tipo_diferente': 0}
         erros_detalhados = []
         avisos_detalhados = []
 
         for cte in ctes_sem_pagamento:
             try:
-                # Verificar se CT-e tem prestação e modal rodoviário
+                # Verificar se CT-e tem prestação
                 if not hasattr(cte, 'prestacao') or not cte.prestacao:
-                     avisos_detalhados.append(f"CT-e {cte.chave}: Sem dados de prestação, ignorado.")
-                     contador['avisos'] += 1
-                     continue
-                if not hasattr(cte, 'modal_rodoviario') or not cte.modal_rodoviario:
-                     avisos_detalhados.append(f"CT-e {cte.chave}: Sem dados de modal rodoviário, ignorado.")
-                     contador['avisos'] += 1
-                     continue
-
-                # Encontrar o primeiro veículo agregado no CT-e
-                veiculo_agregado = next((v for v in cte.modal_rodoviario.veiculos.all() if v.tipo_proprietario == '02'), None)
-                if not veiculo_agregado:
-                    avisos_detalhados.append(f"CT-e {cte.chave}: Nenhum veículo com tipo '02' (Agregado) encontrado, ignorado.")
+                    avisos_detalhados.append(f"CT-e {cte.chave[-8:]}: Sem dados de prestação, ignorado.")
                     contador['avisos'] += 1
                     continue
 
-                # Buscar motorista principal (se houver)
-                motorista = cte.modal_rodoviario.motoristas.first()
-                motorista_nome = motorista.nome if motorista else (veiculo_agregado.proprietario_nome or "Motorista Agregado")
-                motorista_cpf = motorista.cpf if motorista else None
+                # Buscar o MDF-e que transportou este CT-e via MDFeDocumentosVinculados
+                doc_vinculado = MDFeDocumentosVinculados.objects.filter(
+                    cte_relacionado=cte
+                ).select_related('mdfe', 'mdfe__modal_rodoviario').first()
+
+                if not doc_vinculado or not doc_vinculado.mdfe:
+                    contador['sem_mdfe'] += 1
+                    continue  # CT-e não está em nenhum MDF-e
+
+                mdfe = doc_vinculado.mdfe
+
+                # Buscar veículo de tração do MDF-e via modal_rodoviario
+                try:
+                    veiculo = mdfe.modal_rodoviario.veiculo_tracao
+                except (MDFeVeiculoTracao.DoesNotExist, AttributeError):
+                    veiculo = None
+
+                if not veiculo:
+                    avisos_detalhados.append(f"CT-e {cte.chave[-8:]}: MDF-e sem veículo de tração.")
+                    contador['avisos'] += 1
+                    continue
+
+                # Filtrar por tipo de proprietário (se especificado)
+                if tipo_veiculo != 'todos':
+                    if veiculo.prop_tp != tipo_veiculo:
+                        contador['tipo_diferente'] += 1
+                        continue  # Tipo de proprietário diferente do filtro
+
+                # Buscar condutor do MDF-e (relacionado diretamente ao mdfe, não ao modal)
+                condutor = mdfe.condutores.first()
+                condutor_nome = condutor.nome if condutor else (veiculo.prop_razao_social or "Condutor não identificado")
+                condutor_cpf = condutor.cpf if condutor else veiculo.prop_cpf
 
                 # Criar pagamento
                 PagamentoAgregado.objects.create(
                     cte=cte,
-                    placa=veiculo_agregado.placa,
-                    condutor_nome=motorista_nome,
-                    condutor_cpf=motorista_cpf,
+                    placa=veiculo.placa,
+                    condutor_nome=condutor_nome,
+                    condutor_cpf=condutor_cpf,
                     valor_frete_total=cte.prestacao.valor_total_prestado,
                     percentual_repasse=percentual_decimal,
                     # valor_repassado é calculado no save()
@@ -234,17 +266,23 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                 )
                 contador['criados'] += 1
             except Exception as e:
-                erros_detalhados.append(f"CT-e {cte.chave}: {str(e)}")
+                erros_detalhados.append(f"CT-e {cte.chave[-8:]}: {str(e)}")
                 contador['erros'] += 1
+
+        # Monta mensagem de resumo
+        tipo_desc = {'0': 'Agregado', '1': 'Independente', '2': 'Outros', 'todos': 'Todos'}
+        msg_tipo = tipo_desc.get(tipo_veiculo, tipo_veiculo)
 
         status_final = status.HTTP_201_CREATED if contador['criados'] > 0 else status.HTTP_200_OK
         return Response({
-            "message": f"Geração de pagamentos concluída.",
+            "message": f"Geração de pagamentos concluída para veículos tipo '{msg_tipo}'.",
             "criados": contador['criados'],
             "erros": contador['erros'],
-            "avisos": contador['avisos'], # Avisos sobre CTes ignorados
-            "detalhes_erros": erros_detalhados,
-            "detalhes_avisos": avisos_detalhados
+            "avisos": contador['avisos'],
+            "sem_mdfe": contador['sem_mdfe'],
+            "tipo_diferente": contador['tipo_diferente'],
+            "detalhes_erros": erros_detalhados[:20],  # Limita a 20 para não sobrecarregar
+            "detalhes_avisos": avisos_detalhados[:20]
         }, status=status_final)
 
     @action(detail=False, methods=['get'])

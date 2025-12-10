@@ -30,3 +30,4 @@ django-redis
 gunicorn
 dj-database-url
 openpyxl
+django-cors-headers

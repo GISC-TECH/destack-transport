@@ -29,7 +29,9 @@ from ..models import (
     MDFeResponsavelTecnico, MDFeProtocoloAutorizacao, MDFeSuplementar,
     MDFeCancelamento, MDFeCancelamentoEncerramento,
     # Veículos e Manutenção
-    Veiculo, ManutencaoVeiculo,
+    Veiculo, ManutencaoVeiculo, CompartimentacaoVeiculo,
+    # Clientes e Motoristas
+    Cliente, Motorista,
     # Pagamentos e Parametrização
     FaixaKM, PagamentoAgregado, PagamentoProprio,
     # Configurações do Sistema

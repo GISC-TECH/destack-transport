@@ -1,23 +1,33 @@
 from .common import *
 
-# === ModelAdmin para Veículos ===
-# ===================================
+# === Inline para Compartimentação ===
+class CompartimentacaoVeiculoInline(admin.TabularInline):
+    """Inline para edição de compartimentos do veículo."""
+    model = CompartimentacaoVeiculo
+    extra = 1
+    fields = ['numero_boca', 'capacidade_m3']
+    ordering = ['numero_boca']
+
+# === ModelAdmin para Veículos (ATUALIZADO) ===
+# ==============================================
 
 @admin.register(Veiculo)
 class VeiculoAdmin(admin.ModelAdmin):
-    """ Configuração do Admin para Veículos. """
-    list_display = ('placa', 'proprietario_nome', 'tipo_proprietario_display', 'rntrc_proprietario', 'total_manutencoes', 'total_gastos', 'ativo', 'atualizado_em')
+    """ Configuração do Admin para Veículos (ATUALIZADO). """
+    list_display = ('placa', 'proprietario_nome', 'tipo_proprietario_display', 'rntrc_proprietario', 'total_manutencoes', 'total_gastos', 'status_documentos', 'ativo', 'atualizado_em')
     list_filter = ('ativo', 'uf_proprietario', 'tipo_proprietario', ManutencoesVeiculoFilter)
     search_fields = ('placa', 'renavam', 'proprietario_nome', 'proprietario_cnpj', 'proprietario_cpf')
     readonly_fields = ('criado_em', 'atualizado_em', 'total_manutencoes', 'total_gastos', 'cadastros_vinculados')
     fieldsets = (
-        ('Identificação', {'fields': ('placa', 'renavam', 'ativo')}),
+        ('Identificação', {'fields': ('placa', 'renavam', 'tipo_rodado', 'tipo_carroceria', 'ativo')}),
         ('Capacidades', {'fields': ('tara', 'capacidade_kg', 'capacidade_m3')}),
         ('Proprietário', {'fields': ('tipo_proprietario', 'proprietario_nome', 'proprietario_cnpj', 'proprietario_cpf', 'rntrc_proprietario', 'uf_proprietario')}),
+        ('Documentação', {'fields': ('civ_validade', 'cipp_validade', 'afericao_validade', 'crlv_validade', 'cronotacografo_validade')}),
+        ('Observações', {'fields': ('observacoes',), 'classes': ('collapse',)}),
         ('Estatísticas', {'fields': ('total_manutencoes', 'total_gastos', 'cadastros_vinculados')}),
         ('Datas', {'fields': ('criado_em', 'atualizado_em'), 'classes': ('collapse',)}),
     )
-    inlines = [ManutencaoVeiculoInline]
+    inlines = [CompartimentacaoVeiculoInline, ManutencaoVeiculoInline]
     actions = ['marcar_como_ativo', 'marcar_como_inativo']
 
     @admin.display(description='Tipo Proprietário')
@@ -37,6 +47,26 @@ class VeiculoAdmin(admin.ModelAdmin):
     def total_gastos(self, obj):
         total = obj.manutencoes.aggregate(t=Sum('valor_total'))['t'] or Decimal('0.00')
         return f"R$ {total:.2f}"
+
+    @admin.display(description='Status Docs')
+    def status_documentos(self, obj):
+        """Mostra status visual dos documentos."""
+        docs_vencendo = obj.get_documentos_vencendo(dias=30)
+
+        if not docs_vencendo:
+            return format_html('<span style="color: green;">✓ OK</span>')
+
+        vencidos = [d for d in docs_vencendo if d['vencido']]
+        if vencidos:
+            return format_html(
+                '<span style="color: red;">✗ {} vencido(s)</span>',
+                len(vencidos)
+            )
+
+        return format_html(
+            '<span style="color: orange;">⚠ {} vencendo</span>',
+            len(docs_vencendo)
+        )
 
     @admin.display(description='Cadastros Vinculados')
     def cadastros_vinculados(self, obj):

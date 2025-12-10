@@ -9,10 +9,13 @@ from io import BytesIO
 
 from django.conf import settings
 from django.db import transaction
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.parsers import MultiPartParser, FormParser
 
 from drf_yasg.utils import swagger_auto_schema
@@ -100,9 +103,13 @@ def _get_tag_sem_namespace(tag_com_ns):
     """Retorna a tag sem o prefixo de namespace, se houver."""
     return tag_com_ns.split(':')[-1] if ':' in tag_com_ns else tag_com_ns
 
+@method_decorator(csrf_exempt, name='dispatch')
 class UnifiedUploadViewSet(viewsets.GenericViewSet):
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [IsAuthenticated]
+    # BasicAuthentication primeiro para scripts/APIs (não requer CSRF)
+    # SessionAuthentication para browser (requer CSRF mas já está desabilitado acima)
+    authentication_classes = [BasicAuthentication, SessionAuthentication]
 
     def get_serializer_class(self):
         if self.action == 'batch_upload':
@@ -345,6 +352,9 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
             else: # Fallback para root_tag se _identificar_xml_e_chave não foi conclusivo
                 if root_tag_principal in ('CTe', 'procCTe', 'cteProc'): return self._process_cte(xml_content_principal, arquivo_principal_obj, xml_dict_principal)
                 elif root_tag_principal in ('MDFe', 'procMDFe', 'mdfeProc'): return self._process_mdfe(xml_content_principal, arquivo_principal_obj, xml_dict_principal)
+                elif root_tag_principal in ('procEventoCTe', 'procEventoMDFe', 'eventoCTe', 'eventoMDFe', 'retEventoCTe', 'retEventoMDFe'):
+                    # Fallback para XMLs de evento que não foram identificados corretamente
+                    return self._process_evento(xml_content_principal, xml_content_retorno, arquivo_principal_obj)
                 return Response({
                     "error": f"Tipo de XML não reconhecido. Raiz: '{root_tag_principal}'. Tipo detectado: '{tipo_detectado}'", "filename": arquivo_principal_obj.name
                 }, status=status.HTTP_400_BAD_REQUEST)

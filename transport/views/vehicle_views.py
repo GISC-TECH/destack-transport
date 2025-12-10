@@ -20,11 +20,13 @@ from rest_framework.permissions import IsAuthenticated
 # Imports Locais
 from ..serializers.vehicle_serializers import ( # Use .. para voltar um nível
     VeiculoSerializer,
-    ManutencaoVeiculoSerializer
+    ManutencaoVeiculoSerializer,
+    CompartimentacaoVeiculoSerializer
 )
 from ..models import ( # Modelos usados pelos ViewSets
     Veiculo,
     ManutencaoVeiculo,
+    CompartimentacaoVeiculo,
     CTeDocumento, # Usado em VeiculoViewSet.estatisticas
     MDFeDocumento # Usado em VeiculoViewSet.estatisticas
 )
@@ -84,6 +86,31 @@ class VeiculoViewSet(viewsets.ModelViewSet):
         filename = f"veiculos_export_{timezone.now().strftime('%Y%m%d_%H%M%S')}.csv"
         return csv_response(queryset, self.get_serializer_class(), filename)
 
+    @action(detail=False, methods=['get'])
+    def vencimentos(self, request):
+        """
+        Retorna veículos com documentos vencendo.
+        Query param: dias (default: 30)
+        """
+        dias = int(request.query_params.get('dias', 30))
+
+        veiculos_vencendo = []
+
+        for veiculo in self.get_queryset().filter(ativo=True):
+            docs_vencendo = veiculo.get_documentos_vencendo(dias=dias)
+            if docs_vencendo:
+                veiculos_vencendo.append({
+                    'id': str(veiculo.id),
+                    'placa': veiculo.placa,
+                    'documentos_vencendo': docs_vencendo
+                })
+
+        return Response({
+            'dias_alerta': dias,
+            'total': len(veiculos_vencendo),
+            'veiculos': veiculos_vencendo
+        })
+
     @action(detail=True, methods=['get'])
     def estatisticas(self, request, pk=None):
         """Endpoint para obter estatísticas do veículo."""
@@ -139,7 +166,7 @@ class VeiculoViewSet(viewsets.ModelViewSet):
 
 class ManutencaoVeiculoViewSet(viewsets.ModelViewSet):
     """API para CRUD de Manutenções de Veículos."""
-    queryset = ManutencaoVeiculo.objects.all().order_by('-data_servico')
+    queryset = ManutencaoVeiculo.objects.all().order_by('-data_agendada', '-criado_em')
     serializer_class = ManutencaoVeiculoSerializer
     permission_classes = [IsAuthenticated]
 
@@ -162,25 +189,36 @@ class ManutencaoVeiculoViewSet(viewsets.ModelViewSet):
         # Filtro por placa do veículo (parâmetro ?placa=...)
         placa = params.get('placa')
         if placa:
-            queryset = queryset.filter(veiculo__placa=placa)
+            queryset = queryset.filter(veiculo__placa__icontains=placa)
+
+        # Filtro por tipo de manutenção
+        tipo = params.get('tipo')
+        if tipo:
+            queryset = queryset.filter(tipo=tipo)
 
         # Filtro por status
         status_filter = params.get('status')
         if status_filter:
             queryset = queryset.filter(status=status_filter)
 
-        # Filtro por período
+        # Filtro por período (usa data_agendada, com fallback para data_servico)
         data_inicio = params.get('data_inicio')
         data_fim = params.get('data_fim')
         if data_inicio:
-            queryset = queryset.filter(data_servico__gte=data_inicio)
+            queryset = queryset.filter(
+                Q(data_agendada__gte=data_inicio) | Q(data_servico__gte=data_inicio)
+            )
         if data_fim:
-            queryset = queryset.filter(data_servico__lte=data_fim)
+            queryset = queryset.filter(
+                Q(data_agendada__lte=data_fim) | Q(data_servico__lte=data_fim)
+            )
 
-        # Filtro por texto (serviço, oficina, etc.)
+        # Filtro por texto (descrição, fornecedor, etc.)
         texto = params.get('q')
         if texto:
             queryset = queryset.filter(
+                Q(descricao__icontains=texto) |
+                Q(fornecedor__icontains=texto) |
                 Q(servico_realizado__icontains=texto) |
                 Q(oficina__icontains=texto) |
                 Q(observacoes__icontains=texto) |
@@ -201,37 +239,42 @@ class ManutencaoPainelViewSet(viewsets.ViewSet):
     """ViewSet para o painel de indicadores de manutenção."""
     permission_classes = [IsAuthenticated]
 
+    def _filter_by_date(self, queryset, params):
+        """Filtra queryset por data (usa data_agendada ou data_servico)."""
+        data_inicio = params.get('data_inicio')
+        data_fim = params.get('data_fim')
+
+        if data_inicio:
+            queryset = queryset.filter(
+                Q(data_agendada__gte=data_inicio) | Q(data_servico__gte=data_inicio)
+            )
+        if data_fim:
+            queryset = queryset.filter(
+                Q(data_agendada__lte=data_fim) | Q(data_servico__lte=data_fim)
+            )
+        return queryset
+
     @action(detail=False, methods=['get'])
     def indicadores(self, request):
         """Retorna indicadores gerais de manutenção."""
         params = request.query_params
-        data_inicio = params.get('data_inicio')
-        data_fim = params.get('data_fim')
-
-        # Query base
-        queryset = ManutencaoVeiculo.objects.all()
-
-        # Aplicar filtros de data
-        if data_inicio:
-            queryset = queryset.filter(data_servico__gte=data_inicio)
-        if data_fim:
-            queryset = queryset.filter(data_servico__lte=data_fim)
+        queryset = self._filter_by_date(ManutencaoVeiculo.objects.all(), params)
 
         # Calcular indicadores
         total_manutencoes = queryset.count()
-        # Usar Coalesce para garantir Decimal('0.00') se não houver registros
+        total_custo = queryset.aggregate(t=Coalesce(Sum('custo'), Decimal('0.00')))['t']
         total_pecas = queryset.aggregate(t=Coalesce(Sum('valor_peca'), Decimal('0.00')))['t']
         total_mao_obra = queryset.aggregate(t=Coalesce(Sum('valor_mao_obra'), Decimal('0.00')))['t']
-        total_geral = queryset.aggregate(t=Coalesce(Sum('valor_total'), Decimal('0.00')))['t']
 
         return Response({
             'total_manutencoes': total_manutencoes,
+            'total_custo': float(total_custo),
             'total_pecas': float(total_pecas),
             'total_mao_obra': float(total_mao_obra),
-            'valor_total': float(total_geral),
+            'valor_total': float(total_custo or (total_pecas + total_mao_obra)),
             'filtros': {
-                'data_inicio': data_inicio,
-                'data_fim': data_fim
+                'data_inicio': params.get('data_inicio'),
+                'data_fim': params.get('data_fim')
             }
         })
 
@@ -239,69 +282,83 @@ class ManutencaoPainelViewSet(viewsets.ViewSet):
     def graficos(self, request):
         """Retorna dados para gráficos de manutenção."""
         params = request.query_params
-        data_inicio = params.get('data_inicio')
-        data_fim = params.get('data_fim')
+        queryset = self._filter_by_date(ManutencaoVeiculo.objects.all(), params)
 
-        # Query base
-        queryset = ManutencaoVeiculo.objects.all()
+        # Dados por tipo (preventiva, corretiva, preditiva)
+        por_tipo_raw = list(queryset.values('tipo').annotate(
+            quantidade=Count('id'),
+            custo=Coalesce(Sum('custo'), Decimal('0.00'))
+        ).order_by('tipo'))
 
-        # Aplicar filtros de data
-        if data_inicio:
-            queryset = queryset.filter(data_servico__gte=data_inicio)
-        if data_fim:
-            queryset = queryset.filter(data_servico__lte=data_fim)
+        # Formatar tipos para exibição
+        tipo_labels = {
+            'preventiva': 'Preventiva',
+            'corretiva': 'Corretiva',
+            'preditiva': 'Preditiva'
+        }
+        por_tipo = []
+        for item in por_tipo_raw:
+            por_tipo.append({
+                'tipo': tipo_labels.get(item['tipo'], item['tipo'] or 'Outros'),
+                'quantidade': item['quantidade'],
+                'custo': float(item['custo'])
+            })
 
-        # Dados por status
-        por_status = list(queryset.values('status').annotate(
-            total=Count('id'),
-            valor=Sum('valor_total')
-        ).order_by('status'))
+        # Dados por veículo (top 10)
+        por_veiculo_raw = list(queryset.values('veiculo__placa').annotate(
+            manutencoes=Count('id'),
+            custo=Coalesce(Sum('custo'), Decimal('0.00'))
+        ).order_by('-manutencoes')[:10])
 
-        # Dados por veículo (top 10 por valor)
-        por_veiculo = list(queryset.values('veiculo__placa').annotate(
-            total=Count('id'),
-            valor=Coalesce(Sum('valor_total'), Decimal('0.00')) # Garante que valor não seja None
-        ).order_by('-valor')[:10])
+        por_veiculo = []
+        for item in por_veiculo_raw:
+            por_veiculo.append({
+                'placa': item['veiculo__placa'],
+                'manutencoes': item['manutencoes'],
+                'custo': float(item['custo'])
+            })
 
-        # Dados por período (mês)
-        por_periodo = list(queryset.annotate(
-            mes=TruncMonth('data_servico') # Agrupa por mês
+        # Evolução mensal (últimos 6 meses)
+        evolucao_mensal = []
+        meses_pt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+
+        # Usa Coalesce para obter data válida
+        por_mes_raw = list(queryset.annotate(
+            mes=Coalesce(TruncMonth('data_agendada'), TruncMonth('data_servico'))
         ).values('mes').annotate(
             total=Count('id'),
-            valor=Coalesce(Sum('valor_total'), Decimal('0.00'))
+            custo_total=Coalesce(Sum('custo'), Decimal('0.00')),
+            preventiva=Count('id', filter=Q(tipo='preventiva')),
+            corretiva=Count('id', filter=Q(tipo='corretiva')),
+            preditiva=Count('id', filter=Q(tipo='preditiva'))
         ).order_by('mes'))
 
-        # Formatar dados para o frontend
-        for item in por_veiculo:
-             item['valor'] = float(item['valor']) # Converte Decimal para float
-        for item in por_periodo:
-             item['valor'] = float(item['valor'])
-             if item['mes']:
-                 item['mes_formatado'] = item['mes'].strftime('%m/%Y')
-                 item['mes'] = item['mes'].strftime('%Y-%m-01') # Formato ISO para JS
-             else:
-                  item['mes_formatado'] = 'Data Inválida'
-                  item['mes'] = None
-
+        for item in por_mes_raw:
+            if item['mes']:
+                evolucao_mensal.append({
+                    'mes': meses_pt[item['mes'].month - 1],
+                    'preventiva': item['preventiva'],
+                    'corretiva': item['corretiva'],
+                    'preditiva': item['preditiva'],
+                    'custo_total': float(item['custo_total'])
+                })
 
         return Response({
-            'por_status': por_status,
+            'por_tipo': por_tipo,
             'por_veiculo': por_veiculo,
-            'por_periodo': por_periodo,
+            'evolucao_mensal': evolucao_mensal[-6:],  # Últimos 6 meses
             'filtros': {
-                'data_inicio': data_inicio,
-                'data_fim': data_fim
+                'data_inicio': params.get('data_inicio'),
+                'data_fim': params.get('data_fim')
             }
         })
 
     @action(detail=False, methods=['get'])
     def ultimos(self, request):
         """Retorna as últimas manutenções registradas."""
-        limit = int(request.query_params.get('limit', 10)) # Pega limite do query param ou usa 10
-
-        # Últimas manutenções (considera um limite razoável)
-        limit = max(1, min(limit, 50)) # Limita entre 1 e 50
-        ultimos = ManutencaoVeiculo.objects.all().order_by('-data_servico')[:limit]
+        limit = int(request.query_params.get('limit', 10))
+        limit = max(1, min(limit, 50))
+        ultimos = ManutencaoVeiculo.objects.all().order_by('-data_agendada', '-criado_em')[:limit]
         serializer = ManutencaoVeiculoSerializer(ultimos, many=True)
 
         return Response(serializer.data)
@@ -381,3 +438,32 @@ class ManutencaoPainelViewSet(viewsets.ViewSet):
             },
             'frequencia_por_veiculo': frequencia_por_veiculo[:20] # Limita aos top 20
         })
+
+
+# ===============================================================
+# ==> API PARA COMPARTIMENTAÇÃO DE VEÍCULOS
+# ===============================================================
+
+class CompartimentacaoVeiculoViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gerenciamento de Compartimentação de Veículos.
+
+    Rota aninhada: /api/veiculos/{veiculo_id}/compartimentos/
+    """
+
+    queryset = CompartimentacaoVeiculo.objects.all()
+    serializer_class = CompartimentacaoVeiculoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Filtra por veículo da URL."""
+        veiculo_pk = self.kwargs.get('veiculo_pk')
+        if veiculo_pk:
+            return self.queryset.filter(veiculo_id=veiculo_pk).order_by('numero_boca')
+        return self.queryset.all()
+
+    def perform_create(self, serializer):
+        """Associa compartimento ao veículo da URL."""
+        veiculo_pk = self.kwargs.get('veiculo_pk')
+        serializer.save(veiculo_id=veiculo_pk)
+

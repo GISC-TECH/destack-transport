@@ -1,0 +1,176 @@
+@import '../Clientes/ClienteForm.css';
+
+.veiculo-form-container {
+  padding: 0;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+/* Compartimentos */
+.field-help {
+  margin: 0 0 15px 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.compartimentos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.empty-compartimentos {
+  padding: 0;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 2px dashed #d1d5db;
+}
+
+.empty-compartimentos p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.compartimento-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.compartimento-numero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 10px;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border-radius: 8px;
+  color: white;
+}
+
+.compartimento-numero .numero-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.compartimento-numero .numero-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.compartimento-item .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.compartimento-item .form-group label {
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.btn-remove-compartimento {
+  padding: 8px;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-remove-compartimento:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
+.btn-add-compartimento {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: white;
+  border: 2px dashed #3498db;
+  border-radius: 8px;
+  color: #3498db;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-compartimento:hover {
+  background: #3498db;
+  border-style: solid;
+  color: white;
+}
+
+.compartimentos-resumo {
+  margin-top: 15px;
+  padding: 12px 14px;
+  background: #e0f2fe;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+/* Responsivo para compartimentos */
+@media (max-width: 768px) {
+  .compartimento-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .compartimento-numero {
+    flex-direction: row;
+    gap: 10px;
+    min-width: auto;
+    padding: 10px 14px;
+  }
+
+  .compartimento-numero .numero-value {
+    font-size: 18px;
+  }
+
+  .btn-remove-compartimento {
+    align-self: flex-end;
+  }
+
+  .btn-add-compartimento {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .compartimento-item {
+    padding: 12px;
+  }
+
+  .compartimento-numero {
+    padding: 8px 12px;
+  }
+
+  .compartimento-numero .numero-label {
+    font-size: 9px;
+  }
+
+  .compartimento-numero .numero-value {
+    font-size: 16px;
+  }
+}

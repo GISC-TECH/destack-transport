@@ -39,8 +39,19 @@ if allowed_hosts_env != '*':
 CSRF_TRUSTED_ORIGINS.extend([
     'https://localhost',
     'http://localhost',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'http://localhost:3000',
+    'http://localhost:8001',
+    'http://localhost:8002',
     'http://127.0.0.1',
     'https://127.0.0.1',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    'http://127.0.0.1:5175',
+    'http://127.0.0.1:8001',
+    'http://127.0.0.1:8002',
     'http://31.97.247.165:8001',
     'https://31.97.247.165:8001',
     'http://31.97.247.165',
@@ -53,12 +64,12 @@ CSRF_TRUSTED_ORIGINS.extend([
 
 # Configurações de CSRF
 CSRF_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # Permite JavaScript acessar o cookie CSRF
 CSRF_USE_SESSIONS = False
 
 # Para desenvolvimento, configurações mais flexíveis
 if DEBUG:
-    CSRF_COOKIE_SAMESITE = None
+    CSRF_COOKIE_SAMESITE = 'Lax'  # Lax permite cross-origin com cookies
     CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'
 else:
     CSRF_COOKIE_SAMESITE = 'Lax'
@@ -85,8 +96,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles', # For serving static files by Django (dev)
     # 'whitenoise.runserver_nostatic', # If using WhiteNoise for static files in prod
-    
+
     # Third-party apps
+    'corsheaders',  # CORS support for frontend
     'rest_framework',
     'rest_framework.authtoken', # If using TokenAuthentication alongside JWT (optional)
     'rest_framework_simplejwt',
@@ -101,6 +113,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     # 'whitenoise.middleware.WhiteNoiseMiddleware', # If using WhiteNoise
+    'corsheaders.middleware.CorsMiddleware',  # CORS - must be before CommonMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -276,7 +289,8 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # CSRF Security Settings
-CSRF_COOKIE_HTTPONLY = True
+# CSRF_COOKIE_HTTPONLY deve ser False para permitir que o JavaScript leia o token
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SECURE = not DEBUG  # True in production
 CSRF_COOKIE_SAMESITE = 'Lax'
 
@@ -500,4 +514,56 @@ if not DEBUG:
 # Headers de cache específicos para Django (complementam o Nginx)
 CACHE_MIDDLEWARE_SECONDS = 0  # Desabilita cache middleware
 CACHE_MIDDLEWARE_KEY_PREFIX = 'cte_mdfe'
+
+# =============================================================================
+# CONFIGURAÇÕES DE CORS PARA FRONTEND
+# =============================================================================
+
+# Em desenvolvimento, permite qualquer origem
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
+else:
+    # Em produção, especificar origens permitidas
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8080",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:8080",
+        "https://destacktransporte.site",
+        "https://www.destacktransporte.site",
+        "http://31.97.247.165:8001",
+        "http://31.97.247.165",
+    ]
+    CORS_ALLOW_CREDENTIALS = True
+
+# Headers permitidos
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Métodos HTTP permitidos
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Expor headers para o frontend
+CORS_EXPOSE_HEADERS = [
+    'content-disposition',
+]
 

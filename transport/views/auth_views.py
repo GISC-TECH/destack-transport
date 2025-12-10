@@ -2,28 +2,65 @@
 
 # Imports do Django
 from django.contrib.auth.models import User
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
 
 # Imports do Django REST Framework
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 
 # Imports locais (serializers)
-# Usamos '..' para indicar que serializers está um nível acima (na pasta 'transport')
 from ..serializers.user_serializers import UserSerializer, UserUpdateSerializer
 
+
 # ===============================================================
-# ==> USUÁRIOS e AUTENTICAÇÃO
+# ==> CSRF e Verificacao de Autenticacao (para frontend React)
+# ===============================================================
+
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class CSRFTokenAPIView(APIView):
+    """API para obter CSRF token (necessario para POST/PUT/DELETE)."""
+    permission_classes = [AllowAny]
+
+    def get(self, request, format=None):
+        return Response({'csrfToken': get_token(request)})
+
+
+class CheckAuthAPIView(APIView):
+    """API para verificar se o usuario esta autenticado."""
+    permission_classes = [AllowAny]
+
+    def get(self, request, format=None):
+        if request.user.is_authenticated:
+            return Response({
+                'authenticated': True,
+                'user': {
+                    'id': request.user.id,
+                    'username': request.user.username,
+                    'email': request.user.email,
+                    'first_name': request.user.first_name,
+                    'last_name': request.user.last_name,
+                    'is_staff': request.user.is_staff,
+                }
+            })
+        else:
+            return Response({'authenticated': False}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+# ===============================================================
+# ==> USUARIOS e AUTENTICACAO
 # ===============================================================
 
 class CurrentUserAPIView(APIView):
-    """API para obter e atualizar os dados do usuário autenticado."""
+    """API para obter e atualizar os dados do usuario autenticado."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
-        """Retorna os dados do usuário autenticado."""
+        """Retorna os dados do usuario autenticado."""
         user = request.user
         data = {
             'id': user.id,
@@ -39,9 +76,8 @@ class CurrentUserAPIView(APIView):
         return Response(data)
 
     def patch(self, request, format=None):
-        """Atualiza os dados do usuário autenticado."""
+        """Atualiza os dados do usuario autenticado."""
         user = request.user
-        # Usar get_serializer para consistência, embora funcione diretamente aqui
         serializer = UserUpdateSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -50,37 +86,29 @@ class CurrentUserAPIView(APIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """API para administração de usuários (somente admin)."""
+    """API para administracao de usuarios (somente admin)."""
     queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserSerializer # Serializer padrão para list/retrieve/create/destroy
-    permission_classes = [IsAuthenticated, IsAdminUser] # Permissões padrão para o ViewSet
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_serializer_class(self):
-        """Define qual serializer usar dependendo da ação."""
-        # Para a ação 'me' e métodos PUT/PATCH, usa o serializer de atualização
+        """Define qual serializer usar dependendo da acao."""
         if self.action == 'me' and self.request.method in ['PUT', 'PATCH']:
             return UserUpdateSerializer
-        # Para todas as outras ações (list, retrieve, create, etc.), usa o padrão
         return UserSerializer
 
     @action(detail=False, methods=['get', 'put', 'patch'], permission_classes=[IsAuthenticated])
     def me(self, request):
-        """Endpoint para o usuário logado gerenciar seu próprio perfil."""
-        user = request.user # Pega o usuário da requisição autenticada
+        """Endpoint para o usuario logado gerenciar seu proprio perfil."""
+        user = request.user
 
         if request.method == 'GET':
-            # Usa o serializer definido em get_serializer_class (será UserSerializer)
             serializer = self.get_serializer(user)
             return Response(serializer.data)
         elif request.method in ['PUT', 'PATCH']:
-            # Usa o serializer definido em get_serializer_class (será UserUpdateSerializer)
-            # partial=True é automático para PATCH, mas explícito para clareza
             partial = (request.method == 'PATCH')
             serializer = self.get_serializer(user, data=request.data, partial=partial)
-            serializer.is_valid(raise_exception=True) # Levanta erro se inválido
+            serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
-        # Para outros métodos, DRF normalmente retornaria 405 automaticamente,
-        # mas explicitamos para evitar comportamentos inesperados.
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-

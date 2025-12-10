@@ -281,6 +281,12 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                     Q(cancelamento__isnull=True) | ~Q(cancelamento__c_stat=135)
                 )
 
+        # Filtro por status de pagamento
+        pago = params.get('pago')
+        if pago is not None:
+            is_pago = pago.lower() in ['true', '1', 'sim']
+            queryset = queryset.filter(pago=is_pago)
+
         # Filtro por texto (busca geral)
         texto = params.get('q')
         if texto:
@@ -600,11 +606,70 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @action(detail=True, methods=['patch'])
+    def pagamento(self, request, pk=None):
+        """
+        Atualiza o status de pagamento de um CT-e.
+
+        Permite ao admin marcar o CT-e como pago ou não pago.
+
+        Parâmetros aceitos:
+        - pago: boolean (obrigatório)
+        - observacao_pagamento: string (opcional)
+
+        Exemplo de uso:
+        PATCH /api/ctes/{id}/pagamento/
+        Body: {"pago": true, "observacao_pagamento": "Pago via transferência"}
+        """
+        cte = self.get_object()
+
+        # Valida se o parâmetro 'pago' foi enviado
+        pago = request.data.get('pago')
+        if pago is None:
+            return Response(
+                {"error": "O campo 'pago' é obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Converte para booleano se necessário
+        if isinstance(pago, str):
+            pago = pago.lower() in ['true', '1', 'sim']
+
+        # Atualiza os campos
+        cte.pago = pago
+
+        # Define a data de pagamento automaticamente
+        if pago:
+            cte.data_pagamento = timezone.now()
+        else:
+            cte.data_pagamento = None
+
+        # Atualiza observação se fornecida
+        observacao = request.data.get('observacao_pagamento')
+        if observacao is not None:
+            cte.observacao_pagamento = observacao
+
+        # Salva as alterações
+        cte.save(update_fields=['pago', 'data_pagamento', 'observacao_pagamento'])
+
+        # Log da operação
+        logger.info(f"CT-e {cte.chave} marcado como {'pago' if pago else 'não pago'} por {request.user}")
+
+        # Retorna os dados atualizados
+        return Response({
+            "message": f"CT-e {'marcado como pago' if pago else 'marcado como não pago'} com sucesso.",
+            "id": cte.id,
+            "chave": cte.chave,
+            "pago": cte.pago,
+            "data_pagamento": cte.data_pagamento.isoformat() if cte.data_pagamento else None,
+            "observacao_pagamento": cte.observacao_pagamento
+        })
+
     @action(detail=False, methods=['get'])
     def estatisticas(self, request):
         """
         Retorna estatísticas gerais dos CT-es.
-        
+
         Útil para dashboards e relatórios.
         """
         queryset = self.get_queryset()
@@ -642,4 +707,97 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             },
             "por_modalidade": list(por_modalidade),
             "top_destinos": list(por_uf)
+        })
+
+    @action(detail=False, methods=['get'])
+    def pagamentos_pendentes(self, request):
+        """
+        Retorna resumo de CT-es com pagamentos pendentes.
+
+        Filtros disponíveis:
+        - data_inicio: Data inicial (YYYY-MM-DD)
+        - data_fim: Data final (YYYY-MM-DD)
+        - modalidade: CIF ou FOB
+
+        Retorna:
+        - Totais gerais (quantidade e valor)
+        - Distribuição por modalidade
+        - Top clientes com mais pendências
+        - Lista dos CT-es pendentes mais recentes
+        """
+        # Usa os mesmos filtros do queryset base, mas filtra apenas não pagos
+        queryset = self.get_queryset().filter(pago=False)
+
+        # Exclui cancelados
+        queryset = queryset.filter(
+            Q(cancelamento__isnull=True) | ~Q(cancelamento__c_stat=135)
+        )
+
+        # Calcula estatísticas gerais
+        stats = queryset.aggregate(
+            total_pendentes=Count('id'),
+            valor_total_pendente=Sum('prestacao__valor_total_prestado'),
+            valor_receber_pendente=Sum('prestacao__valor_recebido')
+        )
+
+        # Distribuição por modalidade
+        por_modalidade = queryset.values('modalidade').annotate(
+            quantidade=Count('id'),
+            valor=Sum('prestacao__valor_total_prestado')
+        ).order_by('modalidade')
+
+        # Top clientes com mais pendências (por remetente)
+        top_clientes = queryset.values(
+            'remetente__razao_social',
+            'remetente__cnpj'
+        ).annotate(
+            quantidade=Count('id'),
+            valor_total=Sum('prestacao__valor_total_prestado')
+        ).order_by('-valor_total')[:10]
+
+        # CT-es pendentes mais recentes (últimos 10)
+        ctes_recentes = queryset.order_by('-identificacao__data_emissao')[:10]
+        ctes_recentes_data = []
+        for cte in ctes_recentes:
+            ctes_recentes_data.append({
+                'id': str(cte.id),
+                'numero': cte.identificacao.numero if hasattr(cte, 'identificacao') and cte.identificacao else None,
+                'chave': cte.chave,
+                'data_emissao': cte.identificacao.data_emissao.strftime('%d/%m/%Y') if hasattr(cte, 'identificacao') and cte.identificacao and cte.identificacao.data_emissao else None,
+                'remetente': cte.remetente.razao_social if hasattr(cte, 'remetente') and cte.remetente else None,
+                'destinatario': cte.destinatario.razao_social if hasattr(cte, 'destinatario') and cte.destinatario else None,
+                'valor': float(cte.prestacao.valor_total_prestado) if hasattr(cte, 'prestacao') and cte.prestacao and cte.prestacao.valor_total_prestado else 0,
+                'modalidade': cte.modalidade
+            })
+
+        # Estatísticas de CT-es pagos para comparação
+        pagos_stats = self.get_queryset().filter(pago=True).aggregate(
+            total_pagos=Count('id'),
+            valor_total_pago=Sum('prestacao__valor_total_prestado')
+        )
+
+        return Response({
+            "resumo": {
+                "total_pendentes": stats['total_pendentes'] or 0,
+                "valor_total_pendente": float(stats['valor_total_pendente'] or 0),
+                "valor_receber_pendente": float(stats['valor_receber_pendente'] or 0),
+                "total_pagos": pagos_stats['total_pagos'] or 0,
+                "valor_total_pago": float(pagos_stats['valor_total_pago'] or 0)
+            },
+            "por_modalidade": [
+                {
+                    "modalidade": item['modalidade'] or 'N/I',
+                    "quantidade": item['quantidade'],
+                    "valor": float(item['valor'] or 0)
+                } for item in por_modalidade
+            ],
+            "top_clientes_pendentes": [
+                {
+                    "razao_social": item['remetente__razao_social'] or 'N/I',
+                    "cnpj": item['remetente__cnpj'] or '',
+                    "quantidade": item['quantidade'],
+                    "valor_total": float(item['valor_total'] or 0)
+                } for item in top_clientes
+            ],
+            "ctes_pendentes_recentes": ctes_recentes_data
         })

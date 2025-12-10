@@ -9,16 +9,28 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 # --- Views ---
-from .views.auth_views import UserViewSet, CurrentUserAPIView
+from .views.auth_views import (
+    UserViewSet, CurrentUserAPIView,
+    CSRFTokenAPIView, CheckAuthAPIView
+)
 from .views.upload_views import UnifiedUploadViewSet
 from .views.cte_views import CTeDocumentoViewSet
 from .views.mdfe_views import MDFeDocumentoViewSet
-from .views.vehicle_views import VeiculoViewSet, ManutencaoVeiculoViewSet, ManutencaoPainelViewSet
+from .views.vehicle_views import VeiculoViewSet, ManutencaoVeiculoViewSet, ManutencaoPainelViewSet, CompartimentacaoVeiculoViewSet
 from .views.payment_views import FaixaKMViewSet, PagamentoAgregadoViewSet, PagamentoProprioViewSet
+from .views.cliente_views import ClienteViewSet
+from .views.motorista_views import MotoristaViewSet
+from .views.documento_views import (
+    DocumentoAnexoViewSet,
+    ClienteDocumentoViewSet,
+    MotoristaDocumentoViewSet,
+    VeiculoDocumentoViewSet
+)
 from .views.dashboard_views import (
     DashboardGeralAPIView, CtePainelAPIView, MdfePainelAPIView,
     FinanceiroPainelAPIView, FinanceiroMensalAPIView, FinanceiroDetalheAPIView,
-    GeograficoPainelAPIView, AlertasPagamentoAPIView, AlertaSistemaViewSet
+    GeograficoPainelAPIView, AlertasPagamentoAPIView, AlertaSistemaViewSet,
+    FrotaPainelAPIView, PerformancePainelAPIView
 )
 from .views.config_views import (
     ConfiguracaoEmpresaViewSet, ParametroSistemaViewSet,
@@ -28,14 +40,22 @@ from .views.config_views import (
 # --- Configuração Swagger (Schema View) ---
 schema_view = get_schema_view(
    openapi.Info(
-      title="API Sistema de Transporte",
+      title="API Destack Transportes",
       default_version='v1',
-      description="Documentação da API para o sistema de gestão de CT-e e MDF-e",
-      contact=openapi.Contact(email="seu_email_de_contato@exemplo.com"),
+      description="Documentacao da API para o sistema de gestao de CT-e e MDF-e.\n\n"
+                  "## Autenticacao\n"
+                  "Use o endpoint `/api/auth/login/` para fazer login e obter uma sessao.\n\n"
+                  "## Endpoints Principais\n"
+                  "- **CT-e**: `/api/ctes/` - Gestao de Conhecimentos de Transporte\n"
+                  "- **MDF-e**: `/api/mdfes/` - Gestao de Manifestos de Documentos\n"
+                  "- **Veiculos**: `/api/veiculos/` - Cadastro de frota\n"
+                  "- **Clientes**: `/api/clientes/` - Cadastro de clientes\n"
+                  "- **Motoristas**: `/api/motoristas/` - Cadastro de motoristas\n",
+      contact=openapi.Contact(email="contato@destacktransportes.com.br"),
       license=openapi.License(name="MIT License"),
    ),
    public=True,
-   permission_classes=(permissions.IsAuthenticated,),
+   permission_classes=(permissions.AllowAny,),
 )
 
 # ------------------------------------------------------------------ #
@@ -47,6 +67,8 @@ router.register(r"upload", UnifiedUploadViewSet, basename="unified-upload")
 router.register(r"ctes", CTeDocumentoViewSet, basename="cte-documento")
 router.register(r"mdfes", MDFeDocumentoViewSet, basename="mdfe-documento")
 router.register(r"veiculos", VeiculoViewSet, basename="veiculo")
+router.register(r"clientes", ClienteViewSet, basename="cliente")
+router.register(r"motoristas", MotoristaViewSet, basename="motorista")
 router.register(r"pagamentos/agregados", PagamentoAgregadoViewSet, basename="pagamento-agregado")
 router.register(r"pagamentos/proprios", PagamentoProprioViewSet, basename="pagamento-proprio")
 router.register(r"faixas-km", FaixaKMViewSet, basename="faixa-km")
@@ -56,10 +78,21 @@ router.register(r"usuarios", UserViewSet, basename="usuario")
 router.register(r"configuracoes/empresa", ConfiguracaoEmpresaViewSet, basename="configuracao-empresa")
 router.register(r"configuracoes/parametros", ParametroSistemaViewSet, basename="parametros-sistema")
 router.register(r"backup", BackupAPIView, basename="backup")
+router.register(r"documentos", DocumentoAnexoViewSet, basename="documento-anexo")
 
-# Rotas aninhadas para manutenções de veículos
+# Rotas aninhadas para manutenções e compartimentação de veículos
 veiculos_router = routers.NestedSimpleRouter(router, r"veiculos", lookup="veiculo")
 veiculos_router.register(r"manutencoes", ManutencaoVeiculoViewSet, basename="veiculo-manutencao")
+veiculos_router.register(r"compartimentos", CompartimentacaoVeiculoViewSet, basename="veiculo-compartimento")
+veiculos_router.register(r"documentos", VeiculoDocumentoViewSet, basename="veiculo-documento")
+
+# Rotas aninhadas para documentos de clientes
+clientes_router = routers.NestedSimpleRouter(router, r"clientes", lookup="cliente")
+clientes_router.register(r"documentos", ClienteDocumentoViewSet, basename="cliente-documento")
+
+# Rotas aninhadas para documentos de motoristas
+motoristas_router = routers.NestedSimpleRouter(router, r"motoristas", lookup="motorista")
+motoristas_router.register(r"documentos", MotoristaDocumentoViewSet, basename="motorista-documento")
 
 # ------------------------------------------------------------------ #
 # URL patterns - APENAS APIs
@@ -67,7 +100,9 @@ veiculos_router.register(r"manutencoes", ManutencaoVeiculoViewSet, basename="vei
 urlpatterns = [
     # --- API Endpoints ---
     path("", include(router.urls)),  # Inclui as rotas do router principal
-    path("", include(veiculos_router.urls)),  # Inclui as rotas aninhadas
+    path("", include(veiculos_router.urls)),  # Inclui as rotas aninhadas de veiculos
+    path("", include(clientes_router.urls)),  # Inclui as rotas aninhadas de clientes
+    path("", include(motoristas_router.urls)),  # Inclui as rotas aninhadas de motoristas
 
     # Rota manual para a action batch_upload da UnifiedUploadViewSet
     path("upload/batch_upload/", UnifiedUploadViewSet.as_view({'post': 'batch_upload'}), name="upload-batch-action"),
@@ -80,6 +115,8 @@ urlpatterns = [
     path("financeiro/mensal/", FinanceiroMensalAPIView.as_view(), name="financeiro-mensal"),
     path("financeiro/detalhe/", FinanceiroDetalheAPIView.as_view(), name="financeiro-detalhe"),
     path("painel/geografico/", GeograficoPainelAPIView.as_view(), name="painel-geografico"),
+    path("painel/frota/", FrotaPainelAPIView.as_view(), name="painel-frota"),
+    path("painel/performance/", PerformancePainelAPIView.as_view(), name="painel-performance"),
     path("alertas/pagamentos/", AlertasPagamentoAPIView.as_view(), name="alertas-pagamentos"),
     path(
         "alertas/sistema/",
@@ -106,6 +143,11 @@ urlpatterns = [
 
     # Dados do usuário autenticado (usado pelo JavaScript)
     path("users/me/", CurrentUserAPIView.as_view(), name="user_me"),
+
+    # --- Autenticação API (para frontend React SPA) ---
+    # Login/Logout são tratados em core/urls.py via simple_auth.py (csrf_exempt)
+    path("auth/csrf/", CSRFTokenAPIView.as_view(), name="api-csrf"),
+    path("auth/user/", CheckAuthAPIView.as_view(), name="api-check-auth"),
 
     # --- Documentação da API (Swagger/ReDoc) ---
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),

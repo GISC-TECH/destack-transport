@@ -30,7 +30,7 @@ from ..models import (  # Modelos usados para consultas nos painéis
     MDFeIdentificacao, MDFeProtocoloAutorizacao, MDFeCancelamento, MDFeModalRodoviario,
     MDFeVeiculoTracao, MDFeVeiculoReboque, MDFeDocumentosVinculados,
     PagamentoAgregado, PagamentoProprio, AlertaSistema,
-    # Adicione outros modelos se forem usados nas queries dos painéis
+    Veiculo, Motorista,  # Para paineis de frota e performance
 )
 
 # ===============================================================
@@ -88,11 +88,15 @@ class DashboardGeralAPIView(APIView):
         agregados_frete = ctes_validos_qs.aggregate(
             total=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0')),
             cif=Coalesce(Sum('prestacao__valor_total_prestado', filter=Q(modalidade='CIF')), Decimal('0')),
-            fob=Coalesce(Sum('prestacao__valor_total_prestado', filter=Q(modalidade='FOB')), Decimal('0'))
+            fob=Coalesce(Sum('prestacao__valor_total_prestado', filter=Q(modalidade='FOB')), Decimal('0')),
+            count_cif=Count('id', filter=Q(modalidade='CIF')),
+            count_fob=Count('id', filter=Q(modalidade='FOB'))
         )
         valor_total_fretes = agregados_frete['total']
         valor_cif = agregados_frete['cif']
         valor_fob = agregados_frete['fob']
+        total_ctes_cif = agregados_frete['count_cif']
+        total_ctes_fob = agregados_frete['count_fob']
 
         # === Dados para gráficos ===
         evolucao_mensal = []
@@ -127,10 +131,11 @@ class DashboardGeralAPIView(APIView):
                     })
 
         # === Últimos Lançamentos ===
-        ultimos_ctes = CTeDocumento.objects.filter(processado=True)\
+        # Aplicando filtro de período também aos últimos lançamentos
+        ultimos_ctes = CTeDocumento.objects.filter(filtro_periodo_cte & Q(processado=True))\
             .select_related('identificacao', 'remetente', 'destinatario', 'prestacao')\
             .order_by('-identificacao__data_emissao')[:5]
-        ultimos_mdfes = MDFeDocumento.objects.filter(processado=True)\
+        ultimos_mdfes = MDFeDocumento.objects.filter(filtro_periodo_mdfe & Q(processado=True))\
             .select_related('identificacao', 'modal_rodoviario__veiculo_tracao')\
             .order_by('-identificacao__dh_emi')[:5]
 
@@ -168,7 +173,9 @@ class DashboardGeralAPIView(APIView):
                 'total_mdfes': total_mdfes,
                 'valor_total_fretes': float(valor_total_fretes),
                 'valor_cif': float(valor_cif),
-                'valor_fob': float(valor_fob)
+                'valor_fob': float(valor_fob),
+                'total_ctes_cif': total_ctes_cif,
+                'total_ctes_fob': total_ctes_fob
             },
             'grafico_cif_fob': evolucao_mensal,
             'grafico_metas': [
@@ -856,3 +863,220 @@ class AlertaSistemaViewSet(viewsets.ModelViewSet):
     def limpar_todos(self, request):
         AlertaSistema.objects.all().delete()
         return Response({'message': 'Alertas do sistema removidos.'})
+
+
+class FrotaPainelAPIView(APIView):
+    """
+    API para o painel de frota. Mostra dados sobre veiculos e motoristas ativos.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        params = request.query_params
+        data_inicio_str = params.get('data_inicio')
+        data_fim_str = params.get('data_fim')
+
+        # Padrao: ultimo mes
+        if not data_inicio_str or not data_fim_str:
+            hoje = date.today()
+            data_fim = date(hoje.year, hoje.month + 1, 1) - timedelta(days=1) if hoje.month != 12 else date(hoje.year, 12, 31)
+            data_inicio = date(data_fim.year, data_fim.month, 1)
+        else:
+            try:
+                data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+                data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response({"error": "Formato de data invalido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+        data_fim_query = data_fim + timedelta(days=1)
+
+        # Filtros para documentos validos
+        filtro_periodo_mdfe = Q(identificacao__dh_emi__date__gte=data_inicio, identificacao__dh_emi__date__lt=data_fim_query)
+        filtro_mdfe_valido = Q(processado=True, protocolo__codigo_status=100) & ~Q(cancelamento__c_stat=135)
+
+        # === Veiculos Cadastrados ===
+        total_veiculos = Veiculo.objects.filter(ativo=True).count()
+
+        # === Veiculos Ativos (com MDF-e no periodo) ===
+        placas_ativas = MDFeDocumento.objects.filter(
+            filtro_periodo_mdfe & filtro_mdfe_valido
+        ).values_list('modal_rodoviario__veiculo_tracao__placa', flat=True).distinct()
+        veiculos_ativos = len([p for p in placas_ativas if p])
+
+        # === Top veiculos por viagens ===
+        top_veiculos = MDFeDocumento.objects.filter(
+            filtro_periodo_mdfe & filtro_mdfe_valido
+        ).values('modal_rodoviario__veiculo_tracao__placa').annotate(
+            total_viagens=Count('id'),
+            total_ctes=Count('docs_vinculados_mdfe')
+        ).order_by('-total_viagens')[:10]
+
+        top_veiculos_list = [{
+            'placa': v['modal_rodoviario__veiculo_tracao__placa'] or 'N/A',
+            'viagens': v['total_viagens'],
+            'ctes': v['total_ctes'] or 0
+        } for v in top_veiculos if v['modal_rodoviario__veiculo_tracao__placa']]
+
+        # === Motoristas Cadastrados ===
+        total_motoristas = Motorista.objects.filter(ativo=True).count()
+
+        # === Documentos vencendo (veiculos) ===
+        hoje = date.today()
+        data_limite = hoje + timedelta(days=30)
+
+        veiculos_docs_vencendo = Veiculo.objects.filter(
+            ativo=True
+        ).filter(
+            Q(civ_validade__lte=data_limite) |
+            Q(cipp_validade__lte=data_limite) |
+            Q(afericao_validade__lte=data_limite) |
+            Q(crlv_validade__lte=data_limite) |
+            Q(cronotacografo_validade__lte=data_limite)
+        ).count()
+
+        # === Motoristas com CNH vencendo ===
+        motoristas_cnh_vencendo = Motorista.objects.filter(
+            ativo=True,
+            validade_cnh__lte=data_limite
+        ).count()
+
+        # === Motoristas com certificacoes vencendo ===
+        motoristas_cert_vencendo = Motorista.objects.filter(
+            ativo=True
+        ).filter(
+            Q(nr20_validade__lte=data_limite) |
+            Q(nr35_validade__lte=data_limite) |
+            Q(mopp_validade__lte=data_limite)
+        ).count()
+
+        response_data = {
+            'filtros': {
+                'data_inicio': data_inicio.isoformat(),
+                'data_fim': data_fim.isoformat()
+            },
+            'cards': {
+                'total_veiculos': total_veiculos,
+                'veiculos_ativos': veiculos_ativos,
+                'total_motoristas': total_motoristas,
+                'docs_vencendo': veiculos_docs_vencendo,
+                'cnh_vencendo': motoristas_cnh_vencendo,
+                'certificacoes_vencendo': motoristas_cert_vencendo
+            },
+            'top_veiculos': top_veiculos_list
+        }
+
+        return Response(response_data)
+
+
+class PerformancePainelAPIView(APIView):
+    """
+    API para o painel de performance. Mostra metricas de desempenho operacional.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        params = request.query_params
+        data_inicio_str = params.get('data_inicio')
+        data_fim_str = params.get('data_fim')
+
+        # Padrao: ultimo mes
+        if not data_inicio_str or not data_fim_str:
+            hoje = date.today()
+            data_fim = date(hoje.year, hoje.month + 1, 1) - timedelta(days=1) if hoje.month != 12 else date(hoje.year, 12, 31)
+            data_inicio = date(data_fim.year, data_fim.month, 1)
+        else:
+            try:
+                data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+                data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response({"error": "Formato de data invalido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+        data_fim_query = data_fim + timedelta(days=1)
+
+        # Filtros
+        filtro_periodo_cte = Q(identificacao__data_emissao__date__gte=data_inicio, identificacao__data_emissao__date__lt=data_fim_query)
+        filtro_periodo_mdfe = Q(identificacao__dh_emi__date__gte=data_inicio, identificacao__dh_emi__date__lt=data_fim_query)
+        filtro_cte_valido = Q(processado=True, protocolo__codigo_status=100) & ~Q(cancelamento__c_stat=135)
+        filtro_mdfe_valido = Q(processado=True, protocolo__codigo_status=100) & ~Q(cancelamento__c_stat=135)
+
+        # === Metricas de CT-e ===
+        ctes_qs = CTeDocumento.objects.filter(filtro_periodo_cte)
+        total_ctes = ctes_qs.count()
+        ctes_autorizados = ctes_qs.filter(filtro_cte_valido).count()
+        ctes_cancelados = ctes_qs.filter(cancelamento__c_stat=135).count()
+        ctes_rejeitados = ctes_qs.filter(~Q(protocolo__codigo_status=100) & Q(protocolo__isnull=False)).exclude(cancelamento__c_stat=135).count()
+
+        taxa_aprovacao_cte = (ctes_autorizados / total_ctes * 100) if total_ctes > 0 else 0
+        taxa_cancelamento_cte = (ctes_cancelados / total_ctes * 100) if total_ctes > 0 else 0
+
+        # === Metricas de MDF-e ===
+        mdfes_qs = MDFeDocumento.objects.filter(filtro_periodo_mdfe)
+        total_mdfes = mdfes_qs.count()
+        mdfes_autorizados = mdfes_qs.filter(filtro_mdfe_valido).count()
+        mdfes_encerrados = mdfes_qs.filter(encerrado=True).count()
+        mdfes_cancelados = mdfes_qs.filter(cancelamento__c_stat=135).count()
+
+        taxa_encerramento = (mdfes_encerrados / mdfes_autorizados * 100) if mdfes_autorizados > 0 else 0
+
+        # === KM Total e Custo por KM ===
+        ctes_validos = CTeDocumento.objects.filter(filtro_periodo_cte & filtro_cte_valido)
+        agregados_km = ctes_validos.aggregate(
+            km_total=Coalesce(Sum('identificacao__dist_km'), 0, output_field=DecimalField()),
+            valor_total=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0'))
+        )
+        km_total = float(agregados_km['km_total'] or 0)
+        valor_total = float(agregados_km['valor_total'] or 0)
+        custo_por_km = (valor_total / km_total) if km_total > 0 else 0
+
+        # === Ticket Medio ===
+        ticket_medio = (valor_total / ctes_autorizados) if ctes_autorizados > 0 else 0
+
+        # === Media de CT-es por MDF-e ===
+        if mdfes_autorizados > 0:
+            media_ctes_por_mdfe = ctes_autorizados / mdfes_autorizados
+        else:
+            media_ctes_por_mdfe = 0
+
+        # === Evolucao diaria de documentos ===
+        evolucao_diaria = CTeDocumento.objects.filter(
+            filtro_periodo_cte & filtro_cte_valido
+        ).annotate(
+            dia=TruncDate('identificacao__data_emissao')
+        ).values('dia').annotate(
+            ctes=Count('id'),
+            valor=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0')),
+            km=Coalesce(Sum('identificacao__dist_km'), 0, output_field=DecimalField())
+        ).order_by('dia')
+
+        evolucao_list = [{
+            'data': e['dia'].strftime('%d/%m') if e['dia'] else 'N/A',
+            'ctes': e['ctes'],
+            'valor': float(e['valor']),
+            'km': float(e['km'])
+        } for e in evolucao_diaria]
+
+        response_data = {
+            'filtros': {
+                'data_inicio': data_inicio.isoformat(),
+                'data_fim': data_fim.isoformat()
+            },
+            'cards': {
+                'total_ctes': total_ctes,
+                'ctes_autorizados': ctes_autorizados,
+                'ctes_cancelados': ctes_cancelados,
+                'ctes_rejeitados': ctes_rejeitados,
+                'taxa_aprovacao': round(taxa_aprovacao_cte, 1),
+                'taxa_cancelamento': round(taxa_cancelamento_cte, 1),
+                'total_mdfes': total_mdfes,
+                'mdfes_encerrados': mdfes_encerrados,
+                'taxa_encerramento': round(taxa_encerramento, 1),
+                'km_total': round(km_total, 2),
+                'valor_total': round(valor_total, 2),
+                'custo_por_km': round(custo_por_km, 2),
+                'ticket_medio': round(ticket_medio, 2),
+                'media_ctes_por_mdfe': round(media_ctes_por_mdfe, 1)
+            },
+            'evolucao_diaria': evolucao_list
+        }
+
+        return Response(response_data)

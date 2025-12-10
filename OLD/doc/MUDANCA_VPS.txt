@@ -1,0 +1,241 @@
+# GUIA PARA MUDANÇA DE VPS - CT-e/MDF-e API
+# =====================================================
+
+## RESUMO
+Este guia explica como migrar o projeto CT-e/MDF-e API para uma nova VPS.
+A mudança envolve principalmente a alteração do endereço IP nos arquivos de configuração.
+
+## PRÉ-REQUISITOS
+- Nova VPS com Docker e Docker Compose instalados
+- Acesso SSH à nova VPS
+- Backup dos dados do banco PostgreSQL (se necessário)
+
+## PASSO A PASSO PARA MIGRAÇÃO
+
+### 1. PREPARAR NOVA VPS
+```bash
+# Instalar Docker (Ubuntu/Debian)
+sudo apt update
+sudo apt install -y docker.io docker-compose
+sudo systemctl enable docker
+sudo systemctl start docker
+
+# Adicionar usuário ao grupo docker (opcional)
+sudo usermod -aG docker $USER
+```
+
+### 2. COPIAR PROJETO PARA NOVA VPS
+```bash
+# Método 1: Via Git (se projeto estiver em repositório)
+git clone [URL_DO_REPOSITORIO]
+cd cte_mdfe_api
+
+# Método 2: Via SCP/RSYNC da VPS antiga
+scp -r /caminho/do/projeto usuario@novo_ip:/destino/
+# OU
+rsync -avz /caminho/do/projeto/ usuario@novo_ip:/destino/
+```
+
+### 3. ALTERAR ARQUIVOS DE CONFIGURAÇÃO
+
+#### Arquivo 1: .env
+```bash
+# Localização: /root/cte_mdfe_api/.env
+# Alterar linhas 5 e 6:
+
+ANTES:
+DJANGO_ALLOWED_HOSTS=207.180.255.150,localhost,127.0.0.1,web
+DJANGO_CSRF_TRUSTED_ORIGINS=https://207.180.255.150,http://207.180.255.150,https://localhost,http://localhost
+
+DEPOIS (exemplo com IP 192.168.1.100):
+DJANGO_ALLOWED_HOSTS=192.168.1.100,localhost,127.0.0.1,web
+DJANGO_CSRF_TRUSTED_ORIGINS=https://192.168.1.100,http://192.168.1.100,https://localhost,http://localhost
+```
+
+#### Arquivo 2: nginx/conf.d/default.conf
+```bash
+# Localização: /root/cte_mdfe_api/nginx/conf.d/default.conf
+# Alterar linhas 9 e 35:
+
+ANTES:
+server_name 207.180.255.150 localhost;
+
+DEPOIS:
+server_name 192.168.1.100 localhost;
+```
+
+#### Arquivo 3: core/settings.py
+```bash
+# Localização: /root/cte_mdfe_api/core/settings.py
+# Alterar linhas 27-28:
+
+ANTES:
+CSRF_TRUSTED_ORIGINS = [
+    'https://207.180.255.150',
+    'http://207.180.255.150',
+    ...
+]
+
+DEPOIS:
+CSRF_TRUSTED_ORIGINS = [
+    'https://192.168.1.100',
+    'http://192.168.1.100',
+    ...
+]
+```
+
+### 4. COMANDOS PARA SUBSTITUIÇÃO AUTOMÁTICA
+```bash
+# Substituir IP em todos os arquivos de uma vez
+# Substitua NOVO_IP pelo IP da nova VPS
+
+OLD_IP="207.180.255.150"
+NEW_IP="192.168.1.100"  # <- ALTERE AQUI
+
+# Substituir no .env
+sed -i "s/$OLD_IP/$NEW_IP/g" .env
+
+# Substituir no nginx
+sed -i "s/$OLD_IP/$NEW_IP/g" nginx/conf.d/default.conf
+
+# Substituir no settings.py
+sed -i "s/$OLD_IP/$NEW_IP/g" core/settings.py
+
+# Verificar mudanças
+echo "Verificando alterações..."
+grep -r "$NEW_IP" .env nginx/conf.d/default.conf core/settings.py
+```
+
+### 5. MIGRAÇÃO DO BANCO DE DADOS (SE NECESSÁRIO)
+```bash
+# Na VPS antiga - fazer backup
+docker exec cte_mdfe_api_db_1 pg_dump -U postgres cte_mdfe_db > backup.sql
+
+# Copiar backup para nova VPS
+scp backup.sql usuario@novo_ip:/caminho/
+
+# Na nova VPS - restaurar backup
+docker-compose up -d db
+sleep 10
+docker exec -i cte_mdfe_api_db_1 psql -U postgres cte_mdfe_db < backup.sql
+```
+
+### 6. INICIAR SERVIÇOS NA NOVA VPS
+```bash
+# Parar serviços (se estiverem rodando)
+docker-compose down
+
+# Construir e iniciar containers
+docker-compose up -d --build
+
+# Verificar status
+docker-compose ps
+
+# Verificar logs
+docker-compose logs web
+docker-compose logs nginx
+```
+
+### 7. VERIFICAÇÃO FINAL
+```bash
+# Testar health check
+curl -k https://NOVO_IP/api/health/
+
+# Verificar resposta esperada:
+# {"status": "healthy", "timestamp": 1234567890, "checks": {"database": "ok", "cache": "ok"}}
+
+# Testar acesso web
+curl -I -k https://NOVO_IP/
+```
+
+## EXEMPLO PRÁTICO DE MIGRAÇÃO
+
+### Cenário: Migrar de 207.180.255.150 para 45.32.123.45
+
+1. **Comando de substituição:**
+```bash
+sed -i 's/207.180.255.150/45.32.123.45/g' .env
+sed -i 's/207.180.255.150/45.32.123.45/g' nginx/conf.d/default.conf
+sed -i 's/207.180.255.150/45.32.123.45/g' core/settings.py
+```
+
+2. **Verificar mudanças:**
+```bash
+grep -n "45.32.123.45" .env nginx/conf.d/default.conf core/settings.py
+```
+
+3. **Reiniciar containers:**
+```bash
+docker-compose down
+docker-compose up -d
+```
+
+4. **Testar:**
+```bash
+curl -k https://45.32.123.45/api/health/
+```
+
+## ARQUIVOS IMPORTANTES A VERIFICAR
+- .env (configurações principais)
+- nginx/conf.d/default.conf (configuração do proxy)
+- core/settings.py (configurações Django)
+- docker-compose.yml (não precisa alterar)
+
+## SOLUÇÃO DE PROBLEMAS
+
+### Erro "DisallowedHost"
+- Verifique se o novo IP está em DJANGO_ALLOWED_HOSTS no .env
+
+### Erro CSRF
+- Verifique se o novo IP está em DJANGO_CSRF_TRUSTED_ORIGINS
+
+### Containers não sobem
+- Verifique logs: docker-compose logs [nome_do_container]
+- Verifique se Docker está rodando: systemctl status docker
+
+### SSL não funciona
+- Use certificado auto-assinado inicialmente (-k no curl)
+- Configure Let's Encrypt depois da migração
+
+## COMANDOS ÚTEIS
+```bash
+# Ver todos os containers
+docker ps -a
+
+# Ver logs específicos
+docker logs cte_mdfe_api_web_1
+
+# Entrar no container
+docker exec -it cte_mdfe_api_web_1 bash
+
+# Reiniciar serviço específico
+docker-compose restart web nginx
+
+# Verificar configuração nginx
+docker exec cte_mdfe_api_nginx_1 nginx -t
+```
+
+## CHECKLIST PÓS-MIGRAÇÃO
+□ API responde: https://NOVO_IP/api/health/
+□ Admin acessível: https://NOVO_IP/admin/
+□ Banco de dados funcionando
+□ Cache Redis funcionando
+□ Uploads de arquivo funcionando
+□ Logs sem erros críticos
+
+## OBSERVAÇÕES IMPORTANTES
+1. Mantenha backups antes da migração
+2. Teste em ambiente de desenvolvimento primeiro
+3. Configure DNS se usar domínio personalizado
+4. Configure Let's Encrypt para SSL em produção
+5. Monitore logs após migração
+
+## SUPORTE
+Para problemas específicos, verifique:
+- Logs: docker-compose logs
+- Status: docker-compose ps
+- Health checks dos containers
+- Conectividade de rede entre containers
+
+Data de criação: $(date)
+Versão: 1.0

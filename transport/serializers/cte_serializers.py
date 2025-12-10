@@ -208,7 +208,8 @@ class CTeDocumentoListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'chave', 'numero_cte', 'serie_cte', 'modalidade', 'data_emissao', 'remetente_nome',
             'destinatario_nome', 'uf_inicio', 'uf_fim', 'valor_total',
-            'placa_principal', 'status', 'processado', 'data_upload'
+            'placa_principal', 'status', 'processado', 'data_upload',
+            'pago', 'data_pagamento', 'observacao_pagamento'
         ]
         read_only_fields = fields # Garante que a lista seja apenas leitura
 
@@ -261,6 +262,7 @@ class CTeDocumentoDetailSerializer(serializers.ModelSerializer):
         # Lista os campos a serem incluídos na resposta detalhada
         fields = [
             'id', 'chave', 'versao', 'modalidade', 'data_upload', 'processado', 'status_geral',
+            'pago', 'data_pagamento', 'observacao_pagamento',
             'identificacao', 'complemento', 'emitente', 'remetente', 'expedidor',
             'recebedor', 'destinatario', 'prestacao', 'tributos', 'carga',
             'modal_rodoviario', 'resp_tecnico', 'protocolo', 'suplementar', 'cancelamento',

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:gemini.google.com)",
+      "Bash(.\\venv\\Scripts\\python.exe:*)",
+      "Bash(./venv/Scripts/python.exe test_egs.py --login)",
+      "Bash(./venv/Scripts/pip.exe:*)",
+      "Bash(./venv/Scripts/python.exe:*)",
+      "Bash(where:*)",
+      "Bash(ls:*)",
+      "Bash(dir /b D:WORKSPACEDESTACKdestackscraperdownloads*.zip)",
+      "Bash(python:*)",
+      "Bash(unzip:*)"
+    ]
+  }
+}

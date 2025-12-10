@@ -3,7 +3,7 @@
 from rest_framework import serializers
 
 # Importar modelos relevantes
-from ..models import Veiculo, ManutencaoVeiculo
+from ..models import Veiculo, ManutencaoVeiculo, CompartimentacaoVeiculo
 
 # ==============================================
 # === Serializers Veículos e Manutenções ===
@@ -11,44 +11,101 @@ from ..models import Veiculo, ManutencaoVeiculo
 
 class ManutencaoVeiculoSerializer(serializers.ModelSerializer):
     """ Serializer para o modelo ManutencaoVeiculo. """
-    # Campo calculado para o valor total
-    valor_total = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
-    # Campo para exibir a placa do veículo relacionado (apenas leitura)
-    veiculo_placa = serializers.CharField(source='veiculo.placa', read_only=True)
+    # Campo para exibir dados do veículo relacionado (apenas leitura)
+    veiculo_placa = serializers.SerializerMethodField(read_only=True)
+    # Campos para exibir no frontend (objeto veiculo com placa e modelo)
+    veiculo_info = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ManutencaoVeiculo
-        # Lista os campos a serem incluídos
         fields = [
-            'id', 'veiculo', 'veiculo_placa', 'data_servico', 'servico_realizado',
-            'oficina', 'quilometragem', 'peca_utilizada', 'valor_peca',
-            'valor_mao_obra', 'valor_total', 'status', 'observacoes',
-            'nota_fiscal', 'criado_em', 'atualizado_em'
+            'id', 'veiculo', 'veiculo_placa', 'veiculo_info',
+            'tipo', 'descricao', 'data_agendada', 'data_realizada',
+            'quilometragem', 'custo', 'fornecedor', 'status',
+            'observacoes', 'nota_fiscal',
+            # Campos legados para compatibilidade
+            'data_servico', 'servico_realizado', 'oficina',
+            'peca_utilizada', 'valor_peca', 'valor_mao_obra', 'valor_total',
+            'criado_em', 'atualizado_em'
         ]
-        # Campos que não podem ser definidos diretamente na criação/atualização via API
-        read_only_fields = ('valor_total', 'criado_em', 'atualizado_em', 'veiculo_placa')
-        # Configura o campo 'veiculo' para ser write_only (usado apenas na escrita)
-        # e não obrigatório na atualização (PATCH)
-        extra_kwargs = {'veiculo': {'write_only': True, 'required': False}}
+        read_only_fields = ('valor_total', 'criado_em', 'atualizado_em', 'veiculo_placa', 'veiculo_info')
+        extra_kwargs = {
+            'veiculo': {'required': False},
+            # Campos legados são opcionais
+            'data_servico': {'required': False},
+            'servico_realizado': {'required': False},
+            'oficina': {'required': False},
+            'peca_utilizada': {'required': False},
+            'valor_peca': {'required': False},
+            'valor_mao_obra': {'required': False},
+        }
+
+    def get_veiculo_placa(self, obj):
+        """Retorna a placa do veículo com tratamento de erro."""
+        try:
+            if obj.veiculo:
+                return obj.veiculo.placa
+        except Exception:
+            pass
+        return None
+
+    def get_veiculo_info(self, obj):
+        """Retorna info do veículo no formato esperado pelo frontend."""
+        try:
+            if obj.veiculo:
+                return {
+                    'id': obj.veiculo.id,
+                    'placa': obj.veiculo.placa,
+                    'modelo': getattr(obj.veiculo, 'modelo', '') or ''
+                }
+        except Exception:
+            pass
+        return None
+
+
+class CompartimentacaoVeiculoSerializer(serializers.ModelSerializer):
+    """Serializer para Compartimentação de Veículo."""
+
+    class Meta:
+        model = CompartimentacaoVeiculo
+        fields = '__all__'
+        read_only_fields = ('id',)
+        extra_kwargs = {
+            'veiculo': {'required': False}  # Será setado automaticamente em nested routes
+        }
+
+    def validate_numero_boca(self, value):
+        """Valida número da boca."""
+        if value < 1 or value > 9:
+            raise serializers.ValidationError("Número da boca deve estar entre 1 e 9.")
+        return value
 
 
 class VeiculoSerializer(serializers.ModelSerializer):
-    """ Serializer para o modelo Veiculo. """
-    # Poderíamos adicionar campos calculados ou relacionados aqui se necessário
-    # Ex: total_gasto_manutencao = serializers.DecimalField(...)
+    """ Serializer completo para o modelo Veiculo (ATUALIZADO). """
+
+    compartimentos = CompartimentacaoVeiculoSerializer(many=True, read_only=True)
+    documentos_vencendo = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Veiculo
-        # Lista os campos a serem incluídos
+        # Lista os campos a serem incluídos (ATUALIZADO com novos campos)
         fields = [
             'id', 'placa', 'renavam', 'tara', 'capacidade_kg', 'capacidade_m3',
+            'tipo_rodado', 'tipo_carroceria',
             'tipo_proprietario', 'proprietario_cnpj', 'proprietario_cpf',
             'proprietario_nome', 'rntrc_proprietario', 'uf_proprietario',
-            'ativo', 'criado_em', 'atualizado_em'
-            # 'manutencoes' # Poderia incluir inline se desejado, mas pode ser pesado
+            'civ_validade', 'cipp_validade', 'afericao_validade',
+            'crlv_validade', 'cronotacografo_validade',
+            'ativo', 'observacoes', 'compartimentos', 'documentos_vencendo',
+            'criado_em', 'atualizado_em'
         ]
         # Campos de data/hora são apenas leitura
-        read_only_fields = ('criado_em', 'atualizado_em')
+        read_only_fields = ('id', 'criado_em', 'atualizado_em')
+
+    def get_documentos_vencendo(self, obj):
+        """Retorna documentos que vencem em 30 dias."""
+        return obj.get_documentos_vencendo(dias=30)
 
 # --- Serializers para Painel de Manutenção ---
 # Estes não são ModelSerializers, pois formatam dados agregados da view

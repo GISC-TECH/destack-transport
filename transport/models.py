@@ -53,7 +53,12 @@ class CTeDocumento(models.Model):
     arquivo_xml = models.FileField(upload_to='xml_ctes/', null=True, blank=True, verbose_name="Arquivo XML")
     data_upload = models.DateTimeField(auto_now_add=True)
     processado = models.BooleanField(default=False, help_text="Indica se o XML foi processado e os dados extraídos.")
-    modalidade = models.CharField("Modalidade Frete", max_length=3, choices=MODALIDADE_CHOICES, null=True, blank=True, db_index=True) # NOVO CAMPO
+    modalidade = models.CharField("Modalidade Frete", max_length=3, choices=MODALIDADE_CHOICES, null=True, blank=True, db_index=True)
+
+    # Campos de controle de pagamento (inseridos pelo admin)
+    pago = models.BooleanField("Pago", default=False, db_index=True)
+    data_pagamento = models.DateTimeField("Data do Pagamento", null=True, blank=True)
+    observacao_pagamento = models.TextField("Observação do Pagamento", null=True, blank=True)
 
     # Relacionamento com MDF-e (definido mais abaixo via add_to_class)
     # mdfe_vinculado = models.ManyToManyField('MDFeDocumento', through='MDFeDocumentosVinculados', related_name='ctes_transportados')
@@ -449,7 +454,7 @@ class CTeCancelamento(models.Model):
    cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="cancelamento")
 
    # Campos do evento
-   id_evento = models.CharField("ID Evento", max_length=54, unique=True) # Formato: ID + tpEvento + chCTe + nSeqEvento
+   id_evento = models.CharField("ID Evento", max_length=60, unique=True) # Formato: ID + tpEvento + chCTe + nSeqEvento (55 chars)
    c_orgao = models.CharField("Código Órgão IBGE", max_length=2)
    tp_amb = models.PositiveSmallIntegerField("Tipo Ambiente")
    cnpj = models.CharField("CNPJ Solicitante", max_length=14)
@@ -462,13 +467,13 @@ class CTeCancelamento(models.Model):
    x_just = models.TextField("Justificativa")
 
    # Campos da resposta do evento
-   id_retorno = models.CharField("ID Retorno", max_length=15, null=True, blank=True) # <infEvento> @Id
+   id_retorno = models.CharField("ID Retorno", max_length=30, null=True, blank=True) # <infEvento> @Id (ex: ID329250183167960)
    ver_aplic = models.CharField("Versão Aplicação Resposta", max_length=20, null=True, blank=True)
    c_stat = models.PositiveSmallIntegerField("Código Status Resposta", null=True, blank=True)
    x_motivo = models.CharField("Motivo Status Resposta", max_length=255, null=True, blank=True)
    dh_reg_evento = models.DateTimeField("Data/Hora Registro Evento", null=True, blank=True)
-   n_prot_retorno = models.CharField("Protocolo Evento", max_length=15, null=True, blank=True, unique=True)
-   arquivo_xml_evento = models.FileField(upload_to='xml_eventos_cte/', null=True, blank=True, verbose_name="XML Evento Cancelamento")
+   n_prot_retorno = models.CharField("Protocolo Evento", max_length=20, null=True, blank=True, unique=True) # Protocolo pode ter ate 18 chars
+   arquivo_xml_evento = models.TextField("XML Evento Cancelamento", null=True, blank=True)
 
    class Meta:
        db_table = "cte_cancelamento"
@@ -881,7 +886,7 @@ class MDFeCancelamento(models.Model):
    mdfe = models.OneToOneField(MDFeDocumento, on_delete=models.CASCADE, related_name="cancelamento")
 
    # Campos do evento
-   id_evento = models.CharField("ID Evento", max_length=54, unique=True) # Formato: ID + tpEvento + chMDFe + nSeqEvento
+   id_evento = models.CharField("ID Evento", max_length=60, unique=True) # Formato: ID + tpEvento + chMDFe + nSeqEvento (55 chars)
    c_orgao = models.CharField("Código Órgão IBGE", max_length=2)
    tp_amb = models.PositiveSmallIntegerField("Tipo Ambiente")
    cnpj = models.CharField("CNPJ Solicitante", max_length=14)
@@ -894,13 +899,13 @@ class MDFeCancelamento(models.Model):
    x_just = models.TextField("Justificativa")
 
    # Campos da resposta do evento
-   id_retorno = models.CharField("ID Retorno", max_length=15, null=True, blank=True) # <infEvento> @Id
+   id_retorno = models.CharField("ID Retorno", max_length=30, null=True, blank=True) # <infEvento> @Id (ex: ID329250183167960)
    ver_aplic = models.CharField("Versão Aplicação Resposta", max_length=20, null=True, blank=True)
    c_stat = models.PositiveSmallIntegerField("Código Status Resposta", null=True, blank=True)
    x_motivo = models.CharField("Motivo Status Resposta", max_length=255, null=True, blank=True)
    dh_reg_evento = models.DateTimeField("Data/Hora Registro Evento", null=True, blank=True)
-   n_prot_retorno = models.CharField("Protocolo Evento", max_length=15, null=True, blank=True, unique=True)
-   arquivo_xml_evento = models.FileField(upload_to='xml_eventos_mdfe/', null=True, blank=True, verbose_name="XML Evento Cancelamento")
+   n_prot_retorno = models.CharField("Protocolo Evento", max_length=20, null=True, blank=True, unique=True) # Protocolo pode ter ate 18 chars
+   arquivo_xml_evento = models.TextField("XML Evento Cancelamento", null=True, blank=True)
 
    class Meta:
        db_table = "mdfe_cancelamento"
@@ -919,7 +924,7 @@ class MDFeCancelamentoEncerramento(models.Model):
    mdfe = models.OneToOneField(MDFeDocumento, on_delete=models.CASCADE, related_name="cancelamento_encerramento")
 
    # Campos do evento
-   id_evento = models.CharField("ID Evento", max_length=54, unique=True)
+   id_evento = models.CharField("ID Evento", max_length=60, unique=True) # Formato: ID + tpEvento + chMDFe + nSeqEvento (55 chars)
    c_orgao = models.CharField("Código Órgão IBGE", max_length=2)
    tp_amb = models.PositiveSmallIntegerField("Tipo Ambiente")
    cnpj = models.CharField("CNPJ Solicitante", max_length=14)
@@ -928,17 +933,17 @@ class MDFeCancelamentoEncerramento(models.Model):
    tp_evento = models.CharField("Tipo Evento", max_length=6, default="110113") # 110113 = Cancelamento Encerramento
    n_seq_evento = models.PositiveSmallIntegerField("Sequência Evento", default=1)
    versao_evento = models.CharField("Versão Evento", max_length=5, default="3.00")
-   n_prot_cancelar = models.CharField("Protocolo Encerramento a Cancelar", max_length=15)
+   n_prot_cancelar = models.CharField("Protocolo Encerramento a Cancelar", max_length=20) # Protocolo pode ter ate 18 chars
    x_just = models.TextField("Justificativa")
 
    # Campos da resposta do evento
-   id_retorno = models.CharField("ID Retorno", max_length=15, null=True, blank=True)
+   id_retorno = models.CharField("ID Retorno", max_length=30, null=True, blank=True) # <infEvento> @Id (ex: ID329250183167960)
    ver_aplic = models.CharField("Versão Aplicação Resposta", max_length=20, null=True, blank=True)
    c_stat = models.PositiveSmallIntegerField("Código Status Resposta", null=True, blank=True)
    x_motivo = models.CharField("Motivo Status Resposta", max_length=255, null=True, blank=True)
    dh_reg_evento = models.DateTimeField("Data/Hora Registro Evento", null=True, blank=True)
-   n_prot_retorno = models.CharField("Protocolo Evento", max_length=15, null=True, blank=True, unique=True)
-   arquivo_xml_evento = models.FileField(upload_to='xml_eventos_mdfe/', null=True, blank=True, verbose_name="XML Evento Canc. Encerramento")
+   n_prot_retorno = models.CharField("Protocolo Evento", max_length=20, null=True, blank=True, unique=True) # Protocolo pode ter ate 18 chars
+   arquivo_xml_evento = models.TextField("XML Evento Canc. Encerramento", null=True, blank=True)
 
    class Meta:
        db_table = "mdfe_cancelamento_encerramento"
@@ -956,12 +961,25 @@ class Veiculo(models.Model):
    """
    Cadastro básico do veículo – serve de referência para MDF‑e, manutenção
    e futuros indicadores (quilometragem, capacidade da frota etc.).
+   ATUALIZADO: Adicionados campos de documentação e capacidade.
    """
+   # Dados Básicos
    placa = models.CharField(max_length=8, unique=True, verbose_name="Placa", db_index=True)
    renavam = models.CharField(max_length=11, null=True, blank=True)
    tara = models.PositiveIntegerField(null=True, blank=True, help_text="Peso em ordem de marcha (kg)")
    capacidade_kg = models.PositiveIntegerField(null=True, blank=True, help_text="Capacidade máxima (kg)")
-   capacidade_m3 = models.PositiveIntegerField(null=True, blank=True, help_text="Capacidade cúbica (m³)")
+   capacidade_m3 = models.DecimalField(
+       "Capacidade Total (M³)",
+       max_digits=10,
+       decimal_places=2,
+       null=True,
+       blank=True,
+       help_text="Capacidade total do veículo em metros cúbicos"
+   )
+   tipo_rodado = models.CharField("Tipo Rodado", max_length=5, blank=True, null=True)
+   tipo_carroceria = models.CharField("Tipo Carroceria", max_length=5, blank=True, null=True)
+
+   # Proprietário
    tipo_proprietario = models.CharField(max_length=2, null=True, blank=True,
                                         help_text="00‑Próprio / 01‑Arrendado / 02‑Agregado …")
    proprietario_cnpj = models.CharField("CNPJ Proprietário", max_length=14, null=True, blank=True)
@@ -969,7 +987,42 @@ class Veiculo(models.Model):
    proprietario_nome = models.CharField("Razão Social/Nome Proprietário", max_length=60, null=True, blank=True)
    rntrc_proprietario = models.CharField("RNTRC Proprietário", max_length=8, null=True, blank=True)
    uf_proprietario = models.CharField("UF Proprietário", max_length=2, null=True, blank=True)
+
+   # Documentação do Veículo (NOVOS CAMPOS)
+   civ_validade = models.DateField(
+       "CIV - Validade",
+       blank=True,
+       null=True,
+       help_text="Certificado de Inspeção Veicular"
+   )
+   cipp_validade = models.DateField(
+       "CIPP - Validade",
+       blank=True,
+       null=True,
+       help_text="Certificado de Inspeção para Transporte de Produtos Perigosos"
+   )
+   afericao_validade = models.DateField(
+       "Aferição - Validade",
+       blank=True,
+       null=True,
+       help_text="Aferição de Tacógrafo"
+   )
+   crlv_validade = models.DateField(
+       "CRLV - Validade",
+       blank=True,
+       null=True,
+       help_text="Certificado de Registro e Licenciamento de Veículo"
+   )
+   cronotacografo_validade = models.DateField(
+       "Cronotacógrafo - Validade",
+       blank=True,
+       null=True,
+       help_text="Validade da aferição do cronotacógrafo"
+   )
+
+   # Status
    ativo = models.BooleanField(default=True)
+   observacoes = models.TextField("Observações", blank=True, null=True)
 
    criado_em = models.DateTimeField(auto_now_add=True)
    atualizado_em = models.DateTimeField(auto_now=True)
@@ -977,10 +1030,95 @@ class Veiculo(models.Model):
    def __str__(self):
        return self.placa
 
+   def get_documentos_vencendo(self, dias=30):
+       """
+       Retorna lista de documentos que vencem em X dias.
+
+       Args:
+           dias (int): Número de dias para considerar "próximo do vencimento"
+
+       Returns:
+           list: Lista de dicionários com documentos vencendo
+       """
+       from datetime import date, timedelta
+
+       hoje = date.today()
+       data_limite = hoje + timedelta(days=dias)
+       documentos_vencendo = []
+
+       documentos_verificar = [
+           ('CIV', self.civ_validade),
+           ('CIPP', self.cipp_validade),
+           ('Aferição', self.afericao_validade),
+           ('CRLV', self.crlv_validade),
+           ('Cronotacógrafo', self.cronotacografo_validade),
+       ]
+
+       for nome_doc, validade in documentos_verificar:
+           if validade and validade <= data_limite:
+               documentos_vencendo.append({
+                   'documento': nome_doc,
+                   'validade': validade,
+                   'vencido': validade < hoje
+               })
+
+       return documentos_vencendo
+
    class Meta:
+       db_table = "veiculo"
        verbose_name = "Veículo"
        verbose_name_plural = "Veículos"
        ordering = ["placa"]
+       indexes = [
+           models.Index(fields=['placa']),
+           models.Index(fields=['ativo', 'placa']),
+       ]
+
+
+class CompartimentacaoVeiculo(models.Model):
+    """Modelo para compartimentação de veículos (bocas)."""
+
+    veiculo = models.ForeignKey(
+        Veiculo,
+        on_delete=models.CASCADE,
+        related_name='compartimentos',
+        verbose_name="Veículo"
+    )
+    numero_boca = models.PositiveSmallIntegerField(
+        "Número da Boca",
+        help_text="Número da boca (1-9)"
+    )
+    capacidade_m3 = models.DecimalField(
+        "Capacidade (M³)",
+        max_digits=10,
+        decimal_places=2,
+        help_text="Capacidade da boca em metros cúbicos"
+    )
+
+    class Meta:
+        db_table = "compartimentacao_veiculo"
+        verbose_name = "Compartimento de Veículo"
+        verbose_name_plural = "Compartimentos de Veículos"
+        ordering = ['veiculo', 'numero_boca']
+        unique_together = ('veiculo', 'numero_boca')
+        indexes = [
+            models.Index(fields=['veiculo', 'numero_boca']),
+        ]
+
+    def __str__(self):
+        return f"{self.veiculo.placa} - Boca {self.numero_boca} ({self.capacidade_m3}m³)"
+
+    def clean(self):
+        """Validações customizadas."""
+        from django.core.exceptions import ValidationError
+
+        # Validar número da boca (1-9)
+        if self.numero_boca < 1 or self.numero_boca > 9:
+            raise ValidationError({'numero_boca': 'Número da boca deve estar entre 1 e 9.'})
+
+        # Capacidade deve ser positiva
+        if self.capacidade_m3 and self.capacidade_m3 <= 0:
+            raise ValidationError({'capacidade_m3': 'Capacidade deve ser maior que zero.'})
 
 
 class ManutencaoVeiculo(models.Model):
@@ -988,46 +1126,79 @@ class ManutencaoVeiculo(models.Model):
    Registro de cada serviço de manutenção realizado no veículo.
    Os valores de peça + mão‑de‑obra são somados automaticamente em `valor_total`.
    """
+   TIPO_MANUTENCAO_OPCOES = (
+       ("preventiva", "Preventiva"),
+       ("corretiva", "Corretiva"),
+       ("preditiva", "Preditiva"),
+   )
+
    STATUS_OPCOES = (
-       ("PAGO", "Pago"),
-       ("PENDENTE", "Pendente"),
-       ("AGENDADO", "Agendado"),
-       ("CANCELADO", "Cancelado"),
+       ("agendada", "Agendada"),
+       ("em_andamento", "Em Andamento"),
+       ("concluida", "Concluída"),
+       ("cancelada", "Cancelada"),
    )
 
    veiculo = models.ForeignKey(
        Veiculo,
-       on_delete=models.PROTECT, # Evita excluir veículo com manutenção registrada
+       on_delete=models.PROTECT,
        related_name="manutencoes",
        verbose_name="Veículo",
    )
-   data_servico = models.DateField(verbose_name="Data do Serviço")
-   servico_realizado = models.CharField(max_length=120)
+   tipo = models.CharField(
+       "Tipo de Manutenção",
+       max_length=20,
+       choices=TIPO_MANUTENCAO_OPCOES,
+       default="preventiva",
+       null=True,
+       blank=True
+   )
+   descricao = models.TextField("Descrição do Serviço", null=True, blank=True)
+   data_agendada = models.DateField("Data Agendada", null=True, blank=True)
+   data_realizada = models.DateField("Data Realizada", null=True, blank=True)
+   quilometragem = models.PositiveIntegerField("Quilometragem Atual", null=True, blank=True)
+   custo = models.DecimalField("Custo Total", max_digits=12, decimal_places=2, default=Decimal("0.00"))
+   fornecedor = models.CharField("Fornecedor/Oficina", max_length=120, null=True, blank=True)
+   status = models.CharField(max_length=20, choices=STATUS_OPCOES, default="agendada")
+   observacoes = models.TextField(null=True, blank=True)
+   nota_fiscal = models.CharField("Número Nota Fiscal", max_length=44, null=True, blank=True)
+
+   # Campos legados (mantidos para compatibilidade com dados existentes)
+   data_servico = models.DateField(verbose_name="Data do Serviço", null=True, blank=True)
+   servico_realizado = models.CharField(max_length=120, null=True, blank=True)
    oficina = models.CharField(max_length=120, null=True, blank=True)
-   quilometragem = models.PositiveIntegerField("Quilometragem", null=True, blank=True)
    peca_utilizada = models.CharField(max_length=120, null=True, blank=True)
    valor_peca = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
    valor_mao_obra = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-   valor_total = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
-   status = models.CharField(max_length=10, choices=STATUS_OPCOES, default="PENDENTE")
-   observacoes = models.TextField(null=True, blank=True)
-   nota_fiscal = models.CharField("Nota Fiscal Serviço", max_length=44, null=True, blank=True)
+   valor_total = models.DecimalField(max_digits=12, decimal_places=2, editable=False, default=Decimal("0.00"))
 
    criado_em = models.DateTimeField(auto_now_add=True)
    atualizado_em = models.DateTimeField(auto_now=True)
 
    def save(self, *args, **kwargs):
-       # soma automática dos custos
+       # soma automática dos custos legados
        self.valor_total = (self.valor_peca or Decimal("0")) + (self.valor_mao_obra or Decimal("0"))
+       # Se não tiver custo definido, usa o valor_total legado
+       if not self.custo and self.valor_total:
+           self.custo = self.valor_total
+       # Migrar dados legados para novos campos se necessário
+       if self.data_servico and not self.data_agendada:
+           self.data_agendada = self.data_servico
+       if self.servico_realizado and not self.descricao:
+           self.descricao = self.servico_realizado
+       if self.oficina and not self.fornecedor:
+           self.fornecedor = self.oficina
        super().save(*args, **kwargs)
 
    def __str__(self):
-       return f"{self.veiculo.placa} – {self.servico_realizado} ({self.data_servico:%d/%m/%Y})"
+       data = self.data_agendada or self.data_servico
+       desc = self.descricao or self.servico_realizado or "Manutenção"
+       return f"{self.veiculo.placa} – {desc[:50]} ({data:%d/%m/%Y})"
 
    class Meta:
        verbose_name = "Manutenção de Veículo"
        verbose_name_plural = "Manutenções de Veículos"
-       ordering = ["-data_servico", "-criado_em"]
+       ordering = ["-data_agendada", "-criado_em"]
 
 
 # --------------------------------------------------
@@ -1271,6 +1442,428 @@ class AlertaSistema(models.Model):
 
     def __str__(self):
         return f"[{self.prioridade.upper()}] {self.tipo or 'Alerta'}"
+
+
+# --------------------------------------------------
+#  C A D A S T R O   D E   C L I E N T E S
+# --------------------------------------------------
+class Cliente(models.Model):
+    """Modelo para cadastro de clientes (tomadores de serviço)."""
+
+    # ID
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Dados Fiscais
+    razao_social = models.CharField("Razão Social", max_length=255)
+    nome_fantasia = models.CharField("Nome Fantasia", max_length=255, blank=True, null=True)
+    cnpj = models.CharField("CNPJ", max_length=18, unique=True, db_index=True)
+    ie = models.CharField("Inscrição Estadual", max_length=20, blank=True, null=True)
+
+    # Endereço
+    logradouro = models.CharField("Logradouro", max_length=255, blank=True, null=True)
+    numero = models.CharField("Número", max_length=20, blank=True, null=True)
+    complemento = models.CharField("Complemento", max_length=100, blank=True, null=True)
+    bairro = models.CharField("Bairro", max_length=100, blank=True, null=True)
+    cidade = models.CharField("Cidade", max_length=100, blank=True, null=True)
+    estado = models.CharField("Estado (UF)", max_length=2, blank=True, null=True)
+    cep = models.CharField("CEP", max_length=10, blank=True, null=True)
+
+    # Informações Operacionais
+    distancia = models.DecimalField(
+        "Distância da Base (KM)",
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Distância em KM da base até o cliente"
+    )
+    tipo_frete = models.CharField(
+        "Tipo de Frete Padrão",
+        max_length=3,
+        choices=[('CIF', 'CIF'), ('FOB', 'FOB')],
+        default='CIF',
+        help_text="Tipo de frete padrão para este cliente"
+    )
+
+    # Metadados
+    ativo = models.BooleanField("Ativo", default=True)
+    observacoes = models.TextField("Observações", blank=True, null=True)
+    criado_em = models.DateTimeField("Criado em", auto_now_add=True)
+    atualizado_em = models.DateTimeField("Atualizado em", auto_now=True)
+
+    class Meta:
+        db_table = "cliente"
+        verbose_name = "Cliente"
+        verbose_name_plural = "Clientes"
+        ordering = ['razao_social']
+        indexes = [
+            models.Index(fields=['cnpj']),
+            models.Index(fields=['ativo', 'razao_social']),
+        ]
+
+    def __str__(self):
+        return f"{self.razao_social} ({self.cnpj})"
+
+    def clean(self):
+        """Validações customizadas."""
+        from django.core.exceptions import ValidationError
+
+        # Validação básica de CNPJ (apenas formato)
+        if self.cnpj:
+            cnpj_limpo = ''.join(filter(str.isdigit, self.cnpj))
+            if len(cnpj_limpo) != 14:
+                raise ValidationError({'cnpj': 'CNPJ deve ter 14 dígitos.'})
+
+        # Validação de UF
+        if self.estado:
+            ufs_validas = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
+                          'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
+                          'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
+            if self.estado.upper() not in ufs_validas:
+                raise ValidationError({'estado': 'UF inválida.'})
+
+
+# --------------------------------------------------
+#  C A D A S T R O   D E   M O T O R I S T A S
+# --------------------------------------------------
+class Motorista(models.Model):
+    """Modelo para cadastro de motoristas."""
+
+    # ID
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Dados Pessoais
+    nome = models.CharField("Nome Completo", max_length=255)
+    cpf = models.CharField("CPF", max_length=14, unique=True, db_index=True)
+
+    # CNH
+    cnh = models.CharField("CNH", max_length=20, unique=True, db_index=True)
+    categoria_cnh = models.CharField(
+        "Categoria CNH",
+        max_length=5,
+        choices=[
+            ('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D'), ('E', 'E'),
+            ('AB', 'AB'), ('AC', 'AC'), ('AD', 'AD'), ('AE', 'AE')
+        ],
+        blank=True,
+        null=True
+    )
+    validade_cnh = models.DateField("Validade CNH", blank=True, null=True)
+
+    # Certificações Obrigatórias
+    nr20_validade = models.DateField(
+        "NR20 - Validade",
+        blank=True,
+        null=True,
+        help_text="Norma Regulamentadora 20 - Inflamáveis e Combustíveis"
+    )
+    nr35_validade = models.DateField(
+        "NR35 - Validade",
+        blank=True,
+        null=True,
+        help_text="Norma Regulamentadora 35 - Trabalho em Altura"
+    )
+    mopp_validade = models.DateField(
+        "MOPP - Validade",
+        blank=True,
+        null=True,
+        help_text="Movimentação Operacional de Produtos Perigosos"
+    )
+
+    # Contato
+    telefone = models.CharField("Telefone", max_length=20, blank=True, null=True)
+    email = models.EmailField("E-mail", blank=True, null=True)
+
+    # Endereço
+    logradouro = models.CharField("Logradouro", max_length=255, blank=True, null=True)
+    numero = models.CharField("Número", max_length=20, blank=True, null=True)
+    complemento = models.CharField("Complemento", max_length=100, blank=True, null=True)
+    bairro = models.CharField("Bairro", max_length=100, blank=True, null=True)
+    cidade = models.CharField("Cidade", max_length=100, blank=True, null=True)
+    estado = models.CharField("Estado (UF)", max_length=2, blank=True, null=True)
+    cep = models.CharField("CEP", max_length=10, blank=True, null=True)
+
+    # Metadados
+    ativo = models.BooleanField("Ativo", default=True)
+    observacoes = models.TextField("Observações", blank=True, null=True)
+    criado_em = models.DateTimeField("Criado em", auto_now_add=True)
+    atualizado_em = models.DateTimeField("Atualizado em", auto_now=True)
+
+    class Meta:
+        db_table = "motorista"
+        verbose_name = "Motorista"
+        verbose_name_plural = "Motoristas"
+        ordering = ['nome']
+        indexes = [
+            models.Index(fields=['cpf']),
+            models.Index(fields=['cnh']),
+            models.Index(fields=['ativo', 'nome']),
+        ]
+
+    def __str__(self):
+        return f"{self.nome} (CPF: {self.cpf})"
+
+    def clean(self):
+        """Validações customizadas."""
+        from django.core.exceptions import ValidationError
+
+        # Validação básica de CPF (apenas formato)
+        if self.cpf:
+            cpf_limpo = ''.join(filter(str.isdigit, self.cpf))
+            if len(cpf_limpo) != 11:
+                raise ValidationError({'cpf': 'CPF deve ter 11 dígitos.'})
+
+    def get_documentos_vencendo(self, dias=30):
+        """
+        Retorna lista de documentos que vencem em X dias.
+
+        Args:
+            dias (int): Número de dias para considerar "próximo do vencimento"
+
+        Returns:
+            list: Lista de dicionários com documentos vencendo
+        """
+        from datetime import date, timedelta
+
+        hoje = date.today()
+        data_limite = hoje + timedelta(days=dias)
+        documentos_vencendo = []
+
+        # Verificar CNH
+        if self.validade_cnh and self.validade_cnh <= data_limite:
+            documentos_vencendo.append({
+                'documento': 'CNH',
+                'validade': self.validade_cnh,
+                'vencido': self.validade_cnh < hoje
+            })
+
+        # Verificar NR20
+        if self.nr20_validade and self.nr20_validade <= data_limite:
+            documentos_vencendo.append({
+                'documento': 'NR20',
+                'validade': self.nr20_validade,
+                'vencido': self.nr20_validade < hoje
+            })
+
+        # Verificar NR35
+        if self.nr35_validade and self.nr35_validade <= data_limite:
+            documentos_vencendo.append({
+                'documento': 'NR35',
+                'validade': self.nr35_validade,
+                'vencido': self.nr35_validade < hoje
+            })
+
+        # Verificar MOPP
+        if self.mopp_validade and self.mopp_validade <= data_limite:
+            documentos_vencendo.append({
+                'documento': 'MOPP',
+                'validade': self.mopp_validade,
+                'vencido': self.mopp_validade < hoje
+            })
+
+        return documentos_vencendo
+
+
+# --------------------------------------------------
+#  D O C U M E N T O S   A N E X O S
+# --------------------------------------------------
+
+def documento_anexo_path(instance, filename):
+    """
+    Gera o caminho para salvar o arquivo anexo.
+    Organiza por tipo de entidade e ID.
+    """
+    import os
+    from django.utils import timezone
+
+    # Determina o diretorio base pelo tipo de entidade
+    if instance.cliente:
+        base_dir = f"anexos/clientes/{instance.cliente.id}"
+    elif instance.motorista:
+        base_dir = f"anexos/motoristas/{instance.motorista.id}"
+    elif instance.veiculo:
+        base_dir = f"anexos/veiculos/{instance.veiculo.id}"
+    else:
+        base_dir = "anexos/outros"
+
+    # Adiciona timestamp para evitar colisoes
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    ext = os.path.splitext(filename)[1]
+    new_filename = f"{timestamp}_{filename}"
+
+    return os.path.join(base_dir, new_filename)
+
+
+class DocumentoAnexo(models.Model):
+    """
+    Modelo generico para anexar documentos a Clientes, Motoristas ou Veiculos.
+    Usa GenericForeignKey pattern simplificado com FKs opcionais.
+    """
+
+    TIPO_DOCUMENTO_CHOICES = [
+        # Documentos de Cliente
+        ('contrato', 'Contrato'),
+        ('proposta', 'Proposta Comercial'),
+        ('procuracao', 'Procuração'),
+
+        # Documentos de Motorista
+        ('cnh', 'CNH'),
+        ('rg', 'RG'),
+        ('cpf', 'CPF'),
+        ('comprovante_residencia', 'Comprovante de Residência'),
+        ('certificado_nr20', 'Certificado NR20'),
+        ('certificado_nr35', 'Certificado NR35'),
+        ('certificado_mopp', 'Certificado MOPP'),
+        ('aso', 'ASO - Atestado de Saúde Ocupacional'),
+        ('ficha_registro', 'Ficha de Registro'),
+
+        # Documentos de Veiculo
+        ('crlv', 'CRLV'),
+        ('civ', 'CIV - Certificado de Inspeção Veicular'),
+        ('cipp', 'CIPP - Transporte Produtos Perigosos'),
+        ('seguro', 'Apólice de Seguro'),
+        ('certificado_tacografo', 'Certificado Tacógrafo'),
+        ('laudo_vistoria', 'Laudo de Vistoria'),
+
+        # Outros
+        ('outro', 'Outro'),
+    ]
+
+    # ID
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Relacionamentos (apenas um deve ser preenchido)
+    cliente = models.ForeignKey(
+        'Cliente',
+        on_delete=models.CASCADE,
+        related_name='documentos_anexos',
+        null=True,
+        blank=True
+    )
+    motorista = models.ForeignKey(
+        'Motorista',
+        on_delete=models.CASCADE,
+        related_name='documentos_anexos',
+        null=True,
+        blank=True
+    )
+    veiculo = models.ForeignKey(
+        'Veiculo',
+        on_delete=models.CASCADE,
+        related_name='documentos_anexos',
+        null=True,
+        blank=True
+    )
+
+    # Dados do documento
+    tipo = models.CharField(
+        "Tipo de Documento",
+        max_length=30,
+        choices=TIPO_DOCUMENTO_CHOICES,
+        default='outro'
+    )
+    nome = models.CharField("Nome/Descrição", max_length=255)
+    arquivo = models.FileField(
+        "Arquivo",
+        upload_to=documento_anexo_path,
+        help_text="Formatos aceitos: PDF, JPG, PNG, DOC, DOCX (max 10MB)"
+    )
+
+    # Metadados
+    tamanho = models.PositiveIntegerField("Tamanho (bytes)", null=True, blank=True)
+    tipo_mime = models.CharField("Tipo MIME", max_length=100, null=True, blank=True)
+    validade = models.DateField("Data de Validade", null=True, blank=True)
+    observacoes = models.TextField("Observações", blank=True, null=True)
+
+    # Controle
+    criado_em = models.DateTimeField("Criado em", auto_now_add=True)
+    atualizado_em = models.DateTimeField("Atualizado em", auto_now=True)
+    criado_por = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='documentos_criados'
+    )
+
+    class Meta:
+        db_table = "documento_anexo"
+        verbose_name = "Documento Anexo"
+        verbose_name_plural = "Documentos Anexos"
+        ordering = ['-criado_em']
+        indexes = [
+            models.Index(fields=['cliente', 'tipo']),
+            models.Index(fields=['motorista', 'tipo']),
+            models.Index(fields=['veiculo', 'tipo']),
+            models.Index(fields=['validade']),
+        ]
+
+    def __str__(self):
+        entidade = self.get_entidade_nome()
+        return f"{self.nome} - {entidade}"
+
+    def get_entidade_nome(self):
+        """Retorna o nome da entidade relacionada."""
+        if self.cliente:
+            return f"Cliente: {self.cliente.razao_social}"
+        elif self.motorista:
+            return f"Motorista: {self.motorista.nome}"
+        elif self.veiculo:
+            return f"Veículo: {self.veiculo.placa}"
+        return "Sem vínculo"
+
+    def get_entidade_tipo(self):
+        """Retorna o tipo da entidade relacionada."""
+        if self.cliente:
+            return 'cliente'
+        elif self.motorista:
+            return 'motorista'
+        elif self.veiculo:
+            return 'veiculo'
+        return None
+
+    def save(self, *args, **kwargs):
+        """Salva o documento e atualiza metadados do arquivo."""
+        if self.arquivo:
+            # Atualiza tamanho
+            self.tamanho = self.arquivo.size
+
+            # Tenta determinar o tipo MIME
+            import mimetypes
+            self.tipo_mime = mimetypes.guess_type(self.arquivo.name)[0] or 'application/octet-stream'
+
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        """Validações do modelo."""
+        from django.core.exceptions import ValidationError
+
+        # Verifica se exatamente uma entidade está vinculada
+        vinculos = [self.cliente, self.motorista, self.veiculo]
+        vinculos_preenchidos = sum(1 for v in vinculos if v is not None)
+
+        if vinculos_preenchidos == 0:
+            raise ValidationError(
+                "O documento deve estar vinculado a um Cliente, Motorista ou Veículo."
+            )
+        if vinculos_preenchidos > 1:
+            raise ValidationError(
+                "O documento deve estar vinculado a apenas uma entidade."
+            )
+
+        # Valida tamanho do arquivo (max 10MB)
+        if self.arquivo and self.arquivo.size > 10 * 1024 * 1024:
+            raise ValidationError({'arquivo': 'O arquivo não pode exceder 10MB.'})
+
+        # Valida extensão do arquivo
+        if self.arquivo:
+            import os
+            ext = os.path.splitext(self.arquivo.name)[1].lower()
+            extensoes_permitidas = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx']
+            if ext not in extensoes_permitidas:
+                raise ValidationError({
+                    'arquivo': f'Extensão não permitida. Use: {", ".join(extensoes_permitidas)}'
+                })
 
 
 # --------------------------------------------------

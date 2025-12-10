@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
+from django.conf import settings
+from django.conf.urls.static import static
 from transport.views.simple_auth import simple_login, simple_logout
 from .health import health_check
 from .simple_health import simple_health
@@ -25,20 +27,21 @@ urlpatterns = [
     # Django Admin
     path("admin/", admin.site.urls),
 
-    # Landing page pública (página principal)
+    # Landing page publica (redireciona para frontend React)
     path("", TemplateView.as_view(template_name="index.html"), name="index"),
 
-    # Autenticação simples
-    path("login/", simple_login, name="login"),
-    path("logout/", simple_logout, name="logout"),
+    # Autenticacao simples (para API)
+    path("api/auth/login/", simple_login, name="api_login"),
+    path("api/auth/logout/", simple_logout, name="api_logout"),
 
-    # Health check endpoints (before /api/ to avoid middleware)
+    # Health check endpoints
     path("health/", simple_health, name="simple_health"),
     path("api/health/", health_check, name="health_check"),
-    
+
     # APIs diretamente em /api/
     path("api/", include("transport.api_urls")),
-    
-    # Sistema interno (dashboard e outras páginas)
-    path("app/", include("transport.html_urls")),
 ]
+
+# Servir arquivos de mídia em desenvolvimento
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
