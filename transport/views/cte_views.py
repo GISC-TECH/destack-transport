@@ -615,11 +615,12 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
 
         Parâmetros aceitos:
         - pago: boolean (obrigatório)
+        - data_pagamento: string YYYY-MM-DD (opcional, usa data atual se não informado)
         - observacao_pagamento: string (opcional)
 
         Exemplo de uso:
         PATCH /api/ctes/{id}/pagamento/
-        Body: {"pago": true, "observacao_pagamento": "Pago via transferência"}
+        Body: {"pago": true, "data_pagamento": "2024-12-15", "observacao_pagamento": "Pago via transferência"}
         """
         cte = self.get_object()
 
@@ -638,9 +639,20 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         # Atualiza os campos
         cte.pago = pago
 
-        # Define a data de pagamento automaticamente
+        # Define a data de pagamento
         if pago:
-            cte.data_pagamento = timezone.now()
+            # Usa data informada ou data atual
+            data_pagamento_str = request.data.get('data_pagamento')
+            if data_pagamento_str:
+                from datetime import datetime
+                try:
+                    cte.data_pagamento = datetime.strptime(data_pagamento_str, '%Y-%m-%d').replace(
+                        tzinfo=timezone.get_current_timezone()
+                    )
+                except ValueError:
+                    cte.data_pagamento = timezone.now()
+            else:
+                cte.data_pagamento = timezone.now()
         else:
             cte.data_pagamento = None
 
@@ -755,8 +767,8 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             valor_total=Sum('prestacao__valor_total_prestado')
         ).order_by('-valor_total')[:10]
 
-        # CT-es pendentes mais recentes (últimos 10)
-        ctes_recentes = queryset.order_by('-identificacao__data_emissao')[:10]
+        # CT-es pendentes (todos, ordenados por data mais recente)
+        ctes_recentes = queryset.order_by('-identificacao__data_emissao')
         ctes_recentes_data = []
         for cte in ctes_recentes:
             ctes_recentes_data.append({

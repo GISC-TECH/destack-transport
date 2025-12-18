@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { clientesAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
 import './ClientesList.css';
@@ -8,6 +9,7 @@ import './ClientesList.css';
 function ClienteForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const toast = useToast();
   const isEditing = !!id;
 
   const [loading, setLoading] = useState(isEditing);
@@ -15,21 +17,19 @@ function ClienteForm() {
   const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
-    tipo_pessoa: 'PJ',
     razao_social: '',
     nome_fantasia: '',
-    cnpj_cpf: '',
-    inscricao_estadual: '',
-    email: '',
-    telefone: '',
-    celular: '',
+    cnpj: '',
+    ie: '',
     cep: '',
     logradouro: '',
     numero: '',
     complemento: '',
     bairro: '',
     cidade: '',
-    uf: '',
+    estado: '',
+    distancia: '',
+    tipo_frete: 'CIF',
     observacoes: '',
     ativo: true
   });
@@ -45,21 +45,19 @@ function ClienteForm() {
       setLoading(true);
       const result = await clientesAPI.get(id);
       setFormData({
-        tipo_pessoa: result.tipo_pessoa || 'PJ',
         razao_social: result.razao_social || '',
         nome_fantasia: result.nome_fantasia || '',
-        cnpj_cpf: result.cnpj_cpf || '',
-        inscricao_estadual: result.inscricao_estadual || '',
-        email: result.email || '',
-        telefone: result.telefone || '',
-        celular: result.celular || '',
+        cnpj: result.cnpj || '',
+        ie: result.ie || '',
         cep: result.cep || '',
         logradouro: result.logradouro || '',
         numero: result.numero || '',
         complemento: result.complemento || '',
         bairro: result.bairro || '',
         cidade: result.cidade || '',
-        uf: result.uf || '',
+        estado: result.estado || '',
+        distancia: result.distancia || '',
+        tipo_frete: result.tipo_frete || 'CIF',
         observacoes: result.observacoes || '',
         ativo: result.ativo !== false
       });
@@ -92,7 +90,7 @@ function ClienteForm() {
           logradouro: data.logradouro || '',
           bairro: data.bairro || '',
           cidade: data.localidade || '',
-          uf: data.uf || ''
+          estado: data.uf || ''
         }));
       }
     } catch (err) {
@@ -100,15 +98,8 @@ function ClienteForm() {
     }
   };
 
-  const formatCNPJCPF = (value) => {
+  const formatCNPJ = (value) => {
     const numbers = value.replace(/\D/g, '');
-    if (formData.tipo_pessoa === 'PF') {
-      return numbers
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-        .slice(0, 14);
-    }
     return numbers
       .replace(/(\d{2})(\d)/, '$1.$2')
       .replace(/(\d{3})(\d)/, '$1.$2')
@@ -121,14 +112,6 @@ function ClienteForm() {
     return value.replace(/\D/g, '').replace(/(\d{5})(\d)/, '$1-$2').slice(0, 9);
   };
 
-  const formatTelefone = (value) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 10) {
-      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-    }
-    return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -137,12 +120,15 @@ function ClienteForm() {
     try {
       if (isEditing) {
         await clientesAPI.update(id, formData);
+        toast.success('Cliente atualizado com sucesso!');
       } else {
         await clientesAPI.create(formData);
+        toast.success('Cliente cadastrado com sucesso!');
       }
-      navigate('/clientes');
+      setTimeout(() => navigate('/clientes'), 500);
     } catch (err) {
       console.error('Erro ao salvar cliente:', err);
+      toast.error('Erro ao salvar cliente. Verifique os dados.');
       try {
         const errorData = JSON.parse(err.message);
         const messages = Object.entries(errorData)
@@ -181,42 +167,40 @@ function ClienteForm() {
 
           <div className="form-row">
             <div className="form-group">
-              <label>Tipo de Pessoa *</label>
-              <select
-                name="tipo_pessoa"
-                value={formData.tipo_pessoa}
-                onChange={(e) => {
-                  handleChange(e);
-                  setFormData(prev => ({ ...prev, cnpj_cpf: '' }));
-                }}
-              >
-                <option value="PJ">Pessoa Juridica</option>
-                <option value="PF">Pessoa Fisica</option>
-              </select>
+              <label>CNPJ *</label>
+              <input
+                type="text"
+                name="cnpj"
+                value={formData.cnpj}
+                onChange={(e) => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})}
+                required
+                placeholder="00.000.000/0000-00"
+              />
             </div>
 
             <div className="form-group">
-              <label>{formData.tipo_pessoa === 'PF' ? 'CPF' : 'CNPJ'} *</label>
+              <label>Inscricao Estadual</label>
               <input
                 type="text"
-                name="cnpj_cpf"
-                value={formData.cnpj_cpf}
-                onChange={(e) => setFormData({...formData, cnpj_cpf: formatCNPJCPF(e.target.value)})}
-                required
-                placeholder={formData.tipo_pessoa === 'PF' ? '000.000.000-00' : '00.000.000/0000-00'}
+                name="ie"
+                value={formData.ie}
+                onChange={handleChange}
+                placeholder="Isento ou numero"
+                maxLength={20}
               />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>{formData.tipo_pessoa === 'PF' ? 'Nome Completo' : 'Razao Social'} *</label>
+              <label>Razao Social *</label>
               <input
                 type="text"
                 name="razao_social"
                 value={formData.razao_social}
                 onChange={handleChange}
                 required
+                maxLength={255}
               />
             </div>
 
@@ -227,58 +211,34 @@ function ClienteForm() {
                 name="nome_fantasia"
                 value={formData.nome_fantasia}
                 onChange={handleChange}
+                maxLength={255}
               />
             </div>
           </div>
 
-          {formData.tipo_pessoa === 'PJ' && (
-            <div className="form-group" style={{ maxWidth: '300px' }}>
-              <label>Inscricao Estadual</label>
-              <input
-                type="text"
-                name="inscricao_estadual"
-                value={formData.inscricao_estadual}
-                onChange={handleChange}
-                placeholder="Isento ou numero"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="form-section">
-          <h3>Contato</h3>
-
           <div className="form-row">
             <div className="form-group">
-              <label>E-mail</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
+              <label>Tipo de Frete *</label>
+              <select
+                name="tipo_frete"
+                value={formData.tipo_frete}
                 onChange={handleChange}
-                placeholder="email@exemplo.com"
-              />
+                required
+              >
+                <option value="CIF">CIF (Remetente paga)</option>
+                <option value="FOB">FOB (Destinatario paga)</option>
+              </select>
             </div>
 
             <div className="form-group">
-              <label>Telefone</label>
+              <label>Distancia (km)</label>
               <input
-                type="text"
-                name="telefone"
-                value={formData.telefone}
-                onChange={(e) => setFormData({...formData, telefone: formatTelefone(e.target.value)})}
-                placeholder="(00) 0000-0000"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Celular</label>
-              <input
-                type="text"
-                name="celular"
-                value={formData.celular}
-                onChange={(e) => setFormData({...formData, celular: formatTelefone(e.target.value)})}
-                placeholder="(00) 00000-0000"
+                type="number"
+                name="distancia"
+                value={formData.distancia}
+                onChange={handleChange}
+                placeholder="0"
+                min="0"
               />
             </div>
           </div>
@@ -308,6 +268,7 @@ function ClienteForm() {
                 value={formData.logradouro}
                 onChange={handleChange}
                 placeholder="Rua, Avenida, etc."
+                maxLength={255}
               />
             </div>
 
@@ -318,6 +279,7 @@ function ClienteForm() {
                 name="numero"
                 value={formData.numero}
                 onChange={handleChange}
+                maxLength={20}
               />
             </div>
           </div>
@@ -331,6 +293,7 @@ function ClienteForm() {
                 value={formData.complemento}
                 onChange={handleChange}
                 placeholder="Sala, Andar, etc."
+                maxLength={100}
               />
             </div>
 
@@ -341,6 +304,7 @@ function ClienteForm() {
                 name="bairro"
                 value={formData.bairro}
                 onChange={handleChange}
+                maxLength={100}
               />
             </div>
           </div>
@@ -353,14 +317,15 @@ function ClienteForm() {
                 name="cidade"
                 value={formData.cidade}
                 onChange={handleChange}
+                maxLength={100}
               />
             </div>
 
             <div className="form-group" style={{ maxWidth: '100px' }}>
               <label>UF</label>
               <select
-                name="uf"
-                value={formData.uf}
+                name="estado"
+                value={formData.estado}
                 onChange={handleChange}
               >
                 <option value="">--</option>

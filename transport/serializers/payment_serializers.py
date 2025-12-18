@@ -47,34 +47,52 @@ class PagamentoAgregadoSerializer(serializers.ModelSerializer):
             'criado_em', 'atualizado_em'
         ]
         # Campos que não podem ser definidos diretamente na criação/atualização
-        # O valor_repassado é calculado automaticamente no método save do modelo.
-        read_only_fields = ('valor_repassado', 'criado_em', 'atualizado_em', 'cte_chave', 'cte_numero', 'cte_data_emissao')
-        # Configura o campo 'cte' para ser write_only (usado apenas na escrita, se aplicável)
-        # e não obrigatório (geralmente é criado pela action 'gerar')
-        extra_kwargs = {'cte': {'write_only': True, 'required': False}}
+        read_only_fields = ('criado_em', 'atualizado_em', 'cte_chave', 'cte_numero', 'cte_data_emissao')
+        # CT-e é obrigatório (relação 1:1)
+        extra_kwargs = {'cte': {'write_only': True, 'required': True}}
 
 class PagamentoProprioSerializer(serializers.ModelSerializer):
     """ Serializer para o modelo PagamentoProprio. """
     # Campos somente leitura
     veiculo_placa = serializers.CharField(source='veiculo.placa', read_only=True)
-    valor_total_pagar = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    valor_total_pagar = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
+    # Alias para valor_repassado (compatibilidade com frontend Agregados)
+    valor_repassado = serializers.DecimalField(source='valor_base_faixa', max_digits=12, decimal_places=2, read_only=True)
+    # Alias para condutor (compatibilidade com frontend Agregados)
+    condutor_nome = serializers.CharField(source='motorista_nome', read_only=True, allow_null=True)
+    condutor_cpf = serializers.CharField(source='motorista_cpf', read_only=True, allow_null=True)
+    # Alias placa direto
+    placa = serializers.CharField(source='veiculo.placa', read_only=True)
+    # Campos do CT-e vinculado (se houver)
+    cte_chave = serializers.CharField(source='cte.chave', read_only=True, allow_null=True)
+    cte_data_emissao = serializers.DateTimeField(
+        source='cte.identificacao.data_emissao', read_only=True,
+        allow_null=True, format='%d/%m/%Y'
+    )
 
     class Meta:
         model = PagamentoProprio
         fields = [
-            'id', 'veiculo', 'veiculo_placa', 'periodo', 'km_total_periodo',
-            'valor_base_faixa', 'ajustes', 'valor_total_pagar', # Valor total é calculado
+            'id', 'veiculo', 'veiculo_placa', 'placa', 'periodo',
+            # Campos de CT-e (novos para detalhamento)
+            'cte', 'cte_chave', 'cte_numero', 'cte_data_emissao',
+            # Campos de condutor (novos para detalhamento)
+            'motorista_nome', 'motorista_cpf', 'condutor_nome', 'condutor_cpf',
+            # Campos de pagamento
+            'data_prevista',
+            'km_total_periodo', 'valor_base_faixa', 'valor_repassado', 'ajustes', 'valor_total_pagar',
             'status', 'data_pagamento', 'obs',
             'criado_em', 'atualizado_em'
         ]
         # Campos calculados ou definidos internamente/pela view
         read_only_fields = (
-            'valor_total_pagar', 'criado_em', 'atualizado_em', 'veiculo_placa',
-            'km_total_periodo', 'valor_base_faixa' # Geralmente calculados na action 'gerar' ou 'calcular_km'
+            'valor_repassado', 'criado_em', 'atualizado_em',
+            'veiculo_placa', 'placa', 'condutor_nome', 'condutor_cpf',
+            'cte_chave', 'cte_data_emissao'
         )
-        # Não exigir veiculo/periodo na criação/atualização via API direta, pois
-        # a action 'gerar' é o método principal para criação em lote.
+        # CT-e e veículo são obrigatórios (relação 1:1)
         extra_kwargs = {
-            'veiculo': {'write_only': True, 'required': False},
-            'periodo': {'required': False}
+            'veiculo': {'write_only': True, 'required': True},
+            'periodo': {'required': True},
+            'cte': {'write_only': True, 'required': True},
         }

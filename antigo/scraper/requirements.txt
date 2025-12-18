@@ -1,0 +1,26 @@
+# EGS XML Collector - Dependencies
+
+# Web scraping
+selenium==4.15.2
+webdriver-manager==4.0.1
+
+# HTTP requests
+requests==2.31.0
+urllib3==2.1.0
+
+# HTML parsing
+beautifulsoup4==4.12.2
+lxml>=4.9.3
+
+# Scheduling
+schedule==1.2.1
+APScheduler==3.10.4
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Logging
+colorlog==6.8.0
+
+# Date handling
+python-dateutil==2.8.2

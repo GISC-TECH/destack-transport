@@ -17,28 +17,19 @@ const getDateRange = (periodo) => {
       dataInicio.setDate(dataInicio.getDate() - 7);
       break;
     case 'mes':
-      // Usa o ultimo mes com dados (setembro 2025) se estamos alem dessa data
-      // Fallback para mes atual se estivermos antes
-      const mesAtualInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-      const ultimoMesComDados = new Date(2025, 8, 1); // Setembro 2025
-      if (mesAtualInicio > ultimoMesComDados) {
-        // Se mes atual nao tem dados, usa setembro 2025
-        dataInicio = new Date(2025, 8, 1);
-        dataFim = new Date(2025, 8, 30);
-      } else {
-        dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-        dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-      }
+      // Primeiro e ultimo dia do mes atual
+      dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+      dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
       break;
     case 'ano':
-      // Usa 2025 completo para ter todos os dados
-      dataInicio = new Date(2025, 0, 1);
-      dataFim = new Date(2025, 11, 31);
+      // Ano atual completo
+      dataInicio = new Date(hoje.getFullYear(), 0, 1);
+      dataFim = new Date(hoje.getFullYear(), 11, 31);
       break;
     default:
-      // Default: ultimo ano com dados (2025)
-      dataInicio = new Date(2025, 0, 1);
-      dataFim = new Date(2025, 8, 30);
+      // Default: mes atual
+      dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+      dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
   }
 
   return {

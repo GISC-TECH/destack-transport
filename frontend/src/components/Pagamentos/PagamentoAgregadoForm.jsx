@@ -1,19 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { pagamentosAPI } from '../../services/api';
+import { pagamentosAPI, cteAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import './Pagamentos.css';
 
 function PagamentoAgregadoForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const toast = useToast();
   const isEditing = !!id;
 
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
+  // Lista de CT-es disponiveis para selecao
+  const [ctesDisponiveis, setCtesDisponiveis] = useState([]);
+  const [loadingCtes, setLoadingCtes] = useState(false);
+  const [buscaCte, setBuscaCte] = useState('');
+
   const [formData, setFormData] = useState({
+    cte: '',
+    cte_numero: '',
     placa: '',
     condutor_nome: '',
     condutor_cpf: '',
@@ -28,13 +37,54 @@ function PagamentoAgregadoForm() {
     if (isEditing) {
       loadPagamento();
     }
+    // Carregar CT-es disponiveis (sem pagamento agregado)
+    loadCtesDisponiveis();
   }, [id]);
+
+  const loadCtesDisponiveis = async () => {
+    try {
+      setLoadingCtes(true);
+      // Busca CT-es que ainda nao tem pagamento agregado
+      const result = await cteAPI.list({ pago: false, page_size: 100 });
+      const ctes = result.results || result;
+      setCtesDisponiveis(ctes);
+    } catch (err) {
+      console.error('Erro ao carregar CT-es:', err);
+    } finally {
+      setLoadingCtes(false);
+    }
+  };
+
+  const handleSelectCte = (e) => {
+    const cteId = e.target.value;
+    if (!cteId) {
+      setFormData(prev => ({
+        ...prev,
+        cte: '',
+        cte_numero: '',
+        valor_frete_total: ''
+      }));
+      return;
+    }
+
+    const cteSelecionado = ctesDisponiveis.find(c => c.id === cteId);
+    if (cteSelecionado) {
+      setFormData(prev => ({
+        ...prev,
+        cte: cteId,
+        cte_numero: cteSelecionado.numero_cte || cteSelecionado.numero || '',
+        valor_frete_total: cteSelecionado.valor_total || cteSelecionado.valor_prestacao || ''
+      }));
+    }
+  };
 
   const loadPagamento = async () => {
     try {
       setLoading(true);
       const result = await pagamentosAPI.agregados.get(id);
       setFormData({
+        cte: result.cte || '',
+        cte_numero: result.cte_numero || '',
         placa: result.placa || '',
         condutor_nome: result.condutor_nome || '',
         condutor_cpf: result.condutor_cpf || '',
@@ -75,6 +125,7 @@ function PagamentoAgregadoForm() {
 
     try {
       const data = {
+        cte: formData.cte || null,
         placa: formData.placa.toUpperCase(),
         condutor_nome: formData.condutor_nome,
         condutor_cpf: formData.condutor_cpf || null,
@@ -88,12 +139,15 @@ function PagamentoAgregadoForm() {
 
       if (isEditing) {
         await pagamentosAPI.agregados.update(id, data);
+        toast.success('Pagamento atualizado com sucesso!');
       } else {
         await pagamentosAPI.agregados.create(data);
+        toast.success('Pagamento registrado com sucesso!');
       }
-      navigate('/pagamentos');
+      setTimeout(() => navigate('/pagamentos'), 500);
     } catch (err) {
       console.error('Erro ao salvar pagamento:', err);
+      toast.error('Erro ao salvar pagamento. Verifique os dados.');
       setError('Erro ao salvar pagamento. Verifique os dados e tente novamente.');
     } finally {
       setSaving(false);
@@ -124,6 +178,36 @@ function PagamentoAgregadoForm() {
       )}
 
       <form onSubmit={handleSubmit} className="form-container">
+        <div className="form-section">
+          <h3>Vincular CT-e (Opcional)</h3>
+          <p className="form-hint" style={{ marginBottom: '15px', color: '#666' }}>
+            Selecione um CT-e para preencher automaticamente os dados do frete
+          </p>
+
+          <div className="form-group">
+            <label>CT-e</label>
+            <select
+              name="cte"
+              value={formData.cte}
+              onChange={handleSelectCte}
+              disabled={loadingCtes}
+            >
+              <option value="">-- Selecione um CT-e (opcional) --</option>
+              {ctesDisponiveis.map(cte => (
+                <option key={cte.id} value={cte.id}>
+                  #{cte.numero_cte || cte.numero} - {cte.remetente_nome || 'N/I'} → {cte.destinatario_nome || 'N/I'} - R$ {(cte.valor_total || cte.valor_prestacao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </option>
+              ))}
+            </select>
+            {loadingCtes && <small className="form-hint">Carregando CT-es...</small>}
+            {formData.cte_numero && (
+              <small className="form-hint" style={{ color: '#27ae60' }}>
+                CT-e #{formData.cte_numero} selecionado
+              </small>
+            )}
+          </div>
+        </div>
+
         <div className="form-section">
           <h3>Dados do Condutor</h3>
 
@@ -164,6 +248,7 @@ function PagamentoAgregadoForm() {
               onChange={handleChange}
               required
               placeholder="Nome completo do motorista"
+              maxLength={120}
             />
           </div>
         </div>

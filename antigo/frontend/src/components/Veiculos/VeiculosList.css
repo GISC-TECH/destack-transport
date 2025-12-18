@@ -1,0 +1,259 @@
+.veiculos-list {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.veiculos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.veiculos-header h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 24px;
+}
+
+/* Demo Badge */
+.demo-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-left: 10px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Table Container */
+.table-container {
+  overflow-x: auto;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.veiculos-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.veiculos-table thead {
+  background-color: #34495e;
+  color: white;
+}
+
+.veiculos-table th,
+.veiculos-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.veiculos-table th {
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.veiculos-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Badges de tipo */
+.badge-tipo-00 {
+  background-color: #27ae60;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-tipo-01 {
+  background-color: #3498db;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-tipo-02 {
+  background-color: #e67e22;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-compartimentos {
+  background-color: #16a085;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Alertas */
+.alertas-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.alerta-card {
+  background-color: white;
+  border: 2px solid #f39c12;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.alerta-card h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.alerta-card p {
+  margin: 8px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.documentos-vencendo {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+}
+
+.documentos-vencendo h4 {
+  margin: 0 0 10px 0;
+  color: #34495e;
+  font-size: 16px;
+}
+
+.doc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.doc-item.vencendo {
+  background-color: #fff3cd;
+  border-left: 4px solid #f39c12;
+}
+
+.doc-item.vencido {
+  background-color: #f8d7da;
+  border-left: 4px solid #e74c3c;
+}
+
+.doc-nome {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.doc-validade {
+  color: #666;
+}
+
+.doc-dias {
+  font-weight: 600;
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+  .alertas-container {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .veiculos-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .veiculos-header > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .table-container {
+    margin: 0 -16px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .veiculos-table th,
+  .veiculos-table td {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .veiculos-table th:nth-child(4),
+  .veiculos-table td:nth-child(4),
+  .veiculos-table th:nth-child(5),
+  .veiculos-table td:nth-child(5) {
+    display: none;
+  }
+
+  .alertas-container {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .veiculos-header h2 {
+    font-size: 20px;
+  }
+
+  .veiculos-table th,
+  .veiculos-table td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .badge-tipo-00,
+  .badge-tipo-01,
+  .badge-tipo-02,
+  .badge-compartimentos {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .alerta-card {
+    padding: 16px;
+  }
+
+  .alerta-card h3 {
+    font-size: 16px;
+  }
+}

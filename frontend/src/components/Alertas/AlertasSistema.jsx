@@ -4,58 +4,6 @@ import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
 import './Alertas.css';
 
-// Mock data para alertas (usa mesmos campos do backend)
-const mockAlertas = [
-  {
-    id: 1,
-    tipo: 'vencimento',
-    mensagem: 'CNH do motorista João da Silva vence em 15 dias',
-    prioridade: 'alta',
-    data_hora: '2024-12-01T10:00:00',
-    modulo: 'motoristas'
-  },
-  {
-    id: 2,
-    tipo: 'manutencao',
-    mensagem: 'Veículo ABC-1234 atingiu 50.000 km - Revisão necessária',
-    prioridade: 'media',
-    data_hora: '2024-11-30T14:30:00',
-    modulo: 'veiculos'
-  },
-  {
-    id: 3,
-    tipo: 'pagamento',
-    mensagem: 'Pagamento do CT-e #1003 está atrasado há 5 dias',
-    prioridade: 'alta',
-    data_hora: '2024-11-28T09:15:00',
-    modulo: 'financeiro'
-  },
-  {
-    id: 4,
-    tipo: 'documento',
-    mensagem: 'Licenciamento do veículo DEF-5678 vence em 30 dias',
-    prioridade: 'media',
-    data_hora: '2024-11-27T16:45:00',
-    modulo: 'veiculos'
-  },
-  {
-    id: 5,
-    tipo: 'sistema',
-    mensagem: 'Backup automático realizado com sucesso',
-    prioridade: 'baixa',
-    data_hora: '2024-11-26T03:00:00',
-    modulo: 'backup'
-  },
-  {
-    id: 6,
-    tipo: 'vencimento',
-    mensagem: 'Seguro do veículo GHI-9012 vence em 7 dias',
-    prioridade: 'alta',
-    data_hora: '2024-11-25T11:20:00',
-    modulo: 'veiculos'
-  }
-];
-
 // Função para gerar título baseado no tipo
 const getTituloFromTipo = (tipo) => {
   const titulos = {
@@ -71,7 +19,7 @@ const getTituloFromTipo = (tipo) => {
 function AlertasSistema() {
   const [alertas, setAlertas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [usingMockData, setUsingMockData] = useState(false);
+  const [error, setError] = useState(null);
   const [filtro, setFiltro] = useState('todos');
 
   useEffect(() => {
@@ -83,11 +31,11 @@ function AlertasSistema() {
       setLoading(true);
       const result = await alertasAPI.sistema.list();
       setAlertas(result.results || result);
-      setUsingMockData(false);
+      setError(null);
     } catch (err) {
       console.error('Erro ao carregar alertas:', err);
-      setAlertas(mockAlertas);
-      setUsingMockData(true);
+      setError('Erro ao carregar alertas. Tente novamente.');
+      setAlertas([]);
     } finally {
       setLoading(false);
     }
@@ -96,12 +44,8 @@ function AlertasSistema() {
   // Como o backend não suporta "marcar como lido", usamos delete para remover alertas
   const handleRemoverAlerta = async (id) => {
     try {
-      if (usingMockData) {
-        setAlertas(alertas.filter(a => a.id !== id));
-      } else {
-        await alertasAPI.sistema.delete(id);
-        loadAlertas();
-      }
+      await alertasAPI.sistema.delete(id);
+      loadAlertas();
     } catch (err) {
       console.error('Erro ao remover alerta:', err);
     }
@@ -109,12 +53,8 @@ function AlertasSistema() {
 
   const handleLimparTodos = async () => {
     try {
-      if (usingMockData) {
-        setAlertas([]);
-      } else {
-        await alertasAPI.sistema.limparTodos();
-        loadAlertas();
-      }
+      await alertasAPI.sistema.limparTodos();
+      loadAlertas();
     } catch (err) {
       console.error('Erro ao limpar alertas:', err);
     }
@@ -208,7 +148,7 @@ function AlertasSistema() {
     <div className="alertas-page">
       <PageHeader
         title="Alertas do Sistema"
-        subtitle={usingMockData ? "Acompanhe notificações importantes (Modo Demonstração)" : "Acompanhe notificações importantes"}
+        subtitle="Acompanhe notificações importantes"
         icon={alertaIcon}
         breadcrumbs={[{ label: 'Sistema' }, { label: 'Alertas' }]}
         actions={

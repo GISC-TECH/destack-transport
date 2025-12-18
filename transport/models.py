@@ -109,7 +109,21 @@ class CTeIdentificacao(models.Model):
     retira = models.BooleanField("Retira Mercadoria", default=False)
     detalhes_retira = models.TextField("Detalhes Retira", null=True, blank=True)
     ind_ie_tomador = models.PositiveSmallIntegerField("Indicador IE Tomador", null=True, blank=True)
-    toma = models.PositiveSmallIntegerField("Tomador Serviço (0=Rem, 1=Exp, 2=Rec, 3=Dest, 4=Outros)", null=True, blank=True)
+
+    TOMA_CHOICES = [
+        (0, 'Remetente'),
+        (1, 'Expedidor'),
+        (2, 'Recebedor'),
+        (3, 'Destinatário'),
+        (4, 'Outros'),
+    ]
+    toma = models.PositiveSmallIntegerField(
+        "Tomador Serviço",
+        choices=TOMA_CHOICES,
+        null=True,
+        blank=True,
+        help_text="0=Remetente, 1=Expedidor, 2=Recebedor, 3=Destinatário, 4=Outros"
+    )
 
     # Tomador (se for '4=Outros')
     tomador_cnpj = models.CharField("CNPJ Tomador", max_length=14, null=True, blank=True)
@@ -1234,7 +1248,7 @@ class PagamentoAgregado(models.Model):
    condutor_nome = models.CharField("Nome Condutor", max_length=120) # Mantém nome para referência
    valor_frete_total = models.DecimalField("Valor Frete (Base)", max_digits=12, decimal_places=2)
    percentual_repasse = models.DecimalField("Percentual Repasse (%)", max_digits=5, decimal_places=2, default=Decimal('25.00'))
-   valor_repassado = models.DecimalField("Valor Repasse (R$)", max_digits=12, decimal_places=2, editable=False)
+   valor_repassado = models.DecimalField("Valor Repasse (R$)", max_digits=12, decimal_places=2)
    obs = models.TextField("Observações", blank=True, null=True)
    status = models.CharField("Status", max_length=10, choices=STATUS_PAGAMENTO, default='pendente', db_index=True)
    data_prevista = models.DateField("Data Prevista")
@@ -1260,16 +1274,27 @@ class PagamentoAgregado(models.Model):
 
 
 class PagamentoProprio(models.Model):
-   """Agrupa o pagamento quinzenal/mensal de condutores próprios baseado nas faixas de KM."""
+   """Pagamento de veículos próprios, podendo ser por período ou por CT-e individual."""
    STATUS_PAGAMENTO = [('pendente','Pendente'), ('pago','Pago')]
 
    veiculo = models.ForeignKey(Veiculo, on_delete=models.PROTECT, related_name='pagamentos_proprios')
    # Ex: '2025-04-1Q' (1ª Quinzena), '2025-04-2Q' (2ª Quinzena) ou '2025-04' (Mensal)
    periodo = models.CharField("Período (AAAA-MM ou AAAA-MM-XQ)", max_length=10, db_index=True)
+
+   # CT-e vinculado (obrigatório, relação 1:1)
+   cte = models.OneToOneField(
+       'CTeDocumento', on_delete=models.CASCADE,
+       related_name='pagamento_proprio', verbose_name="CT-e Vinculado"
+   )
+   cte_numero = models.CharField("Número do CT-e", max_length=20, blank=True, null=True)
+   motorista_nome = models.CharField("Nome do Condutor", max_length=255, blank=True, null=True)
+   motorista_cpf = models.CharField("CPF do Condutor", max_length=14, blank=True, null=True)
+   data_prevista = models.DateField("Data Prevista Pagamento", null=True, blank=True)
+
    km_total_periodo = models.PositiveIntegerField("KM Total no Período", default=0)
    valor_base_faixa = models.DecimalField("Valor Base (Faixa KM)", max_digits=12, decimal_places=2, null=True, blank=True)
    ajustes = models.DecimalField("Ajustes/Adicionais (R$)", max_digits=12, decimal_places=2, default=Decimal('0.00'))
-   valor_total_pagar = models.DecimalField("Valor Total a Pagar (R$)", max_digits=12, decimal_places=2, editable=False)
+   valor_total_pagar = models.DecimalField("Valor Total a Pagar (R$)", max_digits=12, decimal_places=2)
    status = models.CharField("Status", max_length=10, choices=STATUS_PAGAMENTO, default='pendente', db_index=True)
    data_pagamento = models.DateField("Data Pagamento", null=True, blank=True)
    obs = models.TextField("Observações", blank=True, null=True)
@@ -1277,10 +1302,10 @@ class PagamentoProprio(models.Model):
    atualizado_em = models.DateTimeField(auto_now=True)
 
    class Meta:
-       verbose_name = "Pagamento Próprio (Período)"
-       verbose_name_plural = "Pagamentos Próprios (Período)"
+       verbose_name = "Pagamento Próprio"
+       verbose_name_plural = "Pagamentos Próprios"
        ordering = ['-periodo', 'veiculo__placa']
-       unique_together = ('veiculo', 'periodo') # Garante um registro por veículo/período
+       # Removido unique_together para permitir múltiplos registros por veículo/período
 
    def save(self, *args, **kwargs):
        # Calcula o valor total a pagar
@@ -1288,6 +1313,8 @@ class PagamentoProprio(models.Model):
        super().save(*args, **kwargs)
 
    def __str__(self):
+       if self.cte_numero:
+           return f"Pgto Próprio {self.veiculo.placa} - CT-e {self.cte_numero}"
        return f"Pgto Próprio {self.veiculo.placa} - Período {self.periodo}"
 
 

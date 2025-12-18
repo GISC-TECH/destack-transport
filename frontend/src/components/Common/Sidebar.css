@@ -106,11 +106,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 999;
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-speed);
+  transition: opacity 0.35s ease,
+              visibility 0.35s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .sidebar-overlay.active {
@@ -132,7 +135,8 @@
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  transition: width var(--transition-speed) ease, transform var(--transition-speed) ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   border-right: 1px solid var(--sidebar-border);
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
@@ -506,10 +510,12 @@
 @media (max-width: 1024px) {
   .sidebar {
     transform: translateX(-100%);
+    box-shadow: none;
   }
 
   .sidebar.mobile-open {
     transform: translateX(0);
+    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.25);
   }
 
   .sidebar.collapsed {
@@ -556,6 +562,42 @@
   .sidebar-overlay {
     display: block;
   }
+
+  /* Animação suave dos itens do menu ao abrir */
+  .sidebar.mobile-open .menu-item {
+    animation: slideInMenu 0.3s ease forwards;
+    opacity: 0;
+  }
+
+  .sidebar.mobile-open .menu-item:nth-child(1) { animation-delay: 0.05s; }
+  .sidebar.mobile-open .menu-item:nth-child(2) { animation-delay: 0.08s; }
+  .sidebar.mobile-open .menu-item:nth-child(3) { animation-delay: 0.11s; }
+  .sidebar.mobile-open .menu-item:nth-child(4) { animation-delay: 0.14s; }
+  .sidebar.mobile-open .menu-item:nth-child(5) { animation-delay: 0.17s; }
+  .sidebar.mobile-open .menu-item:nth-child(6) { animation-delay: 0.20s; }
+  .sidebar.mobile-open .menu-item:nth-child(7) { animation-delay: 0.23s; }
+
+  @keyframes slideInMenu {
+    from {
+      opacity: 0;
+      transform: translateX(-12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Touch feedback melhorado */
+  .menu-link:active {
+    transform: scale(0.98);
+    background: var(--sidebar-hover);
+  }
+
+  .submenu li a:active {
+    transform: scale(0.98);
+    background: var(--sidebar-hover);
+  }
 }
 
 /* ========================================
@@ -569,6 +611,35 @@
 
   .sidebar {
     width: 100%;
+    max-width: 320px;
+  }
+
+  .mobile-header {
+    padding: 0 12px;
+  }
+
+  .menu-toggle {
+    padding: 10px;
+  }
+
+  .menu-link {
+    padding: 14px 16px;
+  }
+
+  .submenu li a {
+    padding: 12px 15px 12px 49px;
+  }
+
+  .sidebar-footer {
+    padding: 12px;
+  }
+
+  .user-info {
+    padding: 10px;
+  }
+
+  .logout-btn {
+    padding: 14px;
   }
 }
 

@@ -6,110 +6,11 @@ import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import './VeiculosList.css';
 
-// Mock data para exibição quando API não está disponível
-const mockVeiculos = [
-  {
-    id: 1,
-    placa: 'ABC-1234',
-    renavam: '12345678901',
-    tipo_proprietario: '00',
-    proprietario_nome: 'Transportadora Alpha LTDA',
-    capacidade_kg: 25000,
-    capacidade_m3: 45,
-    compartimentos: [
-      { numero: 1, capacidade_litros: 15000 },
-      { numero: 2, capacidade_litros: 15000 },
-      { numero: 3, capacidade_litros: 15000 }
-    ],
-    ativo: true,
-    documentos_vencendo: []
-  },
-  {
-    id: 2,
-    placa: 'DEF-5678',
-    renavam: '98765432109',
-    tipo_proprietario: '02',
-    proprietario_nome: 'João da Silva - Agregado',
-    capacidade_kg: 18000,
-    capacidade_m3: 32,
-    compartimentos: [
-      { numero: 1, capacidade_litros: 12000 },
-      { numero: 2, capacidade_litros: 12000 }
-    ],
-    ativo: true,
-    documentos_vencendo: [
-      { documento: 'CRLV', validade: '2024-12-15', vencido: false, dias_restantes: 20 }
-    ]
-  },
-  {
-    id: 3,
-    placa: 'GHI-9012',
-    renavam: '55566677788',
-    tipo_proprietario: '00',
-    proprietario_nome: 'Transportadora Alpha LTDA',
-    capacidade_kg: 30000,
-    capacidade_m3: 55,
-    compartimentos: [
-      { numero: 1, capacidade_litros: 18000 },
-      { numero: 2, capacidade_litros: 18000 },
-      { numero: 3, capacidade_litros: 18000 }
-    ],
-    ativo: true,
-    documentos_vencendo: []
-  },
-  {
-    id: 4,
-    placa: 'JKL-3456',
-    renavam: '11122233344',
-    tipo_proprietario: '01',
-    proprietario_nome: 'Locadora Beta S.A.',
-    capacidade_kg: 22000,
-    capacidade_m3: 40,
-    compartimentos: [],
-    ativo: false,
-    documentos_vencendo: []
-  },
-  {
-    id: 5,
-    placa: 'MNO-7890',
-    renavam: '77788899900',
-    tipo_proprietario: '02',
-    proprietario_nome: 'Carlos Pereira - Agregado',
-    capacidade_kg: 20000,
-    capacidade_m3: 38,
-    compartimentos: [
-      { numero: 1, capacidade_litros: 14000 },
-      { numero: 2, capacidade_litros: 14000 }
-    ],
-    ativo: true,
-    documentos_vencendo: [
-      { documento: 'Seguro', validade: '2024-12-01', vencido: false, dias_restantes: 5 }
-    ]
-  },
-  {
-    id: 6,
-    placa: 'PQR-1234',
-    renavam: '33344455566',
-    tipo_proprietario: '00',
-    proprietario_nome: 'Transportadora Alpha LTDA',
-    capacidade_kg: 28000,
-    capacidade_m3: 50,
-    compartimentos: [
-      { numero: 1, capacidade_litros: 16000 },
-      { numero: 2, capacidade_litros: 16000 },
-      { numero: 3, capacidade_litros: 16000 }
-    ],
-    ativo: true,
-    documentos_vencendo: []
-  }
-];
-
 function VeiculosList() {
   const navigate = useNavigate();
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [usingMockData, setUsingMockData] = useState(false);
   const [filtros, setFiltros] = useState({
     ativo: 'true',
     tipo_proprietario: '',
@@ -151,29 +52,11 @@ function VeiculosList() {
       } else {
         setVeiculos([]);
       }
-      setUsingMockData(false);
     } catch (err) {
       console.error('Erro ao carregar veículos:', err);
-      // Usar dados mock quando API falhar
-      let filteredMock = [...mockVeiculos];
-
-      if (filtros.ativo !== '') {
-        filteredMock = filteredMock.filter(v =>
-          filtros.ativo === 'true' ? v.ativo : !v.ativo
-        );
-      }
-      if (filtros.tipo_proprietario) {
-        filteredMock = filteredMock.filter(v => v.tipo_proprietario === filtros.tipo_proprietario);
-      }
-      if (filtros.placa) {
-        filteredMock = filteredMock.filter(v =>
-          v.placa.toLowerCase().includes(filtros.placa.toLowerCase())
-        );
-      }
-
-      setVeiculos(filteredMock);
-      setPagination({ count: filteredMock.length, next: null, previous: null });
-      setUsingMockData(true);
+      setError('Erro ao carregar veículos. Tente novamente.');
+      setVeiculos([]);
+      setPagination({ count: 0, next: null, previous: null });
     } finally {
       setLoading(false);
     }
@@ -182,24 +65,12 @@ function VeiculosList() {
   const loadVencimentos = async () => {
     try {
       setLoading(true);
-
-      if (usingMockData) {
-        const mockVencimentos = mockVeiculos.filter(v =>
-          v.documentos_vencendo && v.documentos_vencendo.length > 0
-        );
-        setVencimentos(mockVencimentos);
-        setShowAlerts(true);
-      } else {
-        const data = await veiculosAPI.vencimentos(30);
-        setVencimentos(data.results || data);
-        setShowAlerts(true);
-      }
+      const data = await veiculosAPI.vencimentos(30);
+      setVencimentos(data.results || data);
+      setShowAlerts(true);
     } catch (err) {
-      // Fallback para mock
-      const mockVencimentos = mockVeiculos.filter(v =>
-        v.documentos_vencendo && v.documentos_vencendo.length > 0
-      );
-      setVencimentos(mockVencimentos);
+      console.error('Erro ao carregar vencimentos:', err);
+      setVencimentos([]);
       setShowAlerts(true);
     } finally {
       setLoading(false);
@@ -214,10 +85,6 @@ function VeiculosList() {
   };
 
   const handleExport = async () => {
-    if (usingMockData) {
-      alert('Exportação não disponível em modo demonstração');
-      return;
-    }
     try {
       const params = Object.fromEntries(
         Object.entries(filtros).filter(([_, v]) => v !== '')
@@ -303,7 +170,7 @@ function VeiculosList() {
         </svg>
         Vencimentos
       </button>
-      <button className="btn btn-outline" onClick={handleExport} disabled={usingMockData}>
+      <button className="btn btn-outline" onClick={handleExport}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
@@ -326,7 +193,7 @@ function VeiculosList() {
     <div className="veiculos-list">
       <PageHeader
         title="Veiculos"
-        subtitle={usingMockData ? "Modo Demonstracao" : `${pagination.count} registros`}
+        subtitle={`${pagination.count} registros`}
         icon={veiculosIcon}
         breadcrumbs={[{ label: 'Cadastros' }, { label: 'Veiculos' }]}
         actions={headerActions}

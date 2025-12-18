@@ -113,7 +113,7 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date() + timedelta(days=1)
                 queryset = queryset.filter(identificacao__dh_emi__date__lt=data_fim_obj)
             except ValueError:
-                pass
+                logger.warning(f"Data fim inválida no filtro MDF-e: {data_fim}")
 
         # Filtro por emitente (CNPJ)
         emitente_cnpj = params.get('emitente_cnpj')

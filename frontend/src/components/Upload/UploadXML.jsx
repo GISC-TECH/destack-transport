@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { uploadAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import PageHeader from '../Common/PageHeader';
 import './Upload.css';
 
@@ -11,6 +12,7 @@ function UploadXML() {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -74,6 +76,16 @@ function UploadXML() {
     setResults(uploadResults);
     setUploading(false);
     setFiles([]);
+
+    const successCount = uploadResults.filter(r => r.success).length;
+    const errorCount = uploadResults.filter(r => !r.success).length;
+    if (errorCount === 0) {
+      toast.success(`${successCount} arquivo(s) processado(s) com sucesso!`);
+    } else if (successCount > 0) {
+      toast.warning(`${successCount} sucesso, ${errorCount} erro(s)`);
+    } else {
+      toast.error(`Erro ao processar ${errorCount} arquivo(s)`);
+    }
   };
 
   const handleBatchUpload = async () => {
@@ -112,6 +124,16 @@ function UploadXML() {
 
     setUploading(false);
     setFiles([]);
+
+    const hasSuccess = results.some(r => r.success);
+    const hasError = results.some(r => !r.success);
+    if (!hasError && hasSuccess) {
+      toast.success('Lote processado com sucesso!');
+    } else if (hasError && hasSuccess) {
+      toast.warning('Lote processado com alguns erros');
+    } else if (hasError) {
+      toast.error('Erro ao processar lote');
+    }
   };
 
   const uploadIcon = (

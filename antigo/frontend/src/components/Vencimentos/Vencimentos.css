@@ -1,0 +1,394 @@
+.vencimentos-page {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: transparent;
+  min-height: auto;
+}
+
+.vencimentos-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.vencimentos-page .header-title h1 {
+  color: #1e293b;
+  font-size: 24px;
+  margin: 0 0 5px 0;
+}
+
+.vencimentos-page .header-title p {
+  color: #64748b;
+  margin: 0;
+}
+
+.vencimentos-page .header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Summary Cards */
+.vencimentos-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.vencimentos-summary .summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.vencimentos-summary .summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.vencimentos-summary .summary-card.alerta {
+  border-left: 4px solid #e74c3c;
+  background: #fef9f9;
+}
+
+.vencimentos-summary .summary-card.warning {
+  border-left: 4px solid #f39c12;
+  background: #fffcf5;
+}
+
+.vencimentos-summary .summary-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.vencimentos-summary .summary-icon.vencidos {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+}
+
+.vencimentos-summary .summary-icon.urgentes {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+}
+
+.vencimentos-summary .summary-icon.motoristas {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.vencimentos-summary .summary-icon.veiculos {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  color: white;
+}
+
+.vencimentos-summary .summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vencimentos-summary .summary-number {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.vencimentos-summary .summary-label {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Tabs */
+.vencimentos-page .tabs-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.vencimentos-page .tab-button {
+  padding: 10px 18px;
+  border: none;
+  background: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #7f8c8d;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.vencimentos-page .tab-button:hover {
+  background: #f8f9fa;
+  color: #2c3e50;
+}
+
+.vencimentos-page .tab-button.active {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.vencimentos-page .tab-button.danger.active {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+/* Vencimentos Grid */
+.vencimentos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.vencimento-card {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-left: 4px solid #95a5a6;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.vencimento-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.vencimento-card.vencido {
+  border-left-color: #e74c3c;
+  background: #fef9f9;
+}
+
+.vencimento-card.urgente {
+  border-left-color: #f39c12;
+  background: #fffcf5;
+}
+
+.vencimento-card.atencao {
+  border-left-color: #3498db;
+}
+
+.vencimento-card.normal {
+  border-left-color: #27ae60;
+}
+
+.vencimento-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.vencimento-tipo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #7f8c8d;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-badge.vencido {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.status-badge.urgente {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.status-badge.atencao {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-badge.normal {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.vencimento-content {
+  margin-bottom: 14px;
+}
+
+.vencimento-content h3 {
+  margin: 0 0 5px 0;
+  color: #1e293b;
+  font-size: 16px;
+}
+
+.vencimento-content .detalhe {
+  margin: 0 0 12px 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.documento-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.doc-nome {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.doc-validade {
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+.vencimento-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Empty State */
+.vencimentos-page .empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.vencimentos-page .empty-state.success {
+  border-top: 4px solid #27ae60;
+}
+
+.vencimentos-page .empty-state svg {
+  color: #27ae60;
+  margin-bottom: 18px;
+}
+
+.vencimentos-page .empty-state h3 {
+  margin: 0 0 10px 0;
+  color: #1e293b;
+  font-size: 18px;
+}
+
+.vencimentos-page .empty-state p {
+  margin: 0;
+  color: #64748b;
+}
+
+/* Responsivo */
+@media (max-width: 1200px) {
+  .vencimentos-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .vencimentos-page {
+    max-width: 100%;
+  }
+
+  .vencimentos-summary {
+    gap: 16px;
+  }
+
+  .vencimentos-summary .summary-card {
+    padding: 16px;
+  }
+
+  .vencimentos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .vencimento-card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .vencimentos-page .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .vencimentos-summary {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .vencimentos-summary .summary-card {
+    padding: 14px;
+  }
+
+  .vencimentos-summary .summary-number {
+    font-size: 20px;
+  }
+
+  .vencimentos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vencimentos-page .tabs-container {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 10px;
+  }
+
+  .vencimentos-page .tab-button {
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .vencimentos-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .vencimentos-summary .summary-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .vencimento-card {
+    padding: 14px;
+  }
+
+  .vencimento-content h3 {
+    font-size: 15px;
+  }
+
+  .documento-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

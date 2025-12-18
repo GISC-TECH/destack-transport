@@ -712,3 +712,205 @@
     padding: 2px 6px;
   }
 }
+
+/* ========================================
+   MOBILE IMPROVEMENTS
+   ======================================== */
+
+/* Graficos no mobile - altura menor */
+@media (max-width: 768px) {
+  .chart-card .recharts-wrapper,
+  .chart-card .recharts-surface {
+    max-height: 220px !important;
+  }
+
+  .charts-grid {
+    gap: 12px;
+  }
+
+  /* Ajuste para graficos de pizza no mobile */
+  .chart-card-small .recharts-wrapper {
+    max-height: 200px !important;
+  }
+}
+
+/* Alerts Summary Card - melhorias mobile */
+.alerts-summary-card {
+  min-height: auto;
+}
+
+.alerts-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.alert-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.alert-summary-item:hover {
+  background: #f0f0f0;
+}
+
+.alert-summary-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.alert-summary-icon.warning {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+}
+
+.alert-summary-icon.danger {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+}
+
+.alert-summary-icon.info {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.alert-summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alert-summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1;
+}
+
+.alert-summary-label {
+  font-size: 11px;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 768px) {
+  .alerts-summary {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .alert-summary-item {
+    padding: 10px;
+  }
+
+  .alert-summary-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .alert-summary-value {
+    font-size: 18px;
+  }
+
+  .alert-summary-label {
+    font-size: 10px;
+  }
+}
+
+/* Empty chart state */
+.empty-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #7f8c8d;
+  font-size: 14px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .empty-chart {
+    height: 150px;
+    font-size: 13px;
+  }
+}
+
+/* Bottom section mobile - cards em coluna */
+@media (max-width: 768px) {
+  .bottom-section {
+    gap: 12px;
+  }
+
+  .quick-actions-card,
+  .recent-docs-card {
+    border-radius: 12px;
+  }
+
+  .quick-actions-card h3,
+  .recent-docs-card h3 {
+    font-size: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 12px;
+  }
+}
+
+/* Touch feedback melhorado */
+@media (max-width: 768px) {
+  .kpi-card:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .quick-action-btn:active {
+    transform: scale(0.98);
+  }
+
+  .recent-doc-item {
+    border-radius: 8px;
+    padding: 12px;
+    margin: 0 -12px;
+    width: calc(100% + 24px);
+  }
+
+  .recent-doc-item:active {
+    background: #f8f9fa;
+  }
+}
+
+/* Doc placa e data (MDF-e) */
+.doc-placa {
+  font-weight: 600;
+  color: #9b59b6;
+  font-size: 13px;
+}
+
+.doc-data {
+  font-size: 11px;
+  color: #7f8c8d;
+}
+
+@media (max-width: 480px) {
+  .doc-placa {
+    font-size: 12px;
+  }
+
+  .doc-data {
+    font-size: 10px;
+  }
+}

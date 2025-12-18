@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { veiculosAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
@@ -9,6 +10,7 @@ import './VeiculoForm.css';
 function VeiculoForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const toast = useToast();
   const isEdit = !!id;
 
   const [loading, setLoading] = useState(false);
@@ -70,7 +72,7 @@ function VeiculoForm() {
       ...prev,
       compartimentos: [
         ...prev.compartimentos,
-        { numero: novoNumero, capacidade_litros: '' }
+        { numero_boca: novoNumero, capacidade_m3: '' }
       ]
     }));
   };
@@ -80,7 +82,7 @@ function VeiculoForm() {
       ...prev,
       compartimentos: prev.compartimentos
         .filter((_, i) => i !== index)
-        .map((c, i) => ({ ...c, numero: i + 1 }))
+        .map((c, i) => ({ ...c, numero_boca: i + 1 }))
     }));
   };
 
@@ -106,20 +108,23 @@ function VeiculoForm() {
         capacidade_kg: formData.capacidade_kg ? parseFloat(formData.capacidade_kg) : null,
         capacidade_m3: formData.capacidade_m3 ? parseFloat(formData.capacidade_m3) : null,
         compartimentos: formData.compartimentos.map(c => ({
-          ...c,
-          capacidade_litros: c.capacidade_litros ? parseFloat(c.capacidade_litros) : 0
+          numero_boca: c.numero_boca,
+          capacidade_m3: c.capacidade_m3 ? parseFloat(c.capacidade_m3) : 0
         }))
       };
 
       if (isEdit) {
         await veiculosAPI.update(id, dataToSend);
+        toast.success('Veiculo atualizado com sucesso!');
       } else {
         await veiculosAPI.create(dataToSend);
+        toast.success('Veiculo cadastrado com sucesso!');
       }
 
-      navigate('/veiculos');
+      setTimeout(() => navigate('/veiculos'), 500);
     } catch (err) {
       setError(err.message);
+      toast.error('Erro ao salvar veiculo. Verifique os dados.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
@@ -153,13 +158,13 @@ function VeiculoForm() {
                 id="placa"
                 name="placa"
                 value={formData.placa}
-                onChange={(e) => handleChange({
-                  ...e,
-                  target: { ...e.target, value: e.target.value.toUpperCase() }
-                })}
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase();
+                  setFormData(prev => ({ ...prev, placa: value }));
+                }}
                 required
-                maxLength={7}
-                placeholder="ABC1234"
+                maxLength={8}
+                placeholder="ABC1234 ou ABC-1234"
               />
             </div>
 
@@ -171,7 +176,7 @@ function VeiculoForm() {
                 name="renavam"
                 value={formData.renavam}
                 onChange={handleChange}
-                maxLength={20}
+                maxLength={11}
               />
             </div>
           </div>
@@ -274,7 +279,7 @@ function VeiculoForm() {
                 name="proprietario_nome"
                 value={formData.proprietario_nome}
                 onChange={handleChange}
-                maxLength={255}
+                maxLength={60}
               />
             </div>
           </div>
@@ -288,7 +293,8 @@ function VeiculoForm() {
                 name="rntrc_proprietario"
                 value={formData.rntrc_proprietario}
                 onChange={handleChange}
-                maxLength={20}
+                maxLength={8}
+                placeholder="00000000"
               />
             </div>
 
@@ -299,10 +305,10 @@ function VeiculoForm() {
                 id="uf_proprietario"
                 name="uf_proprietario"
                 value={formData.uf_proprietario}
-                onChange={(e) => handleChange({
-                  ...e,
-                  target: { ...e.target, value: e.target.value.toUpperCase() }
-                })}
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase();
+                  setFormData(prev => ({ ...prev, uf_proprietario: value }));
+                }}
                 maxLength={2}
                 placeholder="SP"
               />
@@ -387,17 +393,17 @@ function VeiculoForm() {
                 <div key={index} className="compartimento-item">
                   <div className="compartimento-numero">
                     <span className="numero-label">Boca</span>
-                    <span className="numero-value">{comp.numero}</span>
+                    <span className="numero-value">{comp.numero_boca}</span>
                   </div>
                   <div className="form-group">
-                    <label>Capacidade (litros)</label>
+                    <label>Capacidade (m³)</label>
                     <input
                       type="number"
-                      value={comp.capacidade_litros}
-                      onChange={(e) => handleCompartimentoChange(index, 'capacidade_litros', e.target.value)}
-                      placeholder="Ex: 15000"
+                      value={comp.capacidade_m3}
+                      onChange={(e) => handleCompartimentoChange(index, 'capacidade_m3', e.target.value)}
+                      placeholder="Ex: 15.50"
                       min="0"
-                      step="1"
+                      step="0.01"
                     />
                   </div>
                   <button
@@ -431,7 +437,7 @@ function VeiculoForm() {
           {formData.compartimentos.length > 0 && (
             <div className="compartimentos-resumo">
               <strong>Total:</strong> {formData.compartimentos.length} compartimento{formData.compartimentos.length !== 1 ? 's' : ''} |
-              <strong> Capacidade Total:</strong> {formData.compartimentos.reduce((acc, c) => acc + (parseFloat(c.capacidade_litros) || 0), 0).toLocaleString()} litros
+              <strong> Capacidade Total:</strong> {formData.compartimentos.reduce((acc, c) => acc + (parseFloat(c.capacidade_m3) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³
             </div>
           )}
         </fieldset>

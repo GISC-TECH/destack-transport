@@ -4,7 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Destack Transportes - Redirecionando...</title>
-    <meta http-equiv="refresh" content="0;url=http://localhost:8002/">
+    <script>
+        // Detecta o ambiente automaticamente
+        var frontendUrl;
+        var host = window.location.hostname;
+        var protocol = window.location.protocol;
+
+        if (host === 'localhost' || host === '127.0.0.1') {
+            // Desenvolvimento local - frontend na porta 8002
+            frontendUrl = 'http://localhost:8002/';
+        } else if (host === 'destacktransporte.site' || host === 'www.destacktransporte.site') {
+            // Producao - mesmo dominio (nginx serve frontend e API)
+            frontendUrl = protocol + '//' + host + '/';
+        } else {
+            // Outros ambientes (IP direto, outros dominios)
+            frontendUrl = protocol + '//' + host + ':8002/';
+        }
+
+        // Redireciona apenas se estamos na pagina raiz do backend
+        if (window.location.pathname === '/' || window.location.pathname === '') {
+            window.location.href = frontendUrl;
+        }
+    </script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -39,7 +60,7 @@
     <div class="container">
         <h1>Destack Transportes</h1>
         <p>Redirecionando para o sistema...</p>
-        <p>Se nao for redirecionado automaticamente, <a href="http://localhost:8002/">clique aqui</a>.</p>
+        <p>Se nao for redirecionado automaticamente, <a href="#" onclick="window.location.href=frontendUrl; return false;">clique aqui</a>.</p>
     </div>
 </body>
 </html>

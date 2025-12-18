@@ -457,6 +457,7 @@ function MDFeList() {
       </div>
 
       <div className="table-container">
+        {/* Desktop Table */}
         <table className="data-table">
           <thead>
             <tr>
@@ -549,6 +550,79 @@ function MDFeList() {
             )}
           </tbody>
         </table>
+
+        {/* Mobile Cards */}
+        <div className="mobile-cards">
+          {mdfes.length === 0 ? (
+            <div className="mobile-empty">
+              <div className="mobile-empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              </div>
+              <p className="mobile-empty-text">Nenhum MDF-e encontrado</p>
+            </div>
+          ) : (
+            mdfes.map((mdfe) => (
+              <div key={mdfe.id} className="mobile-card">
+                <div className="mobile-card-header">
+                  <div className="mobile-card-title">
+                    <span className="mobile-card-number">MDF-e #{mdfe.numero_mdfe || '-'}</span>
+                    <span className="mobile-card-date">{mdfe.data_emissao || '-'}</span>
+                  </div>
+                  <div className="mobile-card-status">
+                    <span className={`badge badge-${mdfe.status === 'Autorizado' ? 'success' : mdfe.status === 'Encerrado' ? 'info' : mdfe.status === 'Cancelado' ? 'danger' : mdfe.status?.includes('Rejeitado') ? 'warning' : 'secondary'}`}>
+                      {mdfe.status || 'Pendente'}
+                    </span>
+                  </div>
+                </div>
+                <div className="mobile-card-body">
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Rota</span>
+                    <span className="mobile-card-value">
+                      <span className="badge badge-secondary" style={{ marginRight: '6px' }}>{mdfe.uf_inicio || '-'}</span>
+                      <span style={{ color: '#7f8c8d' }}>→</span>
+                      <span className="badge badge-secondary" style={{ marginLeft: '6px' }}>{mdfe.uf_fim || '-'}</span>
+                    </span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Veiculo</span>
+                    <span className="mobile-card-value" style={{ fontWeight: 700 }}>{mdfe.placa_tracao || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">CT-es</span>
+                    <span className="badge badge-info">{mdfe.documentos_count || 0}</span>
+                  </div>
+                </div>
+                <div className="mobile-card-footer">
+                  <div></div>
+                  <div className="mobile-card-actions">
+                    <button
+                      className="btn-action btn-view"
+                      onClick={() => handleOpenModal(mdfe)}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                    <button
+                      className="btn-action btn-download"
+                      onClick={() => handleDownloadXML(mdfe.id, mdfe.numero_mdfe)}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {pagination.total > 0 && (

@@ -1,0 +1,262 @@
+/* ========================================
+   LOADING COMPONENT - Modern Design
+   ======================================== */
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  min-height: 300px;
+}
+
+.loading-fullscreen {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  min-height: 100vh;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Spinner Container */
+.loading-spinner {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+/* Spinner Rings */
+.spinner-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid transparent;
+}
+
+.spinner-ring:nth-child(1) {
+  border-top-color: #3498db;
+  animation: spin 1.2s ease-in-out infinite;
+}
+
+.spinner-ring:nth-child(2) {
+  border-right-color: #2ecc71;
+  animation: spin 1.2s ease-in-out infinite 0.15s;
+  width: 70%;
+  height: 70%;
+  top: 15%;
+  left: 15%;
+}
+
+.spinner-ring:nth-child(3) {
+  border-bottom-color: #f39c12;
+  animation: spin 1.2s ease-in-out infinite 0.3s reverse;
+  width: 50%;
+  height: 50%;
+  top: 25%;
+  left: 25%;
+}
+
+/* Center Icon */
+.spinner-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.spinner-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: #3498db;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+/* Loading Message */
+.loading-message {
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+  text-align: center;
+}
+
+/* Animated Dots */
+.loading-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.loading-dots span {
+  width: 8px;
+  height: 8px;
+  background: #3498db;
+  border-radius: 50%;
+  animation: bounce 1.4s ease-in-out infinite both;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Size Variants */
+.loading-small .loading-spinner {
+  width: 50px;
+  height: 50px;
+}
+
+.loading-small .spinner-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.loading-small .loading-message {
+  font-size: 14px;
+}
+
+.loading-small .loading-dots span {
+  width: 6px;
+  height: 6px;
+}
+
+.loading-large .loading-spinner {
+  width: 100px;
+  height: 100px;
+}
+
+.loading-large .spinner-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.loading-large .loading-message {
+  font-size: 18px;
+}
+
+.loading-large .loading-dots span {
+  width: 10px;
+  height: 10px;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .loading-container {
+    padding: 50px 18px;
+    min-height: 250px;
+  }
+
+  .loading-spinner {
+    width: 70px;
+    height: 70px;
+  }
+
+  .spinner-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .loading-message {
+    font-size: 15px;
+  }
+
+  .loading-dots span {
+    width: 7px;
+    height: 7px;
+  }
+
+  .loading-large .loading-spinner {
+    width: 90px;
+    height: 90px;
+  }
+
+  .loading-large .spinner-icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-container {
+    padding: 40px 16px;
+    min-height: 200px;
+  }
+
+  .loading-spinner {
+    width: 60px;
+    height: 60px;
+  }
+
+  .spinner-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .loading-message {
+    font-size: 14px;
+  }
+
+  .loading-dots span {
+    width: 6px;
+    height: 6px;
+  }
+
+  .loading-large .loading-spinner {
+    width: 80px;
+    height: 80px;
+  }
+
+  .loading-large .spinner-icon {
+    width: 28px;
+    height: 28px;
+  }
+}

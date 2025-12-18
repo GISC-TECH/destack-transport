@@ -315,7 +315,7 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser", # For file uploads
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5,
+    'PAGE_SIZE': 50,  # Aumentado para mostrar mais itens por página
 
 
     # (Optional) Throttling for API rate limiting
@@ -488,15 +488,15 @@ DATA_UPLOAD_MAX_NUMBER_FILES = 9000 # Aumentar conforme necessidade
 # =============================================================================
 
 # Configurações de Sessão para evitar problemas de cache
-SESSION_COOKIE_AGE = 3600  # 1 hora (em segundos)
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Sessão expira ao fechar navegador
+SESSION_COOKIE_AGE = 3600 * 8  # 8 horas (em segundos)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Não expira ao fechar navegador para melhor UX
 SESSION_SAVE_EVERY_REQUEST = True  # Salva sessão a cada request (renova tempo)
 SESSION_COOKIE_NAME = 'cte_mdfe_sessionid'  # Nome único para o cookie de sessão
 SESSION_COOKIE_HTTPONLY = True  # Previne acesso via JavaScript
 SESSION_COOKIE_SAMESITE = 'Lax'  # Proteção CSRF
 
 # Configurações CSRF para evitar problemas de cache
-CSRF_COOKIE_AGE = 3600  # 1 hora (em segundos)
+CSRF_COOKIE_AGE = 3600 * 8  # 8 horas (deve ser >= SESSION_COOKIE_AGE)
 CSRF_COOKIE_NAME = 'cte_mdfe_csrftoken'  # Nome único para o cookie CSRF
 CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'  # View padrão para falha CSRF
 

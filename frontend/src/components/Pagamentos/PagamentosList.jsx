@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pagamentosAPI } from '../../services/api';
 import Loading from '../Common/Loading';
@@ -7,112 +7,34 @@ import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
 import './Pagamentos.css';
 
-// Mock data para pagamentos de agregados (usando nomes de campos do backend)
-const mockPagamentosAgregados = [
-  {
-    id: 1,
-    cte_numero: 1001,
-    condutor_nome: 'João da Silva',
-    placa: 'DEF-5678',
-    data_prevista: '2024-12-05',
-    valor_repassado: 1850.00,
-    status: 'pendente'
-  },
-  {
-    id: 2,
-    cte_numero: 1002,
-    condutor_nome: 'Carlos Pereira',
-    placa: 'MNO-7890',
-    data_prevista: '2024-12-03',
-    valor_repassado: 2200.00,
-    status: 'pago'
-  },
-  {
-    id: 3,
-    cte_numero: 1003,
-    condutor_nome: 'João da Silva',
-    placa: 'DEF-5678',
-    data_prevista: '2024-11-28',
-    valor_repassado: 1650.00,
-    status: 'atrasado'
-  },
-  {
-    id: 4,
-    cte_numero: 1004,
-    condutor_nome: 'Pedro Santos',
-    placa: 'STU-3456',
-    data_prevista: '2024-12-10',
-    valor_repassado: 3100.00,
-    status: 'pendente'
-  },
-  {
-    id: 5,
-    cte_numero: 1005,
-    condutor_nome: 'Carlos Pereira',
-    placa: 'MNO-7890',
-    data_prevista: '2024-11-25',
-    valor_repassado: 1900.00,
-    status: 'pago'
-  }
-];
-
-// Mock data para pagamentos próprios (usando nomes de campos do backend)
-const mockPagamentosProprios = [
-  {
-    id: 101,
-    periodo: 'Novembro/2024',
-    veiculo_placa: 'ABC-1234',
-    km_total_periodo: 5200,
-    valor_total_pagar: 8500.00,
-    status: 'pago'
-  },
-  {
-    id: 102,
-    periodo: 'Novembro/2024',
-    veiculo_placa: 'GHI-9012',
-    km_total_periodo: 6100,
-    valor_total_pagar: 9200.00,
-    status: 'pago'
-  },
-  {
-    id: 103,
-    periodo: 'Novembro/2024',
-    veiculo_placa: 'PQR-1234',
-    km_total_periodo: 2300,
-    valor_total_pagar: 3500.00,
-    status: 'pendente'
-  },
-  {
-    id: 104,
-    periodo: 'Dezembro/2024',
-    veiculo_placa: 'ABC-1234',
-    km_total_periodo: 4800,
-    valor_total_pagar: 7800.00,
-    status: 'pendente'
-  },
-  {
-    id: 105,
-    periodo: 'Dezembro/2024',
-    veiculo_placa: 'GHI-9012',
-    km_total_periodo: 2800,
-    valor_total_pagar: 4200.00,
-    status: 'pendente'
-  }
-];
-
 function PagamentosList() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('agregados');
   const [pagamentos, setPagamentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [usingMockData, setUsingMockData] = useState(false);
   const [showGerarLote, setShowGerarLote] = useState(false);
   const [gerandoLote, setGerandoLote] = useState(false);
   const [loteConfig, setLoteConfig] = useState({
     data_inicio: '',
     data_fim: '',
     tipo: 'agregados'
+  });
+  // Modal de baixa rápida
+  const [modalBaixa, setModalBaixa] = useState({ show: false, id: null, info: '' });
+  const [dataBaixa, setDataBaixa] = useState(new Date().toISOString().split('T')[0]);
+  const [processandoBaixa, setProcessandoBaixa] = useState(false);
+
+  // Modal de conversão entre agregado e próprio
+  const [modalConverter, setModalConverter] = useState({ show: false, id: null, tipo: '', info: '' });
+  const [convertendoPagamento, setConvertendoPagamento] = useState(false);
+  const [dadosConversao, setDadosConversao] = useState({
+    periodo: '',
+    condutor_nome: '',
+    condutor_cpf: '',
+    cte_id: '',
+    percentual_repasse: '25',
+    data_prevista: new Date().toISOString().split('T')[0]
   });
   // Função para calcular datas do mês atual
   const getDefaultPagDates = () => {
@@ -132,15 +54,18 @@ function PagamentosList() {
     data_fim: defaultDates.data_fim
   });
 
-  const handleDateFilterChange = useCallback((newFiltros) => {
-    const newState = {
-      ...filtros,
-      data_inicio: newFiltros.data_inicio,
-      data_fim: newFiltros.data_fim
-    };
-    setFiltros(newState);
-    loadPagamentos(newState);
-  }, [filtros]);
+  const handleDateFilterChange = (newFiltros) => {
+    setFiltros(prev => {
+      const newState = {
+        ...prev,
+        data_inicio: newFiltros.data_inicio,
+        data_fim: newFiltros.data_fim
+      };
+      // Carrega pagamentos com o novo estado
+      loadPagamentos(newState);
+      return newState;
+    });
+  };
 
   // Carrega na montagem inicial
   useEffect(() => {
@@ -169,19 +94,10 @@ function PagamentosList() {
         result = await pagamentosAPI.proprios.list(params);
       }
       setPagamentos(result.results || result);
-      setUsingMockData(false);
     } catch (err) {
       console.error('Erro ao carregar pagamentos:', err);
-      // Usar mock data
-      const mockData = activeTab === 'agregados' ? mockPagamentosAgregados : mockPagamentosProprios;
-      let filteredMock = [...mockData];
-
-      if (filtros.status) {
-        filteredMock = filteredMock.filter(p => p.status === filtros.status);
-      }
-
-      setPagamentos(filteredMock);
-      setUsingMockData(true);
+      setError('Erro ao carregar pagamentos. Tente novamente.');
+      setPagamentos([]);
     } finally {
       setLoading(false);
     }
@@ -193,10 +109,6 @@ function PagamentosList() {
   };
 
   const handleExport = async () => {
-    if (usingMockData) {
-      alert('Exportação não disponível em modo demonstração');
-      return;
-    }
     try {
       const params = { ...filtros };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
@@ -213,13 +125,6 @@ function PagamentosList() {
   const handleGerarLote = async () => {
     if (!loteConfig.data_inicio || !loteConfig.data_fim) {
       alert('Por favor, selecione o período para geração');
-      return;
-    }
-
-    if (usingMockData) {
-      // Simular geração em modo demo
-      alert(`Modo Demonstração: Seriam gerados pagamentos de ${loteConfig.tipo} para o período de ${loteConfig.data_inicio} a ${loteConfig.data_fim}`);
-      setShowGerarLote(false);
       return;
     }
 
@@ -313,12 +218,111 @@ function PagamentosList() {
     }
   };
 
+  // Abre modal de baixa rápida
+  const handleAbrirBaixa = (pagamento) => {
+    // Usa os mesmos campos para ambos (compatibilidade via serializer)
+    const condutor = pagamento.condutor_nome || pagamento.motorista_nome || '';
+    const placa = pagamento.placa || pagamento.veiculo_placa || '';
+    const info = `CT-e #${pagamento.cte_numero || '-'} - ${condutor || placa}`;
+    setDataBaixa(new Date().toISOString().split('T')[0]);
+    setModalBaixa({ show: true, id: pagamento.id, info });
+  };
+
+  // Confirma a baixa com data selecionada
+  const handleConfirmarBaixa = async () => {
+    setProcessandoBaixa(true);
+    try {
+      const data = {
+        status: 'pago',
+        data_pagamento: dataBaixa
+      };
+      if (activeTab === 'agregados') {
+        await pagamentosAPI.agregados.update(modalBaixa.id, data);
+      } else {
+        await pagamentosAPI.proprios.update(modalBaixa.id, data);
+      }
+      setModalBaixa({ show: false, id: null, info: '' });
+      loadPagamentos(); // Recarrega a lista
+    } catch (err) {
+      console.error('Erro ao baixar pagamento:', err);
+      alert('Erro ao baixar pagamento. Tente novamente.');
+    } finally {
+      setProcessandoBaixa(false);
+    }
+  };
+
+  // Abre modal de conversão
+  const handleAbrirConverter = (pagamento) => {
+    const tipo = activeTab === 'agregados' ? 'agregado_para_proprio' : 'proprio_para_agregado';
+    // Usa os mesmos campos para ambos (compatibilidade via serializer)
+    const condutor = pagamento.condutor_nome || pagamento.motorista_nome || '';
+    const placa = pagamento.placa || pagamento.veiculo_placa || '';
+    const valor = pagamento.valor_repassado || pagamento.valor_base_faixa || pagamento.valor_total_pagar;
+    const info = `CT-e #${pagamento.cte_numero || '-'} - ${condutor || placa} - ${formatCurrency(valor)}`;
+
+    // Define período padrão baseado na data atual
+    const hoje = new Date();
+    const periodoDefault = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+
+    setDadosConversao({
+      periodo: periodoDefault,
+      condutor_nome: pagamento.condutor_nome || '',
+      condutor_cpf: pagamento.condutor_cpf || '',
+      cte_id: '',
+      percentual_repasse: '25',
+      data_prevista: new Date().toISOString().split('T')[0]
+    });
+    setModalConverter({ show: true, id: pagamento.id, tipo, info });
+  };
+
+  // Confirma a conversão
+  const handleConfirmarConversao = async () => {
+    setConvertendoPagamento(true);
+    try {
+      if (modalConverter.tipo === 'agregado_para_proprio') {
+        // Converter de agregado para próprio
+        await pagamentosAPI.agregados.converterParaProprio(modalConverter.id, {
+          periodo: dadosConversao.periodo
+        });
+        alert('Pagamento convertido para Próprio com sucesso!');
+        setActiveTab('proprios'); // Muda para a tab de próprios
+      } else {
+        // Converter de próprio para agregado
+        if (!dadosConversao.condutor_nome) {
+          alert('Nome do condutor é obrigatório.');
+          setConvertendoPagamento(false);
+          return;
+        }
+        if (!dadosConversao.cte_id) {
+          alert('ID do CT-e é obrigatório para converter para Agregado.');
+          setConvertendoPagamento(false);
+          return;
+        }
+        await pagamentosAPI.proprios.converterParaAgregado(modalConverter.id, {
+          condutor_nome: dadosConversao.condutor_nome,
+          condutor_cpf: dadosConversao.condutor_cpf,
+          cte_id: dadosConversao.cte_id,
+          percentual_repasse: dadosConversao.percentual_repasse,
+          data_prevista: dadosConversao.data_prevista
+        });
+        alert('Pagamento convertido para Agregado com sucesso!');
+        setActiveTab('agregados'); // Muda para a tab de agregados
+      }
+      setModalConverter({ show: false, id: null, tipo: '', info: '' });
+      loadPagamentos();
+    } catch (err) {
+      console.error('Erro ao converter pagamento:', err);
+      alert('Erro ao converter: ' + err.message);
+    } finally {
+      setConvertendoPagamento(false);
+    }
+  };
+
   const headerActions = (
     <div className="header-buttons">
       <button
         className="btn btn-outline"
         onClick={handleExport}
-        disabled={usingMockData}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -358,7 +362,7 @@ function PagamentosList() {
     <div className="pagamentos-page">
       <PageHeader
         title="Pagamentos"
-        subtitle={usingMockData ? "Modo Demonstracao" : "Gerencie pagamentos de agregados e proprios"}
+        subtitle="Gerencie pagamentos de agregados e proprios"
         icon={pagamentosIcon}
         breadcrumbs={[{ label: 'Financeiro' }, { label: 'Pagamentos' }]}
         actions={headerActions}
@@ -415,12 +419,7 @@ function PagamentosList() {
                 </div>
               </div>
 
-              {usingMockData && (
-                <div className="alert-warning">
-                  Modo Demonstração: A geração será simulada
-                </div>
-              )}
-            </div>
+              </div>
             <div className="modal-footer">
               <button
                 className="btn-cancel"
@@ -435,6 +434,184 @@ function PagamentosList() {
                 disabled={gerandoLote}
               >
                 {gerandoLote ? 'Gerando...' : 'Gerar Pagamentos'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Baixa Rápida */}
+      {modalBaixa.show && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3>Baixar Pagamento</h3>
+              <button className="modal-close" onClick={() => setModalBaixa({ show: false, id: null, info: '' })}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-description">
+                Confirmar baixa do pagamento:
+              </p>
+              <p style={{ fontWeight: '600', marginBottom: '1rem', color: '#333' }}>
+                {modalBaixa.info}
+              </p>
+
+              <div className="form-group">
+                <label>Data do Pagamento</label>
+                <input
+                  type="date"
+                  value={dataBaixa}
+                  onChange={(e) => setDataBaixa(e.target.value)}
+                  className="input-filter"
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-cancel"
+                onClick={() => setModalBaixa({ show: false, id: null, info: '' })}
+                disabled={processandoBaixa}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleConfirmarBaixa}
+                disabled={processandoBaixa || !dataBaixa}
+              >
+                {processandoBaixa ? 'Processando...' : 'Confirmar Baixa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Conversão */}
+      {modalConverter.show && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px' }}>
+            <div className="modal-header">
+              <h3>
+                {modalConverter.tipo === 'agregado_para_proprio'
+                  ? 'Converter para Próprio'
+                  : 'Converter para Agregado'}
+              </h3>
+              <button className="modal-close" onClick={() => setModalConverter({ show: false, id: null, tipo: '', info: '' })}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-description">
+                {modalConverter.tipo === 'agregado_para_proprio'
+                  ? 'Converter este pagamento de Agregado para Próprio. O registro será movido para a lista de pagamentos próprios.'
+                  : 'Converter este pagamento de Próprio para Agregado. É necessário informar um CT-e para associar.'}
+              </p>
+              <p style={{ fontWeight: '600', marginBottom: '1rem', color: '#333', fontSize: '0.9rem' }}>
+                {modalConverter.info}
+              </p>
+
+              {modalConverter.tipo === 'agregado_para_proprio' ? (
+                <div className="form-group">
+                  <label>Período (AAAA-MM)</label>
+                  <input
+                    type="text"
+                    value={dadosConversao.periodo}
+                    onChange={(e) => setDadosConversao({...dadosConversao, periodo: e.target.value})}
+                    className="input-filter"
+                    placeholder="2025-01"
+                    style={{ width: '100%' }}
+                  />
+                  <small style={{ color: '#666', fontSize: '0.8rem' }}>
+                    Período para agrupar no pagamento próprio
+                  </small>
+                </div>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label>ID do CT-e *</label>
+                    <input
+                      type="text"
+                      value={dadosConversao.cte_id}
+                      onChange={(e) => setDadosConversao({...dadosConversao, cte_id: e.target.value})}
+                      className="input-filter"
+                      placeholder="ID do CT-e (obrigatório)"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Nome do Condutor *</label>
+                      <input
+                        type="text"
+                        value={dadosConversao.condutor_nome}
+                        onChange={(e) => setDadosConversao({...dadosConversao, condutor_nome: e.target.value})}
+                        className="input-filter"
+                        placeholder="Nome do condutor"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>CPF do Condutor</label>
+                      <input
+                        type="text"
+                        value={dadosConversao.condutor_cpf}
+                        onChange={(e) => setDadosConversao({...dadosConversao, condutor_cpf: e.target.value})}
+                        className="input-filter"
+                        placeholder="Apenas números"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Percentual Repasse (%)</label>
+                      <input
+                        type="number"
+                        value={dadosConversao.percentual_repasse}
+                        onChange={(e) => setDadosConversao({...dadosConversao, percentual_repasse: e.target.value})}
+                        className="input-filter"
+                        min="0"
+                        max="100"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Data Prevista</label>
+                      <input
+                        type="date"
+                        value={dadosConversao.data_prevista}
+                        onChange={(e) => setDadosConversao({...dadosConversao, data_prevista: e.target.value})}
+                        className="input-filter"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-cancel"
+                onClick={() => setModalConverter({ show: false, id: null, tipo: '', info: '' })}
+                disabled={convertendoPagamento}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleConfirmarConversao}
+                disabled={convertendoPagamento}
+              >
+                {convertendoPagamento ? 'Convertendo...' : 'Confirmar Conversão'}
               </button>
             </div>
           </div>
@@ -517,10 +694,11 @@ function PagamentosList() {
                 </>
               ) : (
                 <>
-                  <th>Periodo</th>
+                  <th>CT-e</th>
+                  <th>Condutor</th>
                   <th>Placa</th>
-                  <th>KM Total</th>
-                  <th>Valor a Pagar</th>
+                  <th>Data Prevista</th>
+                  <th>Valor Repasse</th>
                   <th>Status</th>
                   <th>Acoes</th>
                 </>
@@ -530,7 +708,7 @@ function PagamentosList() {
           <tbody>
             {pagamentos.length === 0 ? (
               <tr>
-                <td colSpan={activeTab === 'agregados' ? 7 : 6} className="text-center">
+                <td colSpan={7} className="text-center">
                   Nenhum pagamento encontrado
                 </td>
               </tr>
@@ -551,6 +729,18 @@ function PagamentosList() {
                       <td>{getStatusBadge(pagamento.status)}</td>
                       <td>
                         <div className="action-buttons">
+                          {pagamento.status !== 'pago' && (
+                            <button
+                              className="btn-action btn-download"
+                              onClick={() => handleAbrirBaixa(pagamento)}
+                              title="Baixar Pagamento"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                              </svg>
+                            </button>
+                          )}
                           <button
                             className="btn-action btn-edit"
                             onClick={() => handleEditarPagamento(pagamento.id)}
@@ -561,20 +751,48 @@ function PagamentosList() {
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                             </svg>
                           </button>
+                          <button
+                            className="btn-action"
+                            onClick={() => handleAbrirConverter(pagamento)}
+                            title="Converter para Próprio"
+                            style={{ color: '#6366f1' }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="17 1 21 5 17 9"></polyline>
+                              <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                              <polyline points="7 23 3 19 7 15"></polyline>
+                              <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                            </svg>
+                          </button>
                         </div>
                       </td>
                     </>
                   ) : (
                     <>
-                      <td><strong>{pagamento.periodo || '-'}</strong></td>
-                      <td>{pagamento.veiculo_placa || '-'}</td>
-                      <td>{pagamento.km_total_periodo ? `${pagamento.km_total_periodo.toLocaleString('pt-BR')} km` : '-'}</td>
+                      <td>
+                        <strong>#{pagamento.cte_numero || '-'}</strong>
+                      </td>
+                      <td>{pagamento.condutor_nome || pagamento.motorista_nome || '-'}</td>
+                      <td>{pagamento.placa || pagamento.veiculo_placa || '-'}</td>
+                      <td>{formatDate(pagamento.data_prevista)}</td>
                       <td className="text-right">
-                        <strong>{formatCurrency(pagamento.valor_total_pagar)}</strong>
+                        <strong>{formatCurrency(pagamento.valor_repassado || pagamento.valor_base_faixa)}</strong>
                       </td>
                       <td>{getStatusBadge(pagamento.status)}</td>
                       <td>
                         <div className="action-buttons">
+                          {pagamento.status !== 'pago' && (
+                            <button
+                              className="btn-action btn-download"
+                              onClick={() => handleAbrirBaixa(pagamento)}
+                              title="Baixar Pagamento"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                              </svg>
+                            </button>
+                          )}
                           <button
                             className="btn-action btn-edit"
                             onClick={() => handleEditarPagamento(pagamento.id)}
@@ -583,6 +801,19 @@ function PagamentosList() {
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                          </button>
+                          <button
+                            className="btn-action"
+                            onClick={() => handleAbrirConverter(pagamento)}
+                            title="Converter para Agregado"
+                            style={{ color: '#6366f1' }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="17 1 21 5 17 9"></polyline>
+                              <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                              <polyline points="7 23 3 19 7 15"></polyline>
+                              <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
                             </svg>
                           </button>
                         </div>

@@ -65,7 +65,12 @@ class VeiculoViewSet(viewsets.ModelViewSet):
         if uf:
             queryset = queryset.filter(uf_proprietario=uf)
 
-        # Filtro por texto (placa, renavam, nome/CNPJ/CPF/RNTRC proprietário)
+        # Filtro específico por placa (Bug #3 fix)
+        placa = params.get('placa')
+        if placa:
+            queryset = queryset.filter(placa__icontains=placa)
+
+        # Filtro por texto genérico (placa, renavam, nome/CNPJ/CPF/RNTRC proprietário)
         texto = params.get('q')
         if texto:
             queryset = queryset.filter(
@@ -116,38 +121,44 @@ class VeiculoViewSet(viewsets.ModelViewSet):
         """Endpoint para obter estatísticas do veículo."""
         veiculo = self.get_object()
 
-        # Calcular estatísticas de manutenção
-        manutencoes = veiculo.manutencoes.all() # Acessa via related_name
-        total_manutencoes = manutencoes.count()
+        # Calcular estatísticas de manutenção em uma única query
+        manutencoes = veiculo.manutencoes.all()
 
-        # Soma de gastos
-        total_pecas = manutencoes.aggregate(t=Sum('valor_peca'))['t'] or Decimal('0.00')
-        total_mao_obra = manutencoes.aggregate(t=Sum('valor_mao_obra'))['t'] or Decimal('0.00')
-        total_gastos = manutencoes.aggregate(t=Sum('valor_total'))['t'] or Decimal('0.00')
+        # Aggregate único para somar todos os valores (otimizado - 1 query ao invés de 3)
+        totais = manutencoes.aggregate(
+            total_pecas=Sum('valor_peca'),
+            total_mao_obra=Sum('valor_mao_obra'),
+            total_gastos=Sum('valor_total'),
+            total_count=Count('id')
+        )
+        total_manutencoes = totais['total_count'] or 0
+        total_pecas = totais['total_pecas'] or Decimal('0.00')
+        total_mao_obra = totais['total_mao_obra'] or Decimal('0.00')
+        total_gastos = totais['total_gastos'] or Decimal('0.00')
 
         # Estatísticas por status
         stats_por_status = list(manutencoes.values('status').annotate(
             total=Count('id'),
             valor=Sum('valor_total')
-        ).order_by('status')) # Ordena para consistência
+        ).order_by('status'))
 
         # Vincular com documentos (CT-e e MDF-e válidos)
         total_ctes = CTeDocumento.objects.filter(
-            modal_rodoviario__veiculos__placa=veiculo.placa, # Filtra pelo relacionamento
-            protocolo__codigo_status=100 # Apenas autorizados
-        ).exclude(cancelamento__c_stat=135).count() # Exclui cancelados
+            modal_rodoviario__veiculos__placa=veiculo.placa,
+            protocolo__codigo_status=100
+        ).exclude(cancelamento__c_stat=135).count()
 
         total_mdfes = MDFeDocumento.objects.filter(
             Q(modal_rodoviario__veiculo_tracao__placa=veiculo.placa) |
-            Q(modal_rodoviario__veiculos_reboque__placa=veiculo.placa), # Checa tração e reboque
-            protocolo__codigo_status=100 # Apenas autorizados
-        ).exclude(cancelamento__c_stat=135).distinct().count() # Exclui cancelados e garante contagem única
+            Q(modal_rodoviario__veiculos_reboque__placa=veiculo.placa),
+            protocolo__codigo_status=100
+        ).exclude(cancelamento__c_stat=135).distinct().count()
 
         return Response({
             'veiculo': {
                 'placa': veiculo.placa,
                 'proprietario': veiculo.proprietario_nome,
-                'tipo': veiculo.get_tipo_proprietario_display(), # Usa display name se definido no modelo
+                'tipo': veiculo.get_tipo_proprietario_display(),
                 'ativo': veiculo.ativo
             },
             'manutencoes': {
@@ -238,6 +249,10 @@ class ManutencaoVeiculoViewSet(viewsets.ModelViewSet):
 class ManutencaoPainelViewSet(viewsets.ViewSet):
     """ViewSet para o painel de indicadores de manutenção."""
     permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        """Retorna indicadores gerais (rota padrão GET /api/manutencao/painel/)."""
+        return self.indicadores(request)
 
     def _filter_by_date(self, queryset, params):
         """Filtra queryset por data (usa data_agendada ou data_servico)."""

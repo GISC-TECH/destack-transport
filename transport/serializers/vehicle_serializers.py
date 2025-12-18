@@ -68,8 +68,8 @@ class CompartimentacaoVeiculoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CompartimentacaoVeiculo
-        fields = '__all__'
-        read_only_fields = ('id',)
+        fields = ['id', 'numero_boca', 'capacidade_m3', 'veiculo']
+        read_only_fields = ('id', 'veiculo')  # veiculo é setado automaticamente
         extra_kwargs = {
             'veiculo': {'required': False}  # Será setado automaticamente em nested routes
         }
@@ -84,7 +84,8 @@ class CompartimentacaoVeiculoSerializer(serializers.ModelSerializer):
 class VeiculoSerializer(serializers.ModelSerializer):
     """ Serializer completo para o modelo Veiculo (ATUALIZADO). """
 
-    compartimentos = CompartimentacaoVeiculoSerializer(many=True, read_only=True)
+    # Compartimentos agora são writable (não mais read_only)
+    compartimentos = CompartimentacaoVeiculoSerializer(many=True, required=False)
     documentos_vencendo = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -106,6 +107,48 @@ class VeiculoSerializer(serializers.ModelSerializer):
     def get_documentos_vencendo(self, obj):
         """Retorna documentos que vencem em 30 dias."""
         return obj.get_documentos_vencendo(dias=30)
+
+    def validate_compartimentos(self, compartimentos):
+        """Valida que não há numero_boca duplicados."""
+        if not compartimentos:
+            return compartimentos
+
+        numeros_boca = [c.get('numero_boca') for c in compartimentos]
+        if len(numeros_boca) != len(set(numeros_boca)):
+            raise serializers.ValidationError(
+                "Não é permitido ter compartimentos com o mesmo número de boca."
+            )
+        return compartimentos
+
+    def create(self, validated_data):
+        """Cria veículo com compartimentos aninhados."""
+        compartimentos_data = validated_data.pop('compartimentos', [])
+        veiculo = Veiculo.objects.create(**validated_data)
+
+        for comp_data in compartimentos_data:
+            CompartimentacaoVeiculo.objects.create(veiculo=veiculo, **comp_data)
+
+        return veiculo
+
+    def update(self, instance, validated_data):
+        """Atualiza veículo e sincroniza compartimentos."""
+        compartimentos_data = validated_data.pop('compartimentos', None)
+
+        # Atualiza campos do veículo
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Se compartimentos foram enviados, sincroniza (substitui todos)
+        if compartimentos_data is not None:
+            # Remove compartimentos existentes
+            instance.compartimentos.all().delete()
+
+            # Cria novos compartimentos
+            for comp_data in compartimentos_data:
+                CompartimentacaoVeiculo.objects.create(veiculo=instance, **comp_data)
+
+        return instance
 
 # --- Serializers para Painel de Manutenção ---
 # Estes não são ModelSerializers, pois formatam dados agregados da view

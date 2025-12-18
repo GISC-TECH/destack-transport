@@ -50,6 +50,69 @@ const mutationOptions = (method, data) => ({
   body: data ? JSON.stringify(data) : undefined,
 });
 
+// Helper para refresh do CSRF token
+async function refreshCSRFToken() {
+  try {
+    const response = await fetch(`${API_BASE}/auth/csrf/`, defaultOptions);
+    if (response.ok) {
+      // O cookie foi setado pela resposta
+      return true;
+    }
+  } catch (e) {
+    console.warn('Falha ao atualizar CSRF token:', e);
+  }
+  return false;
+}
+
+// Wrapper para requisições com retry automático em caso de CSRF failure (403)
+async function fetchWithCSRFRetry(url, options, retried = false) {
+  const response = await fetch(url, options);
+
+  // Se for 403 e ainda não tentamos retry, atualizar CSRF e tentar novamente
+  if (response.status === 403 && !retried) {
+    console.log('CSRF token expirado, atualizando...');
+    const refreshed = await refreshCSRFToken();
+    if (refreshed) {
+      // Atualizar o header com novo token
+      const newOptions = {
+        ...options,
+        headers: {
+          ...options.headers,
+          'X-CSRFToken': getCSRFToken(),
+        }
+      };
+      return fetchWithCSRFRetry(url, newOptions, true);
+    }
+  }
+
+  return response;
+}
+
+// Helper para validar IDs antes de requisições aninhadas
+const validateId = (id, name = 'ID') => {
+  if (id === undefined || id === null || id === '') {
+    throw new Error(`${name} é obrigatório`);
+  }
+  return id;
+};
+
+// Helper para tratar erros HTTP com mensagens específicas
+const handleHttpError = async (response, defaultMsg) => {
+  if (response.status === 404) {
+    throw new Error('Recurso não encontrado. Verifique se o registro existe.');
+  }
+  if (response.status === 403) {
+    throw new Error('Acesso negado. Você não tem permissão para esta ação.');
+  }
+  try {
+    const error = await response.json();
+    throw new Error(JSON.stringify(error));
+  } catch (e) {
+    if (e.message.startsWith('{')) throw e; // Já é um JSON
+    throw new Error(defaultMsg);
+  }
+};
+
 // ======================================
 // AUTENTICAÇÃO
 // ======================================
@@ -311,33 +374,36 @@ export const veiculosAPI = {
 
   compartimentos: {
     list: async (veiculoId) => {
+      validateId(veiculoId, 'ID do veículo');
       const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/compartimentos/`, defaultOptions);
-      if (!response.ok) throw new Error('Erro ao buscar compartimentos');
+      if (!response.ok) await handleHttpError(response, 'Erro ao buscar compartimentos');
       return response.json();
     },
 
     create: async (veiculoId, data) => {
+      validateId(veiculoId, 'ID do veículo');
       const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/compartimentos/`, mutationOptions('POST', data));
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(JSON.stringify(error));
-      }
+      if (!response.ok) await handleHttpError(response, 'Erro ao criar compartimento');
       return response.json();
     },
 
     update: async (veiculoId, compartimentoId, data) => {
+      validateId(veiculoId, 'ID do veículo');
+      validateId(compartimentoId, 'ID do compartimento');
       const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/compartimentos/${compartimentoId}/`, mutationOptions('PUT', data));
-      if (!response.ok) throw new Error('Erro ao atualizar compartimento');
+      if (!response.ok) await handleHttpError(response, 'Erro ao atualizar compartimento');
       return response.json();
     },
 
     delete: async (veiculoId, compartimentoId) => {
+      validateId(veiculoId, 'ID do veículo');
+      validateId(compartimentoId, 'ID do compartimento');
       const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/compartimentos/${compartimentoId}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
       });
-      if (!response.ok) throw new Error('Erro ao deletar compartimento');
+      if (!response.ok) await handleHttpError(response, 'Erro ao deletar compartimento');
       return true;
     }
   },
@@ -345,40 +411,45 @@ export const veiculosAPI = {
   // Manutenções de um veículo específico (rota aninhada)
   manutencoes: {
     list: async (veiculoId, filters = {}) => {
+      validateId(veiculoId, 'ID do veículo');
       const params = new URLSearchParams(filters);
       const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/manutencoes/?${params}`, defaultOptions);
-      if (!response.ok) throw new Error('Erro ao buscar manutenções do veículo');
+      if (!response.ok) await handleHttpError(response, 'Erro ao buscar manutenções do veículo');
       return response.json();
     },
 
     get: async (veiculoId, manutencaoId) => {
+      validateId(veiculoId, 'ID do veículo');
+      validateId(manutencaoId, 'ID da manutenção');
       const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/manutencoes/${manutencaoId}/`, defaultOptions);
-      if (!response.ok) throw new Error('Erro ao buscar manutenção');
+      if (!response.ok) await handleHttpError(response, 'Erro ao buscar manutenção');
       return response.json();
     },
 
     create: async (veiculoId, data) => {
+      validateId(veiculoId, 'ID do veículo');
       const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/manutencoes/`, mutationOptions('POST', data));
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(JSON.stringify(error));
-      }
+      if (!response.ok) await handleHttpError(response, 'Erro ao criar manutenção');
       return response.json();
     },
 
     update: async (veiculoId, manutencaoId, data) => {
+      validateId(veiculoId, 'ID do veículo');
+      validateId(manutencaoId, 'ID da manutenção');
       const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/manutencoes/${manutencaoId}/`, mutationOptions('PUT', data));
-      if (!response.ok) throw new Error('Erro ao atualizar manutenção');
+      if (!response.ok) await handleHttpError(response, 'Erro ao atualizar manutenção');
       return response.json();
     },
 
     delete: async (veiculoId, manutencaoId) => {
+      validateId(veiculoId, 'ID do veículo');
+      validateId(manutencaoId, 'ID da manutenção');
       const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/manutencoes/${manutencaoId}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
       });
-      if (!response.ok) throw new Error('Erro ao deletar manutenção');
+      if (!response.ok) await handleHttpError(response, 'Erro ao deletar manutenção');
       return true;
     }
   }
@@ -474,10 +545,13 @@ export const cteAPI = {
     window.URL.revokeObjectURL(url);
   },
 
-  marcarPagamento: async (id, pago, observacao = null) => {
+  marcarPagamento: async (id, pago, observacao = null, dataPagamento = null) => {
     const data = { pago };
     if (observacao !== null) {
       data.observacao_pagamento = observacao;
+    }
+    if (dataPagamento !== null) {
+      data.data_pagamento = dataPagamento;
     }
     const response = await fetch(`${API_BASE}/ctes/${id}/pagamento/`, mutationOptions('PATCH', data));
     if (!response.ok) {
@@ -696,7 +770,7 @@ export const pagamentosAPI = {
 
     // Geração em lote de pagamentos para agregados
     gerar: async (data) => {
-      const response = await fetch(`${API_BASE}/pagamentos/agregados/gerar/`, mutationOptions('POST', data));
+      const response = await fetchWithCSRFRetry(`${API_BASE}/pagamentos/agregados/gerar/`, mutationOptions('POST', data));
       if (!response.ok) throw new Error('Erro ao gerar pagamentos');
       return response.json();
     },
@@ -715,6 +789,16 @@ export const pagamentosAPI = {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+    },
+
+    // Converte pagamento agregado para próprio
+    converterParaProprio: async (id, data = {}) => {
+      const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/converter-para-proprio/`, mutationOptions('POST', data));
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao converter pagamento');
+      }
+      return response.json();
     }
   },
 
@@ -768,7 +852,7 @@ export const pagamentosAPI = {
 
     // Geração em lote de pagamentos próprios
     gerar: async (data) => {
-      const response = await fetch(`${API_BASE}/pagamentos/proprios/gerar/`, mutationOptions('POST', data));
+      const response = await fetchWithCSRFRetry(`${API_BASE}/pagamentos/proprios/gerar/`, mutationOptions('POST', data));
       if (!response.ok) throw new Error('Erro ao gerar pagamentos');
       return response.json();
     },
@@ -787,6 +871,16 @@ export const pagamentosAPI = {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+    },
+
+    // Converte pagamento próprio para agregado
+    converterParaAgregado: async (id, data) => {
+      const response = await fetch(`${API_BASE}/pagamentos/proprios/${id}/converter-para-agregado/`, mutationOptions('POST', data));
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao converter pagamento');
+      }
+      return response.json();
     }
   },
 

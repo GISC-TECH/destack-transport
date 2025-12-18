@@ -1,27 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { manutencaoAPI, veiculosAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import './Manutencao.css';
-
-// Mock veículos
-const mockVeiculos = [
-  { id: 1, placa: 'ABC-1234', modelo: 'Volvo FH 540' },
-  { id: 2, placa: 'DEF-5678', modelo: 'Scania R450' },
-  { id: 3, placa: 'GHI-9012', modelo: 'Mercedes Actros' },
-  { id: 4, placa: 'MNO-7890', modelo: 'DAF XF 530' },
-  { id: 5, placa: 'PQR-1234', modelo: 'Iveco Stralis' }
-];
 
 function ManutencaoForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const toast = useToast();
   const isEditing = !!id;
 
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [veiculos, setVeiculos] = useState([]);
-  const [usingMockData, setUsingMockData] = useState(false);
   const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -47,12 +39,12 @@ function ManutencaoForm() {
 
   const loadVeiculos = async () => {
     try {
-      const result = await veiculosAPI.list();
+      // Filtra apenas veículos próprios (tipo_proprietario='00') para manutenção
+      const result = await veiculosAPI.list({ tipo_proprietario: '00', ativo: true });
       setVeiculos(result.results || result);
     } catch (err) {
       console.error('Erro ao carregar veículos:', err);
-      setVeiculos(mockVeiculos);
-      setUsingMockData(true);
+      setVeiculos([]);
     }
   };
 
@@ -60,8 +52,12 @@ function ManutencaoForm() {
     try {
       setLoading(true);
       const result = await manutencaoAPI.get(id);
+
+      // Obtém o ID do veículo e converte para string para compatibilidade com select
+      const veiculoId = result.veiculo_info?.id || result.veiculo;
+
       setFormData({
-        veiculo: result.veiculo_info?.id || result.veiculo || '',
+        veiculo: veiculoId ? String(veiculoId) : '',
         tipo: result.tipo || 'preventiva',
         descricao: result.descricao || result.servico_realizado || '',
         data_agendada: result.data_agendada || result.data_servico || '',
@@ -107,21 +103,17 @@ function ManutencaoForm() {
         nota_fiscal: formData.numero_nota || ''
       };
 
-      if (usingMockData) {
-        // Simular salvamento
-        await new Promise(resolve => setTimeout(resolve, 500));
-        navigate('/manutencoes');
-        return;
-      }
-
       if (isEditing) {
         await manutencaoAPI.update(id, data);
+        toast.success('Manutencao atualizada com sucesso!');
       } else {
         await manutencaoAPI.create(data);
+        toast.success('Manutencao agendada com sucesso!');
       }
-      navigate('/manutencoes');
+      setTimeout(() => navigate('/manutencoes'), 500);
     } catch (err) {
       console.error('Erro ao salvar manutenção:', err);
+      toast.error('Erro ao salvar manutencao. Verifique os dados.');
       setError('Erro ao salvar manutenção. Verifique os dados e tente novamente.');
     } finally {
       setSaving(false);
@@ -136,9 +128,6 @@ function ManutencaoForm() {
         <div className="header-title">
           <h1>{isEditing ? 'Editar Manutenção' : 'Nova Manutenção'}</h1>
           <p>{isEditing ? 'Atualize os dados da manutenção' : 'Agende uma nova manutenção para o veículo'}</p>
-          {usingMockData && (
-            <span className="demo-badge">Modo Demonstração</span>
-          )}
         </div>
       </div>
 
@@ -164,7 +153,7 @@ function ManutencaoForm() {
               >
                 <option value="">Selecione o veículo</option>
                 {veiculos.map(v => (
-                  <option key={v.id} value={v.id}>
+                  <option key={v.id} value={String(v.id)}>
                     {v.placa} - {v.modelo}
                   </option>
                 ))}
@@ -278,6 +267,7 @@ function ManutencaoForm() {
                 value={formData.fornecedor}
                 onChange={handleChange}
                 placeholder="Nome do fornecedor ou oficina"
+                maxLength={120}
               />
             </div>
 
@@ -289,6 +279,7 @@ function ManutencaoForm() {
                 value={formData.numero_nota}
                 onChange={handleChange}
                 placeholder="Ex: 12345"
+                maxLength={44}
               />
             </div>
           </div>

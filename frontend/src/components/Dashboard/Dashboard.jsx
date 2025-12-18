@@ -583,7 +583,7 @@ function Dashboard() {
           <h3>Top Veiculos</h3>
           <div className="recent-docs-list">
             {(frotaData?.top_veiculos || []).length > 0 ? (
-              frotaData.top_veiculos.slice(0, 5).map((veiculo, index) => (
+              frotaData.top_veiculos.map((veiculo, index) => (
                 <div key={index} className="recent-doc-item">
                   <div className="doc-info">
                     <span className="doc-number">{index + 1}. {veiculo.placa}</span>

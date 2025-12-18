@@ -1,0 +1,1166 @@
+<html ng-app="egsERP" lang="pt-BR" class="tema-padrao"><head><meta http-equiv="origin-trial" content="A7vZI3v+Gz7JfuRolKNM4Aff6zaGuT7X0mf3wtoZTnKv6497cVMnhy03KDqX7kBz/q/iidW7srW31oQbBt4VhgoAAACUeyJvcmlnaW4iOiJodHRwczovL3d3dy5nb29nbGUuY29tOjQ0MyIsImZlYXR1cmUiOiJEaXNhYmxlVGhpcmRQYXJ0eVN0b3JhZ2VQYXJ0aXRpb25pbmczIiwiZXhwaXJ5IjoxNzU3OTgwODAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><style type="text/css">[uib-typeahead-popup].dropdown-menu{display:block;}</style><style type="text/css">.uib-time input{width:50px;}</style><style type="text/css">[uib-tooltip-popup].tooltip.top-left > .tooltip-arrow,[uib-tooltip-popup].tooltip.top-right > .tooltip-arrow,[uib-tooltip-popup].tooltip.bottom-left > .tooltip-arrow,[uib-tooltip-popup].tooltip.bottom-right > .tooltip-arrow,[uib-tooltip-popup].tooltip.left-top > .tooltip-arrow,[uib-tooltip-popup].tooltip.left-bottom > .tooltip-arrow,[uib-tooltip-popup].tooltip.right-top > .tooltip-arrow,[uib-tooltip-popup].tooltip.right-bottom > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.top-left > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.top-right > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.bottom-left > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.bottom-right > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.left-top > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.left-bottom > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.right-top > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.right-bottom > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.top-left > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.top-right > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.bottom-left > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.bottom-right > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.left-top > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.left-bottom > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.right-top > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.right-bottom > .tooltip-arrow,[uib-popover-popup].popover.top-left > .arrow,[uib-popover-popup].popover.top-right > .arrow,[uib-popover-popup].popover.bottom-left > .arrow,[uib-popover-popup].popover.bottom-right > .arrow,[uib-popover-popup].popover.left-top > .arrow,[uib-popover-popup].popover.left-bottom > .arrow,[uib-popover-popup].popover.right-top > .arrow,[uib-popover-popup].popover.right-bottom > .arrow,[uib-popover-html-popup].popover.top-left > .arrow,[uib-popover-html-popup].popover.top-right > .arrow,[uib-popover-html-popup].popover.bottom-left > .arrow,[uib-popover-html-popup].popover.bottom-right > .arrow,[uib-popover-html-popup].popover.left-top > .arrow,[uib-popover-html-popup].popover.left-bottom > .arrow,[uib-popover-html-popup].popover.right-top > .arrow,[uib-popover-html-popup].popover.right-bottom > .arrow,[uib-popover-template-popup].popover.top-left > .arrow,[uib-popover-template-popup].popover.top-right > .arrow,[uib-popover-template-popup].popover.bottom-left > .arrow,[uib-popover-template-popup].popover.bottom-right > .arrow,[uib-popover-template-popup].popover.left-top > .arrow,[uib-popover-template-popup].popover.left-bottom > .arrow,[uib-popover-template-popup].popover.right-top > .arrow,[uib-popover-template-popup].popover.right-bottom > .arrow{top:auto;bottom:auto;left:auto;right:auto;margin:0;}[uib-popover-popup].popover,[uib-popover-html-popup].popover,[uib-popover-template-popup].popover{display:block !important;}</style><style type="text/css">.uib-datepicker-popup.dropdown-menu{display:block;float:none;margin:0;}.uib-button-bar{padding:10px 9px 2px;}</style><style type="text/css">.uib-position-measure{display:block !important;visibility:hidden !important;position:absolute !important;top:-9999px !important;left:-9999px !important;}.uib-position-scrollbar-measure{position:absolute !important;top:-9999px !important;width:50px !important;height:50px !important;overflow:scroll !important;}.uib-position-body-scrollbar-measure{overflow:scroll !important;}</style><style type="text/css">.uib-datepicker .uib-title{width:100%;}.uib-day button,.uib-month button,.uib-year button{min-width:100%;}.uib-left,.uib-right{width:100%}</style><style type="text/css">.ng-animate.item:not(.left):not(.right){-webkit-transition:0s ease-in-out left;transition:0s ease-in-out left}</style><style id="ace_searchbox">.ace_search {background-color: #ddd;color: #666;border: 1px solid #cbcbcb;border-top: 0 none;overflow: hidden;margin: 0;padding: 4px 6px 0 4px;position: absolute;top: 0;z-index: 99;white-space: normal;}.ace_search.left {border-left: 0 none;border-radius: 0px 0px 5px 0px;left: 0;}.ace_search.right {border-radius: 0px 0px 0px 5px;border-right: 0 none;right: 0;}.ace_search_form, .ace_replace_form {margin: 0 20px 4px 0;overflow: hidden;line-height: 1.9;}.ace_replace_form {margin-right: 0;}.ace_search_form.ace_nomatch {outline: 1px solid red;}.ace_search_field {border-radius: 3px 0 0 3px;background-color: white;color: black;border: 1px solid #cbcbcb;border-right: 0 none;outline: 0;padding: 0;font-size: inherit;margin: 0;line-height: inherit;padding: 0 6px;min-width: 17em;vertical-align: top;min-height: 1.8em;box-sizing: content-box;}.ace_searchbtn {border: 1px solid #cbcbcb;line-height: inherit;display: inline-block;padding: 0 6px;background: #fff;border-right: 0 none;border-left: 1px solid #dcdcdc;cursor: pointer;margin: 0;position: relative;color: #666;}.ace_searchbtn:last-child {border-radius: 0 3px 3px 0;border-right: 1px solid #cbcbcb;}.ace_searchbtn:disabled {background: none;cursor: default;}.ace_searchbtn:hover {background-color: #eef1f6;}.ace_searchbtn.prev, .ace_searchbtn.next {padding: 0px 0.7em}.ace_searchbtn.prev:after, .ace_searchbtn.next:after {content: "";border: solid 2px #888;width: 0.5em;height: 0.5em;border-width:  2px 0 0 2px;display:inline-block;transform: rotate(-45deg);}.ace_searchbtn.next:after {border-width: 0 2px 2px 0 ;}.ace_searchbtn_close {background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAcCAYAAABRVo5BAAAAZ0lEQVR42u2SUQrAMAhDvazn8OjZBilCkYVVxiis8H4CT0VrAJb4WHT3C5xU2a2IQZXJjiQIRMdkEoJ5Q2yMqpfDIo+XY4k6h+YXOyKqTIj5REaxloNAd0xiKmAtsTHqW8sR2W5f7gCu5nWFUpVjZwAAAABJRU5ErkJggg==) no-repeat 50% 0;border-radius: 50%;border: 0 none;color: #656565;cursor: pointer;font: 16px/16px Arial;padding: 0;height: 14px;width: 14px;top: 9px;right: 7px;position: absolute;}.ace_searchbtn_close:hover {background-color: #656565;background-position: 50% 100%;color: white;}.ace_button {margin-left: 2px;cursor: pointer;-webkit-user-select: none;-moz-user-select: none;-o-user-select: none;-ms-user-select: none;user-select: none;overflow: hidden;opacity: 0.7;border: 1px solid rgba(100,100,100,0.23);padding: 1px;box-sizing:    border-box!important;color: black;}.ace_button:hover {background-color: #eee;opacity:1;}.ace_button:active {background-color: #ddd;}.ace_button.checked {border-color: #3399ff;opacity:1;}.ace_search_options{margin-bottom: 3px;text-align: right;-webkit-user-select: none;-moz-user-select: none;-o-user-select: none;-ms-user-select: none;user-select: none;clear: both;}.ace_search_counter {float: left;font-family: arial;padding: 0 8px;}
+/*# sourceURL=ace/css/ace_searchbox */</style><style>    .error_widget_wrapper {        background: inherit;        color: inherit;        border:none    }    .error_widget {        border-top: solid 2px;        border-bottom: solid 2px;        margin: 5px 0;        padding: 10px 40px;        white-space: pre-wrap;    }    .error_widget.ace_error, .error_widget_arrow.ace_error{        border-color: #ff5a5a    }    .error_widget.ace_warning, .error_widget_arrow.ace_warning{        border-color: #F1D817    }    .error_widget.ace_info, .error_widget_arrow.ace_info{        border-color: #5a5a5a    }    .error_widget.ace_ok, .error_widget_arrow.ace_ok{        border-color: #5aaa5a    }    .error_widget_arrow {        position: absolute;        border: solid 5px;        border-top-color: transparent!important;        border-right-color: transparent!important;        border-left-color: transparent!important;        top: -5px;    }</style><style id="ace-tm">.ace-tm .ace_gutter {background: #f0f0f0;color: #333;}.ace-tm .ace_print-margin {width: 1px;background: #e8e8e8;}.ace-tm .ace_fold {background-color: #6B72E6;}.ace-tm {background-color: #FFFFFF;color: black;}.ace-tm .ace_cursor {color: black;}.ace-tm .ace_invisible {color: rgb(191, 191, 191);}.ace-tm .ace_storage,.ace-tm .ace_keyword {color: blue;}.ace-tm .ace_constant {color: rgb(197, 6, 11);}.ace-tm .ace_constant.ace_buildin {color: rgb(88, 72, 246);}.ace-tm .ace_constant.ace_language {color: rgb(88, 92, 246);}.ace-tm .ace_constant.ace_library {color: rgb(6, 150, 14);}.ace-tm .ace_invalid {background-color: rgba(255, 0, 0, 0.1);color: red;}.ace-tm .ace_support.ace_function {color: rgb(60, 76, 114);}.ace-tm .ace_support.ace_constant {color: rgb(6, 150, 14);}.ace-tm .ace_support.ace_type,.ace-tm .ace_support.ace_class {color: rgb(109, 121, 222);}.ace-tm .ace_keyword.ace_operator {color: rgb(104, 118, 135);}.ace-tm .ace_string {color: rgb(3, 106, 7);}.ace-tm .ace_comment {color: rgb(76, 136, 107);}.ace-tm .ace_comment.ace_doc {color: rgb(0, 102, 255);}.ace-tm .ace_comment.ace_doc.ace_tag {color: rgb(128, 159, 191);}.ace-tm .ace_constant.ace_numeric {color: rgb(0, 0, 205);}.ace-tm .ace_variable {color: rgb(49, 132, 149);}.ace-tm .ace_xml-pe {color: rgb(104, 104, 91);}.ace-tm .ace_entity.ace_name.ace_function {color: #0000A2;}.ace-tm .ace_heading {color: rgb(12, 7, 255);}.ace-tm .ace_list {color:rgb(185, 6, 144);}.ace-tm .ace_meta.ace_tag {color:rgb(0, 22, 142);}.ace-tm .ace_string.ace_regex {color: rgb(255, 0, 0)}.ace-tm .ace_marker-layer .ace_selection {background: rgb(181, 213, 255);}.ace-tm.ace_multiselect .ace_selection.ace_start {box-shadow: 0 0 3px 0px white;}.ace-tm .ace_marker-layer .ace_step {background: rgb(252, 255, 0);}.ace-tm .ace_marker-layer .ace_stack {background: rgb(164, 229, 101);}.ace-tm .ace_marker-layer .ace_bracket {margin: -1px 0 0 -1px;border: 1px solid rgb(192, 192, 192);}.ace-tm .ace_marker-layer .ace_active-line {background: rgba(0, 0, 0, 0.07);}.ace-tm .ace_gutter-active-line {background-color : #dcdcdc;}.ace-tm .ace_marker-layer .ace_selected-word {background: rgb(250, 250, 255);border: 1px solid rgb(200, 200, 250);}.ace-tm .ace_indent-guide {background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAE0lEQVQImWP4////f4bLly//BwAmVgd1/w11/gAAAABJRU5ErkJggg==") right repeat-y;}
+/*# sourceURL=ace/css/ace-tm */</style><style id="ace_editor.css">.ace_br1 {border-top-left-radius    : 3px;}.ace_br2 {border-top-right-radius   : 3px;}.ace_br3 {border-top-left-radius    : 3px; border-top-right-radius:    3px;}.ace_br4 {border-bottom-right-radius: 3px;}.ace_br5 {border-top-left-radius    : 3px; border-bottom-right-radius: 3px;}.ace_br6 {border-top-right-radius   : 3px; border-bottom-right-radius: 3px;}.ace_br7 {border-top-left-radius    : 3px; border-top-right-radius:    3px; border-bottom-right-radius: 3px;}.ace_br8 {border-bottom-left-radius : 3px;}.ace_br9 {border-top-left-radius    : 3px; border-bottom-left-radius:  3px;}.ace_br10{border-top-right-radius   : 3px; border-bottom-left-radius:  3px;}.ace_br11{border-top-left-radius    : 3px; border-top-right-radius:    3px; border-bottom-left-radius:  3px;}.ace_br12{border-bottom-right-radius: 3px; border-bottom-left-radius:  3px;}.ace_br13{border-top-left-radius    : 3px; border-bottom-right-radius: 3px; border-bottom-left-radius:  3px;}.ace_br14{border-top-right-radius   : 3px; border-bottom-right-radius: 3px; border-bottom-left-radius:  3px;}.ace_br15{border-top-left-radius    : 3px; border-top-right-radius:    3px; border-bottom-right-radius: 3px; border-bottom-left-radius: 3px;}.ace_editor {position: relative;overflow: hidden;padding: 0;font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;direction: ltr;text-align: left;-webkit-tap-highlight-color: rgba(0, 0, 0, 0);}.ace_scroller {position: absolute;overflow: hidden;top: 0;bottom: 0;background-color: inherit;-ms-user-select: none;-moz-user-select: none;-webkit-user-select: none;user-select: none;cursor: text;}.ace_content {position: absolute;box-sizing: border-box;min-width: 100%;contain: style size layout;font-variant-ligatures: no-common-ligatures;}.ace_dragging .ace_scroller:before{position: absolute;top: 0;left: 0;right: 0;bottom: 0;content: '';background: rgba(250, 250, 250, 0.01);z-index: 1000;}.ace_dragging.ace_dark .ace_scroller:before{background: rgba(0, 0, 0, 0.01);}.ace_selecting, .ace_selecting * {cursor: text !important;}.ace_gutter {position: absolute;overflow : hidden;width: auto;top: 0;bottom: 0;left: 0;cursor: default;z-index: 4;-ms-user-select: none;-moz-user-select: none;-webkit-user-select: none;user-select: none;contain: style size layout;}.ace_gutter-active-line {position: absolute;left: 0;right: 0;}.ace_scroller.ace_scroll-left {box-shadow: 17px 0 16px -16px rgba(0, 0, 0, 0.4) inset;}.ace_gutter-cell {position: absolute;top: 0;left: 0;right: 0;padding-left: 19px;padding-right: 6px;background-repeat: no-repeat;}.ace_gutter-cell.ace_error {background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAABOFBMVEX/////////QRswFAb/Ui4wFAYwFAYwFAaWGAfDRymzOSH/PxswFAb/SiUwFAYwFAbUPRvjQiDllog5HhHdRybsTi3/Tyv9Tir+Syj/UC3////XurebMBIwFAb/RSHbPx/gUzfdwL3kzMivKBAwFAbbvbnhPx66NhowFAYwFAaZJg8wFAaxKBDZurf/RB6mMxb/SCMwFAYwFAbxQB3+RB4wFAb/Qhy4Oh+4QifbNRcwFAYwFAYwFAb/QRzdNhgwFAYwFAbav7v/Uy7oaE68MBK5LxLewr/r2NXewLswFAaxJw4wFAbkPRy2PyYwFAaxKhLm1tMwFAazPiQwFAaUGAb/QBrfOx3bvrv/VC/maE4wFAbRPBq6MRO8Qynew8Dp2tjfwb0wFAbx6eju5+by6uns4uH9/f36+vr/GkHjAAAAYnRSTlMAGt+64rnWu/bo8eAA4InH3+DwoN7j4eLi4xP99Nfg4+b+/u9B/eDs1MD1mO7+4PHg2MXa347g7vDizMLN4eG+Pv7i5evs/v79yu7S3/DV7/498Yv24eH+4ufQ3Ozu/v7+y13sRqwAAADLSURBVHjaZc/XDsFgGIBhtDrshlitmk2IrbHFqL2pvXf/+78DPokj7+Fz9qpU/9UXJIlhmPaTaQ6QPaz0mm+5gwkgovcV6GZzd5JtCQwgsxoHOvJO15kleRLAnMgHFIESUEPmawB9ngmelTtipwwfASilxOLyiV5UVUyVAfbG0cCPHig+GBkzAENHS0AstVF6bacZIOzgLmxsHbt2OecNgJC83JERmePUYq8ARGkJx6XtFsdddBQgZE2nPR6CICZhawjA4Fb/chv+399kfR+MMMDGOQAAAABJRU5ErkJggg==");background-repeat: no-repeat;background-position: 2px center;}.ace_gutter-cell.ace_warning {background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAmVBMVEX///8AAAD///8AAAAAAABPSzb/5sAAAAB/blH/73z/ulkAAAAAAAD85pkAAAAAAAACAgP/vGz/rkDerGbGrV7/pkQICAf////e0IsAAAD/oED/qTvhrnUAAAD/yHD/njcAAADuv2r/nz//oTj/p064oGf/zHAAAAA9Nir/tFIAAAD/tlTiuWf/tkIAAACynXEAAAAAAAAtIRW7zBpBAAAAM3RSTlMAABR1m7RXO8Ln31Z36zT+neXe5OzooRDfn+TZ4p3h2hTf4t3k3ucyrN1K5+Xaks52Sfs9CXgrAAAAjklEQVR42o3PbQ+CIBQFYEwboPhSYgoYunIqqLn6/z8uYdH8Vmdnu9vz4WwXgN/xTPRD2+sgOcZjsge/whXZgUaYYvT8QnuJaUrjrHUQreGczuEafQCO/SJTufTbroWsPgsllVhq3wJEk2jUSzX3CUEDJC84707djRc5MTAQxoLgupWRwW6UB5fS++NV8AbOZgnsC7BpEAAAAABJRU5ErkJggg==");background-position: 2px center;}.ace_gutter-cell.ace_info {background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAJ0Uk5TAAB2k804AAAAPklEQVQY02NgIB68QuO3tiLznjAwpKTgNyDbMegwisCHZUETUZV0ZqOquBpXj2rtnpSJT1AEnnRmL2OgGgAAIKkRQap2htgAAAAASUVORK5CYII=");background-position: 2px center;}.ace_dark .ace_gutter-cell.ace_info {background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAJFBMVEUAAAChoaGAgIAqKiq+vr6tra1ZWVmUlJSbm5s8PDxubm56enrdgzg3AAAAAXRSTlMAQObYZgAAAClJREFUeNpjYMAPdsMYHegyJZFQBlsUlMFVCWUYKkAZMxZAGdxlDMQBAG+TBP4B6RyJAAAAAElFTkSuQmCC");}.ace_scrollbar {contain: strict;position: absolute;right: 0;bottom: 0;z-index: 6;}.ace_scrollbar-inner {position: absolute;cursor: text;left: 0;top: 0;}.ace_scrollbar-v{overflow-x: hidden;overflow-y: scroll;top: 0;}.ace_scrollbar-h {overflow-x: scroll;overflow-y: hidden;left: 0;}.ace_print-margin {position: absolute;height: 100%;}.ace_text-input {position: absolute;z-index: 0;width: 0.5em;height: 1em;opacity: 0;background: transparent;-moz-appearance: none;appearance: none;border: none;resize: none;outline: none;overflow: hidden;font: inherit;padding: 0 1px;margin: 0 -1px;contain: strict;-ms-user-select: text;-moz-user-select: text;-webkit-user-select: text;user-select: text;white-space: pre!important;}.ace_text-input.ace_composition {background: transparent;color: inherit;z-index: 1000;opacity: 1;}.ace_composition_placeholder { color: transparent }.ace_composition_marker { border-bottom: 1px solid;position: absolute;border-radius: 0;margin-top: 1px;}[ace_nocontext=true] {transform: none!important;filter: none!important;clip-path: none!important;mask : none!important;contain: none!important;perspective: none!important;mix-blend-mode: initial!important;z-index: auto;}.ace_layer {z-index: 1;position: absolute;overflow: hidden;word-wrap: normal;white-space: pre;height: 100%;width: 100%;box-sizing: border-box;pointer-events: none;}.ace_gutter-layer {position: relative;width: auto;text-align: right;pointer-events: auto;height: 1000000px;contain: style size layout;}.ace_text-layer {font: inherit !important;position: absolute;height: 1000000px;width: 1000000px;contain: style size layout;}.ace_text-layer > .ace_line, .ace_text-layer > .ace_line_group {contain: style size layout;position: absolute;top: 0;left: 0;right: 0;}.ace_hidpi .ace_text-layer,.ace_hidpi .ace_gutter-layer,.ace_hidpi .ace_content,.ace_hidpi .ace_gutter {contain: strict;will-change: transform;}.ace_hidpi .ace_text-layer > .ace_line, .ace_hidpi .ace_text-layer > .ace_line_group {contain: strict;}.ace_cjk {display: inline-block;text-align: center;}.ace_cursor-layer {z-index: 4;}.ace_cursor {z-index: 4;position: absolute;box-sizing: border-box;border-left: 2px solid;transform: translatez(0);}.ace_multiselect .ace_cursor {border-left-width: 1px;}.ace_slim-cursors .ace_cursor {border-left-width: 1px;}.ace_overwrite-cursors .ace_cursor {border-left-width: 0;border-bottom: 1px solid;}.ace_hidden-cursors .ace_cursor {opacity: 0.2;}.ace_hasPlaceholder .ace_hidden-cursors .ace_cursor {opacity: 0;}.ace_smooth-blinking .ace_cursor {transition: opacity 0.18s;}.ace_animate-blinking .ace_cursor {animation-duration: 1000ms;animation-timing-function: step-end;animation-name: blink-ace-animate;animation-iteration-count: infinite;}.ace_animate-blinking.ace_smooth-blinking .ace_cursor {animation-duration: 1000ms;animation-timing-function: ease-in-out;animation-name: blink-ace-animate-smooth;}@keyframes blink-ace-animate {from, to { opacity: 1; }60% { opacity: 0; }}@keyframes blink-ace-animate-smooth {from, to { opacity: 1; }45% { opacity: 1; }60% { opacity: 0; }85% { opacity: 0; }}.ace_marker-layer .ace_step, .ace_marker-layer .ace_stack {position: absolute;z-index: 3;}.ace_marker-layer .ace_selection {position: absolute;z-index: 5;}.ace_marker-layer .ace_bracket {position: absolute;z-index: 6;}.ace_marker-layer .ace_error_bracket {position: absolute;border-bottom: 1px solid #DE5555;border-radius: 0;}.ace_marker-layer .ace_active-line {position: absolute;z-index: 2;}.ace_marker-layer .ace_selected-word {position: absolute;z-index: 4;box-sizing: border-box;}.ace_line .ace_fold {box-sizing: border-box;display: inline-block;height: 11px;margin-top: -2px;vertical-align: middle;background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAJCAYAAADU6McMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJpJREFUeNpi/P//PwOlgAXGYGRklAVSokD8GmjwY1wasKljQpYACtpCFeADcHVQfQyMQAwzwAZI3wJKvCLkfKBaMSClBlR7BOQikCFGQEErIH0VqkabiGCAqwUadAzZJRxQr/0gwiXIal8zQQPnNVTgJ1TdawL0T5gBIP1MUJNhBv2HKoQHHjqNrA4WO4zY0glyNKLT2KIfIMAAQsdgGiXvgnYAAAAASUVORK5CYII="),url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA3CAYAAADNNiA5AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACJJREFUeNpi+P//fxgTAwPDBxDxD078RSX+YeEyDFMCIMAAI3INmXiwf2YAAAAASUVORK5CYII=");background-repeat: no-repeat, repeat-x;background-position: center center, top left;color: transparent;border: 1px solid black;border-radius: 2px;cursor: pointer;pointer-events: auto;}.ace_dark .ace_fold {}.ace_fold:hover{background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAJCAYAAADU6McMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJpJREFUeNpi/P//PwOlgAXGYGRklAVSokD8GmjwY1wasKljQpYACtpCFeADcHVQfQyMQAwzwAZI3wJKvCLkfKBaMSClBlR7BOQikCFGQEErIH0VqkabiGCAqwUadAzZJRxQr/0gwiXIal8zQQPnNVTgJ1TdawL0T5gBIP1MUJNhBv2HKoQHHjqNrA4WO4zY0glyNKLT2KIfIMAAQsdgGiXvgnYAAAAASUVORK5CYII="),url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA3CAYAAADNNiA5AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACBJREFUeNpi+P//fz4TAwPDZxDxD5X4i5fLMEwJgAADAEPVDbjNw87ZAAAAAElFTkSuQmCC");}.ace_tooltip {background-color: #FFF;background-image: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.1));border: 1px solid gray;border-radius: 1px;box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);color: black;max-width: 100%;padding: 3px 4px;position: fixed;z-index: 999999;box-sizing: border-box;cursor: default;white-space: pre;word-wrap: break-word;line-height: normal;font-style: normal;font-weight: normal;letter-spacing: normal;pointer-events: none;}.ace_folding-enabled > .ace_gutter-cell {padding-right: 13px;}.ace_fold-widget {box-sizing: border-box;margin: 0 -12px 0 1px;display: none;width: 11px;vertical-align: top;background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAANElEQVR42mWKsQ0AMAzC8ixLlrzQjzmBiEjp0A6WwBCSPgKAXoLkqSot7nN3yMwR7pZ32NzpKkVoDBUxKAAAAABJRU5ErkJggg==");background-repeat: no-repeat;background-position: center;border-radius: 3px;border: 1px solid transparent;cursor: pointer;}.ace_folding-enabled .ace_fold-widget {display: inline-block;   }.ace_fold-widget.ace_end {background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAANElEQVR42m3HwQkAMAhD0YzsRchFKI7sAikeWkrxwScEB0nh5e7KTPWimZki4tYfVbX+MNl4pyZXejUO1QAAAABJRU5ErkJggg==");}.ace_fold-widget.ace_closed {background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAAGCAYAAAAG5SQMAAAAOUlEQVR42jXKwQkAMAgDwKwqKD4EwQ26sSOkVWjgIIHAzPiCgaqiqnJHZnKICBERHN194O5b9vbLuAVRL+l0YWnZAAAAAElFTkSuQmCCXA==");}.ace_fold-widget:hover {border: 1px solid rgba(0, 0, 0, 0.3);background-color: rgba(255, 255, 255, 0.2);box-shadow: 0 1px 1px rgba(255, 255, 255, 0.7);}.ace_fold-widget:active {border: 1px solid rgba(0, 0, 0, 0.4);background-color: rgba(0, 0, 0, 0.05);box-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);}.ace_dark .ace_fold-widget {background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHklEQVQIW2P4//8/AzoGEQ7oGCaLLAhWiSwB146BAQCSTPYocqT0AAAAAElFTkSuQmCC");}.ace_dark .ace_fold-widget.ace_end {background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAH0lEQVQIW2P4//8/AxQ7wNjIAjDMgC4AxjCVKBirIAAF0kz2rlhxpAAAAABJRU5ErkJggg==");}.ace_dark .ace_fold-widget.ace_closed {background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAAFCAYAAACAcVaiAAAAHElEQVQIW2P4//+/AxAzgDADlOOAznHAKgPWAwARji8UIDTfQQAAAABJRU5ErkJggg==");}.ace_dark .ace_fold-widget:hover {box-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);background-color: rgba(255, 255, 255, 0.1);}.ace_dark .ace_fold-widget:active {box-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);}.ace_inline_button {border: 1px solid lightgray;display: inline-block;margin: -1px 8px;padding: 0 5px;pointer-events: auto;cursor: pointer;}.ace_inline_button:hover {border-color: gray;background: rgba(200,200,200,0.2);display: inline-block;pointer-events: auto;}.ace_fold-widget.ace_invalid {background-color: #FFB4B4;border-color: #DE5555;}.ace_fade-fold-widgets .ace_fold-widget {transition: opacity 0.4s ease 0.05s;opacity: 0;}.ace_fade-fold-widgets:hover .ace_fold-widget {transition: opacity 0.05s ease 0.05s;opacity:1;}.ace_underline {text-decoration: underline;}.ace_bold {font-weight: bold;}.ace_nobold .ace_bold {font-weight: normal;}.ace_italic {font-style: italic;}.ace_error-marker {background-color: rgba(255, 0, 0,0.2);position: absolute;z-index: 9;}.ace_highlight-marker {background-color: rgba(255, 255, 0,0.2);position: absolute;z-index: 8;}.ace_mobile-menu {position: absolute;line-height: 1.5;border-radius: 4px;-ms-user-select: none;-moz-user-select: none;-webkit-user-select: none;user-select: none;background: white;box-shadow: 1px 3px 2px grey;border: 1px solid #dcdcdc;color: black;}.ace_dark > .ace_mobile-menu {background: #333;color: #ccc;box-shadow: 1px 3px 2px grey;border: 1px solid #444;}.ace_mobile-button {padding: 2px;cursor: pointer;overflow: hidden;}.ace_mobile-button:hover {background-color: #eee;opacity:1;}.ace_mobile-button:active {background-color: #ddd;}.ace_placeholder {font-family: arial;transform: scale(0.9);transform-origin: left;white-space: pre;opacity: 0.7;margin: 0 10px;}
+/*# sourceURL=ace/css/ace_editor.css */</style><style type="text/css">@charset "UTF-8";[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>
+    <!-- Google Tag Manager -->
+    <!-- End Google Tag Manager -->
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex">
+
+    <!-- icon in the highest resolution we need it for -->
+    <link rel="icon" sizes="192x192" href="App_Themes/Images/logo-egs/icon-192x192.png">
+    <!-- reuse same icon for Safari -->
+    <link rel="apple-touch-icon" href="App_Themes/Images/icon-192x192.png">
+    <!-- multiple icons for IE -->
+    <meta name="msapplication-square310x310logo" content="App_Themes/logo-egs/icon-512x512.png">
+    <!-- Chrome, Firefox OS and Opera -->
+    <meta name="theme-color" content="#0A819B">
+    <!-- icon apple -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>EGS Sistemas</title>
+
+    <base href="/">
+    <link id="favicon" rel="shortcut icon" href="App_Themes/Images/logo-egs/icon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
+<meta name="x-stylesheet-fallback-test" content="" class="fa"><script type="text/javascript" async="" charset="utf-8" src="https://www.gstatic.com/recaptcha/releases/jdMmXeCQEkPbnFDy9T04NbgJ/recaptcha__pt_br.js" crossorigin="anonymous" integrity="sha384-XZW6I/8pLyepEOKC+TtIqZY2YnePfyzr82WnTLrnogxKWO0/TMA6wVz2pMNDcJC9"></script><script>!function(a,b,c,d){var e,f=document,g=f.getElementsByTagName("SCRIPT"),h=g[g.length-1].previousElementSibling,i=f.defaultView&&f.defaultView.getComputedStyle?f.defaultView.getComputedStyle(h):h.currentStyle;if(i&&i[a]!==b)for(e=0;e<c.length;e++)f.write('<link href="'+c[e]+'" '+d+"/>")}("display","inline-block",["/css/all.css"], "rel=\u0022stylesheet\u0022 ");</script>
+
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/19.2.7/css/dx.common.css">
+<meta name="x-stylesheet-fallback-test" content="" class="dx-hidden-input"><script>!function(a,b,c,d){var e,f=document,g=f.getElementsByTagName("SCRIPT"),h=g[g.length-1].previousElementSibling,i=f.defaultView&&f.defaultView.getComputedStyle?f.defaultView.getComputedStyle(h):h.currentStyle;if(i&&i[a]!==b)for(e=0;e<c.length;e++)f.write('<link href="'+c[e]+'" '+d+"/>")}("position","fixed",["/Content/dx.common.css?v=snF4ZIDD4WQuWFwwYJPWRlEsLbWsnUTKqoYbO5V7f1o"], "rel=\u0022stylesheet\u0022 ");</script>
+
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/19.2.7/css/dx.light.css">
+<meta name="x-stylesheet-fallback-test" content="" class="dx-icon"><script>!function(a,b,c,d){var e,f=document,g=f.getElementsByTagName("SCRIPT"),h=g[g.length-1].previousElementSibling,i=f.defaultView&&f.defaultView.getComputedStyle?f.defaultView.getComputedStyle(h):h.currentStyle;if(i&&i[a]!==b)for(e=0;e<c.length;e++)f.write('<link href="'+c[e]+'" '+d+"/>")}("display","inline-block",["/Content/dx.light.css?v=fbh4mGjDc93gvT-UPxQ1lDym9OmNY0AqDRZU07A7sww"], "rel=\u0022stylesheet\u0022 ");</script>
+
+    <link href="/lib/alwan/alwan.css" rel="stylesheet">
+
+    <!-- Lib css -->
+    <link href="/bundles/libCss.min.css?v=355wvpiNm2ZnuuLj0HzLcn0Hel5mGRQU6OL4nzgdQBI" rel="stylesheet">
+
+    <!-- Style css -->
+    
+
+    
+        <link href="/css/style.min.css?v=0.2&amp;v=2MKEjh76-GmORHiS9NnrrAFGvp6YgyKvAQ9P61eLYqc" rel="stylesheet">
+        <link href="/css/devexpress-sob.css?v=EmFteHWGbaY_T3dTsu-GmR5aGcwQw2PZFRJeBtRoWbE" rel="stylesheet">
+        <link href="/css/chat.css?v=5CupqHCnSOHZvAkfLhBOjuNm0sOXU7HXE47FTbZfDDk" rel="stylesheet">
+        <link href="/css/pdv.css?v=q15A4SBe2LRkEIGbSHZfPg9pIwlQeOVfhbm5Wo70NWQ" rel="stylesheet">
+        <link href="/css/pdvMobile.min.css?v=R_n9hpcB1fU1phyRMmSP5sX5FP1TNNmfEWc8DBLMel4" rel="stylesheet">
+        <link href="/css/screen1300.min.css?v=j2PDBo0n3OIrCWubByPDZIlDbT_3SjFCcFvxhJL2GQs" rel="stylesheet">
+        <link href="/css/screen1200.min.css?v=2pvC5fWSx0t4sljMr9XzD4LuuukFzHCCdu61fvaIGtM" rel="stylesheet">
+        <link href="/css/screen768.min.css?v=-31-2hfLPbErGAojc52bM5YyUcPUDkujfko1CIc_7VA" rel="stylesheet">
+        <link href="/css/screen480.min.css?v=2DGSU-8i2nNweX9T04spMSlDHvaZk-PkuxGv8o2Lkgw" rel="stylesheet">
+        <link href="/css/login.min.css?v=41nv0Hbdul3hNCzEFzc28A0LJjVOlaq51jh_UttJCCk" rel="stylesheet">
+        <link href="/css/print.min.css?v=nMMkZEuO-aR4nmOyNbLWLVHK26f22CfRUPuWwKAty14" rel="stylesheet">
+        <link href="/css/creditCard.css?v=icImxfsdRqd1aNCWri8LMpcGpMqb4bbbVFrb-ra_F7s" rel="stylesheet">
+        <link href="/css/components.min.css?v=gXyEtf4ZhbmonEoNSXitSOTLH-3TOJfW_9QiZaixqF0" rel="stylesheet">
+    
+<style>.picker_wrapper.no_alpha .picker_alpha{display:none}.picker_wrapper.no_editor .picker_editor{position:absolute;z-index:-1;opacity:0}.picker_wrapper.no_cancel .picker_cancel{display:none}.layout_default.picker_wrapper{display:-webkit-box;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;flex-flow:row wrap;-webkit-box-pack:justify;justify-content:space-between;-webkit-box-align:stretch;align-items:stretch;font-size:10px;width:25em;padding:.5em}.layout_default.picker_wrapper input,.layout_default.picker_wrapper button{font-size:1rem}.layout_default.picker_wrapper>*{margin:.5em}.layout_default.picker_wrapper::before{content:'';display:block;width:100%;height:0;-webkit-box-ordinal-group:2;order:1}.layout_default .picker_slider,.layout_default .picker_selector{padding:1em}.layout_default .picker_hue{width:100%}.layout_default .picker_sl{-webkit-box-flex:1;flex:1 1 auto}.layout_default .picker_sl::before{content:'';display:block;padding-bottom:100%}.layout_default .picker_editor{-webkit-box-ordinal-group:2;order:1;width:6.5rem}.layout_default .picker_editor input{width:100%;height:100%}.layout_default .picker_sample{-webkit-box-ordinal-group:2;order:1;-webkit-box-flex:1;flex:1 1 auto}.layout_default .picker_done,.layout_default .picker_cancel{-webkit-box-ordinal-group:2;order:1}.picker_wrapper{box-sizing:border-box;background:#f2f2f2;box-shadow:0 0 0 1px silver;cursor:default;font-family:sans-serif;color:#444;pointer-events:auto}.picker_wrapper:focus{outline:none}.picker_wrapper button,.picker_wrapper input{box-sizing:border-box;border:none;box-shadow:0 0 0 1px silver;outline:none}.picker_wrapper button:focus,.picker_wrapper button:active,.picker_wrapper input:focus,.picker_wrapper input:active{box-shadow:0 0 2px 1px dodgerblue}.picker_wrapper button{padding:.4em .6em;cursor:pointer;background-color:whitesmoke;background-image:-webkit-gradient(linear, left bottom, left top, from(gainsboro), to(transparent));background-image:-webkit-linear-gradient(bottom, gainsboro, transparent);background-image:linear-gradient(0deg, gainsboro, transparent)}.picker_wrapper button:active{background-image:-webkit-gradient(linear, left bottom, left top, from(transparent), to(gainsboro));background-image:-webkit-linear-gradient(bottom, transparent, gainsboro);background-image:linear-gradient(0deg, transparent, gainsboro)}.picker_wrapper button:hover{background-color:white}.picker_selector{position:absolute;z-index:1;display:block;-webkit-transform:translate(-50%, -50%);transform:translate(-50%, -50%);border:2px solid white;border-radius:100%;box-shadow:0 0 3px 1px #67b9ff;background:currentColor;cursor:pointer}.picker_slider .picker_selector{border-radius:2px}.picker_hue{position:relative;background-image:-webkit-gradient(linear, left top, right top, from(red), color-stop(yellow), color-stop(lime), color-stop(cyan), color-stop(blue), color-stop(magenta), to(red));background-image:-webkit-linear-gradient(left, red, yellow, lime, cyan, blue, magenta, red);background-image:linear-gradient(90deg, red, yellow, lime, cyan, blue, magenta, red);box-shadow:0 0 0 1px silver}.picker_sl{position:relative;box-shadow:0 0 0 1px silver;background-image:-webkit-gradient(linear, left top, left bottom, from(white), color-stop(50%, rgba(255,255,255,0))),-webkit-gradient(linear, left bottom, left top, from(black), color-stop(50%, rgba(0,0,0,0))),-webkit-gradient(linear, left top, right top, from(gray), to(rgba(128,128,128,0)));background-image:-webkit-linear-gradient(top, white, rgba(255,255,255,0) 50%),-webkit-linear-gradient(bottom, black, rgba(0,0,0,0) 50%),-webkit-linear-gradient(left, gray, rgba(128,128,128,0));background-image:linear-gradient(180deg, white, rgba(255,255,255,0) 50%),linear-gradient(0deg, black, rgba(0,0,0,0) 50%),linear-gradient(90deg, gray, rgba(128,128,128,0))}.picker_alpha,.picker_sample{position:relative;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2'%3E%3Cpath d='M1,0H0V1H2V2H1' fill='lightgrey'/%3E%3C/svg%3E") left top/contain white;box-shadow:0 0 0 1px silver}.picker_alpha .picker_selector,.picker_sample .picker_selector{background:none}.picker_editor input{font-family:monospace;padding:.2em .4em}.picker_sample::before{content:'';position:absolute;display:block;width:100%;height:100%;background:currentColor}.picker_arrow{position:absolute;z-index:-1}.picker_wrapper.popup{position:absolute;z-index:2;margin:1.5em}.picker_wrapper.popup,.picker_wrapper.popup .picker_arrow::before,.picker_wrapper.popup .picker_arrow::after{background:#f2f2f2;box-shadow:0 0 10px 1px rgba(0,0,0,0.4)}.picker_wrapper.popup .picker_arrow{width:3em;height:3em;margin:0}.picker_wrapper.popup .picker_arrow::before,.picker_wrapper.popup .picker_arrow::after{content:"";display:block;position:absolute;top:0;left:0;z-index:-99}.picker_wrapper.popup .picker_arrow::before{width:100%;height:100%;-webkit-transform:skew(45deg);transform:skew(45deg);-webkit-transform-origin:0 100%;transform-origin:0 100%}.picker_wrapper.popup .picker_arrow::after{width:150%;height:150%;box-shadow:none}.popup.popup_top{bottom:100%;left:0}.popup.popup_top .picker_arrow{bottom:0;left:0;-webkit-transform:rotate(-90deg);transform:rotate(-90deg)}.popup.popup_bottom{top:100%;left:0}.popup.popup_bottom .picker_arrow{top:0;left:0;-webkit-transform:rotate(90deg) scale(1, -1);transform:rotate(90deg) scale(1, -1)}.popup.popup_left{top:0;right:100%}.popup.popup_left .picker_arrow{top:0;right:0;-webkit-transform:scale(-1, 1);transform:scale(-1, 1)}.popup.popup_right{top:0;left:100%}.popup.popup_right .picker_arrow{top:0;left:0}</style><link rel="apple-touch-icon" href="App_Themes/Images/logo-egs/icon.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_16_Pro_Max_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_16_Pro_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_16_Plus__iPhone_15_Pro_Max__iPhone_15_Plus__iPhone_14_Pro_Max_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_16__iPhone_15_Pro__iPhone_15__iPhone_14_Pro_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_14_Plus__iPhone_13_Pro_Max__iPhone_12_Pro_Max_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_14__iPhone_13_Pro__iPhone_13__iPhone_12_Pro__iPhone_12_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_13_mini__iPhone_12_mini__iPhone_11_Pro__iPhone_XS__iPhone_X_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_11_Pro_Max__iPhone_XS_Max_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_11__iPhone_XR_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_8_Plus__iPhone_7_Plus__iPhone_6s_Plus__iPhone_6_Plus_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_8__iPhone_7__iPhone_6s__iPhone_6__4.7__iPhone_SE_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-4__iPhone_SE__iPod_touch_5th_generation_and_later_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 1032px) and (device-height: 1376px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-13__iPad_Pro_M4_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-12.9__iPad_Pro_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1210px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-11__iPad_Pro_M4_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-11__iPad_Pro__10.5__iPad_Pro_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-10.9__iPad_Air_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-10.5__iPad_Air_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-10.2__iPad_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-9.7__iPad_Pro__7.9__iPad_mini__9.7__iPad_Air__9.7__iPad_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="App_Themes/Images/splash-screens/tema-padrao-8.3__iPad_Mini_landscape.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_16_Pro_Max_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_16_Pro_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_16_Plus__iPhone_15_Pro_Max__iPhone_15_Plus__iPhone_14_Pro_Max_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_16__iPhone_15_Pro__iPhone_15__iPhone_14_Pro_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_14_Plus__iPhone_13_Pro_Max__iPhone_12_Pro_Max_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_14__iPhone_13_Pro__iPhone_13__iPhone_12_Pro__iPhone_12_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_13_mini__iPhone_12_mini__iPhone_11_Pro__iPhone_XS__iPhone_X_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_11_Pro_Max__iPhone_XS_Max_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_11__iPhone_XR_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_8_Plus__iPhone_7_Plus__iPhone_6s_Plus__iPhone_6_Plus_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-iPhone_8__iPhone_7__iPhone_6s__iPhone_6__4.7__iPhone_SE_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-4__iPhone_SE__iPod_touch_5th_generation_and_later_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 1032px) and (device-height: 1376px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-13__iPad_Pro_M4_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-12.9__iPad_Pro_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1210px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-11__iPad_Pro_M4_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-11__iPad_Pro__10.5__iPad_Pro_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-10.9__iPad_Air_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-10.5__iPad_Air_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-10.2__iPad_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-9.7__iPad_Pro__7.9__iPad_mini__9.7__iPad_Air__9.7__iPad_portrait.png"><link rel="apple-touch-startup-image" media="screen and (device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="App_Themes/Images/splash-screens/tema-padrao-8.3__iPad_Mini_portrait.png"></head>
+<body class="scrollbar-dynamic theme-default modal-open"><div uib-modal-window="modal-window" class="modal zindex ng-scope ng-isolate-scope in" role="dialog" index="0" animate="animate" ng-style="{'z-index': 1050 + $$topModalIndex*10, display: 'block'}" tabindex="-1" uib-modal-animation-class="fade" modal-in-class="in" style="z-index: 1050; display: block;"><div class="modal-dialog  ui-draggable"><div class="modal-content" uib-modal-transclude=""><div class="modal-body box-modal text-center ng-scope" id="modalMsgAlertGeral" style="border-top-left-radius: 6px;border-top-right-radius: 6px; min-height: initial;">
+    <h4 class="ng-binding">Todos os seus acessos já estão sendo utilizados. Usuários contratados 1. Usuários online 1.</h4>
+</div>
+<div class="modal-footer ng-scope">
+    <div class="col-xs-12 modal-btn">
+        <button class="btn btn-block btn-default msgButton" ng-click="close()">OK</button>
+    </div>
+</div></div></div>
+</div><div uib-modal-backdrop="modal-backdrop" class="modal-backdrop ng-scope in" ng-style="{'z-index': 1040 + (index &amp;&amp; 1 || 0) + index*10}" uib-modal-animation-class="fade" modal-in-class="in" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true" style="z-index: 1040;"></div>
+    <!-- Google Tag Manager (noscript) -->
+    <!-- End Google Tag Manager (noscript) -->
+
+    <div b-tukh1rrnlg="" ng-show="firstTutorialBlock" id="onboardingFirstTutorial" class="hide-not ng-hide" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+        <div b-tukh1rrnlg="" id="firstTutorialBackground" class="first-tutorial-backdrop ng-hide" ng-show="firstTutorialBlock"></div>
+    </div>
+
+    <div b-tukh1rrnlg="" ng-show="onboardingElement" id="onboarding" class="hide-not ng-hide" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+        <div b-tukh1rrnlg="" id="onboarding-element">
+            <div b-tukh1rrnlg="" class="onboarding-text ng-hide" ng-show="onboardingText != null">
+                <p b-tukh1rrnlg="" class="ng-binding"></p>
+                <button b-tukh1rrnlg="" class="btn ml2 w100" ng-click="stopOnboarding()">Ok</button>
+            </div>
+        </div>
+    </div>
+
+    <div b-tukh1rrnlg="" id="online" ng-hide="isOnline" class="ng-hide" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+        <h3 b-tukh1rrnlg="">Sem Internet!</h3>
+        <hr b-tukh1rrnlg="">
+        <p b-tukh1rrnlg="" ng-show="!logado">Tente restabelecer a conexão.</p>
+        <p b-tukh1rrnlg="" ng-show="logado" class="ng-hide">Tente restabelecer a conexão. As alterações feitas agora podem não ser salvas.</p>
+    </div>
+
+    <span b-tukh1rrnlg="" id="slowConnectionMessage" class="text-danger error-login" style="display: none; min-height: 60px;" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+        <span b-tukh1rrnlg="" class="box-error-login">
+
+        </span>
+        <br b-tukh1rrnlg="">
+        <a b-tukh1rrnlg="" href="#" class="link" ng-click="openFiltroPeriodo()" style="color: white;text-decoration: underline;">Clique aqui.</a>
+        <span b-tukh1rrnlg="" class="egs-close" ng-click="showSlowConnectionMessageClose()">X</span>
+    </span>
+
+    <div b-tukh1rrnlg="" class="load jqmOverlay" style="display: none;" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+        <div b-tukh1rrnlg="" class="loader-serve">
+            <div b-tukh1rrnlg="" class="loader-spin-wrapper">
+                <img src="/App_Themes/Images/logo-egs/icon-64x64.svg">
+            </div>
+            <div b-tukh1rrnlg="" class="box-title-loader">
+                <p b-tukh1rrnlg="">Carregando...</p>
+                <p b-tukh1rrnlg="" ng-show="timeOut" style="font-weight: 900;" class="ng-binding ng-hide">Estabelecendo comunicação com aplicativo A3,  aguarde... </p>
+            </div>
+        </div>
+    </div>
+
+    <div b-tukh1rrnlg="" class="load serverNotFound" style="background:black;" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+        <div b-tukh1rrnlg="" class="loader-serve">
+            <div b-tukh1rrnlg="" class="loader-spin-wrapper">
+                <img src="/App_Themes/Images/logo-egs/icon-64x64.svg">
+            </div>
+            <div b-tukh1rrnlg="" class="box-title-loader">
+                <p b-tukh1rrnlg="">Você perdeu a conexão com o servidor, aguarde enquanto tentamos restabelecer... </p>
+                <p b-tukh1rrnlg="">Dúvidas ligue para 4007-2642</p>
+            </div>
+        </div>
+    </div>
+
+    <div b-tukh1rrnlg="" style="height:100%;" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+        <div b-tukh1rrnlg="" class="box-main">
+            <!-- Menu -->
+            <!-- ngInclude: --><ng-include b-tukh1rrnlg="" ng-show="showMenu()" src="'/Views/menu/menu.html'" class="ng-scope ng-hide"><div class="box-menu print-not ng-scope" ng-controller="menuCtrl">
+    <div class="box-company">
+        <div class="box-company-name" ng-click="selectEmpresa()">
+            <div class="company-name">
+                <div class="person-name ng-binding" title=""></div>
+                <div title="" class="ng-binding">CPF/CNPJ: </div>
+                <!-- ngIf: selectedIdEmpresa || UFSelected -->
+                <div title="" class="ng-binding">Usuário: </div>
+            </div>
+            <span class="fa fa-chevron-right"></span>
+        </div>
+    </div>
+    <div id="menu-container-main">
+        <div class="search-menu">
+            <div class="input-group" style="overflow:hidden;">
+                <input type="text" placeholder="Pesquisa..." class="form-control ng-pristine ng-untouched ng-valid ng-empty" ng-model="searchMenu" ng-click="$event.stopPropagation();">
+                <span ng-show="searchMenu" class="egs-close-input ng-hide" ng-click="searchMenu = ''">X</span>
+                <span class="input-group-addon" type="button"><i class="fa fa-search"></i></span>
+            </div>
+        </div>
+        <div id="menu-inicio-container">
+            <a id="menu-inicio-button" href="/" ng-mousedown="abreNovaAba($event, '')">
+                <i class="fa fa-home menu-icone" style="font-size: 16px"></i>
+                <span class="title-menu title-categoria-menu">INÍCIO</span>
+            </a>
+            <div ng-click="collapseAll()" class="expand-menu-egs" title="Expandir menu">
+                <i class="fa fa-expand" ng-class="{'fa-expand': recolherTodos, 'fa-compress': !recolherTodos}"></i>
+            </div>
+        </div>
+        <div class="scroll-wrapper scrollbar-dynamic scrollbar-menu-vertical" style="position: relative;"><div id="wrapperMenu" class="scrollbar-dynamic scrollbar-menu-vertical scroll-content" style="height: auto; margin-bottom: 0px; margin-right: 0px; max-height: 0px;">
+            <!-- ngIf: possuiFavoritos() -->
+            <div>
+                <ul class="menu-dashboard connectedSortable nav nav-pills nav-stacked">
+                    <!-- ngRepeat: m in menuOptions | filter: filterNivel1 -->
+                </ul>
+            </div>
+            <!--<div class="sidebar-footer hidden-small">
+                <a ng-click="suporte()">
+                    <span class="fas fa-headset"></span> <span class="text-icon">SUPORTE</span>
+                </a>
+                <a ng-click="logOut()">
+                    <span class="fa fa-power-off" aria-hidden="true"></span><span class="text-icon">SAIR</span>
+                </a>
+            </div>-->
+        </div><div class="scroll-element scroll-x"><div class="scroll-element_outer"><div class="scroll-element_size"></div><div class="scroll-element_track"></div><div class="scroll-bar"></div></div></div><div class="scroll-element scroll-y"><div class="scroll-element_outer"><div class="scroll-element_size"></div><div class="scroll-element_track"></div><div class="scroll-bar"></div></div></div></div>
+    </div>
+    <div class="sidebar-footer hidden-small">
+        <div class="wrap-text-footer">
+            <div class="ng-binding">Chave: </div>
+        </div>
+    </div>
+</div>
+<div class="bg-menu-mobile ng-scope"></div>
+</ng-include>
+
+            <div b-tukh1rrnlg="" class="box-container-main">
+                <!-- Menu horizontal -->
+                <!-- ngInclude: --><ng-include b-tukh1rrnlg="" ng-show="showMenuHorizontal()" src="'/Views/menu/menu-horizontal.html'" class="ng-scope ng-hide"><div class="row col-md-12 menu-horizontal print-not ng-scope" ng-controller="menuCtrl">
+    <i id="btnMenu" class="far fa-bars container-icon-menu"></i>
+    <div class="box-company-egs" style="height: 45px;" ng-click="goTo('home')">
+        <img title="Ir para tela inicial" style="display: none" class="img-mobile" alt="logo-empresa" src="App_Themes/Images/logo-egs/icon.svg">
+        <!-- ngInclude: srcLogo --><div title="Ir para tela inicial" class="img-desk ng-scope" alt="logo-empresa" ng-include="srcLogo"><svg width="96" height="40" viewBox="0 0 96 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="ng-scope">
+<g id="Group 149">
+<g id="Group 141">
+<path id="Vector" d="M51.461 3.76369V7.56078H42.2722L42.278 12.3702H51.461V16.0839H42.278L42.2741 21.4601H51.461V25.2287H37.9766V3.76369H51.4591H51.461Z" fill="white"></path>
+<path id="Vector_2" d="M71.1856 9.82912C69.9983 8.50716 68.8902 7.65317 65.9135 7.65317C62.053 7.65317 59.0394 10.7314 59.0394 14.4806C59.0394 18.2299 61.9686 21.2797 65.9135 21.2797C68.4497 21.2797 71.1041 19.8286 71.9772 17.4498H64.1741V13.5053H76.9068C77.2012 21.4934 70.6316 25.3815 65.8557 25.2241C59.8835 25.2241 55.0386 20.4115 55.0386 14.4806C55.0386 8.54972 59.8835 3.76368 65.8557 3.76368C70.7899 3.76368 74.1143 6.48535 75.7765 9.82912H71.1856Z" fill="white"></path>
+<path id="Vector_3" d="M87.882 7.57055C86.608 7.57055 85.4192 8.57725 85.4192 9.64082C85.4192 11.5992 88.1647 12.1035 90.1454 13.0268C92.494 14.1188 95.0129 15.0137 95.2104 18.9324C95.3808 22.1515 91.9267 25.257 87.9363 25.2285C83.0687 25.2001 80.4937 21.507 80.4937 18.3997H84.852C84.852 19.8272 85.8994 21.4216 87.8511 21.4216C89.8027 21.4216 90.794 19.7154 90.7669 19.0158C90.6546 17.7285 90.0312 16.9171 88.4184 16.1891C85.4463 14.8734 81.0609 14.2307 81.0609 9.80765C81.0609 6.61693 84.2033 3.76368 87.9091 3.76368C91.9286 3.76368 94.5889 6.75723 94.7864 9.78111H90.3138C90.3138 8.71754 89.1812 7.57055 87.8801 7.57055H87.882Z" fill="white"></path>
+</g>
+<g id="SISTEMAS">
+<path id="Vector_4" d="M90.2064 39.9514C89.7086 39.9514 89.2606 39.8724 88.8624 39.71C88.4713 39.5432 88.1655 39.315 87.9403 39.0274C87.7151 38.7333 87.6013 38.3953 87.5942 38.0134H88.6467C88.6822 38.3405 88.8268 38.6192 89.0804 38.8453C89.3412 39.0669 89.7157 39.1767 90.2087 39.1767C90.6781 39.1767 91.0478 39.0691 91.3133 38.8562C91.5883 38.6346 91.7257 38.3536 91.7257 38.0134C91.7257 37.7457 91.6452 37.5284 91.4863 37.3616C91.3275 37.1948 91.1284 37.0675 90.889 36.9797C90.6496 36.8919 90.3296 36.7997 89.9243 36.6988C89.4265 36.5781 89.0236 36.4573 88.7202 36.3388C88.4239 36.2181 88.1679 36.0316 87.9498 35.777C87.7412 35.5158 87.6345 35.169 87.6345 34.7344C87.6345 34.3525 87.7388 34.0145 87.9474 33.7204C88.156 33.4263 88.4499 33.1981 88.8244 33.0379C89.2084 32.8776 89.6446 32.7964 90.1353 32.7964C90.844 32.7964 91.4224 32.961 91.8703 33.2881C92.3255 33.6151 92.5815 34.0497 92.6407 34.5918H91.5575C91.5219 34.324 91.3702 34.0914 91.1023 33.8894C90.8345 33.6831 90.4813 33.5778 90.0404 33.5778C89.628 33.5778 89.2938 33.6787 89.033 33.8785C88.7723 34.0716 88.6419 34.346 88.6419 34.7015C88.6419 34.9561 88.7178 35.1624 88.8695 35.3226C89.0283 35.4829 89.2203 35.608 89.4431 35.6936C89.6754 35.7748 89.9954 35.8669 90.4078 35.9745C90.9056 36.1018 91.3086 36.2291 91.612 36.3564C91.9154 36.4771 92.1761 36.668 92.3918 36.9292C92.6099 37.1838 92.7165 37.5306 92.7165 37.9717C92.7165 38.3119 92.6194 38.6346 92.425 38.9353C92.2306 39.2359 91.9415 39.4796 91.5575 39.6683C91.1758 39.8549 90.7231 39.9493 90.204 39.9493L90.2064 39.9514Z" fill="white"></path>
+<path id="Vector_5" d="M78.7761 38.3256H75.4062L74.7855 39.9514H73.7212L76.5093 32.7964H77.673L80.4611 39.9493H79.3968L78.7761 38.3256ZM78.49 37.584L77.0911 34.0537L75.6947 37.5862H78.4876L78.49 37.584Z" fill="white"></path>
+<path id="Vector_6" d="M66.5878 32.7964V39.9493H65.5818V34.7091L63.0378 39.9514H62.3292L59.7755 34.7003V39.9514H58.7695V32.7986H59.8529L62.6847 38.6814L65.5141 32.7964H66.5878Z" fill="white"></path>
+<path id="Vector_7" d="M48.576 33.5493V35.9767H51.3137V36.7295H48.576V39.1986H51.6367V39.9514H47.5928V32.7964H51.6343V33.5493H48.5737H48.576Z" fill="white"></path>
+<path id="Vector_8" d="M40.4568 32.7964V33.5383H38.3942L38.3894 39.9514H37.402L37.4091 33.5383H35.3369V32.7964H40.4592H40.4568Z" fill="white"></path>
+<path id="Vector_9" d="M25.6276 39.9514C25.1168 39.9514 24.657 39.8724 24.2483 39.71C23.8469 39.5432 23.5331 39.315 23.302 39.0274C23.0709 38.7333 22.9541 38.3953 22.9468 38.0134H24.0269C24.0634 38.3405 24.2118 38.6192 24.4721 38.8453C24.7397 39.0669 25.1241 39.1767 25.6301 39.1767C26.1117 39.1767 26.4912 39.0691 26.7637 38.8562C27.0459 38.6346 27.187 38.3536 27.187 38.0134C27.187 37.7457 27.1043 37.5284 26.9413 37.3616C26.7783 37.1948 26.574 37.0675 26.3283 36.9797C26.0825 36.8919 25.7541 36.7997 25.3381 36.6988C24.8273 36.5781 24.4137 36.4573 24.1023 36.3388C23.7982 36.2181 23.5355 36.0316 23.3117 35.777C23.0952 35.5158 22.9881 35.169 22.9881 34.7344C22.9881 34.3525 23.0952 34.0145 23.3093 33.7204C23.5233 33.4263 23.825 33.1981 24.2094 33.0379C24.601 32.8776 25.0511 32.7964 25.5547 32.7964C26.282 32.7964 26.8756 32.961 27.3354 33.2881C27.8025 33.6151 28.0652 34.0497 28.126 34.5918H27.0143C26.9778 34.324 26.8221 34.0914 26.5472 33.8894C26.2723 33.6831 25.9098 33.5778 25.4573 33.5778C25.0341 33.5778 24.691 33.6787 24.4234 33.8785C24.1558 34.0716 24.022 34.346 24.022 34.7015C24.022 34.9561 24.0999 35.1624 24.2556 35.3226C24.4186 35.4829 24.6156 35.608 24.8443 35.6936C25.0827 35.7748 25.4111 35.8669 25.8344 35.9745C26.3453 36.1018 26.7564 36.2291 27.0702 36.3564C27.3816 36.4771 27.6492 36.668 27.8706 36.9292C28.0944 37.1838 28.2039 37.5306 28.2039 37.9717C28.2039 38.3119 28.1041 38.6346 27.9047 38.9353C27.7052 39.2359 27.4084 39.4796 27.0143 39.6683C26.6226 39.8549 26.158 39.9493 25.6252 39.9493L25.6276 39.9514Z" fill="white"></path>
+<path id="Vector_10" d="M15.8137 32.7964V39.9514H14.8701V32.7964H15.8137Z" fill="white"></path>
+<path id="Vector_11" d="M5.22638 39.9514C4.72861 39.9514 4.28061 39.8724 3.88239 39.71C3.49129 39.5432 3.18551 39.3149 2.96033 39.0274C2.73515 38.7333 2.62137 38.3953 2.61426 38.0134H3.66669C3.70224 38.3405 3.84684 38.6192 4.10047 38.8453C4.3612 39.0669 4.73572 39.1767 5.22875 39.1767C5.69808 39.1767 6.06784 39.0691 6.33332 38.8562C6.60828 38.6346 6.74577 38.3536 6.74577 38.0134C6.74577 37.7457 6.66517 37.5284 6.50636 37.3616C6.34755 37.1948 6.14844 37.0675 5.90904 36.9797C5.66963 36.8919 5.34963 36.7997 4.94431 36.6988C4.44653 36.578 4.04357 36.4573 3.74017 36.3388C3.44388 36.2181 3.18788 36.0315 2.96981 35.7769C2.76122 35.5158 2.65456 35.169 2.65456 34.7344C2.65456 34.3525 2.75885 34.0145 2.96744 33.7204C3.17603 33.4263 3.46995 33.1981 3.84446 33.0378C4.22609 32.8776 4.6646 32.7964 5.15526 32.7964C5.86399 32.7964 6.44236 32.961 6.89035 33.2881C7.34546 33.6151 7.60146 34.0496 7.66071 34.5918H6.57747C6.54191 34.324 6.39021 34.0913 6.12237 33.8894C5.85452 33.6831 5.50133 33.5778 5.06045 33.5778C4.64801 33.5778 4.31379 33.6787 4.05306 33.8785C3.79232 34.0716 3.66195 34.3459 3.66195 34.7015C3.66195 34.9561 3.7378 35.1624 3.8895 35.3226C4.04831 35.4828 4.24032 35.6079 4.46313 35.6935C4.69542 35.7748 5.01542 35.8669 5.42786 35.9745C5.92563 36.1018 6.32858 36.2291 6.63199 36.3564C6.93539 36.4771 7.19613 36.668 7.41183 36.9292C7.62753 37.1838 7.73657 37.5306 7.73657 37.9717C7.73657 38.3119 7.63938 38.6346 7.44501 38.9353C7.25064 39.2359 6.96146 39.4796 6.57747 39.6683C6.19584 39.8549 5.74311 39.9492 5.224 39.9492L5.22638 39.9514Z" fill="white"></path>
+</g>
+<g id="Group 148">
+<g id="Group">
+<path id="Vector_12" d="M24.4188 5.28812C24.41 7.5338 22.6112 9.31498 20.3878 9.30612C19.5614 9.30243 19.5047 9.23006 19.1022 9.09049C18.8441 8.95092 18.5802 8.82316 18.3045 8.71387C17.3801 8.33651 16.365 8.12826 15.3012 8.12383C14.2374 8.1194 13.1066 8.3439 12.1305 8.76113C11.9499 8.83867 11.7693 8.92212 11.5946 9.01221C11.1493 9.1791 10.6679 9.27363 10.1629 9.27141C7.93882 9.26255 6.15186 7.43632 6.15186 5.19064C6.15186 3.53647 7.06524 2.33424 8.08331 1.73608C8.36639 1.59282 8.64947 1.46137 8.94435 1.33583C10.9075 0.494719 13.0675 0.0398227 15.3336 0.0486843C17.5998 0.0582844 19.9536 0.579643 21.9757 1.50864C22.048 1.54482 22.1254 1.57584 22.1976 1.61202C23.5231 2.2796 24.4254 3.66866 24.4188 5.26375V5.28738V5.28812Z" fill="#6BC6A6"></path>
+<path id="Vector_13" d="M17.3611 3.82075C16.5672 5.51923 17.3007 7.54411 19.0021 8.33944C20.6977 9.13477 22.7191 8.39999 23.513 6.69561C24.307 4.99713 23.5735 2.97225 21.872 2.17692C20.1765 1.38159 18.1551 2.11637 17.3611 3.82075Z" fill="#36886B"></path>
+</g>
+<g id="Group_2">
+<path id="Vector_14" d="M2.11271 12.4162C4.0707 11.3226 6.50271 12.0182 7.58564 13.9641C7.98815 14.687 7.95277 14.7727 8.0287 15.1921C8.03386 15.486 8.05229 15.7785 8.09283 16.0731C8.21816 17.0649 8.53441 18.0537 9.05266 18.9842C9.57091 19.9154 10.3206 20.7927 11.1625 21.4388C11.3188 21.5585 11.4802 21.6752 11.6439 21.7837C12.0073 22.0909 12.3258 22.4646 12.5713 22.9062C13.6542 24.852 12.9428 27.3074 10.9885 28.4092C9.54953 29.2208 8.05524 29.0133 7.0357 28.4174C6.77178 28.2409 6.51892 28.0577 6.26533 27.862C4.57052 26.5609 3.11529 24.8986 2.01171 22.9158C0.908132 20.9337 0.206322 18.6231 0.0234978 16.4017C0.0198119 16.3213 0.00801674 16.2378 0.00433077 16.1573C-0.0649656 14.6723 0.700243 13.2042 2.09133 12.4266L2.11197 12.4155L2.11271 12.4162Z" fill="#9CE3FF"></path>
+<path id="Vector_15" d="M4.29852 19.2973C6.16583 19.157 7.56724 17.5235 7.42423 15.6486C7.28416 13.778 5.65348 12.3742 3.78175 12.5175C1.91443 12.6578 0.513023 14.2913 0.656038 16.1662C0.796105 18.0368 2.42678 19.4406 4.29852 19.2973Z" fill="#3FC0EF"></path>
+</g>
+<g id="Group_3">
+<path id="Vector_16" d="M19.464 28.3673C17.5126 27.261 16.841 24.8189 17.9365 22.8797C18.3434 22.1597 18.4348 22.1449 18.7533 21.8621C19.001 21.7048 19.2413 21.5364 19.4713 21.3489C20.252 20.7256 20.9302 19.9413 21.4544 19.0138C21.9785 18.0863 22.3361 16.9882 22.4496 15.9322C22.4702 15.7365 22.4857 15.5379 22.4931 15.3414C22.5661 14.8703 22.7187 14.4036 22.9679 13.9634C24.0633 12.0242 26.527 11.3559 28.4828 12.4548C29.9226 13.2634 30.5234 14.6502 30.5462 15.8318C30.533 16.1493 30.5086 16.4609 30.4732 16.78C30.2454 18.9067 29.5857 21.0158 28.4688 22.992C27.3527 24.9674 25.7471 26.7692 23.9491 28.0815C23.882 28.1265 23.8178 28.1797 23.7508 28.2247C22.5211 29.0563 20.8705 29.1655 19.4846 28.3798L19.464 28.368V28.3673Z" fill="#FDB07B"></path>
+<path id="Vector_17" d="M24.1932 22.9174C23.1022 21.3932 20.9805 21.0432 19.456 22.1413C17.9344 23.2342 17.585 25.3595 18.6812 26.8867C19.7722 28.4109 21.8939 28.7609 23.4184 27.6628C24.94 26.5699 25.2894 24.4446 24.1932 22.9174Z" fill="#F08033"></path>
+</g>
+</g>
+</g>
+</svg>
+</div>
+    </div>
+    <a id="expandMenuHorizontal" class="far fa-ellipsis-v menu-smart-h" role="button" data-toggle="collapse" href="#menu-smart" aria-expanded="false" aria-controls="collapseExample">
+    </a>
+    <div class="collapse" id="menu-smart">
+        <div id="h-icons">
+            <egs-button-balanca ng-show="isPdv()" button-pdv="true" class="ng-isolate-scope ng-hide"><!-- ngIf: defaultButton && !buttonPapelApontamento && !buttonPdv -->
+
+<!-- ngIf: buttonPapelApontamento && !buttonPdv -->
+
+<!-- ngIf: buttonPdv && !buttonPapelApontamento --><button ng-if="buttonPdv &amp;&amp; !buttonPapelApontamento" class="learn-more ng-scope bg-active-balanca" ng-click="ativarBalanca()" ng-class="{'bg-active': balancaConectada, 'bg-active-balanca': !balancaConectada}">
+    <div class="circle">
+        <i id="button-balance-icon" class="icon fas fa-balance-scale-left"></i>
+        <div id="button-balance-text" class="text-icon ng-binding">Ativar Balança </div>
+    </div>
+</button><!-- end ngIf: buttonPdv && !buttonPapelApontamento --></egs-button-balanca>
+            <button class="learn-more" ng-click="agenda()">
+                <div class="circle">
+                    <div class="text-icon-button">Agenda</div>
+                    <span class="icon far fa-calendar"></span>
+                </div>
+            </button>
+            <!-- ngIf: estaNaEmpresaEgs() -->
+
+            <button class="learn-more" ng-click="periodo()">
+                <div class="circle">
+                    <div class="text-icon-button">Filtrar por Período</div>
+                    <span class="icon far fa-filter"></span>
+                </div>
+            </button>
+
+            <div class="menu-collapse-notificacao">
+                <button class="learn-more" type="button" ng-class="{'has-notification-alert': !mensagensLidas() &amp;&amp; hasNotificaoImportante()}" data-toggle="collapse" data-target="#collapseNotificacao">
+                    <i id="expandSubmenuNotificacao" class="text-icon-button expandSubmenu far fa-chevron-down"></i>
+                    <div id="notificacao" class="circle">
+                        <div class="text-icon-button">Notificações</div>
+                        <span class="icon far fa-bell faa-ring" ng-class="{'animated': !mensagensLidas() &amp;&amp; hasNotifications()}"></span>
+                        <div ng-show="!mensagensLidas() &amp;&amp; hasNotifications()" class="egs-badge ng-hide"></div>
+                    </div>
+                </button>
+
+                <div class="collapse" id="collapseNotificacao" style="max-width:340px; width:100%;">
+                    <div class="link-menu submenu-title submenu-mobile">
+                        <span class="far fa-bell faa-ring"></span>
+                        <div class="text-icon">Notificação</div>
+                    </div>
+                    <div class="notificacoes-container">
+                        <div class="well">
+                            <div ng-show="!hasNotifications()" class="box-no-notification" style="border: none !important;">
+                                <h2>Sem notificações</h2>
+                            </div>
+                            <!-- ngRepeat: msg in notifications | orderBy:'-DATAINI' -->
+                        </div>
+                        <div class="box-notification-link" style="border:none" ng-click="closeMenuCollapse('notificacao')" ui-sref="notificacoes" href="/notificacoes">
+                            <div class="box-body-not">
+                                <p>Ver notificações</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-collapse-cliente">
+                <button class="learn-more" type="button" data-toggle="collapse" data-target="#collapseCliente">
+                    <i id="expandSubmenuCliente" class="text-icon-button expandSubmenu far fa-chevron-down"></i>
+                    <div id="cliente" class="circle">
+                        <span class="icon far fa-cog"></span>
+                        <div class="text-icon-button">Área do Cliente</div>
+                    </div>
+                </button>
+
+                <div class="collapse" id="collapseCliente" style="max-width:200px; width:100%;">
+                    <div class="well" style="padding: 0;">
+                        <div class="link-menu submenu-title submenu-mobile">
+                            <span class="far fa-cog"></span>
+                            <div class="text-icon ml10">Área do Cliente</div>
+                        </div>
+                        <div class="link-menu" ng-click="openPortalCliente()">
+                            <span class="far fa-user-circle"></span>
+                            <div class="text-icon ml10">Área do Cliente</div>
+                        </div>
+                        <div class="link-menu" ui-sref="email-saida" href="/email-saida">
+                            <span class="far fa-envelope"></span>
+                            <div class="text-icon ml10">Consulta E-mails</div>
+                        </div>
+                        <div class="link-menu" ng-click="openTrocarSenha()">
+                            <span class="far fa-lock-alt"></span>
+                            <div class="text-icon ml10">Alterar Senha</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-collapse-suporte">
+                <button class="learn-more" style="background: var(--cor-laranja-500)" type="button" data-toggle="collapse" data-target="#collapseSuporte">
+                    <i id="expandSubmenuSuporte" class="text-icon-button expandSubmenu far fa-chevron-down"></i>
+                    <div id="suporte" class="circle">
+                        <span class="icon fas fa-headset"></span>
+                        <div class="text-icon-button menu-suporte-text">Suporte Técnico</div>
+                    </div>
+                </button>
+
+                <div class="collapse" id="collapseSuporte" style="max-width:200px; width:100%;">
+                    <div class="well" style="padding: 0;">
+                        <div class="link-menu submenu-title-orange submenu-mobile">
+                            <span class="fas fa-headset"></span>
+                            <div class="text-icon ml10">Suporte Técnico</div>
+                        </div>
+                        <div class="link-menu" ng-click="suporte()">
+                            <span class="far fa-comments-alt"></span>
+                            <div class="text-icon ml10">Conversar com Especialista</div>
+                        </div>
+                        <div class="link-menu" ng-click="manual()">
+                            <span class="far fa-book-open"></span>
+                            <div class="text-icon ml10">Manual</div>
+                        </div>
+                        <div class="link-menu" ng-click="toggleHelpSidebar()">
+                            <span class="far fa-desktop"></span>
+                            <div class="text-icon ml10">Tutoriais do Sistema</div>
+                        </div>
+                        <div class="link-menu" ng-click="agendaTreinamento()">
+                            <span class="far fa-calendar"></span>
+                            <div class="text-icon ml10">Agenda Treinamentos</div>
+                        </div>
+                        <div class="link-menu" ng-click="openModalContatosSuporte()">
+                            <span class="far fa-phone-alt"></span>
+                            <div class="text-icon ml10">Contatos Suporte</div>
+                        </div>
+                        <!-- ngIf: isTemaErpme() -->
+                    </div>
+                </div>
+            </div>
+
+            <button class="learn-more bg-red" ng-click="logOut()">
+                <div class="circle">
+                    <div class="text-icon-button menu-logout-text">Sair do Sistema</div>
+                    <span class="icon far fa-power-off"></span>
+                </div>
+            </button>
+        </div>
+    </div>
+    <!-- ngIf: location.current.name != 'login' --><form ng-if="location.current.name != 'login'" name="egsFormEmpSelect" novalidate="" class="ng-pristine ng-valid ng-scope">
+        <!--<egs-gempresa class="col-lg-12" form-parse="egsFormEmpSelect" name="empresa" label="Empresa ativa" ng-model="CODEMPRESA" ng-change="changeEmpresaAtiva" hide-clean="true">
+        </egs-gempresa>-->
+    </form><!-- end ngIf: location.current.name != 'login' -->
+</div>
+
+<script class="ng-scope">
+    $(document).ready(function () {
+        $('#menu-smart').on('shown.bs.collapse', function () {
+            $('#expandMenuHorizontal')
+                .addClass('menuHorizontalButton fa-times')
+                .removeClass('fa-ellipsis-v');
+        });
+
+        $('#menu-smart').on('hidden.bs.collapse', function () {
+            $('#expandMenuHorizontal')
+                .removeClass('menuHorizontalButton fa-times')
+                .addClass('fa-ellipsis-v');
+        });
+    });
+
+    const $menu = $('.menu-collapse-notificacao, .menu-collapse-cliente, .menu-collapse-suporte');
+
+    $(document).mouseup(e => {
+        if (!$menu.is(e.target) // if the target of the click isn't the container...
+            && $menu.has(e.target).length === 0) // ... nor a descendant of the container
+        {
+            if ($("#collapseNotificacao").is(":visible")) {
+                $("#notificacao").removeClass("active-collapse");
+                $("#expandSubmenuNotificacao").removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                $("#collapseNotificacao").collapse('hide');
+            }
+            if ($("#collapseCliente").is(":visible")) {
+                $("#cliente").removeClass("active-collapse");
+                $("#expandSubmenuCliente").removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                $("#collapseCliente").collapse('hide');
+            }
+            if ($("#collapseSuporte").is(":visible")) {
+                $("#suporte").removeClass("active-collapse");
+                $("#expandSubmenuSuporte").removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                $("#collapseSuporte").collapse('hide');
+            }
+        }
+        });
+
+    $(document).ready(function () {
+
+        function closeAllExcept(exceptId) {
+            const menus = [
+                { id: "#collapseNotificacao", button: "#notificacao", icon: "#expandSubmenuNotificacao" },
+                { id: "#collapseCliente", button: "#cliente", icon: "#expandSubmenuCliente" },
+                { id: "#collapseSuporte", button: "#suporte", icon: "#expandSubmenuSuporte" },
+            ];
+
+            menus.forEach(menu => {
+                if (menu.id !== exceptId && $(menu.id).is(":visible")) {
+                    $(menu.button).removeClass("active-collapse");
+                    $(menu.id).collapse('hide');
+                    $(menu.icon).removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                }
+            });
+        }
+
+        $(".menu-collapse-notificacao").click(function () {
+            const collapseId = "#collapseNotificacao";
+            if ($(collapseId).is(":visible")) {
+                $("#notificacao").removeClass("active-collapse");
+                $(collapseId).collapse('hide');
+                $("#expandSubmenuNotificacao").removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                return;
+            }
+
+            closeAllExcept(collapseId);
+
+            $("#notificacao").addClass("active-collapse");
+            $("#expandSubmenuNotificacao").removeClass("fa-chevron-down").addClass("fa-chevron-up");
+        });
+
+        $(".menu-collapse-cliente").click(function () {
+            const collapseId = "#collapseCliente";
+            if ($(collapseId).is(":visible")) {
+                $("#cliente").removeClass("active-collapse");
+                $(collapseId).collapse('hide');
+                $("#expandSubmenuCliente").removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                return;
+            }
+
+            closeAllExcept(collapseId);
+
+            $("#cliente").addClass("active-collapse");
+            $("#expandSubmenuCliente").removeClass("fa-chevron-down").addClass("fa-chevron-up");
+        });
+
+        $(".menu-collapse-suporte").click(function () {
+            const collapseId = "#collapseSuporte";
+            if ($(collapseId).is(":visible")) {
+                $("#suporte").removeClass("active-collapse");
+                $(collapseId).collapse('hide');
+                $("#expandSubmenuSuporte").removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                return;
+            }
+
+            closeAllExcept(collapseId);
+
+            $("#suporte").addClass("active-collapse");
+            $("#expandSubmenuSuporte").removeClass("fa-chevron-down").addClass("fa-chevron-up");
+        });
+
+        $('#collapseNotificacao, #collapseCliente, #collapseSuporte').on('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+</script></ng-include>
+
+                <!-- Help Sidebar -->
+                <!-- ngInclude: --><ng-include b-tukh1rrnlg="" src="'Views/helpSidebar.html'" class="hide-not ng-scope"><form novalidate="" name="egsForm" id="egsForm" class="form-horizontal ng-pristine ng-valid ng-scope" ng-submit="save(egsForm)">
+    <div id="sidebar-tutoriais-sistema" class="help-sidebar ng-scope ng-hide" ng-show="helpSidebar" ng-controller="helpSidebarCtrl">
+        <!-- Steps -->
+        <div ng-show="open" class="help-sidebar__header help-sidebar__draggable ng-hide">
+            <div class="help-sidebar__top">
+                <h2 class="help-sidebar__heading">Boas Vindas!</h2>
+                <lucide-icon class="icon-x ng-isolate-scope" ng-click="closeSidebar()" name="x"><!-- ngIf: iconPath --><!-- ngInclude: iconPath --><div class="lucide-host ng-scope" ng-if="iconPath" ng-style="hostStyle" ng-include="iconPath"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x ng-scope"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></div><!-- end ngIf: iconPath --></lucide-icon>
+            </div>
+            <div style="padding: 0px 24px">
+                <h3 class="mb20" style="font-size: 20px; color: var(--cor-terciaria-500)"> <b>Seja bem-vindo ao sistema EGS.</b></h3>
+                <p>
+                    Notamos que é seu primeiro acesso. Para ajudá-lo, criamos um tutorial passo a passo que o guiará na emissão de documentos fiscais e no uso de outras funcionalidades do sistema.
+                </p>
+                <p>
+                    Este tutorial orienta você no preenchimento dos dados obrigatórios para autorização dos documentos. <b>Essas configurações são realizadas apenas uma vez!</b>
+                </p>
+                <p>Para isso, clique no botão <b>Iniciar Tutorial</b> e em seguida escolha o documento que precisa emitir.</p>
+                <div class="container-buttons-sidebar">
+                    <button ng-click="iniciarTutorial(); stopOnboarding();" class="btn btn-edit mr10 pr30 pl30">
+                        Iniciar Tutorial
+                    </button>
+                    <button ng-click="closeSidebar()" class="btn btn-edit mr10 pr30 pl30 btn-close-sidebar">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+            <div class="text-center mt20" style="z-index:100000">
+                <div class="help-sidebar__preferences">
+                    <egs-input-check class="col-lg-12 col-md-12 col-sm-12 col-xs-12 ng-pristine ng-untouched ng-valid ng-isolate-scope ng-empty" form-parse="egsForm" name="naoAbrirNovamente" label="Não abrir novamente" ng-change="changeDontShowAgain" ng-model="naoAbrirNovamente">
+<div tabindex="0" class="egs-checkbox" ng-click="check()" ng-class="{'inputCheckDisabled': disable}" ng-keypress="($event.keyCode === 13 || $event.keyCode == 32) &amp;&amp; check()">
+    <i class="far fa-square" ng-class="{'fa-square' : !model, 'fa-check-square' : model}"></i>
+    <span class="ng-binding">Não abrir novamente</span>
+    <!-- ngIf: helper -->
+</div></egs-input-check>
+                </div>
+            </div>
+        </div>
+        <div ng-show="!open">
+            <div>
+                <header class="help-sidebar__header help-sidebar__draggable">
+                    <div class="help-sidebar__top sidebar-move">
+                        <h2 class="help-sidebar__heading">Tutoriais do Sistema</h2>
+                        <lucide-icon class="icon-x ng-isolate-scope" ng-click="closeSidebar()" name="x"><!-- ngIf: iconPath --><!-- ngInclude: iconPath --><div class="lucide-host ng-scope" ng-if="iconPath" ng-style="hostStyle" ng-include="iconPath"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x ng-scope"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></div><!-- end ngIf: iconPath --></lucide-icon>
+                    </div>
+                    <div class="sidebar-body" ng-show="!tutorialSelecionado.tutorial">
+                        <div ng-show="!itemSelecionado.item" style="padding: 10px 20px 0px 20px">
+                            <p>Escolha uma função e siga o passo a passo para concluí-la. Lembre-se de marcar como concluído cada passo assim que finalizá-lo.</p>
+                            <hr style="border: 1px solid var(--cor-cinza-300);">
+                        </div>
+                        <div class="titulo-funcionalidades ng-hide" ng-show="itemSelecionado.item || itemSelecionado.item.funcoes || itemSelecionado.item.ITENS">
+                            <div class="btn-voltar" ng-click="voltar()">
+                                <lucide-icon style="margin-top: 4px" name="chevron-left" class="ng-isolate-scope"><!-- ngIf: iconPath --><!-- ngInclude: iconPath --><div class="lucide-host ng-scope" ng-if="iconPath" ng-style="hostStyle" ng-include="iconPath"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left ng-scope"><path d="m15 18-6-6 6-6"></path></svg></div><!-- end ngIf: iconPath --></lucide-icon>
+                                <span>Voltar</span>
+                            </div>
+
+                            <div class="titulo-subtitulo">
+                                <span style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap">
+                                    <span ng-show="!grupoSelecionado.grupo" class="ng-binding"></span>
+                                    <span ng-show="grupoSelecionado.grupo" class="ng-binding ng-hide"></span>
+                                    <lucide-icon name="chevron-right" ng-show="grupoSelecionado.grupo" class="icone-funcionalidade ng-isolate-scope ng-hide"><!-- ngIf: iconPath --><!-- ngInclude: iconPath --><div class="lucide-host ng-scope" ng-if="iconPath" ng-style="hostStyle" ng-include="iconPath"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right ng-scope"><path d="m9 18 6-6-6-6"></path></svg></div><!-- end ngIf: iconPath --></lucide-icon>
+                                    <span ng-show="grupoSelecionado.grupo" class="ng-binding ng-hide"></span>
+                                </span>
+
+                                <p ng-show="grupoSelecionado.grupo || (itemSelecionado.item.GRUPOS.length == 0 &amp;&amp; itemSelecionado.item)" class="ng-binding ng-hide"></p>
+                            </div>
+
+                            <p ng-show="itemSelecionado.item.length &gt; 1" class="ng-binding ng-hide">Seleciona o tipo de funcionalidade desejada para </p>
+                        </div>
+                        <div class="pesquisa-container" ng-show="!itemSelecionado.item">
+                            <input type="text" placeholder="Pesquisa..." ng-model="itemPesquisa" class="ng-pristine ng-untouched ng-valid ng-empty">
+                            <lucide-icon style="width: 18px; height: 18px; margin: 6px; color: var(--cor-secundaria-500)" name="search" class="ng-isolate-scope"><!-- ngIf: iconPath --><!-- ngInclude: iconPath --><div class="lucide-host ng-scope" ng-if="iconPath" ng-style="hostStyle" ng-include="iconPath"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search ng-scope"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></div><!-- end ngIf: iconPath --></lucide-icon>
+                        </div>
+
+                        <div class="start-steps ng-hide" ng-show="itemSelecionado.item.ITENS &amp;&amp; itemSelecionado.item.PROGRESSODESEMPENHO &amp;&amp; itemSelecionado.item.GRUPOS.length &gt; 0 &amp;&amp; grupoSelecionado.grupo">
+                            <div class="start-steps__header">
+                                <div class="start-steps__top">
+                                    <div style="display: flex; flex-direction: column; gap: 10px">
+                                        <h3 class="start-steps__heading">Etapas concluídas</h3>
+                                        <!-- ngIf: itemSelecionado.item.ITENS.length == 0 -->
+                                    </div>
+                                    <div class="start-steps__progress ng-binding">
+                                        /
+                                    </div>
+                                </div>
+                                <div class="sliced-progress-bar">
+                                    <!-- ngRepeat: item in itemSelecionado.item.ITENS | filter:{ SEQUENCIALGRUPO: grupoSelecionado.grupo.SEQUENCIAL } | orderBy:'ORDEM' -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lista-tutoriais">
+                            <recursive-list items="opcoesTutorial" expand="plus" collapse="minus" class="ng-isolate-scope"><link rel="stylesheet" href="../css/pdv.scss">
+
+<ul id="diretiva-menu-tutorial">
+    <!-- ngIf: (items.length == 0 && !itemSelecionado.item) || itemSelecionado.item.length == 0 --><li style="font-size: 15px" ng-if="(items.length == 0 &amp;&amp; !itemSelecionado.item) || itemSelecionado.item.length == 0" class="ng-scope">
+        Nenhum resultado encontrado
+    </li><!-- end ngIf: (items.length == 0 && !itemSelecionado.item) || itemSelecionado.item.length == 0 -->
+    <!-- ngRepeat: item in items -->
+
+    <!-- Lista de grupos -->
+    <!-- ngIf: itemSelecionado.item && itemSelecionado.item.GRUPOS.length > 0 && !grupoSelecionado.grupo -->
+
+    <!-- Lista de etapas em um grupo -->
+    <!-- ngRepeat: etapa in etapasGrupo() -->
+</ul>
+
+
+</recursive-list>
+                        </div>
+                        <!-- ngIf: !itemSelecionado.item --><div ng-if="!itemSelecionado.item" class="help-sidebar__preferences ng-scope">
+                            <egs-input-check class="col-lg-12 col-md-12 col-sm-12 col-xs-12 ng-pristine ng-untouched ng-valid ng-isolate-scope ng-empty" form-parse="egsForm" name="naoAbrirNovamente" label="Não abrir novamente" ng-change="changeDontShowAgain" ng-model="naoAbrirNovamente">
+<div tabindex="0" class="egs-checkbox" ng-click="check()" ng-class="{'inputCheckDisabled': disable}" ng-keypress="($event.keyCode === 13 || $event.keyCode == 32) &amp;&amp; check()">
+    <i class="far fa-square" ng-class="{'fa-square' : !model, 'fa-check-square' : model}"></i>
+    <span class="ng-binding">Não abrir novamente</span>
+    <!-- ngIf: helper -->
+</div></egs-input-check>
+                        </div><!-- end ngIf: !itemSelecionado.item -->
+                    </div>
+                    <div ng-show="tutorialSelecionado.tutorial" class="ng-hide">
+                        <div class="scroll-wrapper scrollbar-dynamic scrollbar-menu-vertical help-sidebar__draggable tutorial-selecionado" style="position: relative;"><div class="scrollbar-dynamic scrollbar-menu-vertical help-sidebar__draggable tutorial-selecionado scroll-content" style="height: auto; margin-bottom: 0px; margin-right: 0px; max-height: 0px;">
+                            <div class="btn-voltar" ng-click="tutorialSelecionado.tutorial = undefined" style="width: 90%; margin: 0 auto">
+                                <lucide-icon style="margin-top: 4px" name="chevron-left" class="ng-isolate-scope"><!-- ngIf: iconPath --><!-- ngInclude: iconPath --><div class="lucide-host ng-scope" ng-if="iconPath" ng-style="hostStyle" ng-include="iconPath"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left ng-scope"><path d="m15 18-6-6 6-6"></path></svg></div><!-- end ngIf: iconPath --></lucide-icon>
+                                <span>Voltar</span>
+                            </div>
+                            <div class="help-sidebar__content">
+                                <h1 style="color: var(--cor-cinza-900); font-size: 20px" class="ng-binding"></h1>
+                                <!-- ngIf: tutorialSelecionado.tutorial.VIDEOURL -->
+                                <div ng-bind-html="tutorialSelecionado.tutorial.HTML" class="ng-binding"></div>
+                            </div>
+                        </div><div class="scroll-element scroll-x"><div class="scroll-element_outer"><div class="scroll-element_size"></div><div class="scroll-element_track"></div><div class="scroll-bar"></div></div></div><div class="scroll-element scroll-y"><div class="scroll-element_outer"><div class="scroll-element_size"></div><div class="scroll-element_track"></div><div class="scroll-bar"></div></div></div></div>
+                        <div class="container-concluir-etapa" ng-click="concluirPasso(tutorialSelecionado.tutorial)">
+                            <span ng-show="!!tutorialSelecionado.tutorial &amp;&amp; !tutorialSelecionado.tutorial.FINALIZADO" class="ng-hide">
+                                Concluir etapa
+                            </span>
+                            <div class="status-done ng-hide" ng-show="!!tutorialSelecionado.tutorial &amp;&amp; tutorialSelecionado.tutorial.FINALIZADO">
+                                <i class="fas fa-check-circle"></i>
+                                Concluído
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            </div>
+        </div>
+    </div>
+</form>
+</ng-include>
+
+                <!-- Help Sidebar -->
+                <!-- ngInclude: --><ng-include b-tukh1rrnlg="" src="'Views/chat/chatComercialCliente.html'" class="hide-not ng-scope"><div ng-controller="chatComercialClienteCtrl" class="ng-scope">
+    <!-- ngIf: !estaNaEmpresaEgs() --><form novalidate="" name="egsMessagerForm" id="egsMessagerForm" class="form-horizontal ng-pristine ng-valid ng-scope ng-valid-required ng-valid-minlength ng-valid-maxlength" ng-submit="enviar(egsMessagerForm)" ng-if="!estaNaEmpresaEgs()">
+        <div id="chat" class="chat ui-draggable">
+            <div class="card-chat ui-draggable-handle">
+                <div class="box-action">
+                    <div class="mini-chat" ng-click="minimizarChat()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="43" height="42" viewBox="0 0 43 42" fill="none">
+                            <path d="M34.5172 20.7168L17.8849 20.7168" stroke="#009B94" stroke-width="8" stroke-linecap="round"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="card-chat-msg">
+                    <div class="header-chat">
+                        <div class="header-box ng-hide" ng-show="vm &amp;&amp; vm.PARA &amp;&amp; vm.PARA.NOME">
+                            <div class="box-user">
+                                <div class="img-chat">
+                                    <img ng-show="!vm.PARA.FOTOURL" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRv8_z-QPYZvFtqKGir2_qC2vPsVqY_L3oRiQ&amp;usqp=CAU" alt="MDN logo">
+                                    <img ng-show="vm.PARA.FOTOURL" alt="MDN logo" class="ng-hide">
+                                </div>
+                                <div class="box-text-chat">
+                                    <div class="text-label ng-binding"> </div>
+                                    <div class="data-chat">
+                                        <div class="text-desc">Comercial</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-info">
+                                <!--<div class="text-label">Protocolo</div>
+                                <div class="text-desc">251661154151</div>-->
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="body-chat">
+                        <!-- ngRepeat: m in vm.MSGS -->
+                    </div>
+                    <div class="footer-chat">
+                        <div class="box-input">
+                            <egs-input-text-area class="col-lg-12 col-md-12 col-sm-12 col-xs-12 ng-pristine ng-untouched ng-valid ng-isolate-scope ng-empty" form-parse="egsMessagerForm" name="MENSAGEM" ng-model="vm.MSG" ng-keyup="onEscrever(vm.MSG)" egs-key-enter="enviarMensagem(egsMessagerForm)" egs-key-shift-enter="" max-length="4096"><label class="pull-left ng-binding"><span ng-show="required" class="val-Asterisk ng-hide">*</span></label>
+
+<!-- ngIf: helper -->
+
+<textarea name="MENSAGEM" ng-model="model" ng-maxlength="4096" ng-required="required" ng-class="{'has-error' : formParse[name].$dirty &amp;&amp; (formParse[name].$error.required || formParse[name].$error.minlength || formParse[name].$error.maxlength || formParse[name].$error.egsConditional)}" ng-disabled="disabled" ng-style="style" class="form-control ng-pristine ng-untouched ng-valid ng-empty ng-valid-required ng-valid-minlength ng-valid-maxlength" autocomplete="none" placeholder="" ng-paste="paste($event)" egs-change-on-blur="blur(formParse)" egs-conditional-validation=""></textarea>
+
+<div ng-show="formParse[name].$dirty" ng-messages="formParse[name].$error" style="bottom: -16px; top:initial;" class="ng-inactive ng-hide">
+    <!-- ngMessage: required -->
+    <!-- ngMessage: minlength -->
+    <!-- ngMessage: maxlength -->
+    <!-- ngMessage: egsConditional -->
+</div></egs-input-text-area>
+
+                            <button type="button" class="icon-shipping" ng-click="enviarMensagem(egsMessagerForm)" ng-disabled="egsMessagerForm.$submitted">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="41" viewBox="0 0 28 41" fill="none">
+                                    <g clip-path="url(#clip0_67_215)">
+                                        <path d="M7.96496 9.28454L20.9856 22.3052L7.96495 35.3258" stroke="white" stroke-width="3.47217" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_67_215">
+                                            <rect width="39.93" height="27.7774" fill="white" transform="translate(27.9299 0.604126) rotate(90)"></rect>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="chat-icon" ng-class="{'blinkingBtn': buscarTotalMsgRecebidas() &gt; 0 }" ng-show="mostraBotaoChatComercial()" ng-click="abrirChat()" class="ng-hide">
+            <i class="icon fa fa-comment" style="font-size: 25px; color: white;"></i>
+            <div class="badge egs-badge ng-binding ng-hide" ng-show="buscarTotalMsgRecebidas() &gt; 0"> 0 </div>
+        </div>
+    </form><!-- end ngIf: !estaNaEmpresaEgs() -->
+</div>
+
+<style class="ng-scope">
+    .blinkingBtn {
+        animation: blinkingBtnTxt 2s infinite;
+    }
+
+    @keyframes blinkingBtnTxt {
+        0% {
+            background-color: var(--cor-primaria-500);
+        }
+
+        50% {
+            background-color: var(--cor-laranja-500);
+        }
+
+        100% {
+            background-color: var(--cor-primaria-500);
+        }
+    }
+</style>
+
+<script class="ng-scope">
+
+    $(document).ready(function () {
+        $(".chat").draggable({
+            handle: ".card-chat",
+            drag: function () {
+                originalPosition = $(this).position();
+            },
+        });
+    });
+
+</script></ng-include>
+
+                <!-- Menu horizontal -->
+                <!-- ngInclude: --><ng-include b-tukh1rrnlg="" ng-show="showMenuHorizontalPortal()" src="'/Views/menu/menu-horizontal-portal.html'" class="ng-scope ng-hide"><div class="row col-md-12 menu-horizontal print-not ng-scope" ng-controller="menuCtrl" style="width: 100% !important">
+    <div class="box-company-egs">
+        <img title="Ir para tela inicial" style="display: none" class="img-mobile" alt="logo-empresa" src="App_Themes/Images/logo-egs/icon.svg">
+        <!-- ngInclude: srcLogo --><div title="Ir para tela inicial" class="img-desk ng-scope" alt="logo-empresa" ng-include="srcLogo"><svg width="96" height="40" viewBox="0 0 96 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="ng-scope">
+<g id="Group 149">
+<g id="Group 141">
+<path id="Vector" d="M51.461 3.76369V7.56078H42.2722L42.278 12.3702H51.461V16.0839H42.278L42.2741 21.4601H51.461V25.2287H37.9766V3.76369H51.4591H51.461Z" fill="white"></path>
+<path id="Vector_2" d="M71.1856 9.82912C69.9983 8.50716 68.8902 7.65317 65.9135 7.65317C62.053 7.65317 59.0394 10.7314 59.0394 14.4806C59.0394 18.2299 61.9686 21.2797 65.9135 21.2797C68.4497 21.2797 71.1041 19.8286 71.9772 17.4498H64.1741V13.5053H76.9068C77.2012 21.4934 70.6316 25.3815 65.8557 25.2241C59.8835 25.2241 55.0386 20.4115 55.0386 14.4806C55.0386 8.54972 59.8835 3.76368 65.8557 3.76368C70.7899 3.76368 74.1143 6.48535 75.7765 9.82912H71.1856Z" fill="white"></path>
+<path id="Vector_3" d="M87.882 7.57055C86.608 7.57055 85.4192 8.57725 85.4192 9.64082C85.4192 11.5992 88.1647 12.1035 90.1454 13.0268C92.494 14.1188 95.0129 15.0137 95.2104 18.9324C95.3808 22.1515 91.9267 25.257 87.9363 25.2285C83.0687 25.2001 80.4937 21.507 80.4937 18.3997H84.852C84.852 19.8272 85.8994 21.4216 87.8511 21.4216C89.8027 21.4216 90.794 19.7154 90.7669 19.0158C90.6546 17.7285 90.0312 16.9171 88.4184 16.1891C85.4463 14.8734 81.0609 14.2307 81.0609 9.80765C81.0609 6.61693 84.2033 3.76368 87.9091 3.76368C91.9286 3.76368 94.5889 6.75723 94.7864 9.78111H90.3138C90.3138 8.71754 89.1812 7.57055 87.8801 7.57055H87.882Z" fill="white"></path>
+</g>
+<g id="SISTEMAS">
+<path id="Vector_4" d="M90.2064 39.9514C89.7086 39.9514 89.2606 39.8724 88.8624 39.71C88.4713 39.5432 88.1655 39.315 87.9403 39.0274C87.7151 38.7333 87.6013 38.3953 87.5942 38.0134H88.6467C88.6822 38.3405 88.8268 38.6192 89.0804 38.8453C89.3412 39.0669 89.7157 39.1767 90.2087 39.1767C90.6781 39.1767 91.0478 39.0691 91.3133 38.8562C91.5883 38.6346 91.7257 38.3536 91.7257 38.0134C91.7257 37.7457 91.6452 37.5284 91.4863 37.3616C91.3275 37.1948 91.1284 37.0675 90.889 36.9797C90.6496 36.8919 90.3296 36.7997 89.9243 36.6988C89.4265 36.5781 89.0236 36.4573 88.7202 36.3388C88.4239 36.2181 88.1679 36.0316 87.9498 35.777C87.7412 35.5158 87.6345 35.169 87.6345 34.7344C87.6345 34.3525 87.7388 34.0145 87.9474 33.7204C88.156 33.4263 88.4499 33.1981 88.8244 33.0379C89.2084 32.8776 89.6446 32.7964 90.1353 32.7964C90.844 32.7964 91.4224 32.961 91.8703 33.2881C92.3255 33.6151 92.5815 34.0497 92.6407 34.5918H91.5575C91.5219 34.324 91.3702 34.0914 91.1023 33.8894C90.8345 33.6831 90.4813 33.5778 90.0404 33.5778C89.628 33.5778 89.2938 33.6787 89.033 33.8785C88.7723 34.0716 88.6419 34.346 88.6419 34.7015C88.6419 34.9561 88.7178 35.1624 88.8695 35.3226C89.0283 35.4829 89.2203 35.608 89.4431 35.6936C89.6754 35.7748 89.9954 35.8669 90.4078 35.9745C90.9056 36.1018 91.3086 36.2291 91.612 36.3564C91.9154 36.4771 92.1761 36.668 92.3918 36.9292C92.6099 37.1838 92.7165 37.5306 92.7165 37.9717C92.7165 38.3119 92.6194 38.6346 92.425 38.9353C92.2306 39.2359 91.9415 39.4796 91.5575 39.6683C91.1758 39.8549 90.7231 39.9493 90.204 39.9493L90.2064 39.9514Z" fill="white"></path>
+<path id="Vector_5" d="M78.7761 38.3256H75.4062L74.7855 39.9514H73.7212L76.5093 32.7964H77.673L80.4611 39.9493H79.3968L78.7761 38.3256ZM78.49 37.584L77.0911 34.0537L75.6947 37.5862H78.4876L78.49 37.584Z" fill="white"></path>
+<path id="Vector_6" d="M66.5878 32.7964V39.9493H65.5818V34.7091L63.0378 39.9514H62.3292L59.7755 34.7003V39.9514H58.7695V32.7986H59.8529L62.6847 38.6814L65.5141 32.7964H66.5878Z" fill="white"></path>
+<path id="Vector_7" d="M48.576 33.5493V35.9767H51.3137V36.7295H48.576V39.1986H51.6367V39.9514H47.5928V32.7964H51.6343V33.5493H48.5737H48.576Z" fill="white"></path>
+<path id="Vector_8" d="M40.4568 32.7964V33.5383H38.3942L38.3894 39.9514H37.402L37.4091 33.5383H35.3369V32.7964H40.4592H40.4568Z" fill="white"></path>
+<path id="Vector_9" d="M25.6276 39.9514C25.1168 39.9514 24.657 39.8724 24.2483 39.71C23.8469 39.5432 23.5331 39.315 23.302 39.0274C23.0709 38.7333 22.9541 38.3953 22.9468 38.0134H24.0269C24.0634 38.3405 24.2118 38.6192 24.4721 38.8453C24.7397 39.0669 25.1241 39.1767 25.6301 39.1767C26.1117 39.1767 26.4912 39.0691 26.7637 38.8562C27.0459 38.6346 27.187 38.3536 27.187 38.0134C27.187 37.7457 27.1043 37.5284 26.9413 37.3616C26.7783 37.1948 26.574 37.0675 26.3283 36.9797C26.0825 36.8919 25.7541 36.7997 25.3381 36.6988C24.8273 36.5781 24.4137 36.4573 24.1023 36.3388C23.7982 36.2181 23.5355 36.0316 23.3117 35.777C23.0952 35.5158 22.9881 35.169 22.9881 34.7344C22.9881 34.3525 23.0952 34.0145 23.3093 33.7204C23.5233 33.4263 23.825 33.1981 24.2094 33.0379C24.601 32.8776 25.0511 32.7964 25.5547 32.7964C26.282 32.7964 26.8756 32.961 27.3354 33.2881C27.8025 33.6151 28.0652 34.0497 28.126 34.5918H27.0143C26.9778 34.324 26.8221 34.0914 26.5472 33.8894C26.2723 33.6831 25.9098 33.5778 25.4573 33.5778C25.0341 33.5778 24.691 33.6787 24.4234 33.8785C24.1558 34.0716 24.022 34.346 24.022 34.7015C24.022 34.9561 24.0999 35.1624 24.2556 35.3226C24.4186 35.4829 24.6156 35.608 24.8443 35.6936C25.0827 35.7748 25.4111 35.8669 25.8344 35.9745C26.3453 36.1018 26.7564 36.2291 27.0702 36.3564C27.3816 36.4771 27.6492 36.668 27.8706 36.9292C28.0944 37.1838 28.2039 37.5306 28.2039 37.9717C28.2039 38.3119 28.1041 38.6346 27.9047 38.9353C27.7052 39.2359 27.4084 39.4796 27.0143 39.6683C26.6226 39.8549 26.158 39.9493 25.6252 39.9493L25.6276 39.9514Z" fill="white"></path>
+<path id="Vector_10" d="M15.8137 32.7964V39.9514H14.8701V32.7964H15.8137Z" fill="white"></path>
+<path id="Vector_11" d="M5.22638 39.9514C4.72861 39.9514 4.28061 39.8724 3.88239 39.71C3.49129 39.5432 3.18551 39.3149 2.96033 39.0274C2.73515 38.7333 2.62137 38.3953 2.61426 38.0134H3.66669C3.70224 38.3405 3.84684 38.6192 4.10047 38.8453C4.3612 39.0669 4.73572 39.1767 5.22875 39.1767C5.69808 39.1767 6.06784 39.0691 6.33332 38.8562C6.60828 38.6346 6.74577 38.3536 6.74577 38.0134C6.74577 37.7457 6.66517 37.5284 6.50636 37.3616C6.34755 37.1948 6.14844 37.0675 5.90904 36.9797C5.66963 36.8919 5.34963 36.7997 4.94431 36.6988C4.44653 36.578 4.04357 36.4573 3.74017 36.3388C3.44388 36.2181 3.18788 36.0315 2.96981 35.7769C2.76122 35.5158 2.65456 35.169 2.65456 34.7344C2.65456 34.3525 2.75885 34.0145 2.96744 33.7204C3.17603 33.4263 3.46995 33.1981 3.84446 33.0378C4.22609 32.8776 4.6646 32.7964 5.15526 32.7964C5.86399 32.7964 6.44236 32.961 6.89035 33.2881C7.34546 33.6151 7.60146 34.0496 7.66071 34.5918H6.57747C6.54191 34.324 6.39021 34.0913 6.12237 33.8894C5.85452 33.6831 5.50133 33.5778 5.06045 33.5778C4.64801 33.5778 4.31379 33.6787 4.05306 33.8785C3.79232 34.0716 3.66195 34.3459 3.66195 34.7015C3.66195 34.9561 3.7378 35.1624 3.8895 35.3226C4.04831 35.4828 4.24032 35.6079 4.46313 35.6935C4.69542 35.7748 5.01542 35.8669 5.42786 35.9745C5.92563 36.1018 6.32858 36.2291 6.63199 36.3564C6.93539 36.4771 7.19613 36.668 7.41183 36.9292C7.62753 37.1838 7.73657 37.5306 7.73657 37.9717C7.73657 38.3119 7.63938 38.6346 7.44501 38.9353C7.25064 39.2359 6.96146 39.4796 6.57747 39.6683C6.19584 39.8549 5.74311 39.9492 5.224 39.9492L5.22638 39.9514Z" fill="white"></path>
+</g>
+<g id="Group 148">
+<g id="Group">
+<path id="Vector_12" d="M24.4188 5.28812C24.41 7.5338 22.6112 9.31498 20.3878 9.30612C19.5614 9.30243 19.5047 9.23006 19.1022 9.09049C18.8441 8.95092 18.5802 8.82316 18.3045 8.71387C17.3801 8.33651 16.365 8.12826 15.3012 8.12383C14.2374 8.1194 13.1066 8.3439 12.1305 8.76113C11.9499 8.83867 11.7693 8.92212 11.5946 9.01221C11.1493 9.1791 10.6679 9.27363 10.1629 9.27141C7.93882 9.26255 6.15186 7.43632 6.15186 5.19064C6.15186 3.53647 7.06524 2.33424 8.08331 1.73608C8.36639 1.59282 8.64947 1.46137 8.94435 1.33583C10.9075 0.494719 13.0675 0.0398227 15.3336 0.0486843C17.5998 0.0582844 19.9536 0.579643 21.9757 1.50864C22.048 1.54482 22.1254 1.57584 22.1976 1.61202C23.5231 2.2796 24.4254 3.66866 24.4188 5.26375V5.28738V5.28812Z" fill="#6BC6A6"></path>
+<path id="Vector_13" d="M17.3611 3.82075C16.5672 5.51923 17.3007 7.54411 19.0021 8.33944C20.6977 9.13477 22.7191 8.39999 23.513 6.69561C24.307 4.99713 23.5735 2.97225 21.872 2.17692C20.1765 1.38159 18.1551 2.11637 17.3611 3.82075Z" fill="#36886B"></path>
+</g>
+<g id="Group_2">
+<path id="Vector_14" d="M2.11271 12.4162C4.0707 11.3226 6.50271 12.0182 7.58564 13.9641C7.98815 14.687 7.95277 14.7727 8.0287 15.1921C8.03386 15.486 8.05229 15.7785 8.09283 16.0731C8.21816 17.0649 8.53441 18.0537 9.05266 18.9842C9.57091 19.9154 10.3206 20.7927 11.1625 21.4388C11.3188 21.5585 11.4802 21.6752 11.6439 21.7837C12.0073 22.0909 12.3258 22.4646 12.5713 22.9062C13.6542 24.852 12.9428 27.3074 10.9885 28.4092C9.54953 29.2208 8.05524 29.0133 7.0357 28.4174C6.77178 28.2409 6.51892 28.0577 6.26533 27.862C4.57052 26.5609 3.11529 24.8986 2.01171 22.9158C0.908132 20.9337 0.206322 18.6231 0.0234978 16.4017C0.0198119 16.3213 0.00801674 16.2378 0.00433077 16.1573C-0.0649656 14.6723 0.700243 13.2042 2.09133 12.4266L2.11197 12.4155L2.11271 12.4162Z" fill="#9CE3FF"></path>
+<path id="Vector_15" d="M4.29852 19.2973C6.16583 19.157 7.56724 17.5235 7.42423 15.6486C7.28416 13.778 5.65348 12.3742 3.78175 12.5175C1.91443 12.6578 0.513023 14.2913 0.656038 16.1662C0.796105 18.0368 2.42678 19.4406 4.29852 19.2973Z" fill="#3FC0EF"></path>
+</g>
+<g id="Group_3">
+<path id="Vector_16" d="M19.464 28.3673C17.5126 27.261 16.841 24.8189 17.9365 22.8797C18.3434 22.1597 18.4348 22.1449 18.7533 21.8621C19.001 21.7048 19.2413 21.5364 19.4713 21.3489C20.252 20.7256 20.9302 19.9413 21.4544 19.0138C21.9785 18.0863 22.3361 16.9882 22.4496 15.9322C22.4702 15.7365 22.4857 15.5379 22.4931 15.3414C22.5661 14.8703 22.7187 14.4036 22.9679 13.9634C24.0633 12.0242 26.527 11.3559 28.4828 12.4548C29.9226 13.2634 30.5234 14.6502 30.5462 15.8318C30.533 16.1493 30.5086 16.4609 30.4732 16.78C30.2454 18.9067 29.5857 21.0158 28.4688 22.992C27.3527 24.9674 25.7471 26.7692 23.9491 28.0815C23.882 28.1265 23.8178 28.1797 23.7508 28.2247C22.5211 29.0563 20.8705 29.1655 19.4846 28.3798L19.464 28.368V28.3673Z" fill="#FDB07B"></path>
+<path id="Vector_17" d="M24.1932 22.9174C23.1022 21.3932 20.9805 21.0432 19.456 22.1413C17.9344 23.2342 17.585 25.3595 18.6812 26.8867C19.7722 28.4109 21.8939 28.7609 23.4184 27.6628C24.94 26.5699 25.2894 24.4446 24.1932 22.9174Z" fill="#F08033"></path>
+</g>
+</g>
+</g>
+</svg>
+</div>
+    </div>
+    <div class="collapse" id="menu-smart">
+        <div id="h-icons">
+            <button class="learn-more" ng-click="alteraSenhaPortalEgs()">
+                <div class="circle">
+                    <span class="icon fa fa-key"></span>
+                    <div class="text-icon">Alterar Senha</div>
+                </div>
+            </button>
+            <button class="learn-more" ng-click="logOutPortalEgs()">
+                <div class="circle">
+                    <span class="icon fas fa-power-off"></span>
+                    <div class="text-icon">Sair do Sistema</div>
+                </div>
+            </button>
+        </div>
+    </div>
+</div></ng-include>
+
+                <div b-tukh1rrnlg="" class="container-form">
+                    <!-- Notification Sidebar -->
+                    <!-- ngInclude: --><ng-include b-tukh1rrnlg="" src="'Views/common/notificacoesBanner.html'" class="ng-scope"><div id="comunicado-body" ng-controller="notificacoesBannerCtrl" ng-show="notificationBannerShow &amp;&amp; !hiddenBannerNotification" class="showComunicado ng-scope ng-hide">
+    <lucide-icon class="comunicado-icon ng-isolate-scope" name="bell"><!-- ngIf: iconPath --><!-- ngInclude: iconPath --><div class="lucide-host ng-scope" ng-if="iconPath" ng-style="hostStyle" ng-include="iconPath"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell-icon lucide-bell ng-scope"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg></div><!-- end ngIf: iconPath --></lucide-icon>
+    <div ng-show="notificationsBanner.QTDBANNERS &lt;= 1" class="comunicado-text ng-hide">
+        <p class="ng-binding"></p>
+    </div>
+    <div ng-show="notificationsBanner.QTDBANNERS &gt; 1" class="comunicado-text ng-hide">
+        <span class="ng-binding"></span>
+        <p> Novos comunicados para sua empresa</p>
+    </div>
+    <div class="buttons-comunicado">
+        <button class="comunicado-button-abrir" ng-click="visualizarComunicados()">Ver Comunicados</button>
+        <lucide-icon ng-click="fechar()" name="x" class="ng-isolate-scope"><!-- ngIf: iconPath --><!-- ngInclude: iconPath --><div class="lucide-host ng-scope" ng-if="iconPath" ng-style="hostStyle" ng-include="iconPath"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x ng-scope"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></div><!-- end ngIf: iconPath --></lucide-icon>
+    </div>
+</div></ng-include>
+
+                    <egs-delivery-toast b-tukh1rrnlg=""><div id="toast-container" style="transition: transform 0.2s ease-out; transform: translateX(1536px);">
+    <div id="toast-indicator" style="background-color: #4ae588"></div>
+    <div id="toast-type-circle" style="background-color: #4ae588">
+        <lucide-icon style="color: white" name="check" class="ng-isolate-scope"><!-- ngIf: iconPath --><!-- ngInclude: iconPath --><div class="lucide-host ng-scope" ng-if="iconPath" ng-style="hostStyle" ng-include="iconPath"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-icon lucide-check ng-scope"><path d="M20 6 9 17l-5-5"></path></svg></div><!-- end ngIf: iconPath --></lucide-icon>
+    </div>
+    <div id="toast-text">
+        <p id="toast-title" class="ng-binding"></p>
+        <p id="toast-description" class="ng-binding"></p>
+    </div>
+</div></egs-delivery-toast>
+                    <!-- uiView: --><ui-view b-tukh1rrnlg="" class="ng-scope"><div id="login" class="ng-scope">
+    <span ng-show="backEndError" class="text-danger error-login ng-hide">
+        <div class="scroll-wrapper box-error-login scrollbar-dynamic scrollbar-menu-vertical ng-binding" style="position: relative;"><span class="box-error-login scrollbar-dynamic scrollbar-menu-vertical ng-binding scroll-content" style="height: auto; margin-bottom: 0px; margin-right: 0px; max-height: 0px;">
+            
+        </span><div class="scroll-element scroll-x"><div class="scroll-element_outer"><div class="scroll-element_size"></div><div class="scroll-element_track"></div><div class="scroll-bar"></div></div></div><div class="scroll-element scroll-y"><div class="scroll-element_outer"><div class="scroll-element_size"></div><div class="scroll-element_track"></div><div class="scroll-bar"></div></div></div></div>
+        <span class="egs-close" ng-click="close()">X</span>
+    </span>
+
+    <div class="content_login">
+        <div class="banner">
+            <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="5000">
+                <!-- Indicators -->
+                <ol class="carousel-indicators" ng-show="carouselSlides.length &gt; 1">
+                    <!-- ngRepeat: slide in carouselSlides --><li ng-repeat="slide in carouselSlides" data-target="#myCarousel" data-slide-to="0" ng-class="{'active': $index === 0}" class="ng-scope"></li><!-- end ngRepeat: slide in carouselSlides --><li ng-repeat="slide in carouselSlides" data-target="#myCarousel" data-slide-to="1" ng-class="{'active': $index === 0}" class="ng-scope"></li><!-- end ngRepeat: slide in carouselSlides --><li ng-repeat="slide in carouselSlides" data-target="#myCarousel" data-slide-to="2" ng-class="{'active': $index === 0}" class="ng-scope"></li><!-- end ngRepeat: slide in carouselSlides --><li ng-repeat="slide in carouselSlides" data-target="#myCarousel" data-slide-to="3" ng-class="{'active': $index === 0}" class="ng-scope active"></li><!-- end ngRepeat: slide in carouselSlides --><li ng-repeat="slide in carouselSlides" data-target="#myCarousel" data-slide-to="4" ng-class="{'active': $index === 0}" class="ng-scope"></li><!-- end ngRepeat: slide in carouselSlides --><li ng-repeat="slide in carouselSlides" data-target="#myCarousel" data-slide-to="5" ng-class="{'active': $index === 0}" class="ng-scope"></li><!-- end ngRepeat: slide in carouselSlides --><li ng-repeat="slide in carouselSlides" data-target="#myCarousel" data-slide-to="6" ng-class="{'active': $index === 0}" class="ng-scope"></li><!-- end ngRepeat: slide in carouselSlides --><li ng-repeat="slide in carouselSlides" data-target="#myCarousel" data-slide-to="7" ng-class="{'active': $index === 0}" class="ng-scope"></li><!-- end ngRepeat: slide in carouselSlides --><li ng-repeat="slide in carouselSlides" data-target="#myCarousel" data-slide-to="8" ng-class="{'active': $index === 0}" class="ng-scope"></li><!-- end ngRepeat: slide in carouselSlides -->
+                </ol>
+                <!-- Wrapper for slides -->
+                <div class="carousel-inner" id="carousel-login">
+                    <!-- ngRepeat: slide in carouselSlides --><div class="item ng-scope" ng-class="{'active': $index === 0}" ng-repeat="slide in carouselSlides">
+                        <div class="box-center-login">
+                            <img ng-src="../App_Themes/Images/login/login-erp.png" alt="Sistema de Gestão" src="../App_Themes/Images/login/login-erp.png">
+                        </div>
+                        <div class="box-center-login">
+                            <h5 class="ng-binding">Sistema de Gestão</h5>
+                            <span class="ng-binding">Utilizando nossa solução, você está sempre no controle da situação onde estiver.</span>
+                        </div>
+                    </div><!-- end ngRepeat: slide in carouselSlides --><div class="item ng-scope" ng-class="{'active': $index === 0}" ng-repeat="slide in carouselSlides">
+                        <div class="box-center-login">
+                            <img ng-src="../App_Themes/Images/login/login-nfe.png" alt="Emissor de NF-e" src="../App_Themes/Images/login/login-nfe.png">
+                        </div>
+                        <div class="box-center-login">
+                            <h5 class="ng-binding">Emissor de NF-e</h5>
+                            <span class="ng-binding">Simplifique sua rotina e aumente sua produtividade utilizando nossa solução.</span>
+                        </div>
+                    </div><!-- end ngRepeat: slide in carouselSlides --><div class="item ng-scope" ng-class="{'active': $index === 0}" ng-repeat="slide in carouselSlides">
+                        <div class="box-center-login">
+                            <img ng-src="../App_Themes/Images/login/login-cte.png" alt="Emissor de CT-e" src="../App_Themes/Images/login/login-cte.png">
+                        </div>
+                        <div class="box-center-login">
+                            <h5 class="ng-binding">Emissor de CT-e</h5>
+                            <span class="ng-binding">Emissor prático e versátil, pensado para simplificar seus processos e otimizar seu tempo.</span>
+                        </div>
+                    </div><!-- end ngRepeat: slide in carouselSlides --><div class="item ng-scope active" ng-class="{'active': $index === 0}" ng-repeat="slide in carouselSlides">
+                        <div class="box-center-login">
+                            <img ng-src="../App_Themes/Images/login/login-cte-os.png" alt="Emissor de CT-e OS" src="../App_Themes/Images/login/login-cte-os.png">
+                        </div>
+                        <div class="box-center-login">
+                            <h5 class="ng-binding">Emissor de CT-e OS</h5>
+                            <span class="ng-binding">Na hora de emitir seus documentos conte com a eficácia do emissor líder de mercado.</span>
+                        </div>
+                    </div><!-- end ngRepeat: slide in carouselSlides --><div class="item ng-scope" ng-class="{'active': $index === 0}" ng-repeat="slide in carouselSlides">
+                        <div class="box-center-login">
+                            <img ng-src="../App_Themes/Images/login/login-pdv.png" alt="Frente de Caixa (PDV)" src="../App_Themes/Images/login/login-pdv.png">
+                        </div>
+                        <div class="box-center-login">
+                            <h5 class="ng-binding">Frente de Caixa (PDV)</h5>
+                            <span class="ng-binding">Seja qual for o seu empreendimento, nós temos a solução que você precisa para suas vendas.</span>
+                        </div>
+                    </div><!-- end ngRepeat: slide in carouselSlides --><div class="item ng-scope" ng-class="{'active': $index === 0}" ng-repeat="slide in carouselSlides">
+                        <div class="box-center-login">
+                            <img ng-src="../App_Themes/Images/login/login-conta-digital.png" alt="Conta Digital" src="../App_Themes/Images/login/login-conta-digital.png">
+                        </div>
+                        <div class="box-center-login">
+                            <h5 class="ng-binding">Conta Digital</h5>
+                            <span class="ng-binding">A conta digital com opções de boletos, cartão de crédito, PIX e links de pagamentos.</span>
+                        </div>
+                    </div><!-- end ngRepeat: slide in carouselSlides --><div class="item ng-scope" ng-class="{'active': $index === 0}" ng-repeat="slide in carouselSlides">
+                        <div class="box-center-login">
+                            <img ng-src="../App_Themes/Images/login/login-ecommerce.png" alt="E-commerce" src="../App_Themes/Images/login/login-ecommerce.png">
+                        </div>
+                        <div class="box-center-login">
+                            <h5 class="ng-binding">E-commerce</h5>
+                            <span class="ng-binding">Transformando a sua ideia de negócio virtual em realidade.</span>
+                        </div>
+                    </div><!-- end ngRepeat: slide in carouselSlides --><div class="item ng-scope" ng-class="{'active': $index === 0}" ng-repeat="slide in carouselSlides">
+                        <div class="box-center-login">
+                            <img ng-src="../App_Themes/Images/login/login-gtve.png" alt="Emissor GTVe" src="../App_Themes/Images/login/login-gtve.png">
+                        </div>
+                        <div class="box-center-login">
+                            <h5 class="ng-binding">Emissor GTV-e</h5>
+                            <span class="ng-binding">Agilidade nos Processos e Segurança nas Informações.</span>
+                        </div>
+                    </div><!-- end ngRepeat: slide in carouselSlides --><div class="item ng-scope" ng-class="{'active': $index === 0}" ng-repeat="slide in carouselSlides">
+                        <div class="box-center-login">
+                            <img ng-src="../App_Themes/Images/login/login-certificado-digital.png" alt="Certificado Digital" src="../App_Themes/Images/login/login-certificado-digital.png">
+                        </div>
+                        <div class="box-center-login">
+                            <h5 class="ng-binding">Certificado Digital</h5>
+                            <span class="ng-binding">Nosso certificado modelo A1 serve para emissão de NF-e, NFS-e, NFC-e, CT-e, MDF-e, CT-e OS, GTV-e, entre outras.</span>
+                        </div>
+                    </div><!-- end ngRepeat: slide in carouselSlides -->
+                </div>
+            </div>
+        </div>
+        <div ng-show="!vmExternal" class="login">
+            <div class="login-block">
+                <form name="egsForm" class="form-login ng-valid-pattern ng-valid-maxlength ng-dirty ng-valid-parse ng-valid-required ng-valid ng-valid-minlength ng-submitted" ng-submit="logar(egsForm)" novalidate="">
+                    <img src="App_Themes/Images/logo-egs/logo-azul.svg" class="img-login">
+                    <div class="form-group">
+                        <label>LOGIN</label>
+                        <input type="text" class="form-control input_style ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required ng-touched" placeholder="Digite seu usuário" ng-class="{'has-error' : egsForm.login.$dirty &amp;&amp; egsForm.login.$error.required}" name="login" ng-model="LOGIN" autocomplete="username" ng-required="true" required="required">
+                        <span class="fa fa-user"></span>
+                        <div ng-show="egsForm.login.$dirty" ng-messages="egsForm.login.$error" class="ng-inactive">
+                            <!-- ngMessage: required -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>SENHA</label>
+                        <input type="password" class="form-control input_style ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required ng-touched" placeholder="Digite a senha" id="password" ng-class="{'has-error' : egsForm.senha.$dirty &amp;&amp; egsForm.senha.$error.required}" name="senha" ng-model="SENHA" autocomplete="current-password" ng-required="true" required="required">
+                        <span class="fa fa-lock"></span>
+                        <span class="fa fa-eye-slash" id="showPassword" aria-hidden="true"></span>
+                        <div ng-show="egsForm.senha.$dirty" ng-messages="egsForm.senha.$error" class="ng-inactive">
+                            <!-- ngMessage: required -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>CHAVE DE ACESSO</label>
+                        <input type="number" pattern="\d*" class="form-control input_style ng-valid-pattern ng-valid-maxlength ng-not-empty ng-dirty ng-valid-parse ng-valid-required ng-valid ng-valid-minlength ng-touched" placeholder="Digite a chave" ng-class="{'has-error' : egsForm.chaveAcesso.$dirty &amp;&amp; (egsForm.chaveAcesso.$error.required || egsForm.chaveAcesso.$error.maxlength)}" name="chaveAcesso" ng-model="CHAVEACESSO" ng-required="true" maxlength="9" minlength="2" required="required">
+                        <span class="fa fa-key" aria-hidden="true"></span>
+                        <div ng-show="egsForm.chaveAcesso.$dirty" ng-messages="egsForm.chaveAcesso.$error" class="ng-inactive">
+                            <!-- ngMessage: required -->
+                            <!-- ngMessage: maxlength -->
+                            <!-- ngMessage: minlength -->
+                        </div>
+                    </div>
+
+                    <!-- ngIf: gerouCaptcha -->
+
+                    <button class="btn btn-edit btn-block" type="submit"> Entrar </button>
+
+                    <div class="mt10">
+                        <a href="#" ng-click="linkCadastro()" class="pull-left">Cadastrar</a>
+                        <a href="#" class="pull-right" ng-click="esqueciSenha()">Esqueceu a Senha?</a>
+                    </div>
+                </form>
+                <div class="mt10 btn-midia">
+                    <!--<button class="btn btn-large btn-google-plus btn-block mr5" type="button" data-ng-click="authExternalProvider('Google')"><i class="fab fa-google-plus-g"></i><span class="ml5 mr5">|</span>  Google</button>-->
+                    <!--<button class="btn btn-large btn-facebook-plus btn-block ml5" type="button" data-ng-click="authExternalProvider('Google')"><i class="fab fa-facebook-f"></i><span class="ml5 mr5">|</span>  Facebook</button>-->
+                </div>
+            </div>
+        </div>
+        <div ng-show="vmExternal" class="login ng-hide">
+            <div class="login-block">
+                <form name="egsFormExternal" class="form-login ng-pristine ng-invalid ng-invalid-required" ng-submit="logarExternal(egsFormExternal)">
+                    <img src="App_Themes/Images/logo-egs/logo-azul.svg" class="img-login">
+                    <div class="egs-title mt10 mb10">
+                        <h2 style="text-transform: initial; text-align:center;">Escolha a empresa e o usuário</h2>
+                        <hr>
+                    </div>
+                    <div class="form-group">
+                        <egs-gempresa-ds form-parse="egsFormExternal" name="IdEmpresa" label="Empresa" ng-model="vmExternal.IdEmpresa" ng-required="true" ng-data-source="Empresas" ng-change="changeEmpresaLogin" class="ng-pristine ng-untouched ng-isolate-scope ng-empty ng-invalid ng-invalid-required" required="required"><label class="pull-left ng-binding">Empresa<span ng-show="required" class="val-Asterisk">*</span></label>
+
+<select name="IdEmpresa" id="" ng-required="required" ng-disabled="disabled" ng-model="model" ng-options="x.CODIGO as x.DESCRICAO for x in SOURCE" ng-class="{'has-error' : formParse[name].$dirty &amp;&amp; formParse[name].$error.required}" class="form-control choice ng-pristine ng-untouched ng-empty ng-invalid ng-invalid-required" ng-change="changeEvent(model)" required="required"><option value="" disabled="" hidden="" class="" selected="selected">Selecione um item</option></select>
+
+<div ng-show="formParse[name].$dirty" ng-messages="formParse[name].$error" class="ng-active ng-hide">
+    <!-- ngMessage: required --><div class="egs-error ng-binding ng-scope" ng-message="required">O campo é obrigatório</div>
+</div></egs-gempresa-ds>
+                    </div>
+                    <div class="form-group">
+                        <egs-gusuario-ds form-parse="egsFormExternal" name="IdUsuario" label="Usuário" ng-model="vmExternal.IdUsuario" ng-required="true" ng-data-source="Usuarios" class="ng-pristine ng-untouched ng-isolate-scope ng-empty ng-invalid ng-invalid-required" required="required"><label class="pull-left ng-binding">Usuário<span ng-show="required" class="val-Asterisk">*</span></label>
+
+<select name="IdUsuario" id="" ng-required="required" ng-disabled="disabled" ng-model="model" ng-options="x.CODIGO as x.DESCRICAO for x in SOURCE" ng-class="{'has-error' : formParse[name].$dirty &amp;&amp; formParse[name].$error.required}" class="form-control choice ng-pristine ng-untouched ng-empty ng-invalid ng-invalid-required" ng-change="changeEvent(model)" required="required"><option value="" disabled="" hidden="" class="" selected="selected">Selecione um item</option></select>
+
+<div ng-show="formParse[name].$dirty" ng-messages="formParse[name].$error" class="ng-active ng-hide">
+    <!-- ngMessage: required --><div class="egs-error ng-binding ng-scope" ng-message="required">O campo é obrigatório</div>
+</div></egs-gusuario-ds>
+                    </div>
+                    <div class="btn-midia">
+                        <button type="button" class="btn btn-block mt10 mr5" style="margin-top:0 !important;" ng-click="voltar()">Voltar</button>
+                        <button type="submit" class="btn btn-edit btn-block ml5" style="margin-top:0 !important;">Entrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script class="ng-scope">
+    jQuery(document).ready(function () {
+        jQuery('.scrollbar-dynamic').scrollbar();
+    });
+
+    const numberInput = document.querySelector('input[type="number"]');
+
+    // Remove qualquer coisa que não seja número, ponto ou sinal de menos
+    numberInput.addEventListener('input', function () {
+        this.value = this.value.replace(/[^0-9.-]/g, '');  
+    });
+
+    //// Permitir apenas números, teclas de navegação, backspace, delete e tab
+    //numberInput.addEventListener('keydown', function (event) {        
+    //    if (!/[0-9]|Backspace|ArrowLeft|ArrowRight|Delete|Tab/.test(event.key)) {
+    //        event.preventDefault();
+    //    }
+    //});
+
+    //// Converte para float para remover qualquer entrada estranha e reverte para string vazia se o resultado for NaN
+    numberInput.addEventListener('change', function () {
+        this.value = parseFloat(this.value) || '';  
+    });
+</script></ui-view>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <!-- Lib Estilo -->
+    <link href="/css/jsuites.css?v=QZTVN5l-XnzyVWfLSbAxLGWPNLD42c45xhOK4L_m4dg" rel="stylesheet" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+    <link href="/lib/angular-summernote/dist/summernote.css?v=PzxWuXhpo65mAtbhFGS5K4mi9jiPrqWmzDRpdtistPs" rel="stylesheet" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+    <link href="/lib/jsoneditor/jsoneditor.min.css?v=eKF9MavbL4ZnwhDMh27zas1_ZpxfwSASyhFEnIX6SDY" rel="stylesheet" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+    <link href="/css/jexcel.css?v=IWstPyqQNw0eV57Q8HhkOQqtwK3rlQsWIe5ksIH8ijo" rel="stylesheet" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+
+    <!-- Lib Scripts -->
+    <script src="/bundles/libJquery.min.js?v=YOpV_5PWVyqO7z2TvftN0Ov37jX_DLNp_uvdVtAHO8E" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/bundles/libAngular.min.js?v=UnRF6cl8ku39BUioKKov-gMvb-R3cYsDIy22dV-al0M" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/bundles/libDx.min.js?v=LmMSnRPsrjXHw-EbOA9G5qKEVrrfg1mGBa_-R30RmkQ" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="lib/angular-input-masks/angular-input-masks.js?v=AgPXbyNz5MQrnnvUNCI3a_FhiRm_tDnAiaTbohRz2cs" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="lib/angular-ui-mask/mask.min.js?v=HgOa9qh7m31fH2sCO8RjHPuwsfL2W0CXb_BnHXc4-9A" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/js/jsuites.js?v=-Bg_DNFHIMJxMbI1hhZlF7l_BN2YOd58QGo3E-ra_98" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/js/jexcel.js?v=5bfoX3ddiHPC_dj2AuEZIHTvXIogHK9j76Z6ws5fBPY" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/lib/angular-recaptcha/angular-recaptcha.min.js" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/lib/angular-recaptcha/angular-recaptcha.min.js" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+
+    <!-- Adiciona a locale do browser do cliente para as mensagens do devexpress -->
+    <script data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">DevExpress.localization.locale(navigator.language || navigator.browserLanguage);</script>
+    
+    
+    
+        <script src="/bundles/appCore.min.js?v=ASN6giUBcT99s7F4q2o4QTnwkuLOWsk1T-FsnL5lYdQ" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+        <script src="/app/constant/producao.min.js?v=tv_Blsf0TgRVEOXspy_hfUQpOdJ3d6g0SGDXhyKNNQg" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+        <script src="/bundles/appCtrl.min.js?v=6PkiOlwXmx0iZNPXb8YyMBWYzBXDFvQEXQWMQjThF_I" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    
+
+    <script src="/lib/egs-serialPort/SerialPort.js?v=UW2Y37rrOYlc7vdjBCneNkl_qukqU0vFxHmaCRGstL0" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/lib/egs-serialPort/SerialPortNew.js?v=eBTNL98i9YWnJv_NFDlC05fNIMy4f-GI1V6wT5PEs7Y" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/lib/angular-summernote/dist/summernote.js?v=Po4k2eIJ8LYbhDCHHdWsqTyfvOMdfz3EbiJ27AeMPT0" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/lib/angular-summernote/dist/lang/summernote-pt-BR.js?v=iT-CtDYrMMWP05I1FVWe2D76fQJ-C4lyQ2l_3uXpmYM" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/lib/angular-summernote/dist/angular-summernote.js?v=ilIMYu40fsU6L0Nw1h9Syuk6GlYoZND55crGami1lBU" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/lib/jsoneditor/jsoneditor.min.js?v=nCUL-RI0fgW9R6QJ5ZJwfrFEa2RB4omfz_X1a4A22ew" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/js/masonry.min.js?v=YMcw4DEkcVnKbh_0oaaB0uHBXykwpt19Itf5WQ7EOPA" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <script src="/lib/qrcode/qrcode.min.js" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+
+    <!--Importa widget pluggy-->
+    <script src="/scripts/pluggy-connect.js" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+
+    <!-- Lib Barcode -->
+    <script src="/scripts/jsbarcode.all.min.js" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+    <!-- Color Picker -->
+    <script src="/scripts/alwan.min.js" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+
+
+    <!--Reference the SignalR core library. -->
+    <script src="/lib/microsoft-signalr/signalr.min.js?v=ptopZRHG_yATK9eGRDTPbG9uQ1G3-wHmdbCAsM11MqU" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+
+    <!--Exportação dos TREELIST para excel-->
+    <script src="/lib/xlsx/xlsx.full.min.js?v=BrBYlWblduSNDaDDV8gEvvJv0J9-fo6f7j7i1YKlG0g" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+
+    <!--Usado para realizar o sanitize do HTML-->
+    <script src="/lib/dompurify/purify.min.js?v=u-AiDt3V6GswXHi_BEG6VTflD5KdeNb4GrHSDIbYbJI" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+
+    <!-- Drag-and-drop (SortableJS) -->
+    <script src="/lib/sortablejs/sortable.min.js?v=7398oXy5Q4QT9Hx3vRNkfvPSc4N62L-bhEX9ndLlvrA" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script>
+
+
+<script data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true">
+    (function () {
+        const hostname = window.location.hostname;
+
+        const tema = hostname.includes('erpme') ? "tema-erpme" : "tema-padrao";
+
+        // 1. Favicon
+        const favicon = document.getElementById("favicon");
+        if (favicon && tema !== "tema-padrao") {
+            favicon.href = "App_Themes/Images/logo-egs/icon-erpme.svg";
+        }
+
+        //2. Titulo Página
+        document.title = tema !== "tema-padrao" ? "ERP ME" : 'EGS Sistemas';
+
+        // 3. Ícone do atalho iOS
+        const appleIcon = document.createElement("link");
+        appleIcon.rel = "apple-touch-icon";
+        appleIcon.href = `App_Themes/Images/logo-egs/icon${tema !== "tema-padrao" ? '-erpme' : ''}.png`;
+        document.head.appendChild(appleIcon);
+
+        // 4. Splash screens por tema
+        const splashConfigs = [
+            { name: "iPhone_16_Pro_Max_landscape.png", media: "screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
+            { name: "iPhone_16_Pro_landscape.png", media: "screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
+            { name: "iPhone_16_Plus__iPhone_15_Pro_Max__iPhone_15_Plus__iPhone_14_Pro_Max_landscape.png", media: "screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
+            { name: "iPhone_16__iPhone_15_Pro__iPhone_15__iPhone_14_Pro_landscape.png", media: "screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
+            { name: "iPhone_14_Plus__iPhone_13_Pro_Max__iPhone_12_Pro_Max_landscape.png", media: "screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
+            { name: "iPhone_14__iPhone_13_Pro__iPhone_13__iPhone_12_Pro__iPhone_12_landscape.png", media: "screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
+            { name: "iPhone_13_mini__iPhone_12_mini__iPhone_11_Pro__iPhone_XS__iPhone_X_landscape.png", media: "screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
+            { name: "iPhone_11_Pro_Max__iPhone_XS_Max_landscape.png", media: "screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
+            { name: "iPhone_11__iPhone_XR_landscape.png", media: "screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "iPhone_8_Plus__iPhone_7_Plus__iPhone_6s_Plus__iPhone_6_Plus_landscape.png", media: "screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
+            { name: "iPhone_8__iPhone_7__iPhone_6s__iPhone_6__4.7__iPhone_SE_landscape.png", media: "screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "4__iPhone_SE__iPod_touch_5th_generation_and_later_landscape.png", media: "screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "13__iPad_Pro_M4_landscape.png", media: "screen and (device-width: 1032px) and (device-height: 1376px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "12.9__iPad_Pro_landscape.png", media: "screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "11__iPad_Pro_M4_landscape.png", media: "screen and (device-width: 834px) and (device-height: 1210px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "11__iPad_Pro__10.5__iPad_Pro_landscape.png", media: "screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "10.9__iPad_Air_landscape.png", media: "screen and (device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "10.5__iPad_Air_landscape.png", media: "screen and (device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "10.2__iPad_landscape.png", media: "screen and (device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "9.7__iPad_Pro__7.9__iPad_mini__9.7__iPad_Air__9.7__iPad_landscape.png", media: "screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "8.3__iPad_Mini_landscape.png", media: "screen and (device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" },
+            { name: "iPhone_16_Pro_Max_portrait.png", media: "screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+            { name: "iPhone_16_Pro_portrait.png", media: "screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+            { name: "iPhone_16_Plus__iPhone_15_Pro_Max__iPhone_15_Plus__iPhone_14_Pro_Max_portrait.png", media: "screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+            { name: "iPhone_16__iPhone_15_Pro__iPhone_15__iPhone_14_Pro_portrait.png", media: "screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+            { name: "iPhone_14_Plus__iPhone_13_Pro_Max__iPhone_12_Pro_Max_portrait.png", media: "screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+            { name: "iPhone_14__iPhone_13_Pro__iPhone_13__iPhone_12_Pro__iPhone_12_portrait.png", media: "screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+            { name: "iPhone_13_mini__iPhone_12_mini__iPhone_11_Pro__iPhone_XS__iPhone_X_portrait.png", media: "screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+            { name: "iPhone_11_Pro_Max__iPhone_XS_Max_portrait.png", media: "screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+            { name: "iPhone_11__iPhone_XR_portrait.png", media: "screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "iPhone_8_Plus__iPhone_7_Plus__iPhone_6s_Plus__iPhone_6_Plus_portrait.png", media: "screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+            { name: "iPhone_8__iPhone_7__iPhone_6s__iPhone_6__4.7__iPhone_SE_portrait.png", media: "screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "4__iPhone_SE__iPod_touch_5th_generation_and_later_portrait.png", media: "screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "13__iPad_Pro_M4_portrait.png", media: "screen and (device-width: 1032px) and (device-height: 1376px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "12.9__iPad_Pro_portrait.png", media: "screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "11__iPad_Pro_M4_portrait.png", media: "screen and (device-width: 834px) and (device-height: 1210px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "11__iPad_Pro__10.5__iPad_Pro_portrait.png", media: "screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "10.9__iPad_Air_portrait.png", media: "screen and (device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "10.5__iPad_Air_portrait.png", media: "screen and (device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "10.2__iPad_portrait.png", media: "screen and (device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "9.7__iPad_Pro__7.9__iPad_mini__9.7__iPad_Air__9.7__iPad_portrait.png", media: "screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
+            { name: "8.3__iPad_Mini_portrait.png", media: "screen and (device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" }
+        ];
+
+        splashConfigs.forEach(cfg => {
+            const link = document.createElement("link");
+            link.rel = "apple-touch-startup-image";
+            link.media = cfg.media;
+            link.href = `App_Themes/Images/splash-screens/${tema}-${cfg.name}`;
+            document.head.appendChild(link);
+        });
+    })();
+
+</script><script async="" defer="" src="https://www.google.com/recaptcha/api.js?onload=vcRecaptchaApiLoaded&amp;render=explicit" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"></script><div style="left: -1000px; overflow: scroll; position: absolute; top: -1000px; border: none; box-sizing: content-box; height: 200px; margin: 0px; padding: 0px; width: 200px;" data-bootstrap-modal-aria-hidden-count="1" aria-hidden="true"><div style="border: none; box-sizing: content-box; height: 200px; margin: 0px; padding: 0px; width: 200px;"></div></div></body></html>

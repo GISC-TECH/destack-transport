@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area, ComposedChart, Line
@@ -41,10 +41,10 @@ function FinanceiroPainel() {
     };
   };
 
-  const handleDateFilterChange = useCallback((newFiltros) => {
+  const handleDateFilterChange = (newFiltros) => {
     setFiltros(newFiltros);
     loadDados(newFiltros);
-  }, []);
+  };
 
   // Carrega na montagem inicial
   useEffect(() => {

@@ -161,7 +161,7 @@ function GeograficoPainel() {
         <div className="geo-chart-card large">
           <h3>Top Origens (por quantidade de CT-es)</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={(dados?.top_origens || []).slice(0, 10)}>
+            <ComposedChart data={dados?.top_origens || []}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="municipio" tick={{ fontSize: 10 }} angle={-15} textAnchor="end" height={60} />
               <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
@@ -225,7 +225,7 @@ function GeograficoPainel() {
         <div className="geo-chart-card">
           <h3>Top Destinos</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={(dados?.top_destinos || []).slice(0, 8)} layout="vertical">
+            <BarChart data={dados?.top_destinos || []} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis type="number" tick={{ fontSize: 12 }} />
               <YAxis
@@ -264,7 +264,7 @@ function GeograficoPainel() {
                 </tr>
               </thead>
               <tbody>
-                {(dados?.rotas_frequentes || []).slice(0, 8).map((rota, index) => (
+                {(dados?.rotas_frequentes || []).map((rota, index) => (
                   <tr key={index}>
                     <td>
                       <span className="rota-origem">{rota.origem?.municipio}/{rota.origem?.uf}</span>

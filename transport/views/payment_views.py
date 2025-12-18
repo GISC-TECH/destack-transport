@@ -241,11 +241,28 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                     contador['avisos'] += 1
                     continue
 
-                # Filtrar por tipo de proprietário (se especificado)
+                # Buscar veículo no cadastro do sistema para obter tipo_proprietario correto
+                veiculo_cadastro = Veiculo.objects.filter(placa=veiculo.placa).first()
+
+                # Filtrar por tipo de proprietário usando cadastro do sistema (se disponível)
+                # ou fallback para prop_tp do MDF-e
                 if tipo_veiculo != 'todos':
-                    if veiculo.prop_tp != tipo_veiculo:
-                        contador['tipo_diferente'] += 1
-                        continue  # Tipo de proprietário diferente do filtro
+                    # Mapeia tipo_proprietario do cadastro para prop_tp do MDF-e
+                    # Cadastro: '00'=Próprio, '01'=Arrendado, '02'=Agregado
+                    # MDF-e: '0'=TAC-Agregado, '1'=TAC-Independente, '2'=Outros
+                    if veiculo_cadastro:
+                        # Se veículo está no cadastro, usa tipo do cadastro
+                        # '02' (Agregado no cadastro) equivale a '0' (TAC-Agregado no MDF-e)
+                        tipo_cadastro = veiculo_cadastro.tipo_proprietario
+                        if tipo_veiculo == '0' and tipo_cadastro != '02':
+                            # Buscando agregados, mas veículo é próprio ou arrendado
+                            contador['tipo_diferente'] += 1
+                            continue
+                    else:
+                        # Sem cadastro, usa prop_tp do MDF-e (comportamento antigo)
+                        if veiculo.prop_tp != tipo_veiculo:
+                            contador['tipo_diferente'] += 1
+                            continue
 
                 # Buscar condutor do MDF-e (relacionado diretamente ao mdfe, não ao modal)
                 condutor = mdfe.condutores.first()
@@ -292,6 +309,82 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         filename = f"pagamentos_agregados_export_{timezone.now().strftime('%Y%m%d_%H%M%S')}.csv"
         return csv_response(queryset, self.get_serializer_class(), filename)
 
+    @action(detail=True, methods=['post'], url_path='converter-para-proprio')
+    @transaction.atomic
+    def converter_para_proprio(self, request, pk=None):
+        """
+        Converte um pagamento agregado para próprio.
+        Remove o registro de agregado e cria um novo registro em próprio,
+        mantendo o detalhamento do CT-e.
+
+        Parâmetros no body (opcionais):
+        - periodo: Período para o pagamento próprio (AAAA-MM, default: mês da data prevista)
+        - ajustes: Valor de ajustes (default: 0)
+        """
+        pagamento_agregado = self.get_object()
+
+        # Busca o veículo pela placa
+        veiculo = Veiculo.objects.filter(placa=pagamento_agregado.placa).first()
+        if not veiculo:
+            return Response(
+                {"error": f"Veículo com placa {pagamento_agregado.placa} não encontrado no cadastro. Cadastre o veículo primeiro."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Define o período (mês da data prevista ou informado)
+        periodo = request.data.get('periodo')
+        if not periodo:
+            periodo = pagamento_agregado.data_prevista.strftime('%Y-%m')
+
+        # Validação de formato do período
+        if not re.match(r'^\d{4}-\d{2}(-[12]Q)?$', periodo):
+            return Response(
+                {"error": "Formato de período inválido. Use AAAA-MM ou AAAA-MM-1Q/2Q."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Valor do ajuste
+        try:
+            ajustes = Decimal(str(request.data.get('ajustes', '0')))
+        except (InvalidOperation, TypeError):
+            ajustes = Decimal('0.00')
+
+        # Obtém o número do CT-e para registro
+        cte_numero = None
+        if pagamento_agregado.cte and hasattr(pagamento_agregado.cte, 'identificacao'):
+            cte_numero = str(pagamento_agregado.cte.identificacao.numero)
+
+        # Sempre cria um novo registro individual (sem agregar)
+        pagamento_proprio = PagamentoProprio.objects.create(
+            veiculo=veiculo,
+            periodo=periodo,
+            # Novos campos de detalhamento
+            cte=pagamento_agregado.cte,
+            cte_numero=cte_numero,
+            motorista_nome=pagamento_agregado.condutor_nome,
+            motorista_cpf=pagamento_agregado.condutor_cpf,
+            data_prevista=pagamento_agregado.data_prevista,
+            # Valores
+            km_total_periodo=0,  # Não tem KM associado
+            valor_base_faixa=pagamento_agregado.valor_repassado,
+            ajustes=ajustes,
+            status=pagamento_agregado.status,
+            data_pagamento=pagamento_agregado.data_pagamento,
+            obs=f"Convertido de Agregado. {pagamento_agregado.obs or ''}"
+        )
+
+        # Remove o pagamento agregado
+        pagamento_agregado.delete()
+
+        return Response({
+            "message": "Pagamento convertido de Agregado para Próprio com sucesso.",
+            "pagamento_proprio_id": pagamento_proprio.id,
+            "periodo": periodo,
+            "cte_numero": cte_numero,
+            "motorista": pagamento_proprio.motorista_nome,
+            "valor_total": float(pagamento_proprio.valor_total_pagar)
+        }, status=status.HTTP_201_CREATED)
+
 
 class PagamentoProprioViewSet(viewsets.ModelViewSet):
     """API para gerenciar pagamentos a motoristas próprios."""
@@ -324,8 +417,20 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         if periodo:
             queryset = queryset.filter(periodo=periodo)
 
+        # Filtro por data (baseado no período AAAA-MM)
+        data_inicio = params.get('data_inicio')
+        data_fim = params.get('data_fim')
+        if data_inicio:
+            # Filtra períodos >= data_inicio (comparando strings AAAA-MM)
+            periodo_inicio = data_inicio[:7]  # Pega AAAA-MM
+            queryset = queryset.filter(periodo__gte=periodo_inicio)
+        if data_fim:
+            # Filtra períodos <= data_fim
+            periodo_fim = data_fim[:7]  # Pega AAAA-MM
+            queryset = queryset.filter(periodo__lte=periodo_fim)
+
         # Selecionar/Prefetch dados relacionados para otimizar
-        queryset = queryset.select_related('veiculo')
+        queryset = queryset.select_related('veiculo', 'cte', 'cte__identificacao')
 
         return queryset
 
@@ -468,21 +573,52 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         """
         Endpoint para gerar registros de pagamentos próprios em lote.
         Parâmetros no body:
-        - periodo: Período no formato AAAA-MM ou AAAA-MM-XQ (obrigatório)
+        - periodo: Período no formato AAAA-MM ou AAAA-MM-XQ (alternativo a data_inicio/data_fim)
+        - data_inicio: Data inicial (YYYY-MM-DD) - gera períodos mensais no intervalo
+        - data_fim: Data final (YYYY-MM-DD) - gera períodos mensais no intervalo
         - veiculos: Lista de IDs de veículos ou "todos" para todos veículos próprios (opcional, default="todos")
         - km_padrao: KM padrão a considerar (opcional, sobrescreve cálculo automático)
         """
         periodo = request.data.get('periodo')
+        data_inicio = request.data.get('data_inicio')
+        data_fim = request.data.get('data_fim')
         veiculos_param = request.data.get('veiculos', 'todos') # Default "todos"
         km_padrao = request.data.get('km_padrao')
 
-        if not periodo:
-            return Response({"error": "Parâmetro periodo é obrigatório."},
-                           status=status.HTTP_400_BAD_REQUEST)
+        # Gerar lista de períodos a processar
+        periodos_a_processar = []
 
-        # Validação de formato do período
-        if not re.match(r'^\d{4}-\d{2}(-[12]Q)?$', periodo):
-            return Response({"error": "Formato de período inválido. Use AAAA-MM ou AAAA-MM-1Q/2Q."},
+        if periodo:
+            # Usar período direto se fornecido
+            if not re.match(r'^\d{4}-\d{2}(-[12]Q)?$', periodo):
+                return Response({"error": "Formato de período inválido. Use AAAA-MM ou AAAA-MM-1Q/2Q."},
+                               status=status.HTTP_400_BAD_REQUEST)
+            periodos_a_processar = [periodo]
+        elif data_inicio and data_fim:
+            # Gerar períodos mensais a partir do intervalo de datas
+            try:
+                dt_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                dt_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
+
+                if dt_inicio > dt_fim:
+                    return Response({"error": "Data inicial deve ser menor ou igual à data final."},
+                                   status=status.HTTP_400_BAD_REQUEST)
+
+                # Gerar períodos mensais (AAAA-MM) no intervalo
+                current = date(dt_inicio.year, dt_inicio.month, 1)
+                while current <= dt_fim:
+                    periodos_a_processar.append(current.strftime('%Y-%m'))
+                    # Próximo mês
+                    if current.month == 12:
+                        current = date(current.year + 1, 1, 1)
+                    else:
+                        current = date(current.year, current.month + 1, 1)
+
+            except ValueError as e:
+                return Response({"error": f"Formato de data inválido: {str(e)}. Use YYYY-MM-DD."},
+                               status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "Informe 'periodo' ou 'data_inicio' e 'data_fim'."},
                            status=status.HTTP_400_BAD_REQUEST)
 
         # Obter veículos
@@ -518,58 +654,72 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
 
         resultados = {'criados': 0, 'ignorados': 0, 'erros': 0, 'detalhes': []}
 
-        # Processa cada veículo
-        for veiculo in veiculos:
-            # Verifica se já existe pagamento para este veículo/período
-            if PagamentoProprio.objects.filter(veiculo=veiculo, periodo=periodo).exists():
-                resultados['ignorados'] += 1
-                resultados['detalhes'].append({'veiculo': veiculo.placa, 'status': 'ignorado', 'motivo': 'Pagamento já existe'})
-                continue
+        # Processa cada período e cada veículo
+        for periodo_atual in periodos_a_processar:
+            for veiculo in veiculos:
+                # Verifica se já existe pagamento para este veículo/período
+                if PagamentoProprio.objects.filter(veiculo=veiculo, periodo=periodo_atual).exists():
+                    resultados['ignorados'] += 1
+                    resultados['detalhes'].append({
+                        'veiculo': veiculo.placa,
+                        'periodo': periodo_atual,
+                        'status': 'ignorado',
+                        'motivo': 'Pagamento já existe'
+                    })
+                    continue
 
-            try:
-                # Calcula ou usa KM padrão
-                km_total = km_total_padrao if km_total_padrao is not None else self._calcular_km_periodo(veiculo, periodo)
+                try:
+                    # Calcula ou usa KM padrão
+                    km_total = km_total_padrao if km_total_padrao is not None else self._calcular_km_periodo(veiculo, periodo_atual)
 
-                # Busca faixa de KM correspondente
-                faixa = FaixaKM.objects.filter(
-                    Q(min_km__lte=km_total) &
-                    (Q(max_km__gte=km_total) | Q(max_km__isnull=True))
-                ).order_by('-min_km').first()
+                    # Busca faixa de KM correspondente
+                    faixa = FaixaKM.objects.filter(
+                        Q(min_km__lte=km_total) &
+                        (Q(max_km__gte=km_total) | Q(max_km__isnull=True))
+                    ).order_by('-min_km').first()
 
-                if not faixa:
-                     # Se não há faixa aplicável, não pode gerar o pagamento base
-                     raise ValueError(f"Nenhuma faixa de KM encontrada para {km_total} KM.")
+                    if not faixa:
+                         # Se não há faixa aplicável, não pode gerar o pagamento base
+                         raise ValueError(f"Nenhuma faixa de KM encontrada para {km_total} KM.")
 
-                # Cria o registro de pagamento
-                PagamentoProprio.objects.create(
-                    veiculo=veiculo,
-                    periodo=periodo,
-                    km_total_periodo=km_total,
-                    valor_base_faixa=faixa.valor_pago,
-                    ajustes=Decimal('0.00'), # Ajustes podem ser feitos depois
-                    status='pendente'
-                    # valor_total_pagar é calculado no save()
-                )
-                resultados['criados'] += 1
-                resultados['detalhes'].append({
-                    'veiculo': veiculo.placa,
-                    'status': 'criado',
-                    'km_total': km_total,
-                    'valor_base': float(faixa.valor_pago)
-                })
+                    # Cria o registro de pagamento
+                    PagamentoProprio.objects.create(
+                        veiculo=veiculo,
+                        periodo=periodo_atual,
+                        km_total_periodo=km_total,
+                        valor_base_faixa=faixa.valor_pago,
+                        ajustes=Decimal('0.00'), # Ajustes podem ser feitos depois
+                        status='pendente'
+                        # valor_total_pagar é calculado no save()
+                    )
+                    resultados['criados'] += 1
+                    resultados['detalhes'].append({
+                        'veiculo': veiculo.placa,
+                        'periodo': periodo_atual,
+                        'status': 'criado',
+                        'km_total': km_total,
+                        'valor_base': float(faixa.valor_pago)
+                    })
 
-            except Exception as e:
-                logger.warning(
-                    "Erro ao gerar pagamento para %s / %s: %s",
-                    veiculo.placa,
-                    periodo,
-                    e,
-                )
-                resultados['erros'] += 1
-                resultados['detalhes'].append({'veiculo': veiculo.placa, 'status': 'erro', 'motivo': str(e)})
+                except Exception as e:
+                    logger.warning(
+                        "Erro ao gerar pagamento para %s / %s: %s",
+                        veiculo.placa,
+                        periodo_atual,
+                        e,
+                    )
+                    resultados['erros'] += 1
+                    resultados['detalhes'].append({
+                        'veiculo': veiculo.placa,
+                        'periodo': periodo_atual,
+                        'status': 'erro',
+                        'motivo': str(e)
+                    })
 
+        periodos_str = ', '.join(periodos_a_processar)
         return Response({
-            "message": f"Geração de pagamentos concluída.",
+            "message": f"Geração de pagamentos concluída para período(s): {periodos_str}",
+            "periodos_processados": periodos_a_processar,
             "criados": resultados['criados'],
             "ignorados": resultados['ignorados'],
             "erros": resultados['erros'],
@@ -582,3 +732,101 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
         filename = f"pagamentos_proprios_export_{timezone.now().strftime('%Y%m%d_%H%M%S')}.csv"
         return csv_response(queryset, self.get_serializer_class(), filename)
+
+    @action(detail=True, methods=['post'], url_path='converter-para-agregado')
+    @transaction.atomic
+    def converter_para_agregado(self, request, pk=None):
+        """
+        Converte um pagamento próprio para agregado.
+        Remove o registro de próprio e cria um registro em agregado.
+
+        Parâmetros no body:
+        - cte_id: ID do CT-e para associar (obrigatório se não houver CT-e vinculado)
+        - condutor_nome: Nome do condutor (obrigatório)
+        - condutor_cpf: CPF do condutor (opcional)
+        - percentual_repasse: Percentual de repasse (default: 25%)
+        - data_prevista: Data prevista para pagamento (default: hoje)
+        """
+        pagamento_proprio = self.get_object()
+
+        # Obtém dados do request
+        cte_id = request.data.get('cte_id')
+        condutor_nome = request.data.get('condutor_nome')
+        condutor_cpf = request.data.get('condutor_cpf', '')
+
+        try:
+            percentual_repasse = Decimal(str(request.data.get('percentual_repasse', '25')))
+        except (InvalidOperation, TypeError):
+            percentual_repasse = Decimal('25.00')
+
+        data_prevista_str = request.data.get('data_prevista')
+        if data_prevista_str:
+            try:
+                data_prevista = datetime.strptime(data_prevista_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {"error": "Formato de data inválido. Use YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            data_prevista = date.today()
+
+        # Validações
+        if not condutor_nome:
+            return Response(
+                {"error": "Nome do condutor é obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Busca ou valida CT-e
+        cte = None
+        if cte_id:
+            cte = CTeDocumento.objects.filter(pk=cte_id).first()
+            if not cte:
+                return Response(
+                    {"error": f"CT-e com ID {cte_id} não encontrado."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            # Verifica se CT-e já tem pagamento agregado
+            if hasattr(cte, 'pagamento_agregado'):
+                return Response(
+                    {"error": f"CT-e {cte.chave[-8:]} já possui um pagamento agregado associado."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Se não tem CTE e o modelo exige, não podemos criar
+        if not cte:
+            return Response({
+                "error": "É necessário informar um CT-e (cte_id) para converter para pagamento agregado.",
+                "hint": "O modelo de pagamento agregado requer um CT-e associado."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Obtém a placa do veículo
+        placa = pagamento_proprio.veiculo.placa
+
+        # Calcula valor do frete baseado no valor total do pagamento próprio
+        valor_frete = pagamento_proprio.valor_total_pagar
+
+        # Cria pagamento agregado
+        pagamento_agregado = PagamentoAgregado.objects.create(
+            cte=cte,
+            placa=placa,
+            condutor_nome=condutor_nome,
+            condutor_cpf=condutor_cpf,
+            valor_frete_total=valor_frete,
+            percentual_repasse=percentual_repasse,
+            data_prevista=data_prevista,
+            data_pagamento=pagamento_proprio.data_pagamento,
+            status=pagamento_proprio.status,
+            obs=f"Convertido de Próprio período {pagamento_proprio.periodo}. {pagamento_proprio.obs or ''}"
+        )
+
+        # Remove o pagamento próprio
+        pagamento_proprio.delete()
+
+        return Response({
+            "message": "Pagamento convertido de Próprio para Agregado com sucesso.",
+            "pagamento_agregado_id": pagamento_agregado.id,
+            "cte_chave": cte.chave if cte else None,
+            "valor_repassado": float(pagamento_agregado.valor_repassado)
+        }, status=status.HTTP_201_CREATED)

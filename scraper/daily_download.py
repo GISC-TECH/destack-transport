@@ -16,6 +16,7 @@ from datetime import datetime
 
 from browser import BrowserManager
 from egs_client import EGSClient
+from destack_client import DestackClient
 from config import DOWNLOAD_DIR
 from logger_setup import setup_logger
 
@@ -83,15 +84,32 @@ def download_daily_xmls(target_date: str = None):
         mdfe_count = download_mdfe_daily(client, output_folder)
         logger.info(f"MDF-e: {mdfe_count} XMLs baixados")
 
-        # Resultado final
+        # Resultado do download
+        total_downloaded = cte_count + mdfe_count
         logger.info("")
         logger.info("=" * 60)
-        logger.info("DOWNLOAD DIÁRIO CONCLUÍDO!")
+        logger.info("DOWNLOAD CONCLUÍDO!")
         logger.info(f"Data: {target_date}")
         logger.info(f"CT-e: {cte_count} XMLs")
         logger.info(f"MDF-e: {mdfe_count} XMLs")
-        logger.info(f"Total: {cte_count + mdfe_count} XMLs")
+        logger.info(f"Total: {total_downloaded} XMLs")
         logger.info(f"Pasta: {output_folder}")
+        logger.info("=" * 60)
+
+        # Enviar XMLs para a API do Destack
+        if total_downloaded > 0:
+            logger.info("")
+            logger.info("-" * 40)
+            logger.info("Enviando XMLs para API do Destack...")
+            logger.info("-" * 40)
+            upload_result = upload_xmls_to_api(output_folder)
+            logger.info(f"Enviados: {upload_result['success']} | Duplicados: {upload_result['duplicates']} | Falhas: {upload_result['failed']}")
+        else:
+            logger.info("Nenhum XML para enviar")
+
+        logger.info("")
+        logger.info("=" * 60)
+        logger.info("PROCESSO DIÁRIO FINALIZADO!")
         logger.info("=" * 60)
 
         return True
@@ -111,6 +129,52 @@ def download_daily_xmls(target_date: str = None):
                 pass
 
 
+def upload_xmls_to_api(folder_path: str) -> dict:
+    """
+    Envia todos os XMLs de uma pasta para a API do Destack.
+    Retorna estatísticas do envio.
+    """
+    result = {'success': 0, 'failed': 0, 'duplicates': 0, 'total': 0}
+
+    # Encontrar todos os XMLs na pasta
+    xml_files = glob.glob(os.path.join(folder_path, "**/*.xml"), recursive=True)
+    result['total'] = len(xml_files)
+
+    if not xml_files:
+        logger.info("Nenhum arquivo XML encontrado para enviar")
+        return result
+
+    logger.info(f"Encontrados {len(xml_files)} arquivos XML para enviar")
+
+    # Conectar à API
+    destack = DestackClient()
+    if not destack.login():
+        logger.error("Falha ao conectar na API do Destack")
+        result['failed'] = len(xml_files)
+        return result
+
+    # Enviar cada XML
+    for xml_path in xml_files:
+        filename = os.path.basename(xml_path)
+        try:
+            upload_result = destack.upload_xml(xml_path)
+
+            if upload_result.get('success'):
+                result['success'] += 1
+            elif upload_result.get('duplicate'):
+                result['duplicates'] += 1
+            else:
+                result['failed'] += 1
+                logger.warning(f"Falha ao enviar {filename}: {upload_result.get('error')}")
+
+        except Exception as e:
+            result['failed'] += 1
+            logger.error(f"Erro ao enviar {filename}: {e}")
+
+    logger.info(f"Upload concluído: {result['success']} enviados, {result['duplicates']} duplicados, {result['failed']} falhas")
+    return result
+
+
 def download_cte_daily(client: EGSClient, output_folder: str) -> int:
     """Baixa todos os CT-e disponíveis e retorna a contagem"""
     from selenium.webdriver.common.by import By
@@ -122,38 +186,21 @@ def download_cte_daily(client: EGSClient, output_folder: str) -> int:
         close_banner(client)
         time.sleep(1)
 
-        # Navegar via menu: FISCAL > CT-E / CT-E OS > EXPORTAÇÃO XML
-        fiscal_menu = client._wait_and_find_element([
-            (By.XPATH, '//span[contains(text(), "FISCAL")]'),
-            (By.XPATH, '//a[contains(., "FISCAL")]'),
-        ], timeout=10)
+        # Navegar para página de EXPORTAÇÃO XML de CT-e
+        logger.info("Navegando para /cte-tela-xml...")
+        client.browser.driver.get('https://app.egssistemas.com.br/cte-tela-xml')
+        time.sleep(5)
 
-        if fiscal_menu:
-            client._safe_click(fiscal_menu)
-            time.sleep(1)
+        # Fechar banner novamente se aparecer
+        close_banner(client)
+        time.sleep(1)
 
-        # Clicar em CT-E
-        cte_menu = client._wait_and_find_element([
-            (By.XPATH, '//span[contains(text(), "CT-E")]'),
-            (By.XPATH, '//a[contains(., "CT-E")]'),
-        ], timeout=10)
+        # Log da URL atual para debug
+        current_url = client.browser.driver.current_url
+        logger.info(f"URL atual: {current_url}")
 
-        if cte_menu:
-            client._safe_click(cte_menu)
-            time.sleep(1)
-
-        # Clicar em EXPORTAÇÃO XML
-        export_menu = client._wait_and_find_element([
-            (By.XPATH, '//span[contains(text(), "EXPORTAÇÃO XML")]'),
-            (By.XPATH, '//a[contains(., "EXPORTAÇÃO XML")]'),
-        ], timeout=10)
-
-        if export_menu:
-            client._safe_click(export_menu)
-            time.sleep(3)
-
-        # Aguardar grid
-        client._wait_for_devexpress_grid(timeout=30)
+        # Aguardar grid (timeout maior para conexões lentas)
+        client._wait_for_devexpress_grid(timeout=90)
 
         # Verificar contagem
         try:
@@ -168,22 +215,43 @@ def download_cte_daily(client: EGSClient, output_folder: str) -> int:
             logger.info("Nenhum CT-e encontrado")
             return 0
 
-        # Selecionar todos
+        # Selecionar todos (mesma abordagem do MDF-e)
         client.browser.driver.execute_script("""
-            var headerCheckbox = document.querySelector('.dx-header-row .dx-checkbox, .dx-datagrid-headers .dx-checkbox');
+            var headerCheckbox = document.querySelector('.dx-header-row .dx-checkbox');
             if (headerCheckbox) headerCheckbox.click();
         """)
-        time.sleep(1)
+        time.sleep(2)
 
-        # Clicar em Download
-        download_btn = client._find_element_multiple_strategies([
-            (By.XPATH, '//button[contains(., "Download XML")]'),
-            (By.XPATH, '//button[contains(., "Download")]'),
-        ])
+        # Verificar seleção
+        selected = client.browser.driver.execute_script("""
+            return document.querySelectorAll('.dx-datagrid-rowsview .dx-checkbox-checked').length;
+        """)
+        logger.info(f"Registros selecionados: {selected}")
 
-        if download_btn:
-            client._safe_click(download_btn)
-            time.sleep(2)
+        if selected == 0:
+            logger.warning("Nenhum registro selecionado")
+            return 0
+
+        # Clicar no botão de download XML
+        # Usa seletor para botão com ícone fa-download (funciona na página cte-tela-xml)
+        download_clicked = client.browser.driver.execute_script("""
+            var selectors = [
+                "button:has(i.fa-download)",
+                "button[ng-click='downloadXml()']",
+                "button[ng-click*='download']",
+                "button.btn-download"
+            ];
+            for (var i = 0; i < selectors.length; i++) {
+                var btn = document.querySelector(selectors[i]);
+                if (btn) {
+                    btn.click();
+                    return 'clicked: ' + selectors[i];
+                }
+            }
+            return 'not found';
+        """)
+        logger.info(f"Botão de download: {download_clicked}")
+        time.sleep(2)
 
         # Aguardar download
         count = wait_and_extract_zip(output_folder, 'cte')
@@ -212,8 +280,8 @@ def download_mdfe_daily(client: EGSClient, output_folder: str) -> int:
         close_banner(client)
         time.sleep(1)
 
-        # Aguardar grid
-        client._wait_for_devexpress_grid(timeout=30)
+        # Aguardar grid (timeout maior para conexões lentas)
+        client._wait_for_devexpress_grid(timeout=90)
 
         # Verificar contagem
         try:

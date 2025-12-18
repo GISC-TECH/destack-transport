@@ -10,6 +10,13 @@
   margin-bottom: 20px;
 }
 
+/* Remove margin when inside page-header-actions */
+.page-header-actions .date-filter {
+  margin-bottom: 0;
+  box-shadow: none;
+  padding: 8px 12px;
+}
+
 .period-buttons {
   display: flex;
   gap: 8px;

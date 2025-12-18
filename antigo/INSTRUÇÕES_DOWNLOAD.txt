@@ -1,0 +1,160 @@
+═══════════════════════════════════════════════════════════════════
+  DESTACK - INSTRUÇÕES PARA DOWNLOAD E SETUP LOCAL
+═══════════════════════════════════════════════════════════════════
+
+✅ TUDO PRONTO PARA DOWNLOAD!
+
+📦 O QUE FOI PREPARADO:
+
+1. ✅ Backup do banco de dados de produção (172MB em backups/)
+   - destack_backup_20251122_010653.dump (formato binário)
+   - destack_backup_20251122_010706.sql (formato texto)
+   
+2. ✅ Docker Compose para desenvolvimento local
+   - docker-compose.local.yml
+   - Dockerfile.local
+   
+3. ✅ Arquivo .env.local com configurações de dev
+   
+4. ✅ Scripts de automação (todos executáveis):
+   - scripts/start-local.sh
+   - scripts/stop-local.sh
+   - scripts/restore-backup.sh
+   - scripts/logs-local.sh
+   - scripts/shell-local.sh
+   - scripts/manage-local.sh
+   
+5. ✅ Documentação completa:
+   - README_LOCAL.md (guia detalhado)
+   - QUICK_START.md (guia rápido)
+   - CHECKLIST_DOWNLOAD.md (checklist)
+
+═══════════════════════════════════════════════════════════════════
+  COMO BAIXAR E USAR
+═══════════════════════════════════════════════════════════════════
+
+OPÇÃO 1: Baixar via GitHub (RECOMENDADO)
+─────────────────────────────────────────
+$ git clone git@github.com:GISC-TECH/destack-transport.git
+$ cd destack-transport
+
+⚠️ IMPORTANTE: Os backups do BD NÃO estão no GitHub (são muito grandes)
+   Você precisa baixar a pasta backups/ separadamente do servidor!
+
+
+OPÇÃO 2: Baixar pasta completa do servidor
+───────────────────────────────────────────
+No seu PC local, execute:
+
+$ scp -r root@31.97.247.165:/root/apps/destack ./destack
+
+Ou use WinSCP, FileZilla, etc.
+
+
+═══════════════════════════════════════════════════════════════════
+  BAIXAR APENAS OS BACKUPS DO BANCO
+═══════════════════════════════════════════════════════════════════
+
+Se já clonou do GitHub, baixe apenas os backups:
+
+$ scp -r root@31.97.247.165:/root/apps/destack/backups ./destack/
+
+Isso irá baixar ~172MB de backups do banco de dados.
+
+
+═══════════════════════════════════════════════════════════════════
+  DEPOIS DE BAIXAR - PRÓXIMOS PASSOS
+═══════════════════════════════════════════════════════════════════
+
+1. Instale o Docker Desktop
+   - Windows/Mac: https://www.docker.com/products/docker-desktop
+   
+2. Abra terminal na pasta destack/
+
+3. Execute:
+   $ ./scripts/start-local.sh
+   
+4. Aguarde 1-2 minutos
+
+5. Acesse: http://localhost:8001
+   - Usuário: admin
+   - Senha: admin123
+
+6. (Opcional) Restaurar backup de produção:
+   $ ./scripts/restore-backup.sh
+
+
+═══════════════════════════════════════════════════════════════════
+  ESTRUTURA DE PASTAS
+═══════════════════════════════════════════════════════════════════
+
+destack/
+├── backups/                    ← BACKUPS DO BD (172MB, não no Git)
+│   ├── destack_backup_*.dump
+│   ├── destack_backup_*.sql
+│   └── README.md
+├── scripts/                    ← Scripts de automação
+│   ├── start-local.sh
+│   ├── stop-local.sh
+│   ├── restore-backup.sh
+│   └── ...
+├── core/                       ← Configurações Django
+├── transport/                  ← App principal (modelos, views, API)
+├── docker-compose.local.yml    ← Docker Compose para dev
+├── Dockerfile.local            ← Dockerfile para dev
+├── .env.local                  ← Variáveis de ambiente local
+├── requirements.txt            ← Dependências Python
+├── README_LOCAL.md             ← GUIA COMPLETO (LEIA ISTO!)
+├── QUICK_START.md              ← Guia rápido
+└── CHECKLIST_DOWNLOAD.md       ← Checklist de verificação
+
+
+═══════════════════════════════════════════════════════════════════
+  TAMANHO DOS ARQUIVOS
+═══════════════════════════════════════════════════════════════════
+
+- Código + Docker: ~30MB
+- Backups banco:   ~172MB
+- TOTAL:           ~200MB
+
+
+═══════════════════════════════════════════════════════════════════
+  ⚠️ IMPORTANTE - SEGURANÇA
+═══════════════════════════════════════════════════════════════════
+
+🔐 Os backups contêm DADOS REAIS de produção!
+   - NÃO compartilhe publicamente
+   - NÃO commite no Git
+   - Use apenas para desenvolvimento local
+   - Mantenha seguro
+
+
+═══════════════════════════════════════════════════════════════════
+  📚 DOCUMENTAÇÃO
+═══════════════════════════════════════════════════════════════════
+
+1. README_LOCAL.md     - Guia completo e detalhado
+2. QUICK_START.md      - Início rápido em 3 passos
+3. CHECKLIST_DOWNLOAD  - Verificação de arquivos
+
+
+═══════════════════════════════════════════════════════════════════
+  🆘 PROBLEMAS?
+═══════════════════════════════════════════════════════════════════
+
+1. Leia README_LOCAL.md (seção Troubleshooting)
+2. Verifique logs: ./scripts/logs-local.sh
+3. Reporte issues no GitHub
+
+
+═══════════════════════════════════════════════════════════════════
+  ✅ PRONTO!
+═══════════════════════════════════════════════════════════════════
+
+A pasta destack/ está completamente preparada para desenvolvimento
+local. Basta baixar e seguir o QUICK_START.md!
+
+Data de preparação: 2025-11-22 01:15 UTC
+Versão: Django 5.0.6 + PostgreSQL 15 + Redis 7
+
+═══════════════════════════════════════════════════════════════════

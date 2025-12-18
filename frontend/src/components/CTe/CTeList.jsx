@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { cteAPI, dashboardAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
@@ -28,6 +29,7 @@ const getDefaultDates = () => {
 };
 
 function CTeList() {
+  const toast = useToast();
   const defaultDates = getDefaultDates();
   const [ctes, setCtes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -183,9 +185,10 @@ function CTeList() {
           ? { ...c, pago: novoPago, data_pagamento: novoPago ? new Date().toISOString() : null }
           : c
       ));
+      toast.success(novoPago ? 'CT-e marcado como pago!' : 'CT-e marcado como pendente!');
     } catch (err) {
       console.error('Erro ao atualizar status de pagamento:', err);
-      alert('Erro ao atualizar status de pagamento. Tente novamente.');
+      toast.error('Erro ao atualizar status de pagamento. Tente novamente.');
     } finally {
       setAtualizandoPagamento(null);
     }
@@ -441,6 +444,7 @@ function CTeList() {
       </div>
 
       <div className="table-container">
+        {/* Desktop Table */}
         <table className="data-table">
           <thead>
             <tr>
@@ -551,6 +555,103 @@ function CTeList() {
             )}
           </tbody>
         </table>
+
+        {/* Mobile Cards */}
+        <div className="mobile-cards">
+          {ctes.length === 0 ? (
+            <div className="mobile-empty">
+              <div className="mobile-empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              </div>
+              <p className="mobile-empty-text">Nenhum CT-e encontrado</p>
+            </div>
+          ) : (
+            ctes.map((cte) => (
+              <div key={cte.id} className="mobile-card">
+                <div className="mobile-card-header">
+                  <div className="mobile-card-title">
+                    <span className="mobile-card-number">CT-e #{cte.numero_cte || '-'}</span>
+                    <span className="mobile-card-date">{cte.data_emissao || '-'}</span>
+                  </div>
+                  <div className="mobile-card-status">
+                    <span className={`badge badge-${cte.status === 'Autorizado' ? 'success' : cte.status === 'Cancelado' ? 'danger' : cte.status?.includes('Rejeitado') ? 'warning' : 'secondary'}`}>
+                      {cte.status || 'Pendente'}
+                    </span>
+                  </div>
+                </div>
+                <div className="mobile-card-body">
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Remetente</span>
+                    <span className="mobile-card-value">{cte.remetente_nome || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Destinatario</span>
+                    <span className="mobile-card-value">{cte.destinatario_nome || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Valor</span>
+                    <span className="mobile-card-value valor">{formatCurrency(cte.valor_total)}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Modalidade</span>
+                    <span className={`badge badge-${cte.modalidade === 'CIF' ? 'info' : 'warning'}`}>
+                      {cte.modalidade || '-'}
+                    </span>
+                  </div>
+                </div>
+                <div className="mobile-card-footer">
+                  <div className="mobile-card-pago">
+                    <button
+                      className={`btn-toggle-pago ${cte.pago ? 'pago' : 'nao-pago'}`}
+                      onClick={() => handleTogglePagamento(cte)}
+                      disabled={atualizandoPagamento === cte.id}
+                    >
+                      {atualizandoPagamento === cte.id ? (
+                        <span className="loading-spinner-small"></span>
+                      ) : cte.pago ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10"></circle>
+                        </svg>
+                      )}
+                    </button>
+                    <span style={{ fontSize: '12px', color: cte.pago ? '#27ae60' : '#7f8c8d' }}>
+                      {cte.pago ? 'Pago' : 'Pendente'}
+                    </span>
+                  </div>
+                  <div className="mobile-card-actions">
+                    <button
+                      className="btn-action btn-view"
+                      onClick={() => handleOpenModal(cte)}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                    <button
+                      className="btn-action btn-download"
+                      onClick={() => handleDownloadXML(cte.id, cte.numero_cte)}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {pagination.total > 0 && (

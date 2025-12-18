@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motoristasAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
@@ -9,6 +10,7 @@ import './MotoristaForm.css';
 function MotoristaForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const toast = useToast();
   const isEdit = !!id;
 
   const [loading, setLoading] = useState(false);
@@ -18,9 +20,9 @@ function MotoristaForm() {
     cpf: '',
     cnh: '',
     categoria_cnh: 'E',
-    cnh_validade: '',
+    validade_cnh: '',
     nr20_validade: '',
-    aso_validade: '',
+    mopp_validade: '',
     telefone: '',
     email: '',
     ativo: true
@@ -72,20 +74,27 @@ function MotoristaForm() {
       setLoading(true);
       setError(null);
 
+      // Converte strings vazias para null nos campos de data
       const dataToSend = {
         ...formData,
-        cpf: formData.cpf.replace(/\D/g, '')
+        cpf: formData.cpf.replace(/\D/g, ''),
+        validade_cnh: formData.validade_cnh || null,
+        nr20_validade: formData.nr20_validade || null,
+        mopp_validade: formData.mopp_validade || null
       };
 
       if (isEdit) {
         await motoristasAPI.update(id, dataToSend);
+        toast.success('Motorista atualizado com sucesso!');
       } else {
         await motoristasAPI.create(dataToSend);
+        toast.success('Motorista cadastrado com sucesso!');
       }
 
-      navigate('/motoristas');
+      setTimeout(() => navigate('/motoristas'), 500);
     } catch (err) {
       setError(err.message);
+      toast.error('Erro ao salvar motorista. Verifique os dados.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
@@ -201,12 +210,12 @@ function MotoristaForm() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="cnh_validade">Validade CNH</label>
+              <label htmlFor="validade_cnh">Validade CNH</label>
               <input
                 type="date"
-                id="cnh_validade"
-                name="cnh_validade"
-                value={formData.cnh_validade}
+                id="validade_cnh"
+                name="validade_cnh"
+                value={formData.validade_cnh || ''}
                 onChange={handleChange}
               />
             </div>
@@ -219,18 +228,18 @@ function MotoristaForm() {
                 type="date"
                 id="nr20_validade"
                 name="nr20_validade"
-                value={formData.nr20_validade}
+                value={formData.nr20_validade || ''}
                 onChange={handleChange}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="aso_validade">Validade ASO</label>
+              <label htmlFor="mopp_validade">Validade MOPP</label>
               <input
                 type="date"
-                id="aso_validade"
-                name="aso_validade"
-                value={formData.aso_validade}
+                id="mopp_validade"
+                name="mopp_validade"
+                value={formData.mopp_validade || ''}
                 onChange={handleChange}
               />
             </div>

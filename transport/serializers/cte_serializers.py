@@ -64,39 +64,34 @@ class CTeComplementoSerializer(serializers.ModelSerializer):
 class CTeEmitenteSerializer(serializers.ModelSerializer):
     class Meta:
         model = CTeEmitente
-        # Lista todos os campos de Endereco + campos específicos de CTeEmitente
-        fields = [f.name for f in Endereco._meta.get_fields() if f.name != 'id'] + \
+        # Lista todos os campos de Endereco (exceto id, endereco_ptr) + campos específicos de CTeEmitente
+        # Exclui campos internos da herança ('cte', 'endereco_ptr')
+        fields = [f.name for f in Endereco._meta.get_fields() if f.name not in ('id', 'endereco_ptr', 'cte', 'cteemitente')] + \
                  ['cnpj', 'cpf', 'ie', 'razao_social', 'nome_fantasia', 'telefone', 'email', 'crt']
-        # Exclui os campos internos da herança e a FK para CTeDocumento
-        exclude = ['cte', 'endereco_ptr']
 
 class CTeRemetenteSerializer(serializers.ModelSerializer):
     class Meta:
         model = CTeRemetente
-        fields = [f.name for f in Endereco._meta.get_fields() if f.name != 'id'] + \
+        fields = [f.name for f in Endereco._meta.get_fields() if f.name not in ('id', 'endereco_ptr', 'cte', 'cteremetente')] + \
                  ['cnpj', 'cpf', 'ie', 'razao_social', 'nome_fantasia', 'telefone', 'email']
-        exclude = ['cte', 'endereco_ptr']
 
 class CTeExpedidorSerializer(serializers.ModelSerializer):
     class Meta:
         model = CTeExpedidor
-        fields = [f.name for f in Endereco._meta.get_fields() if f.name != 'id'] + \
+        fields = [f.name for f in Endereco._meta.get_fields() if f.name not in ('id', 'endereco_ptr', 'cte', 'cteexpedidor')] + \
                  ['cnpj', 'cpf', 'ie', 'razao_social', 'nome_fantasia', 'telefone', 'email']
-        exclude = ['cte', 'endereco_ptr']
 
 class CTeRecebedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = CTeRecebedor
-        fields = [f.name for f in Endereco._meta.get_fields() if f.name != 'id'] + \
+        fields = [f.name for f in Endereco._meta.get_fields() if f.name not in ('id', 'endereco_ptr', 'cte', 'cterecebedor')] + \
                  ['cnpj', 'cpf', 'ie', 'razao_social', 'nome_fantasia', 'telefone', 'email']
-        exclude = ['cte', 'endereco_ptr']
 
 class CTEDestinatarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = CTEDestinatario
-        fields = [f.name for f in Endereco._meta.get_fields() if f.name != 'id'] + \
+        fields = [f.name for f in Endereco._meta.get_fields() if f.name not in ('id', 'endereco_ptr', 'cte', 'ctedestinatario')] + \
                  ['cnpj', 'cpf', 'ie', 'razao_social', 'nome_fantasia', 'telefone', 'email', 'isuf']
-        exclude = ['cte', 'endereco_ptr']
 
 
 class CTeComponenteValorSerializer(serializers.ModelSerializer):
@@ -216,10 +211,14 @@ class CTeDocumentoListSerializer(serializers.ModelSerializer):
     def get_placa_principal(self, obj):
         """ Pega a placa do primeiro veículo associado ao modal rodoviário, se existir. """
         try:
-             # Acessa o modal e depois a lista de veículos, pegando o primeiro
-             return obj.modal_rodoviario.veiculos.first().placa
-        except AttributeError: # Caso modal_rodoviario ou veiculos não existam
-             return None
+            # Verifica cada nível antes de acessar para evitar AttributeError confusos
+            modal = getattr(obj, 'modal_rodoviario', None)
+            if modal is None:
+                return None
+            veiculo = modal.veiculos.first() if hasattr(modal, 'veiculos') else None
+            return veiculo.placa if veiculo else None
+        except AttributeError:
+            return None
 
     def get_status(self, obj):
         """ Determina o status consolidado do CT-e. """

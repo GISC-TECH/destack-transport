@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cteAPI } from '../../services/api';
 import Loading from '../Common/Loading';
@@ -29,6 +29,12 @@ function PagamentosPendentes() {
   const [dados, setDados] = useState(null);
   const [filtros, setFiltros] = useState(defaultDates);
   const [atualizandoPagamento, setAtualizandoPagamento] = useState(null);
+  // Modal para selecionar data de pagamento
+  const [modalBaixa, setModalBaixa] = useState({ show: false, cteId: null, cteNumero: null });
+  const [dataBaixa, setDataBaixa] = useState(new Date().toISOString().split('T')[0]);
+  // Paginacao da tabela
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const itensPorPagina = 10;
 
   const loadDados = async (customFiltros = null) => {
     const filtrosAtivos = customFiltros || filtros;
@@ -48,15 +54,41 @@ function PagamentosPendentes() {
     loadDados(defaultDates);
   }, []);
 
-  const handleDateFilterChange = useCallback((newFiltros) => {
+  const handleDateFilterChange = (newFiltros) => {
     setFiltros(newFiltros);
+    setPaginaAtual(1); // Reset pagina ao mudar filtros
     loadDados(newFiltros);
-  }, []);
+  };
 
-  const handleMarcarPago = async (cteId) => {
+  // Paginacao - calculos
+  const ctesPendentes = dados?.ctes_pendentes_recentes || [];
+  const totalItens = ctesPendentes.length;
+  const totalPaginas = Math.ceil(totalItens / itensPorPagina);
+  const indiceInicial = (paginaAtual - 1) * itensPorPagina;
+  const indiceFinal = indiceInicial + itensPorPagina;
+  const ctesPaginados = ctesPendentes.slice(indiceInicial, indiceFinal);
+
+  const handlePaginaAnterior = () => {
+    if (paginaAtual > 1) setPaginaAtual(paginaAtual - 1);
+  };
+
+  const handleProximaPagina = () => {
+    if (paginaAtual < totalPaginas) setPaginaAtual(paginaAtual + 1);
+  };
+
+  // Abre o modal para selecionar data de baixa
+  const handleAbrirModalBaixa = (cteId, cteNumero) => {
+    setDataBaixa(new Date().toISOString().split('T')[0]); // Reset para data atual
+    setModalBaixa({ show: true, cteId, cteNumero });
+  };
+
+  // Confirma a baixa com a data selecionada
+  const handleConfirmarBaixa = async () => {
+    const { cteId } = modalBaixa;
     setAtualizandoPagamento(cteId);
+    setModalBaixa({ show: false, cteId: null, cteNumero: null });
     try {
-      await cteAPI.marcarPagamento(cteId, true);
+      await cteAPI.marcarPagamento(cteId, true, null, dataBaixa);
       // Recarrega os dados
       loadDados();
     } catch (err) {
@@ -240,9 +272,14 @@ function PagamentosPendentes() {
       {/* Tabela de CT-es Pendentes Recentes */}
       <div className="section-header">
         <h3>CT-es Pendentes Mais Recentes</h3>
-        <Link to="/ctes?pago=false" className="btn btn-outline btn-sm">
-          Ver Todos
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <span className="text-muted" style={{ fontSize: '13px' }}>
+            {totalItens > 0 ? `${indiceInicial + 1}-${Math.min(indiceFinal, totalItens)} de ${totalItens}` : '0 itens'}
+          </span>
+          <Link to="/ctes?pago=false" className="btn btn-outline btn-sm">
+            Ver Todos
+          </Link>
+        </div>
       </div>
 
       <div className="table-container">
@@ -259,12 +296,12 @@ function PagamentosPendentes() {
             </tr>
           </thead>
           <tbody>
-            {(dados?.ctes_pendentes_recentes || []).length === 0 ? (
+            {ctesPaginados.length === 0 ? (
               <tr>
                 <td colSpan="7" className="text-center">Nenhum CT-e pendente no periodo</td>
               </tr>
             ) : (
-              (dados?.ctes_pendentes_recentes || []).map((cte) => (
+              ctesPaginados.map((cte) => (
                 <tr key={cte.id}>
                   <td>
                     <strong>{cte.numero || '-'}</strong>
@@ -286,9 +323,9 @@ function PagamentosPendentes() {
                     <div className="action-buttons">
                       <button
                         className="btn-action btn-download"
-                        onClick={() => handleMarcarPago(cte.id)}
+                        onClick={() => handleAbrirModalBaixa(cte.id, cte.numero)}
                         disabled={atualizandoPagamento === cte.id}
-                        title="Marcar como Pago"
+                        title="Baixar Pagamento"
                       >
                         {atualizandoPagamento === cte.id ? (
                           <span className="loading-spinner-small"></span>
@@ -318,6 +355,35 @@ function PagamentosPendentes() {
         </table>
       </div>
 
+      {/* Paginacao */}
+      {totalPaginas > 1 && (
+        <div className="pagination" style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+          <button
+            className="btn btn-outline btn-sm"
+            onClick={handlePaginaAnterior}
+            disabled={paginaAtual === 1}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Anterior
+          </button>
+          <span style={{ padding: '0 15px', fontSize: '14px' }}>
+            Pagina <strong>{paginaAtual}</strong> de <strong>{totalPaginas}</strong>
+          </span>
+          <button
+            className="btn btn-outline btn-sm"
+            onClick={handleProximaPagina}
+            disabled={paginaAtual === totalPaginas}
+          >
+            Proxima
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Resumo por Modalidade */}
       <div className="section-header" style={{ marginTop: '30px' }}>
         <h3>Resumo por Modalidade</h3>
@@ -340,6 +406,55 @@ function PagamentosPendentes() {
           </div>
         ))}
       </div>
+
+      {/* Modal de Baixa de Pagamento */}
+      {modalBaixa.show && (
+        <div className="modal-overlay" onClick={() => setModalBaixa({ show: false, cteId: null, cteNumero: null })}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3>Baixar Pagamento</h3>
+              <button
+                className="modal-close"
+                onClick={() => setModalBaixa({ show: false, cteId: null, cteNumero: null })}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p style={{ marginBottom: '20px' }}>
+                Confirmar baixa do CT-e <strong>#{modalBaixa.cteNumero}</strong>?
+              </p>
+              <div className="form-group">
+                <label>Data do Pagamento</label>
+                <input
+                  type="date"
+                  value={dataBaixa}
+                  onChange={(e) => setDataBaixa(e.target.value)}
+                  className="input-filter"
+                  style={{ width: '100%', padding: '10px' }}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-cancel"
+                onClick={() => setModalBaixa({ show: false, cteId: null, cteNumero: null })}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleConfirmarBaixa}
+              >
+                Confirmar Baixa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

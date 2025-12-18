@@ -49,12 +49,11 @@ class MDFeIdentificacaoSerializer(serializers.ModelSerializer):
         exclude = ['id', 'mdfe']
 
 class MDFeEmitenteSerializer(serializers.ModelSerializer):
-     # Lista manualmente os campos herdados + específicos
+     # Lista manualmente os campos herdados + específicos (excluindo mdfe, endereco_ptr)
      class Meta:
         model = MDFeEmitente
-        fields = [f.name for f in Endereco._meta.get_fields() if f.name != 'id'] + \
+        fields = [f.name for f in Endereco._meta.get_fields() if f.name not in ('id', 'endereco_ptr', 'mdfe', 'mdfeemitente')] + \
                  ['cnpj', 'cpf', 'ie', 'razao_social', 'nome_fantasia', 'telefone', 'email']
-        exclude = ['mdfe', 'endereco_ptr']
 
 class MDFeVeiculoTracaoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -117,9 +116,13 @@ class MDFeDocumentosVinculadosSerializer(serializers.ModelSerializer):
     def get_tipo_doc(self, obj):
         """ Determina o tipo de documento baseado na chave. """
         try:
-            modelo = obj.chave_documento[20:22]
-            return {'57': 'CT-e', '55': 'NF-e', '67': 'CT-e OS'}.get(modelo, 'Outro')
-        except: # Em caso de erro (chave inválida, etc.)
+            chave = obj.chave_documento
+            # Verifica se a chave tem tamanho suficiente (mínimo 22 caracteres para acessar índices 20-22)
+            if chave and len(chave) >= 22:
+                modelo = chave[20:22]
+                return {'57': 'CT-e', '55': 'NF-e', '67': 'CT-e OS'}.get(modelo, 'Outro')
+            return 'Desconhecido'
+        except (TypeError, AttributeError):
             return 'Desconhecido'
 
 class MDFeMunicipioDescargaSerializer(serializers.ModelSerializer):

@@ -1054,3 +1054,263 @@
     font-size: 13px;
   }
 }
+
+/* ========================================
+   MOBILE CARDS VIEW - CT-e e MDF-e
+   ======================================== */
+
+/* Esconde tabela no mobile */
+@media (max-width: 768px) {
+  .table-container .data-table {
+    display: none;
+  }
+
+  .table-container {
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+    margin: 0;
+    border-radius: 0;
+  }
+}
+
+/* Cards Mobile */
+.mobile-cards {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.mobile-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mobile-card:active {
+  transform: scale(0.99);
+}
+
+.mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-bottom: 1px solid #eee;
+}
+
+.mobile-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-card-number {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.mobile-card-date {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.mobile-card-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-card-body {
+  padding: 14px 16px;
+}
+
+.mobile-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.mobile-card-row:last-child {
+  border-bottom: none;
+}
+
+.mobile-card-label {
+  font-size: 12px;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.mobile-card-value {
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 500;
+  text-align: right;
+  max-width: 60%;
+  word-break: break-word;
+}
+
+.mobile-card-value.valor {
+  color: #27ae60;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.mobile-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #eee;
+  gap: 10px;
+}
+
+.mobile-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mobile-card-actions .btn-action {
+  padding: 8px 12px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mobile-card-pago {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mobile-card-pago .btn-toggle-pago {
+  width: 32px;
+  height: 32px;
+}
+
+.mobile-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #7f8c8d;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mobile-empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.mobile-empty-text {
+  font-size: 14px;
+}
+
+/* Pagination mobile */
+@media (max-width: 768px) {
+  .pagination {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 15px;
+  }
+
+  .pagination-numbers {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .btn-page {
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
+    padding: 12px 16px;
+  }
+
+  .btn-page-num {
+    min-width: 36px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+}
+
+/* Section header mobile */
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 20px 0 12px 0;
+  }
+
+  .section-header h3 {
+    font-size: 16px;
+  }
+}
+
+/* Header buttons mobile */
+.header-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .header-buttons {
+    width: 100%;
+  }
+
+  .header-buttons .btn,
+  .header-buttons .btn-primary,
+  .header-buttons .btn-outline {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+.btn-outline {
+  background: white;
+  color: #3498db;
+  border: 2px solid #3498db;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-outline:hover {
+  background: #3498db;
+  color: white;
+}
+
+.btn-outline svg {
+  width: 18px;
+  height: 18px;
+}
