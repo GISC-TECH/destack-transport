@@ -17,6 +17,45 @@ from ..serializers.documento_serializers import (
 )
 
 
+# Mapeamento de tipos de documentos anexos para campos de validade
+VEICULO_TIPO_TO_CAMPO = {
+    'crlv': 'crlv_validade',
+    'laudo_cronotacografo': 'cronotacografo_validade',
+    'laudo_inspecao': 'civ_validade',
+    'certificado_ibama': 'cipp_validade',
+    'afericao': 'afericao_validade',
+}
+
+MOTORISTA_TIPO_TO_CAMPO = {
+    'cnh': 'validade_cnh',
+    'certificado_nr20': 'nr20_validade',
+    'curso_mopp': 'mopp_validade',
+    'certificado_nr35': 'nr35_validade',
+    'exame_toxicologico': 'toxicologico_validade',
+    'aso': 'aso_validade',
+}
+
+
+def atualizar_validade_veiculo(veiculo, tipo_documento, validade):
+    """Atualiza o campo de validade do veículo baseado no tipo de documento."""
+    campo = VEICULO_TIPO_TO_CAMPO.get(tipo_documento)
+    if campo and validade:
+        setattr(veiculo, campo, validade)
+        veiculo.save(update_fields=[campo])
+        return True
+    return False
+
+
+def atualizar_validade_motorista(motorista, tipo_documento, validade):
+    """Atualiza o campo de validade do motorista baseado no tipo de documento."""
+    campo = MOTORISTA_TIPO_TO_CAMPO.get(tipo_documento)
+    if campo and validade:
+        setattr(motorista, campo, validade)
+        motorista.save(update_fields=[campo])
+        return True
+    return False
+
+
 class DocumentoAnexoViewSet(viewsets.ModelViewSet):
     """
     ViewSet para gerenciamento de DocumentoAnexo.
@@ -133,6 +172,25 @@ class ClienteDocumentoViewSet(viewsets.ViewSet):
         serializer = DocumentoAnexoSerializer(documento, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def partial_update(self, request, cliente_pk=None, pk=None):
+        """Atualiza documento do cliente (validade, nome, tipo, observacoes)."""
+        cliente = get_object_or_404(Cliente, pk=cliente_pk)
+        documento = get_object_or_404(DocumentoAnexo, pk=pk, cliente=cliente)
+
+        # Campos permitidos para atualização
+        if 'validade' in request.data:
+            documento.validade = request.data['validade'] or None
+        if 'nome' in request.data:
+            documento.nome = request.data['nome']
+        if 'tipo' in request.data:
+            documento.tipo = request.data['tipo']
+        if 'observacoes' in request.data:
+            documento.observacoes = request.data['observacoes']
+
+        documento.save()
+        serializer = DocumentoAnexoSerializer(documento, context={'request': request})
+        return Response(serializer.data)
+
     def destroy(self, request, cliente_pk=None, pk=None):
         """Remove documento do cliente."""
         cliente = get_object_or_404(Cliente, pk=cliente_pk)
@@ -176,19 +234,48 @@ class MotoristaDocumentoViewSet(viewsets.ViewSet):
 
         data = upload_serializer.validated_data
         arquivo = data['arquivo']
+        tipo = data.get('tipo', 'outro')
+        validade = data.get('validade')
 
         documento = DocumentoAnexo.objects.create(
             motorista=motorista,
-            tipo=data.get('tipo', 'outro'),
+            tipo=tipo,
             nome=data.get('nome') or arquivo.name,
             arquivo=arquivo,
-            validade=data.get('validade'),
+            validade=validade,
             observacoes=data.get('observacoes', ''),
             criado_por=request.user if request.user.is_authenticated else None
         )
 
+        # Atualiza automaticamente o campo de validade do motorista
+        atualizar_validade_motorista(motorista, tipo, validade)
+
         serializer = DocumentoAnexoSerializer(documento, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, motorista_pk=None, pk=None):
+        """Atualiza documento do motorista (validade, nome, tipo, observacoes)."""
+        motorista = get_object_or_404(Motorista, pk=motorista_pk)
+        documento = get_object_or_404(DocumentoAnexo, pk=pk, motorista=motorista)
+
+        # Campos permitidos para atualização
+        if 'validade' in request.data:
+            documento.validade = request.data['validade'] or None
+        if 'nome' in request.data:
+            documento.nome = request.data['nome']
+        if 'tipo' in request.data:
+            documento.tipo = request.data['tipo']
+        if 'observacoes' in request.data:
+            documento.observacoes = request.data['observacoes']
+
+        documento.save()
+
+        # Atualiza automaticamente o campo de validade do motorista
+        if documento.validade:
+            atualizar_validade_motorista(motorista, documento.tipo, documento.validade)
+
+        serializer = DocumentoAnexoSerializer(documento, context={'request': request})
+        return Response(serializer.data)
 
     def destroy(self, request, motorista_pk=None, pk=None):
         """Remove documento do motorista."""
@@ -232,19 +319,48 @@ class VeiculoDocumentoViewSet(viewsets.ViewSet):
 
         data = upload_serializer.validated_data
         arquivo = data['arquivo']
+        tipo = data.get('tipo', 'outro')
+        validade = data.get('validade')
 
         documento = DocumentoAnexo.objects.create(
             veiculo=veiculo,
-            tipo=data.get('tipo', 'outro'),
+            tipo=tipo,
             nome=data.get('nome') or arquivo.name,
             arquivo=arquivo,
-            validade=data.get('validade'),
+            validade=validade,
             observacoes=data.get('observacoes', ''),
             criado_por=request.user if request.user.is_authenticated else None
         )
 
+        # Atualiza automaticamente o campo de validade do veículo
+        atualizar_validade_veiculo(veiculo, tipo, validade)
+
         serializer = DocumentoAnexoSerializer(documento, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, veiculo_pk=None, pk=None):
+        """Atualiza documento do veiculo (validade, nome, tipo, observacoes)."""
+        veiculo = get_object_or_404(Veiculo, pk=veiculo_pk)
+        documento = get_object_or_404(DocumentoAnexo, pk=pk, veiculo=veiculo)
+
+        # Campos permitidos para atualização
+        if 'validade' in request.data:
+            documento.validade = request.data['validade'] or None
+        if 'nome' in request.data:
+            documento.nome = request.data['nome']
+        if 'tipo' in request.data:
+            documento.tipo = request.data['tipo']
+        if 'observacoes' in request.data:
+            documento.observacoes = request.data['observacoes']
+
+        documento.save()
+
+        # Atualiza automaticamente o campo de validade do veículo
+        if documento.validade:
+            atualizar_validade_veiculo(veiculo, documento.tipo, documento.validade)
+
+        serializer = DocumentoAnexoSerializer(documento, context={'request': request})
+        return Response(serializer.data)
 
     def destroy(self, request, veiculo_pk=None, pk=None):
         """Remove documento do veiculo."""

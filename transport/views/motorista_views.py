@@ -67,27 +67,40 @@ class MotoristaViewSet(viewsets.ModelViewSet):
     def vencimentos(self, request):
         """
         Retorna motoristas com documentos vencendo.
-        Query param: dias (default: 30)
+        Query params:
+            - dias (default: 30): Número de dias para considerar vencimento
+            - mostrar_todos (default: false): Se true, mostra todos os motoristas
         """
         dias = int(request.query_params.get('dias', 30))
+        mostrar_todos = request.query_params.get('mostrar_todos', 'false').lower() == 'true'
 
-        # Motoristas com pelo menos um documento vencendo
-        motoristas_vencendo = []
+        motoristas_lista = []
 
         for motorista in self.get_queryset().filter(ativo=True):
             docs_vencendo = motorista.get_documentos_vencendo(dias=dias)
-            if docs_vencendo:
-                motoristas_vencendo.append({
+
+            # Se mostrar_todos, inclui todos; senão, só os com docs vencendo
+            if mostrar_todos or docs_vencendo:
+                # Formatar CPF: 123.456.789-01
+                cpf = motorista.cpf or ''
+                cpf_limpo = ''.join(filter(str.isdigit, cpf))
+                cpf_formatado = cpf
+                if len(cpf_limpo) == 11:
+                    cpf_formatado = f'{cpf_limpo[:3]}.{cpf_limpo[3:6]}.{cpf_limpo[6:9]}-{cpf_limpo[9:]}'
+
+                motoristas_lista.append({
                     'id': str(motorista.id),
                     'nome': motorista.nome,
                     'cpf': motorista.cpf,
+                    'cpf_formatado': cpf_formatado,
                     'documentos_vencendo': docs_vencendo
                 })
 
         return Response({
             'dias_alerta': dias,
-            'total': len(motoristas_vencendo),
-            'motoristas': motoristas_vencendo
+            'mostrar_todos': mostrar_todos,
+            'total': len(motoristas_lista),
+            'motoristas': motoristas_lista
         })
 
     @action(detail=False, methods=['get'])

@@ -95,25 +95,32 @@ class VeiculoViewSet(viewsets.ModelViewSet):
     def vencimentos(self, request):
         """
         Retorna veículos com documentos vencendo.
-        Query param: dias (default: 30)
+        Query params:
+            - dias (default: 30): Número de dias para considerar vencimento
+            - mostrar_todos (default: false): Se true, mostra todos os veículos
         """
         dias = int(request.query_params.get('dias', 30))
+        mostrar_todos = request.query_params.get('mostrar_todos', 'false').lower() == 'true'
 
-        veiculos_vencendo = []
+        veiculos_lista = []
 
         for veiculo in self.get_queryset().filter(ativo=True):
             docs_vencendo = veiculo.get_documentos_vencendo(dias=dias)
-            if docs_vencendo:
-                veiculos_vencendo.append({
+
+            # Se mostrar_todos, inclui todos os veículos; senão, só os com docs vencendo
+            if mostrar_todos or docs_vencendo:
+                veiculos_lista.append({
                     'id': str(veiculo.id),
                     'placa': veiculo.placa,
+                    'proprietario_nome': veiculo.proprietario_nome or '',
                     'documentos_vencendo': docs_vencendo
                 })
 
         return Response({
             'dias_alerta': dias,
-            'total': len(veiculos_vencendo),
-            'veiculos': veiculos_vencendo
+            'mostrar_todos': mostrar_todos,
+            'total': len(veiculos_lista),
+            'veiculos': veiculos_lista
         })
 
     @action(detail=True, methods=['get'])

@@ -2,31 +2,72 @@ import { useState, useEffect, useRef } from 'react';
 import { documentosAPI } from '../../services/api';
 import './DocumentosAnexos.css';
 
-// Tipos de documentos por entidade
+// Tipos de documentos por entidade - Transportadora de Cargas
 const TIPOS_DOCUMENTO = {
   cliente: [
-    { value: 'contrato', label: 'Contrato' },
+    { value: 'contrato', label: 'Contrato de Transporte' },
     { value: 'proposta', label: 'Proposta Comercial' },
+    { value: 'cnpj', label: 'Cartao CNPJ' },
+    { value: 'contrato_social', label: 'Contrato Social' },
+    { value: 'inscricao_estadual', label: 'Inscricao Estadual' },
+    { value: 'procuracao', label: 'Procuracao' },
     { value: 'outro', label: 'Outro' },
   ],
   motorista: [
+    // Documentos com validade (atualizam automaticamente)
     { value: 'cnh', label: 'CNH' },
+    { value: 'curso_mopp', label: 'MOPP (Produtos Perigosos)' },
+    { value: 'certificado_nr20', label: 'NR20 (Inflamaveis)' },
+    { value: 'certificado_nr35', label: 'NR35 (Trabalho em Altura)' },
+    { value: 'exame_toxicologico', label: 'Exame Toxicologico' },
+    { value: 'aso', label: 'ASO (Atestado Saude Ocupacional)' },
+    // Cursos e treinamentos
+    { value: 'curso_direcao_defensiva', label: 'Curso Direcao Defensiva' },
+    { value: 'curso_primeiros_socorros', label: 'Curso Primeiros Socorros' },
+    { value: 'curso_cargas_perigosas', label: 'Curso Cargas Perigosas' },
+    { value: 'integracao', label: 'Ficha de Integracao' },
+    // Documentos pessoais
     { value: 'rg', label: 'RG' },
     { value: 'cpf', label: 'CPF' },
+    { value: 'titulo_eleitor', label: 'Titulo de Eleitor' },
+    { value: 'reservista', label: 'Certificado de Reservista' },
     { value: 'comprovante_endereco', label: 'Comprovante de Endereco' },
-    { value: 'certificado_nr20', label: 'Certificado NR20' },
-    { value: 'curso_mopp', label: 'Curso MOPP' },
-    { value: 'exame_toxicologico', label: 'Exame Toxicologico' },
-    { value: 'aso', label: 'ASO (Atestado Saude)' },
+    { value: 'certidao_nascimento', label: 'Certidao de Nascimento' },
+    { value: 'certidao_casamento', label: 'Certidao de Casamento' },
+    // Trabalhista
+    { value: 'ctps', label: 'CTPS (Carteira de Trabalho)' },
+    { value: 'pis', label: 'PIS/PASEP' },
+    { value: 'contrato_trabalho', label: 'Contrato de Trabalho' },
+    { value: 'ficha_registro', label: 'Ficha de Registro' },
+    // Outros
+    { value: 'foto', label: 'Foto 3x4' },
     { value: 'outro', label: 'Outro' },
   ],
   veiculo: [
-    { value: 'crlv', label: 'CRLV' },
-    { value: 'seguro', label: 'Apolice de Seguro' },
-    { value: 'laudo_inspecao', label: 'Laudo de Inspecao' },
-    { value: 'certificado_ibama', label: 'Certificado IBAMA' },
-    { value: 'certificado_antt', label: 'Certificado ANTT' },
-    { value: 'laudo_cronotacografo', label: 'Laudo Cronotacografo' },
+    // Documentos obrigatorios com validade (atualizam automaticamente)
+    { value: 'crlv', label: 'CRLV (Licenciamento)' },
+    { value: 'laudo_inspecao', label: 'CIV (Inspecao Veicular)' },
+    { value: 'certificado_ibama', label: 'CIPP (Produtos Perigosos - IBAMA)' },
+    { value: 'afericao', label: 'Afericao Tacografo (IBAMETRO/INMETRO)' },
+    { value: 'laudo_cronotacografo', label: 'Cronotacografo (Disco/Digital)' },
+    // Seguros
+    { value: 'seguro', label: 'Seguro do Veiculo' },
+    { value: 'seguro_carga', label: 'Seguro de Carga (RCT-C)' },
+    { value: 'seguro_ambiental', label: 'Seguro Ambiental' },
+    // ANTT e Licencas
+    { value: 'certificado_antt', label: 'RNTRC (ANTT)' },
+    { value: 'licenca_ambiental', label: 'Licenca Ambiental' },
+    { value: 'aut_transporte_especial', label: 'AET (Transporte Especial)' },
+    // Laudos e Vistorias
+    { value: 'laudo_opacidade', label: 'Laudo de Opacidade' },
+    { value: 'vistoria_semestral', label: 'Vistoria Semestral' },
+    { value: 'laudo_gas', label: 'Laudo de Gas (GNV)' },
+    // Documentos do proprietario
+    { value: 'contrato_agregado', label: 'Contrato de Agregado' },
+    { value: 'contrato_arrendamento', label: 'Contrato de Arrendamento' },
+    // Outros
+    { value: 'nota_fiscal', label: 'Nota Fiscal do Veiculo' },
+    { value: 'manual', label: 'Manual do Veiculo' },
     { value: 'outro', label: 'Outro' },
   ],
 };
@@ -45,6 +86,14 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
   });
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [editingDoc, setEditingDoc] = useState(null);
+  const [editData, setEditData] = useState({
+    tipo: '',
+    nome: '',
+    validade: '',
+    observacoes: '',
+  });
+  const [saving, setSaving] = useState(false);
 
   // API baseada no tipo de entidade
   const getAPI = () => {
@@ -159,6 +208,43 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
   const handleView = (doc) => {
     if (doc.arquivo_url) {
       window.open(doc.arquivo_url, '_blank');
+    }
+  };
+
+  // Handler para iniciar edicao
+  const handleEdit = (doc) => {
+    setEditingDoc(doc);
+    setEditData({
+      tipo: doc.tipo || 'outro',
+      nome: doc.nome || '',
+      validade: doc.validade || '',
+      observacoes: doc.observacoes || '',
+    });
+  };
+
+  // Handler para cancelar edicao
+  const handleCancelEdit = () => {
+    setEditingDoc(null);
+    setEditData({ tipo: '', nome: '', validade: '', observacoes: '' });
+  };
+
+  // Handler para salvar edicao
+  const handleSaveEdit = async () => {
+    if (!editingDoc) return;
+
+    try {
+      setSaving(true);
+      setError(null);
+      const api = getAPI();
+      await api.update(entidadeId, editingDoc.id, editData);
+      setEditingDoc(null);
+      setEditData({ tipo: '', nome: '', validade: '', observacoes: '' });
+      await loadDocumentos();
+    } catch (err) {
+      console.error('Erro ao atualizar documento:', err);
+      setError(err.message || 'Erro ao atualizar documento');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -301,6 +387,73 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
         </div>
       )}
 
+      {/* Modal de Edicao */}
+      {editingDoc && (
+        <div className="edit-modal-overlay" onClick={handleCancelEdit}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="edit-modal-header">
+              <h4>Editar Documento</h4>
+              <button className="close-btn" onClick={handleCancelEdit}>&times;</button>
+            </div>
+            <div className="edit-modal-body">
+              <div className="form-group">
+                <label>Tipo de Documento</label>
+                <select
+                  value={editData.tipo}
+                  onChange={(e) => setEditData(prev => ({ ...prev, tipo: e.target.value }))}
+                >
+                  {tiposDisponiveis.map(tipo => (
+                    <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Nome do Documento</label>
+                <input
+                  type="text"
+                  value={editData.nome}
+                  onChange={(e) => setEditData(prev => ({ ...prev, nome: e.target.value }))}
+                  placeholder="Nome do documento"
+                />
+              </div>
+              <div className="form-group">
+                <label>Data de Validade</label>
+                <input
+                  type="date"
+                  value={editData.validade}
+                  onChange={(e) => setEditData(prev => ({ ...prev, validade: e.target.value }))}
+                />
+              </div>
+              <div className="form-group">
+                <label>Observacoes</label>
+                <input
+                  type="text"
+                  value={editData.observacoes}
+                  onChange={(e) => setEditData(prev => ({ ...prev, observacoes: e.target.value }))}
+                  placeholder="Observacoes (opcional)"
+                />
+              </div>
+            </div>
+            <div className="edit-modal-footer">
+              <button
+                className="btn btn-success"
+                onClick={handleSaveEdit}
+                disabled={saving}
+              >
+                {saving ? 'Salvando...' : 'Salvar'}
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={handleCancelEdit}
+                disabled={saving}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Lista de Documentos */}
       <div className="documentos-list">
         {loading ? (
@@ -366,16 +519,28 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
                       </svg>
                     </button>
                     {!readOnly && (
-                      <button
-                        className="btn-icon btn-delete"
-                        onClick={() => handleDelete(doc.id)}
-                        title="Excluir"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                      </button>
+                      <>
+                        <button
+                          className="btn-icon btn-edit"
+                          onClick={() => handleEdit(doc)}
+                          title="Editar"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </button>
+                        <button
+                          className="btn-icon btn-delete"
+                          onClick={() => handleDelete(doc.id)}
+                          title="Excluir"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                        </button>
+                      </>
                     )}
                   </td>
                 </tr>

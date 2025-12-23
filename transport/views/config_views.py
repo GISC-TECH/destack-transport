@@ -12,7 +12,7 @@ import traceback
 from io import StringIO, BytesIO
 import openpyxl
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib.pagesizes import letter, landscape, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
@@ -591,18 +591,20 @@ class RelatorioAPIView(APIView):
     def _gerar_relatorio_ctes(self, data_inicio, data_fim, filtros):
         """Gera dados para o relatório de CT-es."""
         logger.info("INFO: Gerando relatório de CT-es com filtros: %s", filtros)
-        
-        # Busca CT-es com dados básicos
-        qs = CTeDocumento.objects.select_related(
+
+        # Busca CT-es com dados básicos - FILTRA apenas CT-es com identificacao (dados completos)
+        qs = CTeDocumento.objects.filter(
+            identificacao__isnull=False
+        ).select_related(
             'identificacao', 'emitente', 'remetente', 'destinatario', 'prestacao'
-        ).prefetch_related('modal_rodoviario__veiculos')
-        
+        )
+
         # Filtros por data
         if data_inicio:
             qs = qs.filter(identificacao__data_emissao__date__gte=data_inicio)
         if data_fim:
             qs = qs.filter(identificacao__data_emissao__date__lte=data_fim)
-            
+
         # Filtros específicos
         if 'chave' in filtros and filtros['chave']:
             qs = qs.filter(chave__icontains=filtros['chave'])
@@ -614,54 +616,68 @@ class RelatorioAPIView(APIView):
             qs = qs.filter(modalidade=filtros['modalidade'])
         if 'processado' in filtros:
             qs = qs.filter(processado=bool(filtros['processado']))
-            
+
         # Limita quantidade para performance
         qs = qs.order_by('-identificacao__data_emissao')[:1000]
-        
+
         dados = []
         for cte in qs:
-            # Pega placa do primeiro veículo se existir
-            placa = None
-            if hasattr(cte, 'modal_rodoviario') and cte.modal_rodoviario:
-                veiculos = cte.modal_rodoviario.veiculos.first()
-                if veiculos:
-                    placa = veiculos.placa
-                    
+            # Dados do CT-e
+            try:
+                numero = cte.identificacao.numero
+                data_emissao = cte.identificacao.data_emissao.strftime('%d/%m/%Y %H:%M')
+            except Exception:
+                numero = None
+                data_emissao = None
+
+            try:
+                remetente = cte.remetente.razao_social
+            except Exception:
+                remetente = None
+
+            try:
+                destinatario = cte.destinatario.razao_social
+            except Exception:
+                destinatario = None
+
+            try:
+                valor_total = float(cte.prestacao.valor_total_prestado) if cte.prestacao.valor_total_prestado else 0
+            except Exception:
+                valor_total = 0
+
             dados.append({
-                'chave': cte.chave,
-                'numero': cte.identificacao.numero if hasattr(cte, 'identificacao') else None,
-                'data_emissao': cte.identificacao.data_emissao.strftime('%Y-%m-%d %H:%M') if hasattr(cte, 'identificacao') and cte.identificacao.data_emissao else None,
-                'emitente': cte.emitente.razao_social if hasattr(cte, 'emitente') else None,
-                'remetente': cte.remetente.razao_social if hasattr(cte, 'remetente') else None,
-                'destinatario': cte.destinatario.razao_social if hasattr(cte, 'destinatario') else None,
-                'valor_total': float(cte.prestacao.valor_total_prestado) if hasattr(cte, 'prestacao') and cte.prestacao.valor_total_prestado else 0,
+                'numero': numero,
+                'data_emissao': data_emissao,
+                'remetente': remetente,
+                'destinatario': destinatario,
+                'valor_total': valor_total,
                 'modalidade': cte.modalidade or 'N/A',
-                'processado': cte.processado,
-                'placa': placa,
-                'km_distancia': cte.identificacao.dist_km if hasattr(cte, 'identificacao') else None,
+                'pago': 'Sim' if cte.pago else 'Não',
             })
-            
+
         return dados
 
     def _gerar_relatorio_mdfes(self, data_inicio, data_fim, filtros):
         """Gera dados para o relatório de MDF-es."""
         logger.info("INFO: Gerando relatório de MDF-es com filtros: %s", filtros)
-        
-        # Busca MDF-es com dados básicos
-        qs = MDFeDocumento.objects.select_related(
-            'identificacao', 'emitente', 'totais'
+
+        # Busca MDF-es com dados básicos - FILTRA apenas MDF-es com identificacao (dados completos)
+        qs = MDFeDocumento.objects.filter(
+            identificacao__isnull=False
+        ).select_related(
+            'identificacao', 'emitente', 'totais',
+            'modal_rodoviario', 'modal_rodoviario__veiculo_tracao'
         ).prefetch_related(
-            'modal_rodoviario__veiculo_tracao',
             'condutores',
             'docs_vinculados_mdfe'
         )
-        
+
         # Filtros por data
         if data_inicio:
             qs = qs.filter(identificacao__dh_emi__date__gte=data_inicio)
         if data_fim:
             qs = qs.filter(identificacao__dh_emi__date__lte=data_fim)
-            
+
         # Filtros específicos
         if 'chave' in filtros and filtros['chave']:
             qs = qs.filter(chave__icontains=filtros['chave'])
@@ -673,41 +689,62 @@ class RelatorioAPIView(APIView):
             qs = qs.filter(encerrado=bool(filtros['encerrado']))
         if 'processado' in filtros:
             qs = qs.filter(processado=bool(filtros['processado']))
-            
+
         # Limita quantidade para performance
         qs = qs.order_by('-identificacao__dh_emi')[:1000]
-        
+
         dados = []
         for mdfe in qs:
             # Pega placa do veículo de tração
             placa_tracao = None
-            if hasattr(mdfe, 'modal_rodoviario') and mdfe.modal_rodoviario and hasattr(mdfe.modal_rodoviario, 'veiculo_tracao'):
-                placa_tracao = mdfe.modal_rodoviario.veiculo_tracao.placa
-                
+            try:
+                if mdfe.modal_rodoviario and mdfe.modal_rodoviario.veiculo_tracao:
+                    placa_tracao = mdfe.modal_rodoviario.veiculo_tracao.placa
+            except Exception:
+                pass
+
             # Conta CT-es vinculados
-            qtd_ctes = mdfe.docs_vinculados_mdfe.count()
-            
+            try:
+                qtd_ctes = mdfe.docs_vinculados_mdfe.count()
+            except Exception:
+                qtd_ctes = 0
+
             # Pega primeiro condutor
-            condutor = mdfe.condutores.first()
-            condutor_nome = condutor.nome if condutor else None
-            
+            try:
+                condutor = mdfe.condutores.first()
+                condutor_nome = condutor.nome if condutor else None
+            except Exception:
+                condutor_nome = None
+
+            # Dados do MDF-e
+            try:
+                numero = mdfe.identificacao.n_mdf
+                data_emissao = mdfe.identificacao.dh_emi.strftime('%d/%m/%Y %H:%M')
+                uf_inicio = mdfe.identificacao.uf_ini
+                uf_fim = mdfe.identificacao.uf_fim
+            except Exception:
+                numero = None
+                data_emissao = None
+                uf_inicio = None
+                uf_fim = None
+
+            try:
+                valor_carga = float(mdfe.totais.v_carga) if mdfe.totais.v_carga else 0
+            except Exception:
+                valor_carga = 0
+
             dados.append({
-                'chave': mdfe.chave,
-                'numero': mdfe.identificacao.n_mdf if hasattr(mdfe, 'identificacao') else None,
-                'data_emissao': mdfe.identificacao.dh_emi.strftime('%Y-%m-%d %H:%M') if hasattr(mdfe, 'identificacao') and mdfe.identificacao.dh_emi else None,
-                'emitente': mdfe.emitente.razao_social if hasattr(mdfe, 'emitente') else None,
-                'uf_inicio': mdfe.identificacao.uf_ini if hasattr(mdfe, 'identificacao') else None,
-                'uf_fim': mdfe.identificacao.uf_fim if hasattr(mdfe, 'identificacao') else None,
-                'placa_tracao': placa_tracao,
-                'condutor': condutor_nome,
+                'numero': numero,
+                'data_emissao': data_emissao,
+                'uf_inicio': uf_inicio,
+                'uf_fim': uf_fim,
+                'placa': placa_tracao or '-',
+                'condutor': condutor_nome or '-',
                 'qtd_ctes': qtd_ctes,
-                'valor_carga': float(mdfe.totais.v_carga) if hasattr(mdfe, 'totais') and mdfe.totais.v_carga else 0,
-                'peso_carga': float(mdfe.totais.q_carga) if hasattr(mdfe, 'totais') and mdfe.totais.q_carga else 0,
-                'encerrado': mdfe.encerrado,
-                'data_encerramento': mdfe.data_encerramento.strftime('%Y-%m-%d') if mdfe.data_encerramento else None,
-                'processado': mdfe.processado,
+                'valor_carga': valor_carga,
+                'encerrado': 'Sim' if mdfe.encerrado else 'Não',
             })
-            
+
         return dados
 
     def _gerar_relatorio_pagamentos(self, data_inicio, data_fim, filtros):
@@ -987,6 +1024,9 @@ class RelatorioAPIView(APIView):
     # --- Método Auxiliar para Gerar PDF ---
     def _gerar_pdf(self, dados, nome_arquivo):
         """Gera arquivo PDF a partir de uma lista de dicts."""
+        from reportlab.lib.styles import ParagraphStyle
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+
         if not dados or not isinstance(dados, list):
              if isinstance(dados, dict) and 'message' in dados:
                 return Response(dados, status=status.HTTP_501_NOT_IMPLEMENTED)
@@ -996,32 +1036,181 @@ class RelatorioAPIView(APIView):
              return Response({"message": "Nenhum dado encontrado."}, status=status.HTTP_204_NO_CONTENT)
 
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+        # Usa A4 landscape para mais espaço horizontal
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(A4),
+            leftMargin=15,
+            rightMargin=15,
+            topMargin=20,
+            bottomMargin=20
+        )
         elements = []
         styles = getSampleStyleSheet()
 
-        # Título
-        elements.append(Paragraph(f"Relatório: {nome_arquivo}", styles['Title']))
-        elements.append(Spacer(1, 12))
+        # Estilo para células
+        cell_style = ParagraphStyle(
+            'CellStyle',
+            parent=styles['Normal'],
+            fontSize=7,
+            leading=9,
+            alignment=TA_LEFT,
+            wordWrap='CJK',
+        )
+        cell_style_center = ParagraphStyle(
+            'CellStyleCenter',
+            parent=cell_style,
+            alignment=TA_CENTER,
+        )
+        cell_style_right = ParagraphStyle(
+            'CellStyleRight',
+            parent=cell_style,
+            alignment=TA_RIGHT,
+        )
+        header_style = ParagraphStyle(
+            'HeaderStyle',
+            parent=styles['Normal'],
+            fontSize=7,
+            leading=9,
+            alignment=TA_CENTER,
+            textColor=colors.white,
+            fontName='Helvetica-Bold',
+        )
+
+        # Título do relatório
+        titulo_tipo = nome_arquivo.replace('relatorio_', '').replace('_', ' ').replace('.pdf', '').upper()
+        elements.append(Paragraph(f"<b>RELATÓRIO DE {titulo_tipo}</b>", styles['Title']))
+        elements.append(Paragraph(f"Gerado em: {timezone.now().strftime('%d/%m/%Y às %H:%M')}", styles['Normal']))
+        elements.append(Spacer(1, 15))
 
         # Tabela
         if isinstance(dados[0], dict):
             headers = list(dados[0].keys())
-            # Trunca texto longo e converte para string
-            data = [headers] + [[str(item.get(h, ''))[:50] for h in headers] for item in dados]
 
-            t = Table(data)
+            # Mapeamento de larguras por tipo de campo (em pontos)
+            # A4 landscape = 842 pontos, margens = 30, disponível = 812
+            largura_disponivel = 812
+            larguras_campos = {
+                'numero': 50,
+                'data_emissao': 80,
+                'data': 60,
+                'placa': 60,
+                'modalidade': 45,
+                'pago': 40,
+                'encerrado': 50,
+                'uf_inicio': 40,
+                'uf_fim': 40,
+                'qtd_ctes': 45,
+                'status': 55,
+                'valor': 70,
+                'valor_total': 75,
+                'valor_carga': 70,
+                'peso_carga': 65,
+                'condutor': 150,
+                'remetente': 180,
+                'destinatario': 180,
+            }
+
+            # Calcula larguras das colunas
+            col_widths = []
+            largura_usada = 0
+            colunas_flexiveis = []
+
+            for i, h in enumerate(headers):
+                if h in larguras_campos:
+                    col_widths.append(larguras_campos[h])
+                    largura_usada += larguras_campos[h]
+                else:
+                    col_widths.append(None)
+                    colunas_flexiveis.append(i)
+
+            # Distribui espaço restante entre colunas flexíveis
+            if colunas_flexiveis:
+                largura_restante = largura_disponivel - largura_usada
+                largura_por_col = max(60, largura_restante / len(colunas_flexiveis))
+                for i in colunas_flexiveis:
+                    col_widths[i] = largura_por_col
+
+            # Formata cabeçalhos
+            headers_formatados = []
+            for h in headers:
+                nome = h.replace('_', ' ').title()
+                headers_formatados.append(Paragraph(nome, header_style))
+
+            # Função para formatar valor de célula
+            def formatar_celula(valor, campo):
+                if valor is None or valor == '':
+                    return Paragraph('-', cell_style_center)
+
+                valor_str = str(valor)
+
+                # Campos numéricos/monetários - alinha à direita
+                if campo in ['valor', 'valor_total', 'valor_carga', 'peso_carga', 'qtd_ctes']:
+                    try:
+                        num = float(valor_str)
+                        if campo in ['valor', 'valor_total', 'valor_carga']:
+                            valor_str = f"R$ {num:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+                        elif campo == 'peso_carga':
+                            valor_str = f"{num:,.0f} kg".replace(',', '.')
+                        else:
+                            valor_str = f"{num:,.0f}".replace(',', '.')
+                    except (ValueError, TypeError):
+                        pass
+                    return Paragraph(valor_str, cell_style_right)
+
+                # Campos de status/boolean - centraliza
+                if campo in ['pago', 'encerrado', 'modalidade', 'status', 'uf_inicio', 'uf_fim', 'placa', 'numero']:
+                    return Paragraph(valor_str, cell_style_center)
+
+                # Remetente e Destinatario - mostrar completo (word wrap automático)
+                if campo in ['remetente', 'destinatario', 'condutor']:
+                    return Paragraph(valor_str, cell_style)
+
+                # Outros campos de texto - mostrar completo
+                return Paragraph(valor_str, cell_style)
+
+            # Monta dados da tabela
+            data = [headers_formatados]
+            for item in dados:
+                row = [formatar_celula(item.get(h, ''), h) for h in headers]
+                data.append(row)
+
+            # Cria tabela
+            t = Table(data, colWidths=col_widths, repeatRows=1)
             t.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('FONTSIZE', (0, 0), (-1, -1), 8), # Fonte menor para caber
+                # Cabeçalho
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a5276')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, 0), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+                ('LEFTPADDING', (0, 0), (-1, 0), 4),
+                ('RIGHTPADDING', (0, 0), (-1, 0), 4),
+
+                # Dados
+                ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 1), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+                ('LEFTPADDING', (0, 1), (-1, -1), 4),
+                ('RIGHTPADDING', (0, 1), (-1, -1), 4),
+
+                # Bordas
+                ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#1a5276')),
+                ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#d5d8dc')),
+                ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#1a5276')),
+
+                # Cores alternadas nas linhas
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9f9')]),
             ]))
             elements.append(t)
+
+            # Rodapé com total de registros
+            elements.append(Spacer(1, 15))
+            elements.append(Paragraph(
+                f"<b>Total de registros:</b> {len(dados)}",
+                styles['Normal']
+            ))
 
         doc.build(elements)
         buffer.seek(0)

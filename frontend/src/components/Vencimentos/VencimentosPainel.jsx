@@ -72,6 +72,7 @@ const ensureArray = (data) => {
 function VencimentosPainel() {
   const [activeTab, setActiveTab] = useState('todos');
   const [diasFiltro, setDiasFiltro] = useState(30);
+  const [mostrarTodos, setMostrarTodos] = useState(false);
   const [motoristas, setMotoristas] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -79,15 +80,15 @@ function VencimentosPainel() {
 
   useEffect(() => {
     loadVencimentos();
-  }, [diasFiltro]);
+  }, [diasFiltro, mostrarTodos]);
 
   const loadVencimentos = async () => {
     try {
       setLoading(true);
 
       const [motoristasData, veiculosData] = await Promise.all([
-        motoristasAPI.vencimentos(diasFiltro),
-        veiculosAPI.vencimentos(diasFiltro)
+        motoristasAPI.vencimentos(diasFiltro, mostrarTodos),
+        veiculosAPI.vencimentos(diasFiltro, mostrarTodos)
       ]);
 
       // Backend retorna {dias_alerta, total, motoristas/veiculos}
@@ -189,17 +190,27 @@ function VencimentosPainel() {
         icon={vencimentoIcon}
         breadcrumbs={[{ label: 'Sistema' }, { label: 'Vencimentos' }]}
         actions={
-          <select
-            className="select-filter"
-            value={diasFiltro}
-            onChange={(e) => setDiasFiltro(Number(e.target.value))}
-          >
-            <option value={7}>Próximos 7 dias</option>
-            <option value={15}>Próximos 15 dias</option>
-            <option value={30}>Próximos 30 dias</option>
-            <option value={60}>Próximos 60 dias</option>
-            <option value={90}>Próximos 90 dias</option>
-          </select>
+          <div className="header-filters">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={mostrarTodos}
+                onChange={(e) => setMostrarTodos(e.target.checked)}
+              />
+              <span>Mostrar todos</span>
+            </label>
+            <select
+              className="select-filter"
+              value={diasFiltro}
+              onChange={(e) => setDiasFiltro(Number(e.target.value))}
+            >
+              <option value={7}>Proximos 7 dias</option>
+              <option value={15}>Proximos 15 dias</option>
+              <option value={30}>Proximos 30 dias</option>
+              <option value={60}>Proximos 60 dias</option>
+              <option value={90}>Proximos 90 dias</option>
+            </select>
+          </div>
         }
       />
 

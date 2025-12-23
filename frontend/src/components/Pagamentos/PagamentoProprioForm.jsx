@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { pagamentosAPI, cteAPI, veiculosAPI } from '../../services/api';
+import { pagamentosAPI, cteAPI, veiculosAPI, motoristasAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import './Pagamentos.css';
@@ -15,10 +15,26 @@ function PagamentoProprioForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  // Lista de CT-es e veiculos disponiveis
-  const [ctesDisponiveis, setCtesDisponiveis] = useState([]);
-  const [veiculosDisponiveis, setVeiculosDisponiveis] = useState([]);
-  const [loadingCtes, setLoadingCtes] = useState(false);
+  // Busca de Veiculo por placa
+  const [buscaVeiculo, setBuscaVeiculo] = useState('');
+  const [resultadosVeiculo, setResultadosVeiculo] = useState([]);
+  const [loadingVeiculo, setLoadingVeiculo] = useState(false);
+  const [veiculoSelecionado, setVeiculoSelecionado] = useState(null);
+  const [mostrarResultadosVeiculo, setMostrarResultadosVeiculo] = useState(false);
+
+  // Busca de CT-e por numero
+  const [buscaCte, setBuscaCte] = useState('');
+  const [resultadosBusca, setResultadosBusca] = useState([]);
+  const [loadingBusca, setLoadingBusca] = useState(false);
+  const [cteSelecionado, setCteSelecionado] = useState(null);
+  const [mostrarResultados, setMostrarResultados] = useState(false);
+
+  // Busca de Condutor (motorista)
+  const [buscaCondutor, setBuscaCondutor] = useState('');
+  const [resultadosCondutor, setResultadosCondutor] = useState([]);
+  const [loadingCondutor, setLoadingCondutor] = useState(false);
+  const [condutorSelecionado, setCondutorSelecionado] = useState(null);
+  const [mostrarResultadosCondutor, setMostrarResultadosCondutor] = useState(false);
 
   const [formData, setFormData] = useState({
     veiculo: '',
@@ -36,57 +52,158 @@ function PagamentoProprioForm() {
   });
 
   useEffect(() => {
-    loadVeiculos();
-    loadCtesDisponiveis();
     if (isEditing) {
       loadPagamento();
     }
   }, [id]);
 
-  const loadVeiculos = async () => {
-    try {
-      // Busca veiculos proprios (tipo_proprietario = '00')
-      const result = await veiculosAPI.list({ tipo_proprietario: '00', ativo: true });
-      setVeiculosDisponiveis(result.results || result || []);
-    } catch (err) {
-      console.error('Erro ao carregar veiculos:', err);
-    }
+  // Busca Veiculo por placa quando usuario digita
+  useEffect(() => {
+    const buscarVeiculo = async () => {
+      if (!buscaVeiculo || buscaVeiculo.length < 2) {
+        setResultadosVeiculo([]);
+        setMostrarResultadosVeiculo(false);
+        return;
+      }
+
+      try {
+        setLoadingVeiculo(true);
+        // Busca veiculos proprios (tipo_proprietario = '00')
+        const result = await veiculosAPI.list({ q: buscaVeiculo, tipo_proprietario: '00', ativo: true, page_size: 10 });
+        const veiculos = result.results || result || [];
+        setResultadosVeiculo(veiculos);
+        setMostrarResultadosVeiculo(true);
+      } catch (err) {
+        console.error('Erro ao buscar veiculos:', err);
+        setResultadosVeiculo([]);
+      } finally {
+        setLoadingVeiculo(false);
+      }
+    };
+
+    const timeoutId = setTimeout(buscarVeiculo, 300);
+    return () => clearTimeout(timeoutId);
+  }, [buscaVeiculo]);
+
+  const handleSelecionarVeiculo = (veiculo) => {
+    setVeiculoSelecionado(veiculo);
+    setFormData(prev => ({
+      ...prev,
+      veiculo: veiculo.id
+    }));
+    setBuscaVeiculo('');
+    setMostrarResultadosVeiculo(false);
+    setResultadosVeiculo([]);
   };
 
-  const loadCtesDisponiveis = async () => {
-    try {
-      setLoadingCtes(true);
-      const result = await cteAPI.list({ pago: false, page_size: 100 });
-      const ctes = result.results || result;
-      setCtesDisponiveis(ctes);
-    } catch (err) {
-      console.error('Erro ao carregar CT-es:', err);
-    } finally {
-      setLoadingCtes(false);
-    }
+  const handleRemoverVeiculo = () => {
+    setVeiculoSelecionado(null);
+    setFormData(prev => ({
+      ...prev,
+      veiculo: ''
+    }));
   };
 
-  const handleSelectCte = (e) => {
-    const cteId = e.target.value;
-    if (!cteId) {
-      setFormData(prev => ({
-        ...prev,
-        cte: '',
-        cte_numero: '',
-        valor_base_faixa: ''
-      }));
-      return;
-    }
+  // Busca CT-e por numero quando usuario digita
+  useEffect(() => {
+    const buscarCte = async () => {
+      if (!buscaCte || buscaCte.length < 2) {
+        setResultadosBusca([]);
+        setMostrarResultados(false);
+        return;
+      }
 
-    const cteSelecionado = ctesDisponiveis.find(c => c.id === cteId);
-    if (cteSelecionado) {
-      setFormData(prev => ({
-        ...prev,
-        cte: cteId,
-        cte_numero: cteSelecionado.numero_cte || cteSelecionado.numero || '',
-        valor_base_faixa: cteSelecionado.valor_total || cteSelecionado.valor_prestacao || ''
-      }));
-    }
+      try {
+        setLoadingBusca(true);
+        const result = await cteAPI.list({ q: buscaCte, page_size: 10 });
+        const ctes = result.results || result || [];
+        setResultadosBusca(ctes);
+        setMostrarResultados(true);
+      } catch (err) {
+        console.error('Erro ao buscar CT-es:', err);
+        setResultadosBusca([]);
+      } finally {
+        setLoadingBusca(false);
+      }
+    };
+
+    const timeoutId = setTimeout(buscarCte, 300);
+    return () => clearTimeout(timeoutId);
+  }, [buscaCte]);
+
+  const handleSelecionarCte = (cte) => {
+    setCteSelecionado(cte);
+    setFormData(prev => ({
+      ...prev,
+      cte: cte.id,
+      cte_numero: cte.numero_cte || cte.numero || '',
+      valor_base_faixa: cte.valor_total || cte.valor_prestacao || ''
+    }));
+    setBuscaCte('');
+    setMostrarResultados(false);
+    setResultadosBusca([]);
+  };
+
+  const handleRemoverCte = () => {
+    setCteSelecionado(null);
+    setFormData(prev => ({
+      ...prev,
+      cte: '',
+      cte_numero: '',
+      valor_base_faixa: ''
+    }));
+  };
+
+  // Busca Condutor por nome ou CPF quando usuario digita
+  useEffect(() => {
+    const buscarCondutor = async () => {
+      if (!buscaCondutor || buscaCondutor.length < 2) {
+        setResultadosCondutor([]);
+        setMostrarResultadosCondutor(false);
+        return;
+      }
+
+      try {
+        setLoadingCondutor(true);
+        const result = await motoristasAPI.list({ q: buscaCondutor, page_size: 10 });
+        const motoristas = (result.results || result || []).map(m => ({
+          ...m,
+          displayName: m.nome,
+          displayCpf: m.cpf
+        }));
+        setResultadosCondutor(motoristas);
+        setMostrarResultadosCondutor(true);
+      } catch (err) {
+        console.error('Erro ao buscar condutor:', err);
+        setResultadosCondutor([]);
+      } finally {
+        setLoadingCondutor(false);
+      }
+    };
+
+    const timeoutId = setTimeout(buscarCondutor, 300);
+    return () => clearTimeout(timeoutId);
+  }, [buscaCondutor]);
+
+  const handleSelecionarCondutor = (motorista) => {
+    setCondutorSelecionado(motorista);
+    setFormData(prev => ({
+      ...prev,
+      motorista_nome: motorista.nome || '',
+      motorista_cpf: motorista.cpf || ''
+    }));
+    setBuscaCondutor('');
+    setMostrarResultadosCondutor(false);
+    setResultadosCondutor([]);
+  };
+
+  const handleRemoverCondutor = () => {
+    setCondutorSelecionado(null);
+    setFormData(prev => ({
+      ...prev,
+      motorista_nome: '',
+      motorista_cpf: ''
+    }));
   };
 
   const loadPagamento = async () => {
@@ -193,76 +310,401 @@ function PagamentoProprioForm() {
         <div className="form-section">
           <h3>Vincular CT-e (Opcional)</h3>
           <p className="form-hint" style={{ marginBottom: '15px', color: '#666' }}>
-            Selecione um CT-e para preencher automaticamente os dados do frete
+            Digite o numero do CT-e para buscar e vincular automaticamente
           </p>
 
-          <div className="form-group">
-            <label>CT-e</label>
-            <select
-              name="cte"
-              value={formData.cte}
-              onChange={handleSelectCte}
-              disabled={loadingCtes}
-            >
-              <option value="">-- Selecione um CT-e (opcional) --</option>
-              {ctesDisponiveis.map(cte => (
-                <option key={cte.id} value={cte.id}>
-                  #{cte.numero_cte || cte.numero} - {cte.remetente_nome || 'N/I'} → {cte.destinatario_nome || 'N/I'} - R$ {(cte.valor_total || cte.valor_prestacao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </option>
-              ))}
-            </select>
-            {loadingCtes && <small className="form-hint">Carregando CT-es...</small>}
-            {formData.cte_numero && (
-              <small className="form-hint" style={{ color: '#27ae60' }}>
-                CT-e #{formData.cte_numero} selecionado
-              </small>
-            )}
-          </div>
+          {!cteSelecionado ? (
+            <div className="form-group" style={{ position: 'relative' }}>
+              <label>Buscar CT-e</label>
+              <input
+                type="text"
+                value={buscaCte}
+                onChange={(e) => setBuscaCte(e.target.value)}
+                placeholder="Digite o numero do CT-e..."
+                autoComplete="off"
+              />
+              {loadingBusca && (
+                <small className="form-hint">Buscando...</small>
+              )}
+
+              {/* Lista de resultados da busca */}
+              {mostrarResultados && resultadosBusca.length > 0 && (
+                <div className="cte-search-results" style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  background: '#fff',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  zIndex: 1000,
+                  maxHeight: '300px',
+                  overflowY: 'auto'
+                }}>
+                  {resultadosBusca.map(cte => (
+                    <div
+                      key={cte.id}
+                      className="cte-search-item"
+                      onClick={() => handleSelecionarCte(cte)}
+                      style={{
+                        padding: '12px 15px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #eee',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                      onMouseLeave={(e) => e.target.style.background = '#fff'}
+                    >
+                      <div style={{ fontWeight: '600', color: '#333' }}>
+                        CT-e #{cte.numero_cte || cte.numero}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+                        {cte.remetente_nome || 'N/I'} → {cte.destinatario_nome || 'N/I'}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#27ae60', fontWeight: '500', marginTop: '2px' }}>
+                        R$ {(cte.valor_total || cte.valor_prestacao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {mostrarResultados && resultadosBusca.length === 0 && buscaCte.length >= 2 && !loadingBusca && (
+                <small className="form-hint" style={{ color: '#e74c3c' }}>
+                  Nenhum CT-e encontrado com esse numero
+                </small>
+              )}
+            </div>
+          ) : (
+            /* CT-e selecionado - exibe card com detalhes */
+            <div className="cte-selecionado" style={{
+              background: '#f8f9fa',
+              border: '1px solid #27ae60',
+              borderRadius: '8px',
+              padding: '15px',
+              position: 'relative'
+            }}>
+              <button
+                type="button"
+                onClick={handleRemoverCte}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: '#e74c3c',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  lineHeight: '24px',
+                  textAlign: 'center'
+                }}
+                title="Remover CT-e"
+              >
+                ×
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <span style={{
+                  background: '#27ae60',
+                  color: '#fff',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: '600'
+                }}>
+                  CT-e VINCULADO
+                </span>
+              </div>
+              <div style={{ fontWeight: '600', fontSize: '16px', color: '#333' }}>
+                CT-e #{cteSelecionado.numero_cte || cteSelecionado.numero}
+              </div>
+              <div style={{ color: '#666', marginTop: '8px', fontSize: '14px' }}>
+                <div><strong>Remetente:</strong> {cteSelecionado.remetente_nome || 'N/I'}</div>
+                <div><strong>Destinatario:</strong> {cteSelecionado.destinatario_nome || 'N/I'}</div>
+                <div style={{ marginTop: '8px', color: '#27ae60', fontWeight: '600', fontSize: '16px' }}>
+                  Valor: R$ {(cteSelecionado.valor_total || cteSelecionado.valor_prestacao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="form-section">
-          <h3>Dados do Veiculo e Condutor</h3>
+          <h3>Dados do Condutor</h3>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Veiculo Proprio *</label>
-              <select
-                name="veiculo"
-                value={formData.veiculo}
-                onChange={handleChange}
-                required
-              >
-                <option value="">-- Selecione o veiculo --</option>
-                {veiculosDisponiveis.map(v => (
-                  <option key={v.id} value={v.id}>
-                    {v.placa} - {v.modelo || 'N/I'}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>CPF do Condutor</label>
+          {/* Busca de Condutor por Nome */}
+          {!condutorSelecionado ? (
+            <div className="form-group" style={{ position: 'relative', marginBottom: '20px' }}>
+              <label>Buscar Nome do Condutor</label>
+              <small className="form-hint" style={{ display: 'block', marginBottom: '8px', color: '#666' }}>
+                Digite o nome do motorista para buscar e vincular automaticamente
+              </small>
               <input
                 type="text"
-                name="motorista_cpf"
-                value={formData.motorista_cpf}
-                onChange={handleCPFChange}
-                maxLength="11"
-                placeholder="00000000000"
+                value={buscaCondutor}
+                onChange={(e) => setBuscaCondutor(e.target.value)}
+                placeholder="Digite o nome do motorista..."
+                autoComplete="off"
               />
-            </div>
-          </div>
+              {loadingCondutor && (
+                <small className="form-hint">Buscando...</small>
+              )}
 
+              {/* Lista de resultados da busca de condutor */}
+              {mostrarResultadosCondutor && resultadosCondutor.length > 0 && (
+                <div className="condutor-search-results" style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  background: '#fff',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  zIndex: 1000,
+                  maxHeight: '300px',
+                  overflowY: 'auto'
+                }}>
+                  {resultadosCondutor.map((motorista, index) => (
+                    <div
+                      key={`motorista-${motorista.id}-${index}`}
+                      className="condutor-search-item"
+                      onClick={() => handleSelecionarCondutor(motorista)}
+                      style={{
+                        padding: '12px 15px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #eee',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                    >
+                      <div style={{ fontWeight: '600', color: '#333' }}>
+                        {motorista.nome}
+                      </div>
+                      {motorista.cpf && (
+                        <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                          CPF: {motorista.cpf_formatado || motorista.cpf}
+                        </div>
+                      )}
+                      {motorista.categoria_cnh && (
+                        <div style={{ fontSize: '12px', color: '#3498db', marginTop: '2px' }}>
+                          CNH: {motorista.categoria_cnh}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {mostrarResultadosCondutor && resultadosCondutor.length === 0 && buscaCondutor.length >= 2 && !loadingCondutor && (
+                <small className="form-hint" style={{ color: '#e74c3c' }}>
+                  Nenhum motorista encontrado
+                </small>
+              )}
+            </div>
+          ) : (
+            /* Condutor selecionado - exibe card com detalhes */
+            <div className="condutor-selecionado" style={{
+              background: '#f8f9fa',
+              border: '1px solid #3498db',
+              borderRadius: '8px',
+              padding: '15px',
+              position: 'relative',
+              marginBottom: '20px'
+            }}>
+              <button
+                type="button"
+                onClick={handleRemoverCondutor}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: '#e74c3c',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  lineHeight: '24px',
+                  textAlign: 'center'
+                }}
+                title="Remover condutor"
+              >
+                ×
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <span style={{
+                  background: '#3498db',
+                  color: '#fff',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: '600'
+                }}>
+                  MOTORISTA VINCULADO
+                </span>
+              </div>
+              <div style={{ fontWeight: '600', fontSize: '16px', color: '#333' }}>
+                {condutorSelecionado.nome}
+              </div>
+              {condutorSelecionado.cpf && (
+                <div style={{ color: '#666', marginTop: '4px', fontSize: '14px' }}>
+                  CPF: {condutorSelecionado.cpf_formatado || condutorSelecionado.cpf}
+                </div>
+              )}
+              {condutorSelecionado.categoria_cnh && (
+                <div style={{ color: '#3498db', marginTop: '4px', fontSize: '14px' }}>
+                  CNH: {condutorSelecionado.categoria_cnh}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Busca de Veiculo por Placa */}
+          {!veiculoSelecionado ? (
+            <div className="form-group" style={{ position: 'relative', marginBottom: '20px' }}>
+              <label>Placa do Veiculo *</label>
+              <small className="form-hint" style={{ display: 'block', marginBottom: '8px', color: '#666' }}>
+                Digite a placa do veiculo para buscar e vincular automaticamente
+              </small>
+              <input
+                type="text"
+                value={buscaVeiculo}
+                onChange={(e) => setBuscaVeiculo(e.target.value.toUpperCase())}
+                placeholder="Digite a placa do veiculo..."
+                autoComplete="off"
+                style={{ textTransform: 'uppercase' }}
+              />
+              {loadingVeiculo && (
+                <small className="form-hint">Buscando...</small>
+              )}
+
+              {/* Lista de resultados da busca de veiculo */}
+              {mostrarResultadosVeiculo && resultadosVeiculo.length > 0 && (
+                <div className="veiculo-search-results" style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  background: '#fff',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  zIndex: 1000,
+                  maxHeight: '300px',
+                  overflowY: 'auto'
+                }}>
+                  {resultadosVeiculo.map((veiculo, index) => (
+                    <div
+                      key={`veiculo-${veiculo.id}-${index}`}
+                      className="veiculo-search-item"
+                      onClick={() => handleSelecionarVeiculo(veiculo)}
+                      style={{
+                        padding: '12px 15px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #eee',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                    >
+                      <div style={{ fontWeight: '700', fontSize: '16px', color: '#333' }}>
+                        {veiculo.placa}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+                        {veiculo.modelo || 'Modelo N/I'} {veiculo.marca ? `- ${veiculo.marca}` : ''}
+                      </div>
+                      {veiculo.proprietario_nome && (
+                        <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>
+                          Proprietario: {veiculo.proprietario_nome}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {mostrarResultadosVeiculo && resultadosVeiculo.length === 0 && buscaVeiculo.length >= 2 && !loadingVeiculo && (
+                <small className="form-hint" style={{ color: '#e74c3c' }}>
+                  Nenhum veiculo proprio encontrado com essa placa
+                </small>
+              )}
+            </div>
+          ) : (
+            /* Veiculo selecionado - exibe card com detalhes */
+            <div className="veiculo-selecionado" style={{
+              background: '#f8f9fa',
+              border: '1px solid #e67e22',
+              borderRadius: '8px',
+              padding: '15px',
+              position: 'relative',
+              marginBottom: '20px'
+            }}>
+              <button
+                type="button"
+                onClick={handleRemoverVeiculo}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: '#e74c3c',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  lineHeight: '24px',
+                  textAlign: 'center'
+                }}
+                title="Remover veiculo"
+              >
+                ×
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <span style={{
+                  background: '#e67e22',
+                  color: '#fff',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: '600'
+                }}>
+                  VEICULO VINCULADO
+                </span>
+              </div>
+              <div style={{ fontWeight: '700', fontSize: '20px', color: '#333' }}>
+                {veiculoSelecionado.placa}
+              </div>
+              <div style={{ color: '#666', marginTop: '6px', fontSize: '14px' }}>
+                {veiculoSelecionado.modelo || 'Modelo N/I'} {veiculoSelecionado.marca ? `- ${veiculoSelecionado.marca}` : ''}
+              </div>
+              {veiculoSelecionado.proprietario_nome && (
+                <div style={{ color: '#888', marginTop: '4px', fontSize: '13px' }}>
+                  Proprietario: {veiculoSelecionado.proprietario_nome}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Campo CPF oculto mas editavel se necessario */}
           <div className="form-group">
-            <label>Nome do Condutor</label>
+            <label>CPF do Condutor</label>
             <input
               type="text"
-              name="motorista_nome"
-              value={formData.motorista_nome}
-              onChange={handleChange}
-              placeholder="Nome completo do motorista"
-              maxLength={255}
+              name="motorista_cpf"
+              value={formData.motorista_cpf}
+              onChange={handleCPFChange}
+              maxLength="11"
+              placeholder="00000000000"
             />
           </div>
         </div>

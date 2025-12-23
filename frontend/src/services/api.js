@@ -278,8 +278,9 @@ export const motoristasAPI = {
     return true;
   },
 
-  vencimentos: async (dias = 30) => {
-    const response = await fetch(`${API_BASE}/motoristas/vencimentos/?dias=${dias}`, defaultOptions);
+  vencimentos: async (dias = 30, mostrarTodos = false) => {
+    const params = new URLSearchParams({ dias, mostrar_todos: mostrarTodos });
+    const response = await fetch(`${API_BASE}/motoristas/vencimentos/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar vencimentos');
     return response.json();
   },
@@ -344,8 +345,9 @@ export const veiculosAPI = {
     return true;
   },
 
-  vencimentos: async (dias = 30) => {
-    const response = await fetch(`${API_BASE}/veiculos/vencimentos/?dias=${dias}`, defaultOptions);
+  vencimentos: async (dias = 30, mostrarTodos = false) => {
+    const params = new URLSearchParams({ dias, mostrar_todos: mostrarTodos });
+    const response = await fetch(`${API_BASE}/veiculos/vencimentos/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar vencimentos');
     return response.json();
   },
@@ -1490,6 +1492,20 @@ export const documentosAPI = {
       });
       if (!response.ok) throw new Error('Erro ao deletar documento');
       return true;
+    },
+
+    update: async (clienteId, documentoId, dados) => {
+      const response = await fetchWithCSRFRetry(`${API_BASE}/clientes/${clienteId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'PATCH',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+        body: JSON.stringify(dados),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || JSON.stringify(error) || 'Erro ao atualizar documento');
+      }
+      return response.json();
     }
   },
 
@@ -1532,6 +1548,20 @@ export const documentosAPI = {
       });
       if (!response.ok) throw new Error('Erro ao deletar documento');
       return true;
+    },
+
+    update: async (motoristaId, documentoId, dados) => {
+      const response = await fetchWithCSRFRetry(`${API_BASE}/motoristas/${motoristaId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'PATCH',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+        body: JSON.stringify(dados),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || JSON.stringify(error) || 'Erro ao atualizar documento');
+      }
+      return response.json();
     }
   },
 
@@ -1574,6 +1604,20 @@ export const documentosAPI = {
       });
       if (!response.ok) throw new Error('Erro ao deletar documento');
       return true;
+    },
+
+    update: async (veiculoId, documentoId, dados) => {
+      const response = await fetchWithCSRFRetry(`${API_BASE}/veiculos/${veiculoId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'PATCH',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+        body: JSON.stringify(dados),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || JSON.stringify(error) || 'Erro ao atualizar documento');
+      }
+      return response.json();
     }
   }
 };

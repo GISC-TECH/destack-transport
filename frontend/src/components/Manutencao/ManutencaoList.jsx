@@ -501,9 +501,12 @@ function ManutencaoList() {
                     <strong>{formatCurrency(manutencao.custo)}</strong>
                   </td>
                   <td>{getStatusBadge(manutencao.status)}</td>
-                  <td>
-                    <Link to={`/manutencoes/${manutencao.id}`} className="btn-action btn-view">
-                      Ver
+                  <td className="actions-cell">
+                    <Link to={`/manutencoes/${manutencao.id}`} className="btn-action btn-view" title="Ver detalhes">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
                     </Link>
                   </td>
                 </tr>

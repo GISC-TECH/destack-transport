@@ -18,11 +18,31 @@ RUN npm run build
 # Stage 2: Serve with nginx
 FROM nginx:alpine
 
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx config
-RUN echo 'server {     listen 8000;     root /usr/share/nginx/html;     index index.html;     location / {         try_files $uri $uri/ /index.html;     }     location /api/ {         proxy_pass http://destack:8000/api/;         proxy_set_header Host $host;         proxy_set_header X-Real-IP $remote_addr;     } }' > /etc/nginx/conf.d/default.conf
+# Create nginx config with health endpoint
+RUN cat > /etc/nginx/conf.d/default.conf << 'EOF'
+server {
+    listen 8000;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Health check endpoint
+    location /health {
+        return 200 'OK';
+        add_header Content-Type text/plain;
+    }
+
+    # SPA routing
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+EOF
 
 EXPOSE 8000
 

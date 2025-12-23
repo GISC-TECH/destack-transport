@@ -163,6 +163,8 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
     - processado: true/false
     - autorizado: true/false
     - cancelado: true/false
+    - status: autorizado/cancelado/rejeitado (alternativa mais intuitiva)
+    - pago: true/false (status de pagamento)
     - q: Texto para busca geral
     """
     permission_classes = [IsAuthenticated]
@@ -286,6 +288,30 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         if pago is not None:
             is_pago = pago.lower() in ['true', '1', 'sim']
             queryset = queryset.filter(pago=is_pago)
+
+        # Filtro por status geral (autorizado/cancelado/rejeitado)
+        status_param = params.get('status')
+        if status_param:
+            status_lower = status_param.lower()
+            if status_lower == 'autorizado':
+                # Autorizado: protocolo existe e código status = 100, sem cancelamento
+                queryset = queryset.filter(
+                    protocolo__codigo_status=100
+                ).filter(
+                    Q(cancelamento__isnull=True) | ~Q(cancelamento__c_stat=135)
+                )
+            elif status_lower == 'cancelado':
+                # Cancelado: tem cancelamento com c_stat = 135
+                queryset = queryset.filter(cancelamento__c_stat=135)
+            elif status_lower == 'rejeitado':
+                # Rejeitado: tem protocolo mas código status != 100, sem cancelamento
+                queryset = queryset.filter(
+                    protocolo__isnull=False
+                ).exclude(
+                    protocolo__codigo_status=100
+                ).filter(
+                    Q(cancelamento__isnull=True) | ~Q(cancelamento__c_stat=135)
+                )
 
         # Filtro por texto (busca geral)
         texto = params.get('q')

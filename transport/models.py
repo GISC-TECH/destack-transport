@@ -10,7 +10,7 @@ from django.db.models import JSONField
 class Endereco(models.Model):
     """Endereço genérico usado por emitente, remetente, destinatário, etc."""
     logradouro = models.CharField(max_length=60, null=True, blank=True)
-    numero = models.CharField(max_length=20, null=True, blank=True)
+    numero = models.CharField(max_length=60, null=True, blank=True)
     complemento = models.CharField(max_length=60, null=True, blank=True)
     bairro = models.CharField(max_length=60, null=True, blank=True)
     codigo_municipio = models.CharField(max_length=7, null=True, blank=True)
@@ -1070,10 +1070,12 @@ class Veiculo(models.Model):
 
        for nome_doc, validade in documentos_verificar:
            if validade and validade <= data_limite:
+               dias_restantes = (validade - hoje).days
                documentos_vencendo.append({
                    'documento': nome_doc,
                    'validade': validade,
-                   'vencido': validade < hoje
+                   'vencido': validade < hoje,
+                   'dias_restantes': dias_restantes
                })
 
        return documentos_vencendo
@@ -1495,6 +1497,10 @@ class Cliente(models.Model):
     estado = models.CharField("Estado (UF)", max_length=2, blank=True, null=True)
     cep = models.CharField("CEP", max_length=10, blank=True, null=True)
 
+    # Contato
+    email = models.EmailField("E-mail", max_length=255, blank=True, null=True)
+    telefone = models.CharField("Telefone", max_length=20, blank=True, null=True)
+
     # Informações Operacionais
     distancia = models.DecimalField(
         "Distância da Base (KM)",
@@ -1596,6 +1602,18 @@ class Motorista(models.Model):
         null=True,
         help_text="Movimentação Operacional de Produtos Perigosos"
     )
+    toxicologico_validade = models.DateField(
+        "Exame Toxicológico - Validade",
+        blank=True,
+        null=True,
+        help_text="Exame toxicológico obrigatório para motoristas profissionais"
+    )
+    aso_validade = models.DateField(
+        "ASO - Validade",
+        blank=True,
+        null=True,
+        help_text="Atestado de Saúde Ocupacional"
+    )
 
     # Contato
     telefone = models.CharField("Telefone", max_length=20, blank=True, null=True)
@@ -1658,34 +1676,62 @@ class Motorista(models.Model):
 
         # Verificar CNH
         if self.validade_cnh and self.validade_cnh <= data_limite:
+            dias_restantes = (self.validade_cnh - hoje).days
             documentos_vencendo.append({
                 'documento': 'CNH',
                 'validade': self.validade_cnh,
-                'vencido': self.validade_cnh < hoje
+                'vencido': self.validade_cnh < hoje,
+                'dias_restantes': dias_restantes
             })
 
         # Verificar NR20
         if self.nr20_validade and self.nr20_validade <= data_limite:
+            dias_restantes = (self.nr20_validade - hoje).days
             documentos_vencendo.append({
                 'documento': 'NR20',
                 'validade': self.nr20_validade,
-                'vencido': self.nr20_validade < hoje
+                'vencido': self.nr20_validade < hoje,
+                'dias_restantes': dias_restantes
             })
 
         # Verificar NR35
         if self.nr35_validade and self.nr35_validade <= data_limite:
+            dias_restantes = (self.nr35_validade - hoje).days
             documentos_vencendo.append({
                 'documento': 'NR35',
                 'validade': self.nr35_validade,
-                'vencido': self.nr35_validade < hoje
+                'vencido': self.nr35_validade < hoje,
+                'dias_restantes': dias_restantes
             })
 
         # Verificar MOPP
         if self.mopp_validade and self.mopp_validade <= data_limite:
+            dias_restantes = (self.mopp_validade - hoje).days
             documentos_vencendo.append({
                 'documento': 'MOPP',
                 'validade': self.mopp_validade,
-                'vencido': self.mopp_validade < hoje
+                'vencido': self.mopp_validade < hoje,
+                'dias_restantes': dias_restantes
+            })
+
+        # Verificar Exame Toxicológico
+        if self.toxicologico_validade and self.toxicologico_validade <= data_limite:
+            dias_restantes = (self.toxicologico_validade - hoje).days
+            documentos_vencendo.append({
+                'documento': 'Toxicológico',
+                'validade': self.toxicologico_validade,
+                'vencido': self.toxicologico_validade < hoje,
+                'dias_restantes': dias_restantes
+            })
+
+        # Verificar ASO
+        if self.aso_validade and self.aso_validade <= data_limite:
+            dias_restantes = (self.aso_validade - hoje).days
+            documentos_vencendo.append({
+                'documento': 'ASO',
+                'validade': self.aso_validade,
+                'vencido': self.aso_validade < hoje,
+                'dias_restantes': dias_restantes
             })
 
         return documentos_vencendo

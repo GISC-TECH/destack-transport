@@ -309,6 +309,12 @@
   transition: all 0.2s ease;
 }
 
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
 .btn-view {
   background: #e8f4fd;
   color: #3498db;
@@ -337,6 +343,91 @@
 .btn-delete:hover {
   background: #e74c3c;
   color: white;
+}
+
+.btn-edit {
+  background: #fff8e6;
+  color: #f39c12;
+}
+
+.btn-edit:hover {
+  background: #f39c12;
+  color: white;
+}
+
+/* Modal de Edicao */
+.edit-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.edit-modal {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  margin: 1rem;
+}
+
+.edit-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.edit-modal-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.edit-modal-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #95a5a6;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.edit-modal-header .close-btn:hover {
+  color: #e74c3c;
+}
+
+.edit-modal-body {
+  padding: 1.5rem;
+}
+
+.edit-modal-body .form-group {
+  margin-bottom: 1rem;
+}
+
+.edit-modal-body .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.edit-modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid #e9ecef;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
 }
 
 /* Responsividade */

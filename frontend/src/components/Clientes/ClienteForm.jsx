@@ -15,12 +15,15 @@ function ClienteForm() {
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
 
   const [formData, setFormData] = useState({
     razao_social: '',
     nome_fantasia: '',
     cnpj: '',
     ie: '',
+    email: '',
+    telefone: '',
     cep: '',
     logradouro: '',
     numero: '',
@@ -49,6 +52,8 @@ function ClienteForm() {
         nome_fantasia: result.nome_fantasia || '',
         cnpj: result.cnpj || '',
         ie: result.ie || '',
+        email: result.email || '',
+        telefone: result.telefone || '',
         cep: result.cep || '',
         logradouro: result.logradouro || '',
         numero: result.numero || '',
@@ -95,6 +100,56 @@ function ClienteForm() {
       }
     } catch (err) {
       console.error('Erro ao buscar CEP:', err);
+    }
+  };
+
+  const buscarCnpj = async () => {
+    const cnpj = formData.cnpj.replace(/\D/g, '');
+    if (cnpj.length !== 14) {
+      toast.error('CNPJ deve ter 14 digitos');
+      return;
+    }
+
+    setBuscandoCnpj(true);
+    try {
+      // Usando BrasilAPI (gratuita e sem autenticacao)
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          toast.error('CNPJ nao encontrado na base da Receita Federal');
+        } else {
+          toast.error('Erro ao consultar CNPJ. Tente novamente.');
+        }
+        return;
+      }
+
+      const data = await response.json();
+
+      // Formatar CEP se existir
+      const cepFormatado = data.cep ? formatCEP(data.cep.toString()) : '';
+
+      setFormData(prev => ({
+        ...prev,
+        razao_social: data.razao_social || prev.razao_social,
+        nome_fantasia: data.nome_fantasia || prev.nome_fantasia,
+        email: data.email || prev.email,
+        telefone: data.ddd_telefone_1 || prev.telefone,
+        cep: cepFormatado || prev.cep,
+        logradouro: data.logradouro || prev.logradouro,
+        numero: data.numero || prev.numero,
+        complemento: data.complemento || prev.complemento,
+        bairro: data.bairro || prev.bairro,
+        cidade: data.municipio || prev.cidade,
+        estado: data.uf || prev.estado
+      }));
+
+      toast.success('Dados do CNPJ carregados com sucesso!');
+    } catch (err) {
+      console.error('Erro ao buscar CNPJ:', err);
+      toast.error('Erro ao consultar CNPJ. Verifique sua conexao.');
+    } finally {
+      setBuscandoCnpj(false);
     }
   };
 
@@ -168,14 +223,38 @@ function ClienteForm() {
           <div className="form-row">
             <div className="form-group">
               <label>CNPJ *</label>
-              <input
-                type="text"
-                name="cnpj"
-                value={formData.cnpj}
-                onChange={(e) => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})}
-                required
-                placeholder="00.000.000/0000-00"
-              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  type="text"
+                  name="cnpj"
+                  value={formData.cnpj}
+                  onChange={(e) => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})}
+                  required
+                  placeholder="00.000.000/0000-00"
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={buscarCnpj}
+                  disabled={buscandoCnpj || formData.cnpj.replace(/\D/g, '').length !== 14}
+                  style={{
+                    padding: '10px 20px',
+                    background: buscandoCnpj ? '#95a5a6' : '#3498db',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: buscandoCnpj ? 'wait' : 'pointer',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    minWidth: '120px'
+                  }}
+                >
+                  {buscandoCnpj ? 'Buscando...' : 'Buscar CNPJ'}
+                </button>
+              </div>
+              <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                Digite o CNPJ e clique em "Buscar CNPJ" para preencher automaticamente
+              </small>
             </div>
 
             <div className="form-group">
@@ -188,6 +267,9 @@ function ClienteForm() {
                 placeholder="Isento ou numero"
                 maxLength={20}
               />
+              <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                A IE nao esta disponivel na consulta CNPJ (registro estadual)
+              </small>
             </div>
           </div>
 
@@ -333,6 +415,32 @@ function ClienteForm() {
                   <option key={uf} value={uf}>{uf}</option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>E-mail</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="email@empresa.com.br"
+                maxLength={255}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Telefone</label>
+              <input
+                type="text"
+                name="telefone"
+                value={formData.telefone}
+                onChange={handleChange}
+                placeholder="(00) 0000-0000"
+                maxLength={20}
+              />
             </div>
           </div>
         </div>

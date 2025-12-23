@@ -157,19 +157,36 @@
   color: #e74c3c;
 }
 
-.btn-action {
-  background-color: #f39c12;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
+/* Action Buttons */
+.actions-cell {
+  text-align: center;
 }
 
-.btn-action:hover {
-  background-color: #e67e22;
+.btn-action {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-action svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-action.btn-edit {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-action.btn-edit:hover {
+  background-color: #2980b9;
+  transform: scale(1.05);
 }
 
 .empty-state {
