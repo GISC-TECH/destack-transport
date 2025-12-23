@@ -1,7 +1,7 @@
 asgiref
 chardet
 colorama
-Django==5.0.6
+Django==5.2.9
 djangorestframework
 djangorestframework-simplejwt
 drf-nested-routers
