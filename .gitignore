@@ -111,3 +111,7 @@ destack-api
 # Diretório vendor
 vendor/
 nul
+
+# Pastas de backup/antigas (não rastrear)
+antigo/
+OLD/
