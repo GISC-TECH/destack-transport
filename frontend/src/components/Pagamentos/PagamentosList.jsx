@@ -18,7 +18,8 @@ function PagamentosList() {
   const [loteConfig, setLoteConfig] = useState({
     data_inicio: '',
     data_fim: '',
-    tipo: 'agregados'
+    tipo: 'agregados',
+    percentual: ''
   });
   // Modal de baixa rápida
   const [modalBaixa, setModalBaixa] = useState({ show: false, id: null, info: '' });
@@ -128,12 +129,24 @@ function PagamentosList() {
       return;
     }
 
+    if (loteConfig.tipo === 'agregados' && !loteConfig.percentual) {
+      alert('Por favor, informe o percentual de repasse');
+      return;
+    }
+
+    const percentual = parseFloat(loteConfig.percentual);
+    if (loteConfig.tipo === 'agregados' && (percentual <= 0 || percentual > 100)) {
+      alert('O percentual deve estar entre 0 e 100');
+      return;
+    }
+
     try {
       setGerandoLote(true);
       if (loteConfig.tipo === 'agregados') {
         await pagamentosAPI.agregados.gerar({
           data_inicio: loteConfig.data_inicio,
-          data_fim: loteConfig.data_fim
+          data_fim: loteConfig.data_fim,
+          percentual: percentual
         });
       } else {
         await pagamentosAPI.proprios.gerar({
@@ -419,7 +432,25 @@ function PagamentosList() {
                 </div>
               </div>
 
-              </div>
+              {loteConfig.tipo === 'agregados' && (
+                <div className="form-group">
+                  <label>Percentual de Repasse (%) *</label>
+                  <input
+                    type="number"
+                    value={loteConfig.percentual}
+                    onChange={(e) => setLoteConfig({...loteConfig, percentual: e.target.value})}
+                    className="input-filter"
+                    min="0.01"
+                    max="100"
+                    step="0.01"
+                    placeholder="Ex: 25, 30, 35..."
+                    required
+                  />
+                  <small style={{ color: '#666', fontSize: '12px' }}>Informe o percentual a ser aplicado sobre o valor do frete (0-100%)</small>
+                </div>
+              )}
+
+            </div>
             <div className="modal-footer">
               <button
                 className="btn-cancel"
