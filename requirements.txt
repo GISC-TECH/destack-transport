@@ -1,33 +1,53 @@
-asgiref
-chardet
-colorama
+# Destack Transport - Backend Dependencies
+# Last updated: 2025-12-26
+
+# Django Framework
 Django==5.2.9
-djangorestframework
-djangorestframework-simplejwt
-drf-nested-routers
-drf-yasg
-inflection
-packaging
-Pillow
-psycopg2-binary
-PyJWT
-python-dateutil
-pytz
-PyYAML
-reportlab
-qrcode
-python-barcode
-setuptools
-six
-sqlparse
-tzdata
-uritemplate
-xmltodict
-python-dotenv
-celery
-redis
-django-redis
-gunicorn
-dj-database-url
-openpyxl
-django-cors-headers
+djangorestframework==3.16.1
+djangorestframework-simplejwt==5.5.1
+django-cors-headers==4.9.0
+django-redis==6.0.0
+drf-nested-routers==0.95.0
+drf-yasg==1.21.11
+dj-database-url==3.0.1
+
+# Database
+psycopg2-binary==2.9.11
+
+# Cache & Task Queue
+celery==5.6.0
+redis==7.1.0
+
+# Web Server
+gunicorn==23.0.0
+
+# Image Processing
+Pillow==12.0.0
+
+# PDF Generation
+reportlab==4.4.7
+qrcode==8.2
+python-barcode==0.16.1
+
+# XML Processing
+xmltodict==1.0.2
+
+# Excel Processing
+openpyxl==3.1.5
+
+# Utilities
+asgiref==3.11.0
+chardet==5.2.0
+colorama==0.4.6
+inflection==0.5.1
+packaging==25.0
+PyJWT==2.10.1
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.1
+pytz==2025.2
+PyYAML==6.0.3
+setuptools>=78.1.1
+six==1.17.0
+sqlparse==0.5.5
+tzdata==2025.3
+uritemplate==4.2.0
