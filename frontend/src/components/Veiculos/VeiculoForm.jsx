@@ -49,7 +49,17 @@ function VeiculoForm() {
     try {
       setLoading(true);
       const data = await veiculosAPI.get(id);
-      setFormData(data);
+      // Converter valores null para string vazia nos campos de data
+      setFormData({
+        ...data,
+        civ_validade: data.civ_validade || '',
+        cipp_validade: data.cipp_validade || '',
+        afericao_validade: data.afericao_validade || '',
+        crlv_validade: data.crlv_validade || '',
+        cronotacografo_validade: data.cronotacografo_validade || '',
+        observacoes: data.observacoes || '',
+        compartimentos: data.compartimentos || []
+      });
     } catch (err) {
       setError(err.message);
     } finally {

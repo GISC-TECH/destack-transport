@@ -38,7 +38,18 @@ function MotoristaForm() {
     try {
       setLoading(true);
       const data = await motoristasAPI.get(id);
-      setFormData(data);
+      // Converter valores null para string vazia nos campos de data
+      setFormData({
+        ...data,
+        validade_cnh: data.validade_cnh || '',
+        nr20_validade: data.nr20_validade || '',
+        nr35_validade: data.nr35_validade || '',
+        mopp_validade: data.mopp_validade || '',
+        toxicologico_validade: data.toxicologico_validade || '',
+        aso_validade: data.aso_validade || '',
+        telefone: data.telefone || '',
+        email: data.email || ''
+      });
     } catch (err) {
       setError(err.message);
     } finally {
