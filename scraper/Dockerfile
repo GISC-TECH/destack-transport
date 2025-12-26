@@ -58,6 +58,9 @@ RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}') \
 # Diretorio de trabalho
 WORKDIR /app
 
+# Atualizar pip para versão segura
+RUN pip install --upgrade pip
+
 # Copiar requirements e instalar dependencias Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
