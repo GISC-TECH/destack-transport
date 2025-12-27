@@ -75,11 +75,11 @@ class DashboardGeralAPIView(APIView):
                 data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
                 data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
             except ValueError:
-                return Response({"error": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Validar que data_fim >= data_inicio
             if data_fim < data_inicio:
-                return Response({"error": "A data final deve ser maior ou igual à data inicial."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "A data final deve ser maior ou igual à data inicial."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Ajusta data_fim para incluir o dia inteiro
         data_fim_query = data_fim + timedelta(days=1)
@@ -260,11 +260,11 @@ class FinanceiroPainelAPIView(APIView):
                 data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
                 data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
             except ValueError:
-                return Response({"error": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Validar que data_fim >= data_inicio
             if data_fim < data_inicio:
-                return Response({"error": "A data final deve ser maior ou igual à data inicial."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "A data final deve ser maior ou igual à data inicial."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Ajusta data_fim para incluir o dia inteiro
         data_fim_query = data_fim + timedelta(days=1)
@@ -359,13 +359,13 @@ class FinanceiroMensalAPIView(APIView):
                 data_inicio = date(data.year, data.month, 1)
                 data_fim = date(data.year, data.month + 1, 1) - timedelta(days=1) if data.month != 12 else date(data.year, 12, 31)
             except ValueError:
-                return Response({"error": "Formato inválido para 'mes'. Use AAAA-MM"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Formato inválido para 'mes'. Use AAAA-MM"}, status=status.HTTP_400_BAD_REQUEST)
         elif data_inicio_str and data_fim_str:
              try:
                 data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
                 data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
              except ValueError:
-                 return Response({"error": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+                 return Response({"detail": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
         else:
              # Default: último mês completo
              hoje = date.today()
@@ -418,13 +418,13 @@ class FinanceiroDetalheAPIView(APIView):
         data_fim_str = params.get('data_fim')
 
         if not data_inicio_str or not data_fim_str:
-            return Response({"error": "Parâmetros data_inicio e data_fim são obrigatórios"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Parâmetros data_inicio e data_fim são obrigatórios"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
             data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
         except ValueError:
-            return Response({"error": "Formato de data inválido. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Formato de data inválido. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
 
         data_fim_query = data_fim + timedelta(days=1)
 
@@ -542,7 +542,7 @@ class CtePainelAPIView(APIView):
                 data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
                 data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
             except ValueError:
-                return Response({"error": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
         data_fim_query = data_fim + timedelta(days=1)
 
@@ -647,7 +647,7 @@ class MdfePainelAPIView(APIView):
                  data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
                  data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
              except ValueError:
-                 return Response({"error": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+                 return Response({"detail": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
         data_fim_query = data_fim + timedelta(days=1)
 
@@ -748,7 +748,7 @@ class GeograficoPainelAPIView(APIView):
                  data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
                  data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
              except ValueError:
-                 return Response({"error": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+                 return Response({"detail": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
         data_fim_query = data_fim + timedelta(days=1)
 
@@ -906,7 +906,7 @@ class FrotaPainelAPIView(APIView):
                 data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
                 data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
             except ValueError:
-                return Response({"error": "Formato de data invalido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Formato de data invalido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
         data_fim_query = data_fim + timedelta(days=1)
 
@@ -1009,7 +1009,7 @@ class PerformancePainelAPIView(APIView):
                 data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
                 data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
             except ValueError:
-                return Response({"error": "Formato de data invalido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Formato de data invalido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
         data_fim_query = data_fim + timedelta(days=1)
 

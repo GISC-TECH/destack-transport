@@ -116,13 +116,13 @@ def generate_csv_from_queryset(queryset, serializer_class):
                 try:
                     dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
                     value = dt.strftime('%d/%m/%Y %H:%M')
-                except:
-                    pass
+                except (ValueError, TypeError):
+                    pass  # Mantém valor original se não conseguir parsear
             elif field == 'valor_total' and value:
                 try:
                     value = f"R$ {float(value):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-                except:
-                    pass
+                except (ValueError, TypeError):
+                    pass  # Mantém valor original se não conseguir converter
             elif field == 'modalidade' and not value:
                 value = 'N/I'
             
@@ -354,7 +354,7 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         max_export = 10000
         if queryset.count() > max_export:
             return Response(
-                {"error": f"Limite de exportação excedido. Máximo {max_export} registros."},
+                {"detail": f"Limite de exportação excedido. Máximo {max_export} registros."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -383,7 +383,7 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
 
         if not cte.xml_original:
             return Response(
-                {"error": "XML não disponível para este CT-e."},
+                {"detail": "XML não disponível para este CT-e."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -394,8 +394,8 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 start = cte.xml_original.index('encoding="') + 10
                 end = cte.xml_original.index('"', start)
                 encoding = cte.xml_original[start:end].lower()
-            except:
-                pass
+            except (ValueError, IndexError):
+                pass  # Usa encoding padrão UTF-8 se não encontrar
 
         # Retorna o XML
         response = HttpResponse(
@@ -419,19 +419,19 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         # Validações
         if not hasattr(cte, 'protocolo') or not cte.protocolo:
             return Response(
-                {"error": "CT-e não possui protocolo de autorização."},
+                {"detail": "CT-e não possui protocolo de autorização."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         if cte.protocolo.codigo_status != 100:
             return Response(
-                {"error": f"CT-e não autorizado. Status: {cte.protocolo.codigo_status}"},
+                {"detail": f"CT-e não autorizado. Status: {cte.protocolo.codigo_status}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         if hasattr(cte, 'cancelamento') and cte.cancelamento and cte.cancelamento.c_stat == 135:
             return Response(
-                {"error": "CT-e cancelado. DACTE não disponível."},
+                {"detail": "CT-e cancelado. DACTE não disponível."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -558,7 +558,7 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception as e:
             logger.error(f"Erro ao preparar dados do DACTE: {str(e)}")
             return Response(
-                {"error": "Erro ao processar dados do DACTE."},
+                {"detail": "Erro ao processar dados do DACTE."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -575,13 +575,13 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         # Validações
         if not cte.xml_original:
             return Response(
-                {"error": "XML original não encontrado. Reprocessamento impossível."},
+                {"detail": "XML original não encontrado. Reprocessamento impossível."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         if hasattr(cte, 'cancelamento') and cte.cancelamento:
             return Response(
-                {"error": "CT-e cancelado não pode ser reprocessado."},
+                {"detail": "CT-e cancelado não pode ser reprocessado."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -617,7 +617,7 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             else:
                 logger.error(f"Parser retornou False para CT-e {cte.chave}")
                 return Response(
-                    {"error": "Falha no reprocessamento. Verifique se o XML está válido."},
+                    {"detail": "Falha no reprocessamento. Verifique se o XML está válido."},
                     status=status.HTTP_422_UNPROCESSABLE_ENTITY
                 )
                 
@@ -628,7 +628,7 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             CTeDocumento.objects.filter(pk=cte.pk).update(processado=False)
             
             return Response(
-                {"error": f"Erro durante o reprocessamento: {str(e)}"},
+                {"detail": f"Erro durante o reprocessamento: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -654,7 +654,7 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         pago = request.data.get('pago')
         if pago is None:
             return Response(
-                {"error": "O campo 'pago' é obrigatório."},
+                {"detail": "O campo 'pago' é obrigatório."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

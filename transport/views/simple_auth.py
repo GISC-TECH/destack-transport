@@ -67,9 +67,12 @@ def simple_login(request):
     return render(request, 'login.html')
 
 
-@csrf_exempt
+@csrf_protect
 def simple_logout(request):
-    """View de logout que aceita JSON."""
+    """
+    View de logout que aceita JSON.
+    Requer CSRF token para prevenir ataques de logout forçado.
+    """
     logout(request)
 
     content_type = request.content_type or ''

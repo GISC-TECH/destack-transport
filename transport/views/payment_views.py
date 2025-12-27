@@ -48,6 +48,7 @@ from ..models import (  # Modelos usados pelos ViewSets
 # Funções utilitárias de outros módulos (se necessário)
 # Ex: from ..utils import format_currency
 from ..utils import csv_response
+from ..constants import DEFAULT_PAYMENT_PERCENTAGE
 
 
 # ===============================================================
@@ -171,28 +172,33 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         Parâmetros no body:
         - data_inicio: Data inicial para filtrar CT-es (YYYY-MM-DD)
         - data_fim: Data final para filtrar CT-es (YYYY-MM-DD)
-        - percentual: Percentual de repasse (opcional, padrão: 25%)
+        - percentual: Percentual de repasse (opcional, padrão: DEFAULT_PAYMENT_PERCENTAGE = 25%)
         - data_prevista: Data prevista para pagamento (opcional, padrão: hoje)
         - tipo_veiculo: Tipo de proprietário do veículo (opcional, padrão: '0' = Agregado)
                        Valores: '0' (Agregado), '1' (Independente), '2' (Outros), 'todos'
         """
         data_inicio = request.data.get('data_inicio')
         data_fim = request.data.get('data_fim')
-        percentual = request.data.get('percentual', 25.0)
+        percentual_raw = request.data.get('percentual', float(DEFAULT_PAYMENT_PERCENTAGE))
         data_prevista_str = request.data.get('data_prevista', date.today().isoformat())
         tipo_veiculo = request.data.get('tipo_veiculo', '0')  # Padrão: Agregado
 
         if not data_inicio or not data_fim:
-            return Response({"error": "Parâmetros data_inicio e data_fim são obrigatórios"},
+            return Response({"detail": "Parâmetros data_inicio e data_fim são obrigatórios"},
+                           status=status.HTTP_400_BAD_REQUEST)
+
+        # Validação de tipo para percentual
+        if not isinstance(percentual_raw, (int, float, str, Decimal)):
+            return Response({"detail": "Percentual deve ser um número válido"},
                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             data_prevista = datetime.strptime(data_prevista_str, '%Y-%m-%d').date()
-            percentual_decimal = Decimal(str(percentual))
+            percentual_decimal = Decimal(str(percentual_raw))
             if not (0 < percentual_decimal <= 100):
-                raise ValueError("Percentual fora do intervalo válido (0-100).")
+                raise ValueError("Percentual deve estar entre 0 e 100.")
         except (ValueError, TypeError, InvalidOperation) as e:
-            return Response({"error": f"Parâmetro inválido: {e}"},
+            return Response({"detail": f"Parâmetro inválido: {e}"},
                            status=status.HTTP_400_BAD_REQUEST)
 
         # Buscar CT-es válidos no período que ainda não têm pagamento
@@ -336,7 +342,7 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         veiculo = Veiculo.objects.filter(placa=pagamento_agregado.placa).first()
         if not veiculo:
             return Response(
-                {"error": f"Veículo com placa {pagamento_agregado.placa} não encontrado no cadastro. Cadastre o veículo primeiro."},
+                {"detail": f"Veículo com placa {pagamento_agregado.placa} não encontrado no cadastro. Cadastre o veículo primeiro."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -348,7 +354,7 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         # Validação de formato do período
         if not re.match(r'^\d{4}-\d{2}(-[12]Q)?$', periodo):
             return Response(
-                {"error": "Formato de período inválido. Use AAAA-MM ou AAAA-MM-1Q/2Q."},
+                {"detail": "Formato de período inválido. Use AAAA-MM ou AAAA-MM-1Q/2Q."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -511,17 +517,17 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         km_manual = request.data.get('km_total')
 
         if not veiculo_id or not periodo:
-            return Response({"error": "Parâmetros veiculo_id e periodo são obrigatórios."},
+            return Response({"detail": "Parâmetros veiculo_id e periodo são obrigatórios."},
                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             veiculo = Veiculo.objects.get(pk=veiculo_id)
         except Veiculo.DoesNotExist:
-            return Response({"error": "Veículo não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Veículo não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
         # Validação de formato do período
         if not re.match(r'^\d{4}-\d{2}(-[12]Q)?$', periodo):
-            return Response({"error": "Formato de período inválido. Use AAAA-MM ou AAAA-MM-1Q/2Q."},
+            return Response({"detail": "Formato de período inválido. Use AAAA-MM ou AAAA-MM-1Q/2Q."},
                            status=status.HTTP_400_BAD_REQUEST)
 
         km_total = 0
@@ -535,7 +541,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                      raise ValueError("KM deve ser positivo.")
                 fonte_km = "Manual"
             except (ValueError, TypeError):
-                return Response({"error": "Valor de km_total inválido."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Valor de km_total inválido."}, status=status.HTTP_400_BAD_REQUEST)
         else:
             # Cálculo automático de KM
             km_total = self._calcular_km_periodo(veiculo, periodo)
@@ -552,7 +558,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             if not faixa:
                  # Se não achou faixa específica, pega a última cadastrada como fallback? Ou retorna erro?
                  # Retornar erro é mais seguro para evitar pagamentos incorretos.
-                 return Response({"error": f"Nenhuma faixa de KM aplicável encontrada para {km_total} KM."},
+                 return Response({"detail": f"Nenhuma faixa de KM aplicável encontrada para {km_total} KM."},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             valor_base = faixa.valor_pago
@@ -573,7 +579,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                 periodo,
                 e,
             )
-            return Response({"error": f"Erro ao calcular valor base: {str(e)}"},
+            return Response({"detail": f"Erro ao calcular valor base: {str(e)}"},
                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'])
@@ -600,7 +606,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         if periodo:
             # Usar período direto se fornecido
             if not re.match(r'^\d{4}-\d{2}(-[12]Q)?$', periodo):
-                return Response({"error": "Formato de período inválido. Use AAAA-MM ou AAAA-MM-1Q/2Q."},
+                return Response({"detail": "Formato de período inválido. Use AAAA-MM ou AAAA-MM-1Q/2Q."},
                                status=status.HTTP_400_BAD_REQUEST)
             periodos_a_processar = [periodo]
         elif data_inicio and data_fim:
@@ -610,7 +616,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                 dt_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
 
                 if dt_inicio > dt_fim:
-                    return Response({"error": "Data inicial deve ser menor ou igual à data final."},
+                    return Response({"detail": "Data inicial deve ser menor ou igual à data final."},
                                    status=status.HTTP_400_BAD_REQUEST)
 
                 # Gerar períodos mensais (AAAA-MM) no intervalo
@@ -624,10 +630,10 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                         current = date(current.year, current.month + 1, 1)
 
             except ValueError as e:
-                return Response({"error": f"Formato de data inválido: {str(e)}. Use YYYY-MM-DD."},
+                return Response({"detail": f"Formato de data inválido: {str(e)}. Use YYYY-MM-DD."},
                                status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"error": "Informe 'periodo' ou 'data_inicio' e 'data_fim'."},
+            return Response({"detail": "Informe 'periodo' ou 'data_inicio' e 'data_fim'."},
                            status=status.HTTP_400_BAD_REQUEST)
 
         # Obter veículos
@@ -641,10 +647,10 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             else:
                  raise ValueError("Parâmetro veiculos deve ser 'todos' ou uma lista de IDs.")
         except ValueError as ve:
-             return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+             return Response({"detail": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             logger.warning("Erro ao buscar veículos: %s", e)
-            return Response({"error": "Erro ao buscar veículos."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Erro ao buscar veículos."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if not veiculos.exists():
             return Response({"message": "Nenhum veículo próprio e ativo encontrado para processar."},
@@ -658,7 +664,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                 if km_total_padrao < 0:
                     raise ValueError("KM deve ser positivo.")
             except (ValueError, TypeError):
-                return Response({"error": "Valor de km_padrao inválido."},
+                return Response({"detail": "Valor de km_padrao inválido."},
                                status=status.HTTP_400_BAD_REQUEST)
 
         resultados = {'criados': 0, 'ignorados': 0, 'erros': 0, 'detalhes': []}
@@ -774,7 +780,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                 data_prevista = datetime.strptime(data_prevista_str, '%Y-%m-%d').date()
             except ValueError:
                 return Response(
-                    {"error": "Formato de data inválido. Use YYYY-MM-DD."},
+                    {"detail": "Formato de data inválido. Use YYYY-MM-DD."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
         else:
@@ -783,7 +789,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         # Validações
         if not condutor_nome:
             return Response(
-                {"error": "Nome do condutor é obrigatório."},
+                {"detail": "Nome do condutor é obrigatório."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -793,20 +799,20 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             cte = CTeDocumento.objects.filter(pk=cte_id).first()
             if not cte:
                 return Response(
-                    {"error": f"CT-e com ID {cte_id} não encontrado."},
+                    {"detail": f"CT-e com ID {cte_id} não encontrado."},
                     status=status.HTTP_404_NOT_FOUND
                 )
             # Verifica se CT-e já tem pagamento agregado
             if hasattr(cte, 'pagamento_agregado'):
                 return Response(
-                    {"error": f"CT-e {cte.chave[-8:]} já possui um pagamento agregado associado."},
+                    {"detail": f"CT-e {cte.chave[-8:]} já possui um pagamento agregado associado."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
         # Se não tem CTE e o modelo exige, não podemos criar
         if not cte:
             return Response({
-                "error": "É necessário informar um CT-e (cte_id) para converter para pagamento agregado.",
+                "detail": "É necessário informar um CT-e (cte_id) para converter para pagamento agregado.",
                 "hint": "O modelo de pagamento agregado requer um CT-e associado."
             }, status=status.HTTP_400_BAD_REQUEST)
 

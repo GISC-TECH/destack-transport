@@ -98,13 +98,42 @@ class VeiculoViewSet(viewsets.ModelViewSet):
         Query params:
             - dias (default: 30): Número de dias para considerar vencimento
             - mostrar_todos (default: false): Se true, mostra todos os veículos
+
+        Otimização: Usa filtro no banco para pré-selecionar veículos com documentos
+        potencialmente vencendo, evitando processar todos os veículos em Python.
         """
+        from django.db.models import Q
+        from datetime import date
+
         dias = int(request.query_params.get('dias', 30))
         mostrar_todos = request.query_params.get('mostrar_todos', 'false').lower() == 'true'
 
-        veiculos_lista = []
+        hoje = date.today()
+        data_limite = hoje + timedelta(days=dias)
 
-        for veiculo in self.get_queryset().filter(ativo=True):
+        # Base queryset filtrado por ativo
+        queryset = self.get_queryset().filter(ativo=True)
+
+        # Se não for mostrar_todos, filtra no banco veículos com algum documento vencendo
+        # Isso evita processar todos os veículos em Python (otimização N+1)
+        if not mostrar_todos:
+            queryset = queryset.filter(
+                Q(civ_validade__lte=data_limite) |
+                Q(cipp_validade__lte=data_limite) |
+                Q(afericao_validade__lte=data_limite) |
+                Q(crlv_validade__lte=data_limite) |
+                Q(cronotacografo_validade__lte=data_limite)
+            )
+
+        # Seleciona apenas campos necessários para melhor performance
+        queryset = queryset.only(
+            'id', 'placa', 'proprietario_nome',
+            'civ_validade', 'cipp_validade', 'afericao_validade',
+            'crlv_validade', 'cronotacografo_validade'
+        )
+
+        veiculos_lista = []
+        for veiculo in queryset:
             docs_vencendo = veiculo.get_documentos_vencendo(dias=dias)
 
             # Se mostrar_todos, inclui todos os veículos; senão, só os com docs vencendo

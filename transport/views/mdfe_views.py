@@ -193,7 +193,7 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         mdfe = self.get_object()
 
         if not mdfe.xml_original:
-            return Response({"error": "XML não disponível para este MDF-e."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "XML não disponível para este MDF-e."}, status=status.HTTP_404_NOT_FOUND)
 
         response = HttpResponse(mdfe.xml_original, content_type='application/xml; charset=utf-8')
         response['Content-Disposition'] = f'attachment; filename="MDFe_{mdfe.chave}.xml"'
@@ -210,7 +210,7 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
 
         if not is_authorized or is_canceled:
             status_text = "cancelado" if is_canceled else "não autorizado"
-            return Response({"error": f"DAMDFE não disponível para MDF-e {status_text}."},
+            return Response({"detail": f"DAMDFE não disponível para MDF-e {status_text}."},
                            status=status.HTTP_400_BAD_REQUEST)
 
         # Gerar o PDF do DAMDFE
@@ -249,7 +249,7 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception as e:
             logger.error(f"Erro ao gerar DAMDFE para MDF-e {mdfe.chave}: {str(e)}")
             return Response(
-                {"error": "Erro ao gerar o DAMDFE. Por favor, tente novamente."},
+                {"detail": "Erro ao gerar o DAMDFE. Por favor, tente novamente."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -259,7 +259,7 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         mdfe = self.get_object()
 
         if not mdfe.xml_original:
-            return Response({"error": "XML original não encontrado. Reprocessamento impossível."},
+            return Response({"detail": "XML original não encontrado. Reprocessamento impossível."},
                            status=status.HTTP_400_BAD_REQUEST)
 
         mdfe.processado = False
@@ -270,13 +270,13 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             if success:
                 return Response({"message": "MDF-e reprocessado com sucesso."})
             else:
-                return Response({"error": "Falha durante o reprocessamento. Verifique os logs."},
+                return Response({"detail": "Falha durante o reprocessamento. Verifique os logs."},
                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             logger.warning("ERRO ao reprocessar MDF-e %s: %s", mdfe.chave, e)
             mdfe.processado = False
             mdfe.save(update_fields=['processado'])
-            return Response({"error": f"Erro durante o reprocessamento: {str(e)}"},
+            return Response({"detail": f"Erro durante o reprocessamento: {str(e)}"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=True, methods=['get'])

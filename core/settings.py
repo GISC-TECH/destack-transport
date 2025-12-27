@@ -64,7 +64,12 @@ CSRF_TRUSTED_ORIGINS.extend([
 
 # Configurações de CSRF
 CSRF_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_HTTPONLY = False  # Permite JavaScript acessar o cookie CSRF
+# CSRF_COOKIE_HTTPONLY=False é INTENCIONAL para SPA (React)
+# O frontend precisa ler o token CSRF via JavaScript para enviá-lo no header X-CSRFToken.
+# Isso é seguro porque: (1) cookies SameSite=Lax protegem contra CSRF cross-site,
+# (2) o token só é útil se o atacante também tiver acesso ao cookie de sessão.
+# Ref: https://docs.djangoproject.com/en/5.0/howto/csrf/#acquiring-the-token-if-csrf-use-sessions-is-false
+CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
 
 # Para desenvolvimento, configurações mais flexíveis

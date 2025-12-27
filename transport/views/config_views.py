@@ -138,7 +138,7 @@ class ParametroSistemaViewSet(viewsets.ModelViewSet):
         parametros_data = request.data.get('parametros', {})
 
         if not parametros_data or not isinstance(parametros_data, dict):
-            return Response({"error": "Formato inválido. Esperado: {'parametros': {nome: valor, ...}}"},
+            return Response({"detail": "Formato inválido. Esperado: {'parametros': {nome: valor, ...}}"},
                            status=status.HTTP_400_BAD_REQUEST)
 
         atualizados = []
@@ -264,7 +264,7 @@ class BackupAPIView(viewsets.ViewSet):
             return Response(serializer.data)
         except Exception as e:
             logger.warning("Erro ao listar backups: %s", e)
-            return Response({"error": f"Erro interno ao listar backups: {str(e)}"},
+            return Response({"detail": f"Erro interno ao listar backups: {str(e)}"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'])
@@ -379,9 +379,9 @@ class BackupAPIView(viewsets.ViewSet):
                     RegistroBackup.objects.create(
                         nome_arquivo=f"erro_backup_{timestamp}.log", status='erro',
                         usuario=request.user.username, detalhes=error_details)
-                except:
-                    pass
-            return Response({"error": "Erro ao executar comando de backup.", "details": cpe.stderr},
+                except Exception as db_err:
+                    logger.warning("Falha ao registrar erro de backup no banco: %s", db_err)
+            return Response({"detail": "Erro ao executar comando de backup.", "details": cpe.stderr},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             # Outros erros (permissão, NotImplementedError, etc.)
@@ -397,9 +397,9 @@ class BackupAPIView(viewsets.ViewSet):
                     RegistroBackup.objects.create(
                         nome_arquivo=f"erro_backup_{timestamp}.log", status='erro',
                         usuario=request.user.username, detalhes=error_details[:999])  # Limita tamanho do detalhe
-                except:
-                    pass
-            return Response({"error": f"Erro inesperado ao gerar backup: {str(e)}"},
+                except Exception as db_err:
+                    logger.warning("Falha ao registrar erro de backup no banco: %s", db_err)
+            return Response({"detail": f"Erro inesperado ao gerar backup: {str(e)}"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=True, methods=['get'])
@@ -409,19 +409,33 @@ class BackupAPIView(viewsets.ViewSet):
 
         # Verifica se o arquivo ainda existe na localização registrada
         if not registro.localizacao or not os.path.exists(registro.localizacao):
-             return Response({"error": f"Arquivo de backup '{registro.nome_arquivo}' não encontrado na localização registrada."},
+             return Response({"detail": f"Arquivo de backup '{registro.nome_arquivo}' não encontrado na localização registrada."},
                             status=status.HTTP_404_NOT_FOUND)
 
         try:
-            # Retorna o arquivo para download
-            return FileResponse(
-                open(registro.localizacao, 'rb'),
-                as_attachment=True,
-                filename=registro.nome_arquivo # Usa o nome original para o download
-            )
+            # Abre o arquivo com context manager para garantir fechamento em caso de erro
+            file_handle = open(registro.localizacao, 'rb')
+            # FileResponse fecha o arquivo automaticamente após enviar (Django 4.2+)
+            # mas precisamos garantir que se houver erro na criação do FileResponse,
+            # o arquivo seja fechado
+            try:
+                response = FileResponse(
+                    file_handle,
+                    as_attachment=True,
+                    filename=registro.nome_arquivo  # Usa o nome original para o download
+                )
+                # Define flag para FileResponse gerenciar o fechamento
+                response.file_to_stream.close_on_del = True
+                return response
+            except Exception:
+                file_handle.close()
+                raise
+        except FileNotFoundError:
+            return Response({"detail": f"Arquivo de backup não encontrado: {registro.nome_arquivo}"},
+                            status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             logger.warning("Erro ao baixar backup %s: %s", registro.nome_arquivo, e)
-            return Response({"error": f"Erro ao tentar baixar o arquivo: {str(e)}"},
+            return Response({"detail": f"Erro ao tentar baixar o arquivo: {str(e)}"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'])
@@ -434,13 +448,13 @@ class BackupAPIView(viewsets.ViewSet):
         # Verificar se um arquivo foi enviado no campo 'arquivo_backup'
         backup_file = request.FILES.get('arquivo_backup')
         if not backup_file:
-             return Response({"error": "Nenhum arquivo de backup enviado no campo 'arquivo_backup'."},
+             return Response({"detail": "Nenhum arquivo de backup enviado no campo 'arquivo_backup'."},
                             status=status.HTTP_400_BAD_REQUEST)
 
         # Verificar extensão (simples verificação)
         if not backup_file.name.lower().endswith('.sql'):
              # Poderia aceitar .dump, .backup dependendo do banco
-             return Response({"error": "Arquivo inválido. Apenas arquivos .sql são suportados (nesta implementação simulada)."},
+             return Response({"detail": "Arquivo inválido. Apenas arquivos .sql são suportados (nesta implementação simulada)."},
                             status=status.HTTP_400_BAD_REQUEST)
 
         try:
@@ -483,7 +497,7 @@ class BackupAPIView(viewsets.ViewSet):
         except Exception as e:
             logger.warning("ERRO ao processar solicitação de restauração: %s", e)
             traceback.print_exc()
-            return Response({"error": f"Erro ao processar pedido de restauração: {str(e)}"},
+            return Response({"detail": f"Erro ao processar pedido de restauração: {str(e)}"},
                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # ===============================================================
@@ -512,7 +526,7 @@ class RelatorioAPIView(APIView):
         filtros_json = params.get('filtros', '{}')
 
         if not tipo:
-            return Response({"error": "Parâmetro 'tipo' de relatório é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Parâmetro 'tipo' de relatório é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             # Decodifica e parseia os filtros JSON
@@ -525,17 +539,17 @@ class RelatorioAPIView(APIView):
                     filtros[key] = value
                     
         except json.JSONDecodeError:
-            return Response({"error": "Formato de 'filtros' inválido. Deve ser um objeto JSON válido (URL encoded)."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Formato de 'filtros' inválido. Deve ser um objeto JSON válido (URL encoded)."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Processar datas comuns se fornecidas nos filtros
         data_inicio = None
         data_fim = None
         if 'data_inicio' in filtros:
             try: data_inicio = datetime.strptime(filtros['data_inicio'], '%Y-%m-%d').date()
-            except (ValueError, TypeError): return Response({"error": "Formato de data_inicio inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+            except (ValueError, TypeError): return Response({"detail": "Formato de data_inicio inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
         if 'data_fim' in filtros:
             try: data_fim = datetime.strptime(filtros['data_fim'], '%Y-%m-%d').date()
-            except (ValueError, TypeError): return Response({"error": "Formato de data_fim inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+            except (ValueError, TypeError): return Response({"detail": "Formato de data_fim inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
         # --- Chamada da Lógica de Geração Específica ---
         # A implementação real ocorreria aqui, chamando funções auxiliares
@@ -555,7 +569,7 @@ class RelatorioAPIView(APIView):
             elif tipo == 'manutencoes':
                 dados = self._gerar_relatorio_manutencoes(data_inicio, data_fim, filtros)
             else:
-                 return Response({"error": f"Tipo de relatório '{tipo}' não suportado ou não implementado."}, status=status.HTTP_400_BAD_REQUEST)
+                 return Response({"detail": f"Tipo de relatório '{tipo}' não suportado ou não implementado."}, status=status.HTTP_400_BAD_REQUEST)
 
             # --- Formatação da Saída ---
             if formato == 'csv':
@@ -570,12 +584,12 @@ class RelatorioAPIView(APIView):
                 filename = f"relatorio_{tipo}_{timezone.now().strftime('%Y%m%d')}.pdf"
                 return self._gerar_pdf(dados, filename)
             else:
-                 return Response({"error": f"Formato '{formato}' não suportado."}, status=status.HTTP_400_BAD_REQUEST)
+                 return Response({"detail": f"Formato '{formato}' não suportado."}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             logger.warning("Erro ao gerar relatório '%s': %s", tipo, e)
             traceback.print_exc()
-            return Response({"error": f"Erro interno ao gerar relatório: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": f"Erro interno ao gerar relatório: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # --- Métodos Auxiliares de Geração (NÃO IMPLEMENTADOS) ---
     def _gerar_relatorio_faturamento(self, data_inicio, data_fim, filtros):
@@ -978,7 +992,7 @@ class RelatorioAPIView(APIView):
             # Se dados não for uma lista, retorna erro ou mensagem
             if isinstance(dados, dict) and 'message' in dados:
                 return Response(dados, status=status.HTTP_501_NOT_IMPLEMENTED) # Retorna msg de não implementado
-            return Response({"error": "Formato de dados inválido para gerar CSV."},
+            return Response({"detail": "Formato de dados inválido para gerar CSV."},
                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Se a lista estiver vazia, retorna CSV vazio com mensagem
@@ -991,7 +1005,7 @@ class RelatorioAPIView(APIView):
             
         # Verifica se o primeiro item é um dicionário
         if not isinstance(dados[0], dict):
-            return Response({"error": "Formato de dados inválido para gerar CSV."},
+            return Response({"detail": "Formato de dados inválido para gerar CSV."},
                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Pega cabeçalhos do primeiro dicionário
@@ -1012,7 +1026,7 @@ class RelatorioAPIView(APIView):
         if not dados or not isinstance(dados, list):
              if isinstance(dados, dict) and 'message' in dados:
                 return Response(dados, status=status.HTTP_501_NOT_IMPLEMENTED)
-             return Response({"error": "Formato de dados inválido para gerar XLSX."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+             return Response({"detail": "Formato de dados inválido para gerar XLSX."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if len(dados) == 0:
              return Response({"message": "Nenhum dado encontrado."}, status=status.HTTP_204_NO_CONTENT)
@@ -1049,7 +1063,7 @@ class RelatorioAPIView(APIView):
         if not dados or not isinstance(dados, list):
              if isinstance(dados, dict) and 'message' in dados:
                 return Response(dados, status=status.HTTP_501_NOT_IMPLEMENTED)
-             return Response({"error": "Formato de dados inválido para gerar PDF."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+             return Response({"detail": "Formato de dados inválido para gerar PDF."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if len(dados) == 0:
              return Response({"message": "Nenhum dado encontrado."}, status=status.HTTP_204_NO_CONTENT)

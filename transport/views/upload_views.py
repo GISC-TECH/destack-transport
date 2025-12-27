@@ -117,20 +117,44 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
         return UploadXMLSerializer
 
     def _read_xml_file_content(self, file_obj):
-        if not file_obj: return None, "Objeto de arquivo não fornecido."
+        """
+        Lê o conteúdo de um arquivo XML com detecção automática de encoding.
+
+        Tenta múltiplos encodings comuns em XMLs fiscais brasileiros:
+        1. UTF-8 (padrão para XMLs novos)
+        2. Windows-1252 / CP1252 (comum em sistemas legados)
+        3. ISO-8859-1 / Latin-1 (fallback universal)
+
+        Returns:
+            tuple: (conteúdo_str, erro_str) - erro é None se sucesso
+        """
+        if not file_obj:
+            return None, "Objeto de arquivo não fornecido."
+
+        # Encodings a tentar, na ordem de preferência
+        encodings_to_try = ['utf-8', 'cp1252', 'iso-8859-1']
+
         try:
             file_obj.seek(0)
+            raw_content = file_obj.read()
+
             content = None
-            error_msg = None
-            try:
-                content = file_obj.read().decode('utf-8').strip()
-            except UnicodeDecodeError:
-                file_obj.seek(0)
-                content = file_obj.read().decode('latin-1').strip()
-            
+            for encoding in encodings_to_try:
+                try:
+                    content = raw_content.decode(encoding).strip()
+                    break  # Sucesso - sai do loop
+                except UnicodeDecodeError:
+                    continue  # Tenta próximo encoding
+
+            if content is None:
+                # Último recurso: decodifica ignorando erros
+                content = raw_content.decode('utf-8', errors='replace').strip()
+                logger.warning(f"XML {file_obj.name}: encoding não detectado, usando UTF-8 com substituição de caracteres")
+
             # Remover BOM (Byte Order Mark) se presente
-            if content and content.startswith('\ufeff'):
+            if content.startswith('\ufeff'):
                 content = content[1:]
+
             return content, None
         except Exception as e:
             return None, f"Erro ao ler conteúdo do arquivo {file_obj.name}: {str(e)}"
@@ -316,7 +340,7 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
         
         xml_content_principal, error_msg_p = self._read_xml_file_content(arquivo_principal_obj)
         if error_msg_p:
-            return Response({"error": error_msg_p, "filename": arquivo_principal_obj.name}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": error_msg_p, "filename": arquivo_principal_obj.name}, status=status.HTTP_400_BAD_REQUEST)
 
         xml_content_retorno = None
         if arquivo_retorno_obj:
@@ -332,7 +356,7 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
             tipo_detectado, _chave_detectada, _is_ret, xml_dict_principal, root_tag_principal = self._identificar_xml_e_chave(arquivo_principal_obj.name, xml_content_principal)
 
             if not xml_dict_principal or not root_tag_principal:
-                 return Response({"error": "Tag raiz do XML principal não identificada ou XML inválido.", "filename": arquivo_principal_obj.name}, status=status.HTTP_400_BAD_REQUEST)
+                 return Response({"detail": "Tag raiz do XML principal não identificada ou XML inválido.", "filename": arquivo_principal_obj.name}, status=status.HTTP_400_BAD_REQUEST)
 
             logger.info(
                 "INFO: Upload Individual - Raiz: %s, Arq: %s, Tipo Det.: %s",
@@ -356,7 +380,7 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                     # Fallback para XMLs de evento que não foram identificados corretamente
                     return self._process_evento(xml_content_principal, xml_content_retorno, arquivo_principal_obj)
                 return Response({
-                    "error": f"Tipo de XML não reconhecido. Raiz: '{root_tag_principal}'. Tipo detectado: '{tipo_detectado}'", "filename": arquivo_principal_obj.name
+                    "detail": f"Tipo de XML não reconhecido. Raiz: '{root_tag_principal}'. Tipo detectado: '{tipo_detectado}'", "filename": arquivo_principal_obj.name
                 }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             logger.warning(
@@ -365,43 +389,43 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                 arquivo_principal_obj.name,
             )
             traceback.print_exc()
-            return Response({"error": f"Erro inesperado no processamento do XML: {str(e)}", "filename": arquivo_principal_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": f"Erro inesperado no processamento do XML: {str(e)}", "filename": arquivo_principal_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _process_cte(self, xml_content, arquivo_obj, xml_dict_principal):
         # ... (Mantido, usar self._get_chave_from_dict e self._get_chave_from_regex)
         chave = self._get_chave_from_dict(xml_dict_principal, 'CTe') or self._get_chave_from_regex(xml_content, 'CTe')
-        if not chave: return Response({"error": "Chave CT-e não identificada.", "filename": arquivo_obj.name}, status=status.HTTP_400_BAD_REQUEST)
+        if not chave: return Response({"detail": "Chave CT-e não identificada.", "filename": arquivo_obj.name}, status=status.HTTP_400_BAD_REQUEST)
         versao = safe_get(xml_dict_principal, 'CTe.infCte.@versao') or '4.00'
         try:
             cte, created = CTeDocumento.objects.update_or_create(chave=chave, defaults={'xml_original': xml_content, 'processado': False, 'versao': versao})
             if arquivo_obj and (created or not cte.arquivo_xml): cte.arquivo_xml.save(arquivo_obj.name, arquivo_obj, save=False) 
             cte.save()
-        except Exception as db_err: return Response({"error": f"DB Error (CTe {chave}): {str(db_err)}", "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as db_err: return Response({"detail": f"DB Error (CTe {chave}): {str(db_err)}", "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
             if parse_cte_completo(cte):
                 return Response({"message": f"CT-e {'reprocessado' if not created else 'processado'}.", "id": str(cte.id), "chave": cte.chave, "reprocessamento": not created, "filename": arquivo_obj.name}, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
-            return Response({"error": "Falha parser CT-e.", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Falha parser CT-e.", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as parse_err:
             cte.processado = False; cte.save(update_fields=['processado'])
-            return Response({"error": f"Erro parser CT-e: {str(parse_err)}", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": f"Erro parser CT-e: {str(parse_err)}", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _process_mdfe(self, xml_content, arquivo_obj, xml_dict_principal):
         # ... (Mantido, usar self._get_chave_from_dict e self._get_chave_from_regex)
         chave = self._get_chave_from_dict(xml_dict_principal, 'MDFe') or self._get_chave_from_regex(xml_content, 'MDFe')
-        if not chave: return Response({"error": "Chave MDF-e não identificada.", "filename": arquivo_obj.name}, status=status.HTTP_400_BAD_REQUEST)
+        if not chave: return Response({"detail": "Chave MDF-e não identificada.", "filename": arquivo_obj.name}, status=status.HTTP_400_BAD_REQUEST)
         versao = safe_get(xml_dict_principal, 'MDFe.infMDFe.@versao') or '3.00'
         try:
             mdfe, created = MDFeDocumento.objects.update_or_create(chave=chave, defaults={'xml_original': xml_content, 'processado': False, 'versao': versao})
             if arquivo_obj and (created or not mdfe.arquivo_xml): mdfe.arquivo_xml.save(arquivo_obj.name, arquivo_obj, save=False)
             mdfe.save()
-        except Exception as db_err: return Response({"error": f"DB Error (MDF-e {chave}): {str(db_err)}", "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as db_err: return Response({"detail": f"DB Error (MDF-e {chave}): {str(db_err)}", "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
             if parse_mdfe_completo(mdfe):
                 return Response({"message": f"MDF-e {'reprocessado' if not created else 'processado'}.", "id": str(mdfe.id), "chave": mdfe.chave, "reprocessamento": not created, "filename": arquivo_obj.name}, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
-            return Response({"error": "Falha parser MDF-e.", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Falha parser MDF-e.", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as parse_err:
             mdfe.processado = False; mdfe.save(update_fields=['processado'])
-            return Response({"error": f"Erro parser MDF-e: {str(parse_err)}", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": f"Erro parser MDF-e: {str(parse_err)}", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _process_evento(self, xml_content_principal_evento, xml_content_retorno_opcional, arquivo_obj_principal_evento):
         # ... (Mantido, mas garantir que `parse_evento` em `services/parser_eventos.py` está robusto)
@@ -422,10 +446,10 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                 "documento_chave": doc_chave_afetada, "documento_id": doc_id_afetado,
                 "detalhes_evento": dados_adicionais, "filename": filename
             }, status=status.HTTP_201_CREATED)
-        except ValueError as ve: return Response({"error": str(ve), "filename": filename}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError as ve: return Response({"detail": str(ve), "filename": filename}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             traceback.print_exc()
-            return Response({"error": f"Erro ao processar evento: {str(e)}", "filename": filename}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": f"Erro ao processar evento: {str(e)}", "filename": filename}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
     @swagger_auto_schema(
@@ -440,7 +464,7 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
 
         todos_arquivos_obj_list = request.FILES.getlist('arquivos_xml')
         if not todos_arquivos_obj_list:
-            return Response({"error": "Nenhum arquivo XML fornecido."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Nenhum arquivo XML fornecido."}, status=status.HTTP_400_BAD_REQUEST)
 
         logger.info(f"Iniciando upload em lote simplificado... {len(todos_arquivos_obj_list)} arquivos")
         
