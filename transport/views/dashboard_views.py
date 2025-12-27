@@ -57,9 +57,15 @@ class DashboardGeralAPIView(APIView):
                 data_inicio = date(hoje.year, hoje.month, 1)
                 data_fim = date(hoje.year, hoje.month + 1, 1) - timedelta(days=1) if hoje.month != 12 else date(hoje.year, 12, 31)
             elif periodo == 'trimestre':
-                trimestre = (hoje.month - 1) // 3
-                data_inicio = date(hoje.year, trimestre * 3 + 1, 1)
-                prox_trimestre_inicio = date(hoje.year, (trimestre + 1) * 3 + 1, 1) if trimestre < 3 else date(hoje.year + 1, 1, 1)
+                trimestre = (hoje.month - 1) // 3  # 0=Q1, 1=Q2, 2=Q3, 3=Q4
+                mes_inicio_trimestre = trimestre * 3 + 1  # 1, 4, 7, 10
+                data_inicio = date(hoje.year, mes_inicio_trimestre, 1)
+                # Calcula o próximo trimestre corretamente
+                if trimestre < 3:
+                    prox_trimestre_inicio = date(hoje.year, (trimestre + 1) * 3 + 1, 1)
+                else:
+                    # Q4: próximo trimestre é Q1 do próximo ano
+                    prox_trimestre_inicio = date(hoje.year + 1, 1, 1)
                 data_fim = prox_trimestre_inicio - timedelta(days=1)
             else:  # ano
                 data_inicio = date(hoje.year, 1, 1)
@@ -70,6 +76,10 @@ class DashboardGeralAPIView(APIView):
                 data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
             except ValueError:
                 return Response({"error": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validar que data_fim >= data_inicio
+            if data_fim < data_inicio:
+                return Response({"error": "A data final deve ser maior ou igual à data inicial."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Ajusta data_fim para incluir o dia inteiro
         data_fim_query = data_fim + timedelta(days=1)
@@ -232,9 +242,15 @@ class FinanceiroPainelAPIView(APIView):
                 data_inicio = date(hoje.year, hoje.month, 1)
                 data_fim = date(hoje.year, hoje.month + 1, 1) - timedelta(days=1) if hoje.month != 12 else date(hoje.year, 12, 31)
             elif periodo == 'trimestre':
-                trimestre = (hoje.month - 1) // 3
-                data_inicio = date(hoje.year, trimestre * 3 + 1, 1)
-                prox_trimestre_inicio = date(hoje.year, (trimestre + 1) * 3 + 1, 1) if trimestre < 3 else date(hoje.year + 1, 1, 1)
+                trimestre = (hoje.month - 1) // 3  # 0=Q1, 1=Q2, 2=Q3, 3=Q4
+                mes_inicio_trimestre = trimestre * 3 + 1  # 1, 4, 7, 10
+                data_inicio = date(hoje.year, mes_inicio_trimestre, 1)
+                # Calcula o próximo trimestre corretamente
+                if trimestre < 3:
+                    prox_trimestre_inicio = date(hoje.year, (trimestre + 1) * 3 + 1, 1)
+                else:
+                    # Q4: próximo trimestre é Q1 do próximo ano
+                    prox_trimestre_inicio = date(hoje.year + 1, 1, 1)
                 data_fim = prox_trimestre_inicio - timedelta(days=1)
             else:  # ano
                 data_inicio = date(hoje.year, 1, 1)
@@ -245,6 +261,10 @@ class FinanceiroPainelAPIView(APIView):
                 data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
             except ValueError:
                 return Response({"error": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validar que data_fim >= data_inicio
+            if data_fim < data_inicio:
+                return Response({"error": "A data final deve ser maior ou igual à data inicial."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Ajusta data_fim para incluir o dia inteiro
         data_fim_query = data_fim + timedelta(days=1)

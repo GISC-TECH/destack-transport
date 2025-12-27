@@ -250,7 +250,7 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                     # Mapeia tipo_proprietario do cadastro para prop_tp do MDF-e
                     # Cadastro: '00'=Próprio, '01'=Arrendado, '02'=Agregado
                     # MDF-e: '0'=TAC-Agregado, '1'=TAC-Independente, '2'=Outros
-                    if veiculo_cadastro:
+                    if veiculo_cadastro is not None:
                         # Se veículo está no cadastro, usa tipo do cadastro
                         # '02' (Agregado no cadastro) equivale a '0' (TAC-Agregado no MDF-e)
                         tipo_cadastro = veiculo_cadastro.tipo_proprietario
@@ -260,7 +260,8 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                             continue
                     else:
                         # Sem cadastro, usa prop_tp do MDF-e (comportamento antigo)
-                        if veiculo.prop_tp != tipo_veiculo:
+                        prop_tp = getattr(veiculo, 'prop_tp', None)
+                        if prop_tp != tipo_veiculo:
                             contador['tipo_diferente'] += 1
                             continue
 
@@ -269,19 +270,27 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                 condutor_nome = condutor.nome if condutor else (veiculo.prop_razao_social or "Condutor não identificado")
                 condutor_cpf = condutor.cpf if condutor else veiculo.prop_cpf
 
-                # Criar pagamento
-                PagamentoAgregado.objects.create(
+                # Criar pagamento usando get_or_create para evitar race condition
+                # Se outro request já criou o pagamento para este CT-e, ignora
+                pagamento, created = PagamentoAgregado.objects.get_or_create(
                     cte=cte,
-                    placa=veiculo.placa,
-                    condutor_nome=condutor_nome,
-                    condutor_cpf=condutor_cpf,
-                    valor_frete_total=cte.prestacao.valor_total_prestado,
-                    percentual_repasse=percentual_decimal,
-                    # valor_repassado é calculado no save()
-                    data_prevista=data_prevista,
-                    status='pendente'
+                    defaults={
+                        'placa': veiculo.placa,
+                        'condutor_nome': condutor_nome,
+                        'condutor_cpf': condutor_cpf,
+                        'valor_frete_total': cte.prestacao.valor_total_prestado,
+                        'percentual_repasse': percentual_decimal,
+                        # valor_repassado é calculado no save()
+                        'data_prevista': data_prevista,
+                        'status': 'pendente'
+                    }
                 )
-                contador['criados'] += 1
+                if created:
+                    contador['criados'] += 1
+                else:
+                    # Pagamento já existia (criado por outro request concorrente)
+                    contador['avisos'] += 1
+                    avisos_detalhados.append(f"CT-e {cte.chave[-8:]}: Pagamento já existe (concorrência).")
             except Exception as e:
                 erros_detalhados.append(f"CT-e {cte.chave[-8:]}: {str(e)}")
                 contador['erros'] += 1

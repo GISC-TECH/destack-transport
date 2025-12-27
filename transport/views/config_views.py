@@ -297,9 +297,20 @@ class BackupAPIView(viewsets.ViewSet):
                 db_user = db_settings.get('USER')
                 db_host = db_settings.get('HOST', 'localhost')
                 db_port = db_settings.get('PORT', '5432')
-                db_password = db_settings.get('PASSWORD') # Pega a senha das settings
+                db_password = db_settings.get('PASSWORD')
+
+                # Usar arquivo .pgpass temporário em vez de variável de ambiente
+                # Isso evita expor a senha em `ps aux`
+                pgpass_file = None
                 if db_password:
-                     env['PGPASSWORD'] = db_password # Define PGPASSWORD no ambiente
+                    import stat
+                    pgpass_file = os.path.join(tempfile.gettempdir(), f'.pgpass_{timestamp}')
+                    with open(pgpass_file, 'w') as f:
+                        # Formato: hostname:port:database:username:password
+                        f.write(f"{db_host}:{db_port}:{db_name}:{db_user}:{db_password}\n")
+                    os.chmod(pgpass_file, stat.S_IRUSR | stat.S_IWUSR)  # 600 - somente owner
+                    env['PGPASSFILE'] = pgpass_file
+
                 command = f"pg_dump -U {db_user} -h {db_host} -p {db_port} -d {db_name} -f \"{filepath}\""
             # Adicionar comandos para outros bancos (MySQL, etc.) se necessário
             else:
@@ -307,12 +318,20 @@ class BackupAPIView(viewsets.ViewSet):
 
             # Executa o comando
             logger.info("Executando comando de backup: %s", command)
-            result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True, encoding='utf-8', errors='ignore', env=env)
-            logger.info(
-                "Comando de backup concluído. Saída: %s, Erro: %s",
-                result.stdout,
-                result.stderr,
-            )
+            try:
+                result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True, encoding='utf-8', errors='ignore', env=env)
+                logger.info(
+                    "Comando de backup concluído. Saída: %s, Erro: %s",
+                    result.stdout,
+                    result.stderr,
+                )
+            finally:
+                # Limpa arquivo .pgpass temporário (se existir)
+                if 'pgpass_file' in dir() and pgpass_file and os.path.exists(pgpass_file):
+                    try:
+                        os.remove(pgpass_file)
+                    except OSError:
+                        pass
 
             # Calcula tamanho e hash MD5
             if not os.path.exists(filepath):
