@@ -58,7 +58,8 @@ function PagamentosList() {
   const [filtros, setFiltros] = useState({
     status: '',
     data_inicio: defaultDates.data_inicio,
-    data_fim: defaultDates.data_fim
+    data_fim: defaultDates.data_fim,
+    busca: ''  // Busca por número CT-e, placa ou condutor
   });
 
   const handleDateFilterChange = (newFiltros) => {
@@ -100,7 +101,7 @@ function PagamentosList() {
     try {
       setLoading(true);
       setError(null);
-      const params = { ...filtrosAtivos };
+      const params = { ...filtrosAtivos, page_size: 1000 };  // Trazer mais resultados
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
 
       let result;
@@ -778,6 +779,23 @@ function PagamentosList() {
       {/* Filtros */}
       <div className="filtros-section">
         <div className="filtros-form">
+          <input
+            type="text"
+            placeholder="Buscar por CT-e, placa ou condutor..."
+            value={filtros.busca}
+            onChange={(e) => setFiltros({...filtros, busca: e.target.value})}
+            onKeyDown={(e) => e.key === 'Enter' && loadPagamentos()}
+            className="input-filter"
+            style={{ minWidth: '250px' }}
+          />
+          <button
+            type="button"
+            onClick={() => loadPagamentos()}
+            className="btn-secondary"
+            style={{ padding: '8px 16px' }}
+          >
+            Buscar
+          </button>
           <select
             value={filtros.status}
             onChange={(e) => {

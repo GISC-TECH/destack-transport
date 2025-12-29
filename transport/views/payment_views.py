@@ -150,6 +150,20 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         if texto:
             queryset = queryset.filter(condutor_nome__icontains=texto)
 
+        # Filtro por número do CT-e
+        cte_numero = params.get('cte_numero')
+        if cte_numero:
+            queryset = queryset.filter(cte__identificacao__numero=cte_numero)
+
+        # Busca geral (número CT-e, placa ou condutor)
+        busca = params.get('busca')
+        if busca:
+            queryset = queryset.filter(
+                Q(cte__identificacao__numero__icontains=busca) |
+                Q(placa__icontains=busca) |
+                Q(condutor_nome__icontains=busca)
+            )
+
         # Selecionar/Prefetch dados relacionados para otimizar
         queryset = queryset.select_related('cte', 'cte__identificacao')
 
@@ -443,6 +457,20 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             # Filtra períodos <= data_fim
             periodo_fim = data_fim[:7]  # Pega AAAA-MM
             queryset = queryset.filter(periodo__lte=periodo_fim)
+
+        # Filtro por número do CT-e
+        cte_numero = params.get('cte_numero')
+        if cte_numero:
+            queryset = queryset.filter(cte__identificacao__numero=cte_numero)
+
+        # Busca geral (número CT-e, placa ou motorista)
+        busca = params.get('busca')
+        if busca:
+            queryset = queryset.filter(
+                Q(cte__identificacao__numero__icontains=busca) |
+                Q(veiculo__placa__icontains=busca) |
+                Q(motorista_nome__icontains=busca)
+            )
 
         # Selecionar/Prefetch dados relacionados para otimizar
         queryset = queryset.select_related('veiculo', 'cte', 'cte__identificacao')

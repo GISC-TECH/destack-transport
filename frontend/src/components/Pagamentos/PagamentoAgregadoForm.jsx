@@ -319,8 +319,15 @@ function PagamentoAgregadoForm() {
       setTimeout(() => navigate('/pagamentos'), 500);
     } catch (err) {
       console.error('Erro ao salvar pagamento:', err);
-      toast.error('Erro ao salvar pagamento. Verifique os dados.');
-      setError('Erro ao salvar pagamento. Verifique os dados e tente novamente.');
+      // Mostrar mensagem específica do erro
+      const errorMsg = err.message || 'Erro ao salvar pagamento';
+      if (errorMsg.includes('já existe') || errorMsg.includes('cte')) {
+        toast.error('Este CT-e já possui um pagamento cadastrado. Edite o pagamento existente.');
+        setError('Este CT-e já possui um pagamento cadastrado. Para modificar, edite o pagamento existente na lista.');
+      } else {
+        toast.error(errorMsg);
+        setError(errorMsg);
+      }
     } finally {
       setSaving(false);
     }
@@ -389,23 +396,30 @@ function PagamentoAgregadoForm() {
                     <div
                       key={cte.id}
                       className="cte-search-item"
-                      onClick={() => handleSelecionarCte(cte)}
+                      onClick={() => !cte.tem_pagamento_agregado && handleSelecionarCte(cte)}
                       style={{
                         padding: '12px 15px',
-                        cursor: 'pointer',
+                        cursor: cte.tem_pagamento_agregado ? 'not-allowed' : 'pointer',
                         borderBottom: '1px solid #eee',
-                        transition: 'background 0.2s'
+                        transition: 'background 0.2s',
+                        opacity: cte.tem_pagamento_agregado ? 0.6 : 1,
+                        background: cte.tem_pagamento_agregado ? '#fff5f5' : '#fff'
                       }}
-                      onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
-                      onMouseLeave={(e) => e.target.style.background = '#fff'}
+                      onMouseEnter={(e) => !cte.tem_pagamento_agregado && (e.currentTarget.style.background = '#f5f5f5')}
+                      onMouseLeave={(e) => e.currentTarget.style.background = cte.tem_pagamento_agregado ? '#fff5f5' : '#fff'}
                     >
-                      <div style={{ fontWeight: '600', color: '#333' }}>
+                      <div style={{ fontWeight: '600', color: cte.tem_pagamento_agregado ? '#999' : '#333', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         CT-e #{cte.numero_cte || cte.numero}
+                        {cte.tem_pagamento_agregado && (
+                          <span style={{ fontSize: '11px', background: '#e74c3c', color: '#fff', padding: '2px 6px', borderRadius: '4px' }}>
+                            Já tem pagamento
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
                         {cte.remetente_nome || 'N/I'} → {cte.destinatario_nome || 'N/I'}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#27ae60', fontWeight: '500', marginTop: '2px' }}>
+                      <div style={{ fontSize: '13px', color: cte.tem_pagamento_agregado ? '#999' : '#27ae60', fontWeight: '500', marginTop: '2px' }}>
                         R$ {(cte.valor_total || cte.valor_prestacao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                     </div>

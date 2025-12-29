@@ -197,6 +197,7 @@ class CTeDocumentoListSerializer(serializers.ModelSerializer):
     uf_fim = serializers.CharField(source='identificacao.uf_fim', read_only=True, allow_null=True)
     placa_principal = serializers.SerializerMethodField() # Obtém a placa via método
     status = serializers.SerializerMethodField() # Obtém o status via método
+    tem_pagamento_agregado = serializers.SerializerMethodField() # Indica se já tem pagamento agregado
 
     class Meta:
         model = CTeDocumento
@@ -204,7 +205,7 @@ class CTeDocumentoListSerializer(serializers.ModelSerializer):
             'id', 'chave', 'numero_cte', 'serie_cte', 'modalidade', 'data_emissao', 'remetente_nome',
             'destinatario_nome', 'uf_inicio', 'uf_fim', 'valor_total',
             'placa_principal', 'status', 'processado', 'data_upload',
-            'pago', 'data_pagamento', 'observacao_pagamento'
+            'pago', 'data_pagamento', 'observacao_pagamento', 'tem_pagamento_agregado'
         ]
         read_only_fields = fields # Garante que a lista seja apenas leitura
 
@@ -229,6 +230,10 @@ class CTeDocumentoListSerializer(serializers.ModelSerializer):
         if obj.processado:
             return "Processado (s/ Prot.)"
         return "Pendente"
+
+    def get_tem_pagamento_agregado(self, obj):
+        """ Verifica se o CT-e já tem um pagamento agregado associado. """
+        return hasattr(obj, 'pagamento_agregado') and obj.pagamento_agregado is not None
 
 
 class CTeDocumentoDetailSerializer(serializers.ModelSerializer):
