@@ -749,7 +749,8 @@ export const pagamentosAPI = {
     },
 
     update: async (id, data) => {
-      const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/`, mutationOptions('PUT', data));
+      // Usa PATCH para atualização parcial (ex: dar baixa só com status e data)
+      const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/`, mutationOptions('PATCH', data));
       if (!response.ok) throw new Error('Erro ao atualizar pagamento');
       return response.json();
     },
@@ -814,7 +815,8 @@ export const pagamentosAPI = {
     },
 
     update: async (id, data) => {
-      const response = await fetch(`${API_BASE}/pagamentos/proprios/${id}/`, mutationOptions('PUT', data));
+      // Usa PATCH para atualização parcial (ex: dar baixa só com status e data)
+      const response = await fetch(`${API_BASE}/pagamentos/proprios/${id}/`, mutationOptions('PATCH', data));
       if (!response.ok) throw new Error('Erro ao atualizar pagamento');
       return response.json();
     },
