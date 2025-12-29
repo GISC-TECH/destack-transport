@@ -78,6 +78,7 @@ function VencimentosPainel() {
   const [loading, setLoading] = useState(true);
   const [usingMockData, setUsingMockData] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadVencimentos();
   }, [diasFiltro, mostrarTodos]);

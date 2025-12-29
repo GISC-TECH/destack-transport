@@ -96,6 +96,19 @@ const validateId = (id, name = 'ID') => {
   return id;
 };
 
+// Helper para download de arquivos (elimina duplicação de código)
+const triggerDownload = async (response, filename) => {
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+};
+
 // Helper para tratar erros HTTP com mensagens específicas
 const handleHttpError = async (response, defaultMsg) => {
   if (response.status === 404) {
@@ -106,9 +119,18 @@ const handleHttpError = async (response, defaultMsg) => {
   }
   try {
     const error = await response.json();
-    throw new Error(JSON.stringify(error));
+    // Extract meaningful message
+    if (error.detail) throw new Error(error.detail);
+    if (error.message) throw new Error(error.message);
+    if (error.error) throw new Error(error.error);
+    // Handle field errors
+    const firstField = Object.keys(error)[0];
+    if (firstField && Array.isArray(error[firstField])) {
+      throw new Error(`${firstField}: ${error[firstField][0]}`);
+    }
+    throw new Error(defaultMsg);
   } catch (e) {
-    if (e.message.startsWith('{')) throw e; // Já é um JSON
+    if (e.message && !e.message.includes('Unexpected')) throw e;
     throw new Error(defaultMsg);
   }
 };
@@ -222,16 +244,7 @@ export const clientesAPI = {
     const params = new URLSearchParams(filters);
     const response = await fetch(`${API_BASE}/clientes/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar clientes');
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `clientes_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    await triggerDownload(response, `clientes_${new Date().toISOString().split('T')[0]}.csv`);
   }
 };
 
@@ -289,16 +302,7 @@ export const motoristasAPI = {
     const params = new URLSearchParams(filters);
     const response = await fetch(`${API_BASE}/motoristas/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar motoristas');
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `motoristas_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    await triggerDownload(response, `motoristas_${new Date().toISOString().split('T')[0]}.csv`);
   }
 };
 
@@ -362,16 +366,7 @@ export const veiculosAPI = {
     const params = new URLSearchParams(filters);
     const response = await fetch(`${API_BASE}/veiculos/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar veículos');
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `veiculos_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    await triggerDownload(response, `veiculos_${new Date().toISOString().split('T')[0]}.csv`);
   },
 
   compartimentos: {
@@ -535,16 +530,7 @@ export const cteAPI = {
     const params = new URLSearchParams(filters);
     const response = await fetch(`${API_BASE}/ctes/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar CT-es');
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ctes_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    await triggerDownload(response, `ctes_${new Date().toISOString().split('T')[0]}.csv`);
   },
 
   marcarPagamento: async (id, pago, observacao = null, dataPagamento = null) => {
@@ -654,16 +640,7 @@ export const mdfeAPI = {
     const params = new URLSearchParams(filters);
     const response = await fetch(`${API_BASE}/mdfes/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar MDF-es');
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `mdfes_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    await triggerDownload(response, `mdfes_${new Date().toISOString().split('T')[0]}.csv`);
   }
 };
 
@@ -781,16 +758,7 @@ export const pagamentosAPI = {
       const params = new URLSearchParams(filters);
       const response = await fetch(`${API_BASE}/pagamentos/agregados/export/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao exportar pagamentos');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `pagamentos_agregados_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      await triggerDownload(response, `pagamentos_agregados_${new Date().toISOString().split('T')[0]}.csv`);
     },
 
     // Converte pagamento agregado para próprio
@@ -863,16 +831,7 @@ export const pagamentosAPI = {
       const params = new URLSearchParams(filters);
       const response = await fetch(`${API_BASE}/pagamentos/proprios/export/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao exportar pagamentos');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `pagamentos_proprios_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      await triggerDownload(response, `pagamentos_proprios_${new Date().toISOString().split('T')[0]}.csv`);
     },
 
     // Converte pagamento próprio para agregado
@@ -992,16 +951,7 @@ export const manutencaoAPI = {
     const params = new URLSearchParams(filters);
     const response = await fetch(`${API_BASE}/manutencoes/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar manutenções');
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `manutencoes_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    await triggerDownload(response, `manutencoes_${new Date().toISOString().split('T')[0]}.csv`);
   },
 
   // Painel de manutenção
@@ -1150,7 +1100,7 @@ export const relatoriosAPI = {
       try {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erro ao gerar relatorio');
-      } catch (e) {
+      } catch {
         throw new Error('Erro ao gerar relatorio');
       }
     }

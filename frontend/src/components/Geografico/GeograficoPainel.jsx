@@ -28,12 +28,14 @@ function GeograficoPainel() {
   const [dados, setDados] = useState(null);
   const [filtros, setFiltros] = useState(defaultDates);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleDateFilterChange = useCallback((newFiltros) => {
     setFiltros(newFiltros);
     loadDados(newFiltros);
   }, []);
 
   // Carrega na montagem inicial
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadDados(defaultDates);
   }, []);

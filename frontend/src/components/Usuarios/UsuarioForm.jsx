@@ -25,6 +25,7 @@ function UsuarioForm() {
     is_superuser: false
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isEdit) {
       loadUsuario();

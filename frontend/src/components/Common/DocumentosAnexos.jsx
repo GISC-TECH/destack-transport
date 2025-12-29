@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { documentosAPI } from '../../services/api';
 import './DocumentosAnexos.css';
 
@@ -96,7 +96,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
   const [saving, setSaving] = useState(false);
 
   // API baseada no tipo de entidade
-  const getAPI = () => {
+  const getAPI = useCallback(() => {
     switch (entidadeTipo) {
       case 'cliente':
         return documentosAPI.clientes;
@@ -107,10 +107,10 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
       default:
         throw new Error('Tipo de entidade invalido');
     }
-  };
+  }, [entidadeTipo]);
 
   // Carrega documentos
-  const loadDocumentos = async () => {
+  const loadDocumentos = useCallback(async () => {
     if (!entidadeId) return;
 
     try {
@@ -126,11 +126,11 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [entidadeId, getAPI]);
 
   useEffect(() => {
     loadDocumentos();
-  }, [entidadeId, entidadeTipo]);
+  }, [loadDocumentos]);
 
   // Handler para selecao de arquivo
   const handleFileSelect = (e) => {

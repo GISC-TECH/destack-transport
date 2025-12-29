@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
@@ -10,10 +10,15 @@ function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const prevPathnameRef = useRef(location.pathname);
 
   // Fechar menu mobile ao mudar de rota
   useEffect(() => {
-    setIsMobileOpen(false);
+    if (prevPathnameRef.current !== location.pathname) {
+      prevPathnameRef.current = location.pathname;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsMobileOpen(false);
+    }
   }, [location.pathname]);
 
   // Fechar menu mobile ao redimensionar para desktop

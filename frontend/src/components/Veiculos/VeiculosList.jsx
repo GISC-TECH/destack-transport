@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { veiculosAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import './VeiculosList.css';
 
 function VeiculosList() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
   const [filtros, setFiltros] = useState({
     ativo: 'true',
     tipo_proprietario: '',
@@ -24,6 +25,7 @@ function VeiculosList() {
   const [showAlerts, setShowAlerts] = useState(false);
   const [vencimentos, setVencimentos] = useState([]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadVeiculos();
   }, [filtros]);
@@ -34,7 +36,7 @@ function VeiculosList() {
       setError(null);
 
       const params = Object.fromEntries(
-        Object.entries(filtros).filter(([_, v]) => v !== '')
+        Object.entries(filtros).filter(([, v]) => v !== '')
       );
 
       const data = await veiculosAPI.list(params);
@@ -87,11 +89,11 @@ function VeiculosList() {
   const handleExport = async () => {
     try {
       const params = Object.fromEntries(
-        Object.entries(filtros).filter(([_, v]) => v !== '')
+        Object.entries(filtros).filter(([, v]) => v !== '')
       );
       await veiculosAPI.export(params);
     } catch (err) {
-      alert('Erro ao exportar: ' + err.message);
+      toast.error('Erro ao exportar: ' + err.message);
     }
   };
 

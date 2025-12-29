@@ -51,6 +51,7 @@ function PagamentoProprioForm() {
     obs: ''
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isEditing) {
       loadPagamento();

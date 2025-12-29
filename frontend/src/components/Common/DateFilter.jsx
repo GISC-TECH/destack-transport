@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './DateFilter.css';
 
 // Funcao para calcular datas baseadas no periodo (fora do componente)

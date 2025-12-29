@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { dashboardAPI, manutencaoAPI } from '../../services/api';
 import Loading from '../Common/Loading';
@@ -13,20 +13,18 @@ import './Dashboard.css';
 
 const COLORS = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
 
-// Funcao para calcular datas do mes atual
-const getDefaultDates = () => {
-  const hoje = new Date();
-  const dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  const dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-  return {
-    periodo: 'mes',
-    data_inicio: dataInicio.toISOString().split('T')[0],
-    data_fim: dataFim.toISOString().split('T')[0]
-  };
-};
-
 function Dashboard() {
-  const defaultDates = getDefaultDates();
+  // useMemo ensures defaultDates is stable across renders
+  const defaultDates = useMemo(() => {
+    const hoje = new Date();
+    const dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    return {
+      periodo: 'mes',
+      data_inicio: dataInicio.toISOString().split('T')[0],
+      data_fim: dataFim.toISOString().split('T')[0]
+    };
+  }, []);
   const [data, setData] = useState(null);
   const [frotaData, setFrotaData] = useState(null);
   const [performanceData, setPerformanceData] = useState(null);
@@ -63,6 +61,7 @@ function Dashboard() {
   };
 
   // Carrega na montagem inicial
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadAllData(defaultDates);
   }, []);

@@ -47,6 +47,7 @@ function FinanceiroPainel() {
   };
 
   // Carrega na montagem inicial
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const defaultDates = getDefaultDates();
     setFiltros(defaultDates);

@@ -19,7 +19,7 @@ const getTituloFromTipo = (tipo) => {
 function AlertasSistema() {
   const [alertas, setAlertas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
   const [filtro, setFiltro] = useState('todos');
 
   useEffect(() => {

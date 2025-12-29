@@ -1,91 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motoristasAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import './MotoristasList.css';
 
-// Mock data para exibição quando API não está disponível
-const mockMotoristas = [
-  {
-    id: 1,
-    nome: 'José Carlos Silva',
-    cpf: '12345678901',
-    cpf_formatado: '123.456.789-01',
-    cnh: 'ABC1234567890',
-    categoria_cnh: 'E',
-    cnh_validade: '2025-08-15',
-    ativo: true,
-    documentos_vencendo: []
-  },
-  {
-    id: 2,
-    nome: 'Marcos Antônio Oliveira',
-    cpf: '98765432109',
-    cpf_formatado: '987.654.321-09',
-    cnh: 'DEF9876543210',
-    categoria_cnh: 'D',
-    cnh_validade: '2024-12-20',
-    ativo: true,
-    documentos_vencendo: [
-      { documento: 'CNH', validade: '2024-12-20', vencido: false, dias_restantes: 25 }
-    ]
-  },
-  {
-    id: 3,
-    nome: 'Pedro Henrique Santos',
-    cpf: '55566677788',
-    cpf_formatado: '555.666.777-88',
-    cnh: 'GHI5556667778',
-    categoria_cnh: 'E',
-    cnh_validade: '2026-03-10',
-    ativo: true,
-    documentos_vencendo: []
-  },
-  {
-    id: 4,
-    nome: 'Roberto Mendes',
-    cpf: '11122233344',
-    cpf_formatado: '111.222.333-44',
-    cnh: 'JKL1112223334',
-    categoria_cnh: 'C',
-    cnh_validade: '2024-11-05',
-    ativo: false,
-    documentos_vencendo: []
-  },
-  {
-    id: 5,
-    nome: 'Fernando Costa Lima',
-    cpf: '77788899900',
-    cpf_formatado: '777.888.999-00',
-    cnh: 'MNO7778889990',
-    categoria_cnh: 'E',
-    cnh_validade: '2025-06-30',
-    ativo: true,
-    documentos_vencendo: []
-  },
-  {
-    id: 6,
-    nome: 'Ricardo Alves',
-    cpf: '33344455566',
-    cpf_formatado: '333.444.555-66',
-    cnh: 'PQR3334445556',
-    categoria_cnh: 'D',
-    cnh_validade: '2024-12-01',
-    ativo: true,
-    documentos_vencendo: [
-      { documento: 'CNH', validade: '2024-12-01', vencido: false, dias_restantes: 5 }
-    ]
-  }
-];
-
 function MotoristasList() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [usingMockData, setUsingMockData] = useState(false);
   const [filtros, setFiltros] = useState({
     ativo: 'true',
     categoria_cnh: '',
@@ -99,6 +26,7 @@ function MotoristasList() {
   const [showAlerts, setShowAlerts] = useState(false);
   const [vencimentos, setVencimentos] = useState([]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadMotoristas();
   }, [filtros]);
@@ -109,7 +37,7 @@ function MotoristasList() {
       setError(null);
 
       const params = Object.fromEntries(
-        Object.entries(filtros).filter(([_, v]) => v !== '')
+        Object.entries(filtros).filter(([, v]) => v !== '')
       );
 
       const data = await motoristasAPI.list(params);
@@ -127,32 +55,11 @@ function MotoristasList() {
       } else {
         setMotoristas([]);
       }
-      setUsingMockData(false);
     } catch (err) {
       console.error('Erro ao carregar motoristas:', err);
-      // Usar dados mock quando API falhar
-      let filteredMock = [...mockMotoristas];
-
-      if (filtros.ativo !== '') {
-        filteredMock = filteredMock.filter(m =>
-          filtros.ativo === 'true' ? m.ativo : !m.ativo
-        );
-      }
-      if (filtros.categoria_cnh) {
-        filteredMock = filteredMock.filter(m => m.categoria_cnh === filtros.categoria_cnh);
-      }
-      if (filtros.q) {
-        const query = filtros.q.toLowerCase();
-        filteredMock = filteredMock.filter(m =>
-          m.nome.toLowerCase().includes(query) ||
-          m.cpf.includes(query) ||
-          m.cnh.toLowerCase().includes(query)
-        );
-      }
-
-      setMotoristas(filteredMock);
-      setPagination({ count: filteredMock.length, next: null, previous: null });
-      setUsingMockData(true);
+      setError('Erro ao carregar motoristas. Tente novamente.');
+      setMotoristas([]);
+      setPagination({ count: 0, next: null, previous: null });
     } finally {
       setLoading(false);
     }
@@ -161,43 +68,26 @@ function MotoristasList() {
   const loadVencimentos = async () => {
     try {
       setLoading(true);
-
-      if (usingMockData) {
-        // Usar mock data para vencimentos
-        const mockVencimentos = mockMotoristas.filter(m =>
-          m.documentos_vencendo && m.documentos_vencendo.length > 0
-        );
-        setVencimentos(mockVencimentos);
-        setShowAlerts(true);
-      } else {
-        const data = await motoristasAPI.vencimentos(30);
-        setVencimentos(data.results || data);
-        setShowAlerts(true);
-      }
-    } catch (err) {
-      // Fallback para mock
-      const mockVencimentos = mockMotoristas.filter(m =>
-        m.documentos_vencendo && m.documentos_vencendo.length > 0
-      );
-      setVencimentos(mockVencimentos);
+      setError(null);
+      const data = await motoristasAPI.vencimentos(30);
+      setVencimentos(data.results || data);
       setShowAlerts(true);
+    } catch (err) {
+      console.error('Erro ao carregar vencimentos:', err);
+      toast.error('Erro ao carregar vencimentos. Tente novamente.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleExport = async () => {
-    if (usingMockData) {
-      alert('Exportação não disponível em modo demonstração');
-      return;
-    }
     try {
       const params = Object.fromEntries(
-        Object.entries(filtros).filter(([_, v]) => v !== '')
+        Object.entries(filtros).filter(([, v]) => v !== '')
       );
       await motoristasAPI.export(params);
     } catch (err) {
-      alert('Erro ao exportar: ' + err.message);
+      toast.error('Erro ao exportar: ' + err.message);
     }
   };
 
@@ -209,6 +99,7 @@ function MotoristasList() {
   };
 
   if (loading) return <Loading message="Carregando motoristas..." />;
+  if (error) return <ErrorMessage message={error} onRetry={loadMotoristas} />;
 
   // Se mostrando alertas
   if (showAlerts) {
@@ -287,7 +178,7 @@ function MotoristasList() {
     <div className="motoristas-list">
       <PageHeader
         title="Motoristas"
-        subtitle={usingMockData ? "Modo Demonstracao" : `${pagination.count} registros`}
+        subtitle={`${pagination.count} registros`}
         icon={motoristasIcon}
         breadcrumbs={[{ label: 'Cadastros' }, { label: 'Motoristas' }]}
         actions={headerActions}

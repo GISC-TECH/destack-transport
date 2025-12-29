@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { mdfeAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import '../CTe/CTe.css';
 
 function MDFeDetail() {
   const { id } = useParams();
+  const toast = useToast();
   const [mdfe, setMdfe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadMDFe();
   }, [id]);
@@ -42,7 +45,7 @@ function MDFeDetail() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Erro ao baixar DAMDFE: ' + err.message);
+      toast.error('Erro ao baixar DAMDFE: ' + err.message);
     } finally {
       setActionLoading(null);
     }
@@ -61,7 +64,7 @@ function MDFeDetail() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Erro ao baixar XML: ' + err.message);
+      toast.error('Erro ao baixar XML: ' + err.message);
     } finally {
       setActionLoading(null);
     }
@@ -72,10 +75,10 @@ function MDFeDetail() {
     try {
       setActionLoading('reprocessar');
       await mdfeAPI.reprocessar(id);
-      alert('MDF-e reprocessado com sucesso!');
+      toast.success('MDF-e reprocessado com sucesso!');
       loadMDFe();
     } catch (err) {
-      alert('Erro ao reprocessar: ' + err.message);
+      toast.error('Erro ao reprocessar: ' + err.message);
     } finally {
       setActionLoading(null);
     }

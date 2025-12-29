@@ -53,6 +53,13 @@ function ToastItem({ toast, onClose }) {
   const { type, message, title, duration = 5000 } = toast;
   const toastConfig = TOAST_TYPES[type] || TOAST_TYPES.info;
 
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onClose(toast.id);
+    }, 300);
+  }, [onClose, toast.id]);
+
   useEffect(() => {
     if (duration > 0) {
       const timer = setTimeout(() => {
@@ -60,14 +67,7 @@ function ToastItem({ toast, onClose }) {
       }, duration);
       return () => clearTimeout(timer);
     }
-  }, [duration]);
-
-  const handleClose = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      onClose(toast.id);
-    }, 300);
-  };
+  }, [duration, handleClose]);
 
   return (
     <div className={`toast toast-${type} ${isExiting ? 'toast-exit' : ''}`}>

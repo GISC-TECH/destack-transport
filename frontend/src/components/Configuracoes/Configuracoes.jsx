@@ -14,6 +14,7 @@ function Configuracoes() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (activeTab === 'empresa') {
       loadEmpresa();
@@ -34,7 +35,7 @@ function Configuracoes() {
         // Se não existe, inicializa com objeto vazio
         setEmpresa(getEmpresaVazia());
       }
-    } catch (err) {
+    } catch {
       // Se não existe (404), inicializa com objeto vazio sem mostrar erro
       console.info('Configuração de empresa não encontrada, criando nova...');
       setEmpresa(getEmpresaVazia());

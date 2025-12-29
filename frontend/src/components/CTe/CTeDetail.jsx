@@ -1,23 +1,20 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { cteAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import './CTe.css';
 
 function CTeDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const toast = useToast();
   const [cte, setCte] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
 
-  useEffect(() => {
-    loadCTe();
-  }, [id]);
-
-  const loadCTe = async () => {
+  const loadCTe = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -28,7 +25,11 @@ function CTeDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadCTe();
+  }, [loadCTe]);
 
   const handleDownloadPDF = async () => {
     try {
@@ -43,7 +44,7 @@ function CTeDetail() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Erro ao baixar DACTE: ' + err.message);
+      toast.error('Erro ao baixar DACTE: ' + err.message);
     } finally {
       setActionLoading(null);
     }
@@ -62,7 +63,7 @@ function CTeDetail() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Erro ao baixar XML: ' + err.message);
+      toast.error('Erro ao baixar XML: ' + err.message);
     } finally {
       setActionLoading(null);
     }
@@ -73,10 +74,10 @@ function CTeDetail() {
     try {
       setActionLoading('reprocessar');
       await cteAPI.reprocessar(id);
-      alert('CT-e reprocessado com sucesso!');
+      toast.success('CT-e reprocessado com sucesso!');
       loadCTe();
     } catch (err) {
-      alert('Erro ao reprocessar: ' + err.message);
+      toast.error('Erro ao reprocessar: ' + err.message);
     } finally {
       setActionLoading(null);
     }

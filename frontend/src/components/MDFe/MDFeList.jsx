@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { mdfeAPI, dashboardAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
 import {
@@ -33,11 +33,12 @@ const getDefaultMDFeDates = () => {
 };
 
 function MDFeList() {
+  const toast = useToast();
   const defaultDates = getDefaultMDFeDates();
   const [mdfes, setMdfes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingGraficos, setLoadingGraficos] = useState(true);
-  const [error, setError] = useState(null);
+  const [_loadingGraficos, setLoadingGraficos] = useState(true);
+  const [_error, setError] = useState(null);
 
   // Modal de detalhes rapidos
   const [modalMdfe, setModalMdfe] = useState(null);
@@ -95,18 +96,21 @@ function MDFeList() {
   };
 
   // Carrega na montagem inicial
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadPainelMDFe(defaultDates);
     loadMDFes();
   }, []);
 
   // Handler para filtro de graficos
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleGraficosFilterChange = useCallback((dateFilters) => {
     setFiltrosGraficos(dateFilters);
     loadPainelMDFe(dateFilters);
   }, []);
 
   // Handler para filtro da tabela
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleTabelaFilterChange = useCallback((dateFilters) => {
     setFiltros(prev => ({
       ...prev,
@@ -134,11 +138,11 @@ function MDFeList() {
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       await mdfeAPI.export(params);
     } catch (err) {
-      alert('Erro ao exportar: ' + err.message);
+      toast.error('Erro ao exportar: ' + err.message);
     }
   };
 
-  const formatDate = (dateString) => {
+  const _formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
@@ -157,7 +161,7 @@ function MDFeList() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Erro ao baixar XML:', err);
-      alert('Erro ao baixar XML. Tente novamente.');
+      toast.error('Erro ao baixar XML. Tente novamente.');
     }
   };
 
@@ -176,7 +180,7 @@ function MDFeList() {
     setModalMdfe(null);
   };
 
-  const getStatusBadge = (mdfe) => {
+  const _getStatusBadge = (mdfe) => {
     if (mdfe.cancelamento) return <span className="badge badge-danger">Cancelado</span>;
     if (mdfe.encerrado) return <span className="badge badge-info">Encerrado</span>;
     if (mdfe.processado && mdfe.protocolo?.codigo_status === 100) {

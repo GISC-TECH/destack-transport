@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { clientesAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
@@ -37,13 +37,7 @@ function ClienteForm() {
     ativo: true
   });
 
-  useEffect(() => {
-    if (isEditing) {
-      loadCliente();
-    }
-  }, [id]);
-
-  const loadCliente = async () => {
+  const loadCliente = useCallback(async () => {
     try {
       setLoading(true);
       const result = await clientesAPI.get(id);
@@ -72,7 +66,13 @@ function ClienteForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEditing) {
+      loadCliente();
+    }
+  }, [isEditing, loadCliente]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -86,10 +86,13 @@ function ClienteForm() {
     const cep = formData.cep.replace(/\D/g, '');
     if (cep.length !== 8) return;
 
+    toast.info('Buscando CEP...');
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
-      if (!data.erro) {
+      if (data.erro) {
+        toast.warning('CEP não encontrado');
+      } else {
         setFormData(prev => ({
           ...prev,
           logradouro: data.logradouro || '',
@@ -100,6 +103,7 @@ function ClienteForm() {
       }
     } catch (err) {
       console.error('Erro ao buscar CEP:', err);
+      toast.error('Erro ao buscar CEP. Tente novamente.');
     }
   };
 

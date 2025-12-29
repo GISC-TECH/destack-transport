@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { cteAPI, dashboardAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
 import {
@@ -17,24 +16,23 @@ const API_BASE = '/api';
 // Cores para os graficos
 const COLORS = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6'];
 
-// Funcao para obter datas do mes atual
-const getDefaultDates = () => {
-  const hoje = new Date();
-  const dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  const dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-  return {
-    data_inicio: dataInicio.toISOString().split('T')[0],
-    data_fim: dataFim.toISOString().split('T')[0]
-  };
-};
-
 function CTeList() {
   const toast = useToast();
-  const defaultDates = getDefaultDates();
+
+  // useMemo ensures defaultDates is stable across renders
+  const defaultDates = useMemo(() => {
+    const hoje = new Date();
+    const dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    return {
+      data_inicio: dataInicio.toISOString().split('T')[0],
+      data_fim: dataFim.toISOString().split('T')[0]
+    };
+  }, []);
   const [ctes, setCtes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingGraficos, setLoadingGraficos] = useState(true);
-  const [error, setError] = useState(null);
+  const [_loadingGraficos, setLoadingGraficos] = useState(true);
+  const [_error, setError] = useState(null);
 
   // Modal de detalhes rapidos
   const [modalCte, setModalCte] = useState(null);
@@ -55,7 +53,7 @@ function CTeList() {
   const [pagination, setPagination] = useState({ page: 1, total: 0 });
 
   // Carregar dados do painel para graficos
-  const loadPainelCTe = async (customFiltros = null) => {
+  const loadPainelCTe = useCallback(async (customFiltros = null) => {
     const filtrosAtivos = customFiltros || filtrosGraficos;
     try {
       setLoadingGraficos(true);
@@ -69,10 +67,10 @@ function CTeList() {
     } finally {
       setLoadingGraficos(false);
     }
-  };
+  }, [filtrosGraficos]);
 
   // Carregar CT-es para tabela (5 por pagina)
-  const loadCTes = async (customFiltros = null, customPage = null) => {
+  const loadCTes = useCallback(async (customFiltros = null, customPage = null) => {
     const filtrosAtivos = customFiltros || filtros;
     const pageAtivo = customPage !== null ? customPage : pagination.page;
     try {
@@ -91,19 +89,20 @@ function CTeList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros, pagination.page]);
 
   // Carrega na montagem inicial
   useEffect(() => {
     loadPainelCTe(defaultDates);
     loadCTes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handler para filtro de graficos
   const handleGraficosFilterChange = useCallback((dateFilters) => {
     setFiltrosGraficos(dateFilters);
     loadPainelCTe(dateFilters);
-  }, []);
+  }, [loadPainelCTe]);
 
   // Handler para filtro da tabela
   const handleTabelaFilterChange = useCallback((dateFilters) => {
@@ -120,7 +119,7 @@ function CTeList() {
       data_inicio: dateFilters.data_inicio,
       data_fim: dateFilters.data_fim
     }, 1);
-  }, []);
+  }, [loadCTes]);
 
   const handleFiltrar = (e) => {
     e.preventDefault();
@@ -133,11 +132,6 @@ function CTeList() {
       style: 'currency',
       currency: 'BRL'
     }).format(value || 0);
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
   // Funcao para baixar XML
@@ -192,17 +186,6 @@ function CTeList() {
     } finally {
       setAtualizandoPagamento(null);
     }
-  };
-
-  const getStatusBadge = (cte) => {
-    if (cte.cancelamento) return <span className="badge badge-danger">Cancelado</span>;
-    if (cte.processado && cte.protocolo?.codigo_status === 100) {
-      return <span className="badge badge-success">Autorizado</span>;
-    }
-    if (cte.protocolo && cte.protocolo.codigo_status !== 100) {
-      return <span className="badge badge-warning">Rejeitado</span>;
-    }
-    return <span className="badge badge-secondary">Pendente</span>;
   };
 
   // KPIs do painel - conforme API /api/painel/cte/

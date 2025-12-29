@@ -30,6 +30,7 @@ function ManutencaoForm() {
     numero_nota: ''
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadVeiculos();
     if (isEditing) {

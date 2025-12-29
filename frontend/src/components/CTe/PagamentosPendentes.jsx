@@ -1,30 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { cteAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
 import './CTe.css';
 
 const COLORS = ['#3498db', '#f39c12', '#27ae60', '#e74c3c', '#9b59b6'];
 
-// Funcao para obter datas do mes atual
-const getDefaultDates = () => {
-  const hoje = new Date();
-  const dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  const dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-  return {
-    data_inicio: dataInicio.toISOString().split('T')[0],
-    data_fim: dataFim.toISOString().split('T')[0]
-  };
-};
-
 function PagamentosPendentes() {
-  const defaultDates = getDefaultDates();
+  const toast = useToast();
+
+  // useMemo ensures defaultDates is stable across renders
+  const defaultDates = useMemo(() => {
+    const hoje = new Date();
+    const dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    return {
+      data_inicio: dataInicio.toISOString().split('T')[0],
+      data_fim: dataFim.toISOString().split('T')[0]
+    };
+  }, []);
+
   const [loading, setLoading] = useState(true);
   const [dados, setDados] = useState(null);
   const [filtros, setFiltros] = useState(defaultDates);
@@ -36,7 +38,7 @@ function PagamentosPendentes() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const itensPorPagina = 10;
 
-  const loadDados = async (customFiltros = null) => {
+  const loadDados = useCallback(async (customFiltros = null) => {
     const filtrosAtivos = customFiltros || filtros;
     try {
       setLoading(true);
@@ -48,10 +50,11 @@ function PagamentosPendentes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros]);
 
   useEffect(() => {
     loadDados(defaultDates);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDateFilterChange = (newFiltros) => {
@@ -93,7 +96,7 @@ function PagamentosPendentes() {
       loadDados();
     } catch (err) {
       console.error('Erro ao marcar como pago:', err);
-      alert('Erro ao marcar como pago. Tente novamente.');
+      toast.error('Erro ao marcar como pago. Tente novamente.');
     } finally {
       setAtualizandoPagamento(null);
     }

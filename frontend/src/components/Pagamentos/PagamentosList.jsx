@@ -1,18 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pagamentosAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
 import './Pagamentos.css';
 
 function PagamentosList() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const isMountedRef = useRef(true);
   const [activeTab, setActiveTab] = useState('agregados');
   const [pagamentos, setPagamentos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
   const [showGerarLote, setShowGerarLote] = useState(false);
   const [gerandoLote, setGerandoLote] = useState(false);
   const [loteConfig, setLoteConfig] = useState({
@@ -69,11 +71,20 @@ function PagamentosList() {
   };
 
   // Carrega na montagem inicial
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadPagamentos();
   }, []);
 
+  // Cleanup on unmount to prevent race conditions
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Carrega quando muda a tab
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (filtros.data_inicio && filtros.data_fim) {
       loadPagamentos();
@@ -94,19 +105,21 @@ function PagamentosList() {
       } else {
         result = await pagamentosAPI.proprios.list(params);
       }
+      // Check if component is still mounted before setting state
+      if (!isMountedRef.current) return;
       setPagamentos(result.results || result);
     } catch (err) {
+      // Check if component is still mounted before setting state
+      if (!isMountedRef.current) return;
       console.error('Erro ao carregar pagamentos:', err);
       setError('Erro ao carregar pagamentos. Tente novamente.');
       setPagamentos([]);
     } finally {
-      setLoading(false);
+      // Check if component is still mounted before setting state
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
-
-  const handleFiltrar = (e) => {
-    e.preventDefault();
-    loadPagamentos();
   };
 
   const handleExport = async () => {
@@ -119,24 +132,24 @@ function PagamentosList() {
         await pagamentosAPI.proprios.export(params);
       }
     } catch (err) {
-      alert('Erro ao exportar: ' + err.message);
+      toast.error('Erro ao exportar: ' + err.message);
     }
   };
 
   const handleGerarLote = async () => {
     if (!loteConfig.data_inicio || !loteConfig.data_fim) {
-      alert('Por favor, selecione o período para geração');
+      toast.warning('Por favor, selecione o período para geração');
       return;
     }
 
     if (loteConfig.tipo === 'agregados' && !loteConfig.percentual) {
-      alert('Por favor, informe o percentual de repasse');
+      toast.warning('Por favor, informe o percentual de repasse');
       return;
     }
 
     const percentual = parseFloat(loteConfig.percentual);
     if (loteConfig.tipo === 'agregados' && (percentual <= 0 || percentual > 100)) {
-      alert('O percentual deve estar entre 0 e 100');
+      toast.warning('O percentual deve estar entre 0 e 100');
       return;
     }
 
@@ -154,11 +167,11 @@ function PagamentosList() {
           data_fim: loteConfig.data_fim
         });
       }
-      alert('Pagamentos gerados com sucesso!');
+      toast.success('Pagamentos gerados com sucesso!');
       setShowGerarLote(false);
       loadPagamentos();
     } catch (err) {
-      alert('Erro ao gerar pagamentos: ' + err.message);
+      toast.error('Erro ao gerar pagamentos: ' + err.message);
     } finally {
       setGerandoLote(false);
     }
@@ -258,7 +271,7 @@ function PagamentosList() {
       loadPagamentos(); // Recarrega a lista
     } catch (err) {
       console.error('Erro ao baixar pagamento:', err);
-      alert('Erro ao baixar pagamento. Tente novamente.');
+      toast.error('Erro ao baixar pagamento. Tente novamente.');
     } finally {
       setProcessandoBaixa(false);
     }
@@ -297,17 +310,17 @@ function PagamentosList() {
         await pagamentosAPI.agregados.converterParaProprio(modalConverter.id, {
           periodo: dadosConversao.periodo
         });
-        alert('Pagamento convertido para Próprio com sucesso!');
+        toast.success('Pagamento convertido para Próprio com sucesso!');
         setActiveTab('proprios'); // Muda para a tab de próprios
       } else {
         // Converter de próprio para agregado
         if (!dadosConversao.condutor_nome) {
-          alert('Nome do condutor é obrigatório.');
+          toast.warning('Nome do condutor é obrigatório.');
           setConvertendoPagamento(false);
           return;
         }
         if (!dadosConversao.cte_id) {
-          alert('ID do CT-e é obrigatório para converter para Agregado.');
+          toast.warning('ID do CT-e é obrigatório para converter para Agregado.');
           setConvertendoPagamento(false);
           return;
         }
@@ -318,14 +331,14 @@ function PagamentosList() {
           percentual_repasse: dadosConversao.percentual_repasse,
           data_prevista: dadosConversao.data_prevista
         });
-        alert('Pagamento convertido para Agregado com sucesso!');
+        toast.success('Pagamento convertido para Agregado com sucesso!');
         setActiveTab('agregados'); // Muda para a tab de agregados
       }
       setModalConverter({ show: false, id: null, tipo: '', info: '' });
       loadPagamentos();
     } catch (err) {
       console.error('Erro ao converter pagamento:', err);
-      alert('Erro ao converter: ' + err.message);
+      toast.error('Erro ao converter: ' + err.message);
     } finally {
       setConvertendoPagamento(false);
     }

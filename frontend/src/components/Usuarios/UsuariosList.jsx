@@ -1,68 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usuariosAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import './Usuarios.css';
 
-// Mock data para usuarios
-const mockUsuarios = [
-  {
-    id: 1,
-    username: 'admin',
-    email: 'admin@destack.local',
-    first_name: 'Administrador',
-    last_name: 'Sistema',
-    is_active: true,
-    is_staff: true,
-    is_superuser: true,
-    date_joined: '2024-01-15T10:00:00Z',
-    last_login: '2024-11-28T14:30:00Z'
-  },
-  {
-    id: 2,
-    username: 'operador1',
-    email: 'operador1@destack.local',
-    first_name: 'João',
-    last_name: 'Silva',
-    is_active: true,
-    is_staff: false,
-    is_superuser: false,
-    date_joined: '2024-03-20T09:00:00Z',
-    last_login: '2024-11-27T16:45:00Z'
-  },
-  {
-    id: 3,
-    username: 'financeiro',
-    email: 'financeiro@destack.local',
-    first_name: 'Maria',
-    last_name: 'Santos',
-    is_active: true,
-    is_staff: true,
-    is_superuser: false,
-    date_joined: '2024-05-10T11:00:00Z',
-    last_login: '2024-11-26T09:15:00Z'
-  },
-  {
-    id: 4,
-    username: 'operador2',
-    email: 'operador2@destack.local',
-    first_name: 'Carlos',
-    last_name: 'Oliveira',
-    is_active: false,
-    is_staff: false,
-    is_superuser: false,
-    date_joined: '2024-06-01T08:00:00Z',
-    last_login: '2024-09-15T10:00:00Z'
-  }
-];
-
 function UsuariosList() {
+  const toast = useToast();
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [usingMockData, setUsingMockData] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('');
@@ -80,11 +29,10 @@ function UsuariosList() {
       setError(null);
       const result = await usuariosAPI.list();
       setUsuarios(result.results || result || []);
-      setUsingMockData(false);
     } catch (err) {
       console.error('Erro ao carregar usuários:', err);
-      setUsuarios(mockUsuarios);
-      setUsingMockData(true);
+      setError('Erro ao carregar usuários. Tente novamente.');
+      setUsuarios([]);
     } finally {
       setLoading(false);
     }
@@ -93,13 +41,6 @@ function UsuariosList() {
   const handleDelete = async () => {
     if (!usuarioToDelete) return;
 
-    if (usingMockData) {
-      setUsuarios(usuarios.filter(u => u.id !== usuarioToDelete.id));
-      setShowDeleteModal(false);
-      setUsuarioToDelete(null);
-      return;
-    }
-
     try {
       setDeleting(true);
       await usuariosAPI.delete(usuarioToDelete.id);
@@ -107,27 +48,20 @@ function UsuariosList() {
       setShowDeleteModal(false);
       setUsuarioToDelete(null);
     } catch (err) {
-      alert('Erro ao excluir usuário: ' + err.message);
+      toast.error('Erro ao excluir usuário: ' + err.message);
     } finally {
       setDeleting(false);
     }
   };
 
   const handleToggleStatus = async (usuario) => {
-    if (usingMockData) {
-      setUsuarios(usuarios.map(u =>
-        u.id === usuario.id ? { ...u, is_active: !u.is_active } : u
-      ));
-      return;
-    }
-
     try {
       await usuariosAPI.patch(usuario.id, { is_active: !usuario.is_active });
       setUsuarios(usuarios.map(u =>
         u.id === usuario.id ? { ...u, is_active: !u.is_active } : u
       ));
     } catch (err) {
-      alert('Erro ao alterar status: ' + err.message);
+      toast.error('Erro ao alterar status: ' + err.message);
     }
   };
 
@@ -202,7 +136,7 @@ function UsuariosList() {
     <div className="usuarios-page">
       <PageHeader
         title="Gerenciamento de Usuários"
-        subtitle={usingMockData ? "Controle de acesso ao sistema (Modo Demonstração)" : "Controle de acesso ao sistema"}
+        subtitle="Controle de acesso ao sistema"
         icon={usuarioIcon}
         breadcrumbs={[{ label: 'Sistema' }, { label: 'Usuários' }]}
         actions={

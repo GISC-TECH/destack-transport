@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { manutencaoAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
@@ -10,103 +11,13 @@ import {
 } from 'recharts';
 import './Manutencao.css';
 
-// Mock data para manutenções
-const mockManutencoes = [
-  {
-    id: 1,
-    veiculo: { placa: 'ABC-1234', modelo: 'Volvo FH 540' },
-    tipo: 'preventiva',
-    descricao: 'Troca de óleo e filtros - revisão 50.000 km',
-    data_agendada: '2024-12-05',
-    custo: 2500.00,
-    status: 'agendada'
-  },
-  {
-    id: 2,
-    veiculo: { placa: 'DEF-5678', modelo: 'Scania R450' },
-    tipo: 'corretiva',
-    descricao: 'Substituição de pastilhas de freio dianteiras',
-    data_agendada: '2024-11-28',
-    custo: 1800.00,
-    status: 'em_andamento'
-  },
-  {
-    id: 3,
-    veiculo: { placa: 'GHI-9012', modelo: 'Mercedes Actros' },
-    tipo: 'preventiva',
-    descricao: 'Revisão completa sistema de arrefecimento',
-    data_agendada: '2024-11-25',
-    custo: 3200.00,
-    status: 'concluida'
-  },
-  {
-    id: 4,
-    veiculo: { placa: 'MNO-7890', modelo: 'DAF XF 530' },
-    tipo: 'corretiva',
-    descricao: 'Reparo no sistema de injeção eletrônica',
-    data_agendada: '2024-11-22',
-    custo: 4500.00,
-    status: 'concluida'
-  },
-  {
-    id: 5,
-    veiculo: { placa: 'PQR-1234', modelo: 'Iveco Stralis' },
-    tipo: 'preditiva',
-    descricao: 'Análise de vibração e balanceamento',
-    data_agendada: '2024-12-10',
-    custo: 850.00,
-    status: 'agendada'
-  },
-  {
-    id: 6,
-    veiculo: { placa: 'ABC-1234', modelo: 'Volvo FH 540' },
-    tipo: 'corretiva',
-    descricao: 'Substituição de bateria e alternador',
-    data_agendada: '2024-11-20',
-    custo: 2100.00,
-    status: 'concluida'
-  },
-  {
-    id: 7,
-    veiculo: { placa: 'GHI-9012', modelo: 'Mercedes Actros' },
-    tipo: 'preventiva',
-    descricao: 'Alinhamento e balanceamento - pneus novos',
-    data_agendada: '2024-12-15',
-    custo: 1200.00,
-    status: 'agendada'
-  }
-];
-
-// Mock data para gráficos
-const mockGraficos = {
-  por_tipo: [
-    { tipo: 'Preventiva', quantidade: 45, custo: 85000 },
-    { tipo: 'Corretiva', quantidade: 28, custo: 62000 },
-    { tipo: 'Preditiva', quantidade: 12, custo: 18000 }
-  ],
-  evolucao_mensal: [
-    { mes: 'Jul', preventiva: 8, corretiva: 4, preditiva: 2, custo_total: 15200 },
-    { mes: 'Ago', preventiva: 10, corretiva: 6, preditiva: 3, custo_total: 22400 },
-    { mes: 'Set', preventiva: 7, corretiva: 5, preditiva: 2, custo_total: 18600 },
-    { mes: 'Out', preventiva: 12, corretiva: 7, preditiva: 3, custo_total: 28500 },
-    { mes: 'Nov', preventiva: 8, corretiva: 6, preditiva: 2, custo_total: 21300 }
-  ],
-  por_veiculo: [
-    { placa: 'ABC-1234', manutencoes: 8, custo: 12500 },
-    { placa: 'DEF-5678', manutencoes: 6, custo: 9800 },
-    { placa: 'GHI-9012', manutencoes: 5, custo: 8200 },
-    { placa: 'MNO-7890', manutencoes: 4, custo: 7100 },
-    { placa: 'PQR-1234', manutencoes: 3, custo: 4500 }
-  ]
-};
-
 const COLORS = ['#3498db', '#f39c12', '#27ae60', '#9b59b6', '#e74c3c'];
 
 function ManutencaoList() {
+  const toast = useToast();
   const [manutencoes, setManutencoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [usingMockData, setUsingMockData] = useState(false);
   const [graficos, setGraficos] = useState(null);
   const [showGraficos, setShowGraficos] = useState(true);
   const [filtros, setFiltros] = useState({
@@ -115,6 +26,7 @@ function ManutencaoList() {
     veiculo: ''
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadManutencoes();
     loadGraficos();
@@ -128,26 +40,10 @@ function ManutencaoList() {
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       const result = await manutencaoAPI.list(params);
       setManutencoes(result.results || result);
-      setUsingMockData(false);
     } catch (err) {
       console.error('Erro ao carregar manutenções:', err);
-      // Usar mock data
-      let filteredMock = [...mockManutencoes];
-
-      if (filtros.status) {
-        filteredMock = filteredMock.filter(m => m.status === filtros.status);
-      }
-      if (filtros.tipo) {
-        filteredMock = filteredMock.filter(m => m.tipo === filtros.tipo);
-      }
-      if (filtros.veiculo) {
-        filteredMock = filteredMock.filter(m =>
-          m.veiculo.placa.toLowerCase().includes(filtros.veiculo.toLowerCase())
-        );
-      }
-
-      setManutencoes(filteredMock);
-      setUsingMockData(true);
+      setError('Erro ao carregar manutenções. Tente novamente.');
+      setManutencoes([]);
     } finally {
       setLoading(false);
     }
@@ -159,7 +55,7 @@ function ManutencaoList() {
       setGraficos(data);
     } catch (err) {
       console.error('Erro ao carregar gráficos:', err);
-      setGraficos(mockGraficos);
+      setGraficos(null);
     }
   };
 
@@ -169,16 +65,12 @@ function ManutencaoList() {
   };
 
   const handleExport = async () => {
-    if (usingMockData) {
-      alert('Exportação não disponível em modo demonstração');
-      return;
-    }
     try {
       const params = { ...filtros };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       await manutencaoAPI.export(params);
     } catch (err) {
-      alert('Erro ao exportar: ' + err.message);
+      toast.error('Erro ao exportar: ' + err.message);
     }
   };
 
@@ -223,6 +115,7 @@ function ManutencaoList() {
   };
 
   if (loading && manutencoes.length === 0) return <Loading message="Carregando manutenções..." />;
+  if (error) return <ErrorMessage message={error} onRetry={loadManutencoes} />;
 
   const manutencaoIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -234,7 +127,7 @@ function ManutencaoList() {
     <div className="manutencao-page">
       <PageHeader
         title="Manutenção de Veículos"
-        subtitle={usingMockData ? "Gerencie as manutenções preventivas e corretivas (Modo Demonstração)" : "Gerencie as manutenções preventivas e corretivas"}
+        subtitle="Gerencie as manutenções preventivas e corretivas"
         icon={manutencaoIcon}
         breadcrumbs={[{ label: 'Manutenção' }]}
         actions={
@@ -242,7 +135,6 @@ function ManutencaoList() {
             <button
               className="btn-secondary"
               onClick={handleExport}
-              disabled={usingMockData}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

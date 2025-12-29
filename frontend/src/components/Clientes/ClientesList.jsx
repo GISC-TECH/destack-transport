@@ -1,87 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clientesAPI } from '../../services/api';
+import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import './ClientesList.css';
 
-// Mock data para exibição quando API não está disponível
-const mockClientes = [
-  {
-    id: 1,
-    razao_social: 'Empresa Alpha Transportes LTDA',
-    nome_fantasia: 'Alpha Transportes',
-    cnpj: '12345678000190',
-    cnpj_formatado: '12.345.678/0001-90',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    tipo_frete: 'CIF',
-    ativo: true
-  },
-  {
-    id: 2,
-    razao_social: 'Beta Distribuidora S.A.',
-    nome_fantasia: 'Beta Dist',
-    cnpj: '98765432000188',
-    cnpj_formatado: '98.765.432/0001-88',
-    cidade: 'Rio de Janeiro',
-    estado: 'RJ',
-    tipo_frete: 'FOB',
-    ativo: true
-  },
-  {
-    id: 3,
-    razao_social: 'Gamma Comércio e Indústria LTDA',
-    nome_fantasia: 'Gamma Comercial',
-    cnpj: '55566677000122',
-    cnpj_formatado: '55.566.677/0001-22',
-    cidade: 'Belo Horizonte',
-    estado: 'MG',
-    tipo_frete: 'CIF',
-    ativo: true
-  },
-  {
-    id: 4,
-    razao_social: 'Delta Logística EIRELI',
-    nome_fantasia: 'Delta Log',
-    cnpj: '11122233000144',
-    cnpj_formatado: '11.122.233/0001-44',
-    cidade: 'Curitiba',
-    estado: 'PR',
-    tipo_frete: 'FOB',
-    ativo: false
-  },
-  {
-    id: 5,
-    razao_social: 'Epsilon Materiais de Construção LTDA',
-    nome_fantasia: 'Epsilon Mat',
-    cnpj: '77788899000155',
-    cnpj_formatado: '77.788.899/0001-55',
-    cidade: 'Porto Alegre',
-    estado: 'RS',
-    tipo_frete: 'CIF',
-    ativo: true
-  },
-  {
-    id: 6,
-    razao_social: 'Zeta Agropecuária S.A.',
-    nome_fantasia: 'Zeta Agro',
-    cnpj: '33344455000166',
-    cnpj_formatado: '33.344.455/0001-66',
-    cidade: 'Goiânia',
-    estado: 'GO',
-    tipo_frete: 'CIF',
-    ativo: true
-  }
-];
-
 function ClientesList() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [usingMockData, setUsingMockData] = useState(false);
   const [filtros, setFiltros] = useState({
     ativo: 'true',
     tipo_frete: '',
@@ -94,17 +25,13 @@ function ClientesList() {
     previous: null
   });
 
-  useEffect(() => {
-    loadClientes();
-  }, [filtros]);
-
-  const loadClientes = async () => {
+  const loadClientes = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
       const params = Object.fromEntries(
-        Object.entries(filtros).filter(([_, v]) => v !== '')
+        Object.entries(filtros).filter(([, v]) => v !== '')
       );
 
       const data = await clientesAPI.list(params);
@@ -122,55 +49,28 @@ function ClientesList() {
       } else {
         setClientes([]);
       }
-      setUsingMockData(false);
     } catch (err) {
       console.error('Erro ao carregar clientes:', err);
-      // Usar dados mock quando API falhar
-      let filteredMock = [...mockClientes];
-
-      // Aplicar filtros nos dados mock
-      if (filtros.ativo !== '') {
-        filteredMock = filteredMock.filter(c =>
-          filtros.ativo === 'true' ? c.ativo : !c.ativo
-        );
-      }
-      if (filtros.tipo_frete) {
-        filteredMock = filteredMock.filter(c => c.tipo_frete === filtros.tipo_frete);
-      }
-      if (filtros.estado) {
-        filteredMock = filteredMock.filter(c =>
-          c.estado.toLowerCase().includes(filtros.estado.toLowerCase())
-        );
-      }
-      if (filtros.q) {
-        const query = filtros.q.toLowerCase();
-        filteredMock = filteredMock.filter(c =>
-          c.razao_social.toLowerCase().includes(query) ||
-          c.nome_fantasia?.toLowerCase().includes(query) ||
-          c.cnpj.includes(query)
-        );
-      }
-
-      setClientes(filteredMock);
-      setPagination({ count: filteredMock.length, next: null, previous: null });
-      setUsingMockData(true);
+      setError('Erro ao carregar clientes. Tente novamente.');
+      setClientes([]);
+      setPagination({ count: 0, next: null, previous: null });
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros]);
+
+  useEffect(() => {
+    loadClientes();
+  }, [loadClientes]);
 
   const handleExport = async () => {
-    if (usingMockData) {
-      alert('Exportação não disponível em modo demonstração');
-      return;
-    }
     try {
       const params = Object.fromEntries(
-        Object.entries(filtros).filter(([_, v]) => v !== '')
+        Object.entries(filtros).filter(([, v]) => v !== '')
       );
       await clientesAPI.export(params);
     } catch (err) {
-      alert('Erro ao exportar: ' + err.message);
+      toast.error('Erro ao exportar: ' + err.message);
     }
   };
 
@@ -182,6 +82,7 @@ function ClientesList() {
   };
 
   if (loading) return <Loading message="Carregando clientes..." />;
+  if (error) return <ErrorMessage message={error} onRetry={loadClientes} />;
 
   const clientesIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -206,7 +107,7 @@ function ClientesList() {
     <div className="clientes-list">
       <PageHeader
         title="Clientes"
-        subtitle={usingMockData ? "Modo Demonstracao" : `${pagination.count} registros`}
+        subtitle={`${pagination.count} registros`}
         icon={clientesIcon}
         breadcrumbs={[{ label: 'Cadastros' }, { label: 'Clientes' }]}
         actions={headerActions}
@@ -320,7 +221,7 @@ function ClientesList() {
       )}
 
       {/* Botões de paginação */}
-      {(pagination.previous || pagination.next) && !usingMockData && (
+      {(pagination.previous || pagination.next) && (
         <div className="pagination-buttons">
           <button
             className="btn-page"

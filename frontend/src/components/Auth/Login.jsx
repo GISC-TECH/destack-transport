@@ -24,7 +24,7 @@ function Login() {
       } else {
         setError(result.error || 'Erro ao fazer login');
       }
-    } catch (err) {
+    } catch {
       setError('Erro ao conectar com o servidor');
     } finally {
       setLoading(false);
