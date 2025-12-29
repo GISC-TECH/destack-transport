@@ -96,6 +96,23 @@ const validateId = (id, name = 'ID') => {
   return id;
 };
 
+// Helper para extrair mensagem de erro legível do objeto de erro da API
+const extractErrorMessage = (error, defaultMsg = 'Erro na operação') => {
+  if (!error || typeof error !== 'object') return defaultMsg;
+  if (error.detail) return error.detail;
+  if (error.message) return error.message;
+  if (error.error) return error.error;
+  // Handle field validation errors like {"field": ["error message"]}
+  const firstField = Object.keys(error)[0];
+  if (firstField && Array.isArray(error[firstField])) {
+    return `${firstField}: ${error[firstField][0]}`;
+  }
+  if (firstField && typeof error[firstField] === 'string') {
+    return `${firstField}: ${error[firstField]}`;
+  }
+  return defaultMsg;
+};
+
 // Helper para download de arquivos (elimina duplicação de código)
 const triggerDownload = async (response, filename) => {
   const blob = await response.blob();
@@ -219,7 +236,7 @@ export const clientesAPI = {
     const response = await fetch(`${API_BASE}/clientes/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(JSON.stringify(error));
+      throw new Error(extractErrorMessage(error));
     }
     return response.json();
   },
@@ -270,7 +287,7 @@ export const motoristasAPI = {
     const response = await fetch(`${API_BASE}/motoristas/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(JSON.stringify(error));
+      throw new Error(extractErrorMessage(error));
     }
     return response.json();
   },
@@ -328,7 +345,7 @@ export const veiculosAPI = {
     const response = await fetch(`${API_BASE}/veiculos/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(JSON.stringify(error));
+      throw new Error(extractErrorMessage(error));
     }
     return response.json();
   },
@@ -474,7 +491,7 @@ export const cteAPI = {
     const response = await fetch(`${API_BASE}/ctes/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(JSON.stringify(error));
+      throw new Error(extractErrorMessage(error));
     }
     return response.json();
   },
@@ -579,7 +596,7 @@ export const mdfeAPI = {
     const response = await fetch(`${API_BASE}/mdfes/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(JSON.stringify(error));
+      throw new Error(extractErrorMessage(error));
     }
     return response.json();
   },
@@ -726,7 +743,7 @@ export const pagamentosAPI = {
       const response = await fetch(`${API_BASE}/pagamentos/agregados/`, mutationOptions('POST', data));
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(JSON.stringify(error));
+        throw new Error(extractErrorMessage(error));
       }
       return response.json();
     },
@@ -791,7 +808,7 @@ export const pagamentosAPI = {
       const response = await fetch(`${API_BASE}/pagamentos/proprios/`, mutationOptions('POST', data));
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(JSON.stringify(error));
+        throw new Error(extractErrorMessage(error));
       }
       return response.json();
     },
@@ -863,7 +880,7 @@ export const pagamentosAPI = {
     const response = await fetch(`${API_BASE}/pagamentos/agregados/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(JSON.stringify(error));
+      throw new Error(extractErrorMessage(error));
     }
     return response.json();
   },
@@ -920,7 +937,7 @@ export const manutencaoAPI = {
     const response = await fetch(`${API_BASE}/manutencoes/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(JSON.stringify(error));
+      throw new Error(extractErrorMessage(error));
     }
     return response.json();
   },
@@ -1042,7 +1059,7 @@ export const configAPI = {
       const response = await fetch(`${API_BASE}/configuracoes/empresa/`, mutationOptions('POST', data));
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(JSON.stringify(error));
+        throw new Error(extractErrorMessage(error));
       }
       return response.json();
     }
@@ -1283,7 +1300,7 @@ export const alertasAPI = {
       const response = await fetch(`${API_BASE}/alertas/sistema/`, mutationOptions('POST', data));
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(JSON.stringify(error));
+        throw new Error(extractErrorMessage(error));
       }
       return response.json();
     },
@@ -1346,7 +1363,7 @@ export const faixasKmAPI = {
     const response = await fetch(`${API_BASE}/faixas-km/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(JSON.stringify(error));
+      throw new Error(extractErrorMessage(error));
     }
     return response.json();
   },
@@ -1429,7 +1446,7 @@ export const documentosAPI = {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || JSON.stringify(error) || 'Erro ao enviar documento');
+        throw new Error(extractErrorMessage(error, 'Erro ao enviar documento'));
       }
       return response.json();
     },
@@ -1453,7 +1470,7 @@ export const documentosAPI = {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || JSON.stringify(error) || 'Erro ao atualizar documento');
+        throw new Error(extractErrorMessage(error, 'Erro ao atualizar documento'));
       }
       return response.json();
     }
@@ -1485,7 +1502,7 @@ export const documentosAPI = {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || JSON.stringify(error) || 'Erro ao enviar documento');
+        throw new Error(extractErrorMessage(error, 'Erro ao enviar documento'));
       }
       return response.json();
     },
@@ -1509,7 +1526,7 @@ export const documentosAPI = {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || JSON.stringify(error) || 'Erro ao atualizar documento');
+        throw new Error(extractErrorMessage(error, 'Erro ao atualizar documento'));
       }
       return response.json();
     }
@@ -1541,7 +1558,7 @@ export const documentosAPI = {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || JSON.stringify(error) || 'Erro ao enviar documento');
+        throw new Error(extractErrorMessage(error, 'Erro ao enviar documento'));
       }
       return response.json();
     },
@@ -1565,7 +1582,7 @@ export const documentosAPI = {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || JSON.stringify(error) || 'Erro ao atualizar documento');
+        throw new Error(extractErrorMessage(error, 'Erro ao atualizar documento'));
       }
       return response.json();
     }
@@ -1594,7 +1611,7 @@ export const usuariosAPI = {
     const response = await fetch(`${API_BASE}/usuarios/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(JSON.stringify(error));
+      throw new Error(extractErrorMessage(error));
     }
     return response.json();
   },

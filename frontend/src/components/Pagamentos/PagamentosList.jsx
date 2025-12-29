@@ -31,6 +31,10 @@ function PagamentosList() {
   // Modal de conversão entre agregado e próprio
   const [modalConverter, setModalConverter] = useState({ show: false, id: null, tipo: '', info: '' });
   const [convertendoPagamento, setConvertendoPagamento] = useState(false);
+
+  // Modal de exclusão
+  const [modalExcluir, setModalExcluir] = useState({ show: false, id: null, info: '' });
+  const [excluindoPagamento, setExcluindoPagamento] = useState(false);
   const [dadosConversao, setDadosConversao] = useState({
     periodo: '',
     condutor_nome: '',
@@ -148,8 +152,8 @@ function PagamentosList() {
     }
 
     const percentual = parseFloat(loteConfig.percentual);
-    if (loteConfig.tipo === 'agregados' && (percentual <= 0 || percentual > 100)) {
-      toast.warning('O percentual deve estar entre 0 e 100');
+    if (loteConfig.tipo === 'agregados' && (isNaN(percentual) || percentual <= 0 || percentual > 100)) {
+      toast.warning('O percentual deve ser um número válido entre 0 e 100');
       return;
     }
 
@@ -324,11 +328,17 @@ function PagamentosList() {
           setConvertendoPagamento(false);
           return;
         }
+        const percentualRepasse = parseFloat(dadosConversao.percentual_repasse);
+        if (isNaN(percentualRepasse) || percentualRepasse <= 0 || percentualRepasse > 100) {
+          toast.warning('O percentual de repasse deve ser um número válido entre 0 e 100');
+          setConvertendoPagamento(false);
+          return;
+        }
         await pagamentosAPI.proprios.converterParaAgregado(modalConverter.id, {
           condutor_nome: dadosConversao.condutor_nome,
           condutor_cpf: dadosConversao.condutor_cpf,
           cte_id: dadosConversao.cte_id,
-          percentual_repasse: dadosConversao.percentual_repasse,
+          percentual_repasse: percentualRepasse,
           data_prevista: dadosConversao.data_prevista
         });
         toast.success('Pagamento convertido para Agregado com sucesso!');
@@ -341,6 +351,35 @@ function PagamentosList() {
       toast.error('Erro ao converter: ' + err.message);
     } finally {
       setConvertendoPagamento(false);
+    }
+  };
+
+  // Abre modal de exclusão
+  const handleAbrirExcluir = (pagamento) => {
+    const condutor = pagamento.condutor_nome || pagamento.motorista_nome || '';
+    const placa = pagamento.placa || pagamento.veiculo_placa || '';
+    const valor = pagamento.valor_repassado || pagamento.valor_base_faixa || pagamento.valor_total_pagar;
+    const info = `CT-e #${pagamento.cte_numero || '-'} - ${condutor || placa} - ${formatCurrency(valor)}`;
+    setModalExcluir({ show: true, id: pagamento.id, info });
+  };
+
+  // Confirma a exclusão
+  const handleConfirmarExcluir = async () => {
+    setExcluindoPagamento(true);
+    try {
+      if (activeTab === 'agregados') {
+        await pagamentosAPI.agregados.delete(modalExcluir.id);
+      } else {
+        await pagamentosAPI.proprios.delete(modalExcluir.id);
+      }
+      toast.success('Pagamento excluido com sucesso!');
+      setModalExcluir({ show: false, id: null, info: '' });
+      loadPagamentos();
+    } catch (err) {
+      console.error('Erro ao excluir pagamento:', err);
+      toast.error('Erro ao excluir pagamento: ' + err.message);
+    } finally {
+      setExcluindoPagamento(false);
     }
   };
 
@@ -662,6 +701,48 @@ function PagamentosList() {
         </div>
       )}
 
+      {/* Modal de Exclusao */}
+      {modalExcluir.show && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '450px' }}>
+            <div className="modal-header">
+              <h3>Excluir Pagamento</h3>
+              <button className="modal-close" onClick={() => setModalExcluir({ show: false, id: null, info: '' })}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-description" style={{ color: '#dc3545' }}>
+                Tem certeza que deseja excluir este pagamento? Esta acao nao pode ser desfeita.
+              </p>
+              <p style={{ fontWeight: '600', marginBottom: '1rem', color: '#333', fontSize: '0.9rem' }}>
+                {modalExcluir.info}
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-cancel"
+                onClick={() => setModalExcluir({ show: false, id: null, info: '' })}
+                disabled={excluindoPagamento}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleConfirmarExcluir}
+                disabled={excluindoPagamento}
+                style={{ backgroundColor: '#dc3545', borderColor: '#dc3545' }}
+              >
+                {excluindoPagamento ? 'Excluindo...' : 'Confirmar Exclusao'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cards de resumo */}
       <div className="summary-cards">
         <div className="summary-card">
@@ -808,6 +889,16 @@ function PagamentosList() {
                               <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
                             </svg>
                           </button>
+                          <button
+                            className="btn-action btn-delete"
+                            onClick={() => handleAbrirExcluir(pagamento)}
+                            title="Excluir"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
                         </div>
                       </td>
                     </>
@@ -858,6 +949,16 @@ function PagamentosList() {
                               <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
                               <polyline points="7 23 3 19 7 15"></polyline>
                               <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                            </svg>
+                          </button>
+                          <button
+                            className="btn-action btn-delete"
+                            onClick={() => handleAbrirExcluir(pagamento)}
+                            title="Excluir"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                             </svg>
                           </button>
                         </div>

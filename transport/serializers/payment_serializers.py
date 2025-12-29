@@ -32,6 +32,7 @@ class FaixaKMSerializer(serializers.ModelSerializer):
 class PagamentoAgregadoSerializer(serializers.ModelSerializer):
     """ Serializer para o modelo PagamentoAgregado. """
     # Campos somente leitura para exibir informações do CT-e relacionado
+    cte_id = serializers.IntegerField(source='cte.id', read_only=True, allow_null=True)
     cte_chave = serializers.CharField(source='cte.chave', read_only=True)
     cte_numero = serializers.IntegerField(source='cte.identificacao.numero', read_only=True, allow_null=True)
     cte_data_emissao = serializers.DateTimeField(source='cte.identificacao.data_emissao', read_only=True, allow_null=True, format='%d/%m/%Y')
@@ -40,14 +41,15 @@ class PagamentoAgregadoSerializer(serializers.ModelSerializer):
         model = PagamentoAgregado
         # Lista os campos a serem incluídos
         fields = [
-            'id', 'cte', 'cte_chave', 'cte_numero', 'cte_data_emissao', # Campos do CT-e
+            'id', 'cte', 'cte_id', 'cte_chave', 'cte_numero', 'cte_data_emissao', # Campos do CT-e
             'placa', 'condutor_cpf', 'condutor_nome',
             'valor_frete_total', 'percentual_repasse', 'valor_repassado', # Valor repassado é calculado
             'obs', 'status', 'data_prevista', 'data_pagamento',
             'criado_em', 'atualizado_em'
         ]
         # Campos que não podem ser definidos diretamente na criação/atualização
-        read_only_fields = ('criado_em', 'atualizado_em', 'cte_chave', 'cte_numero', 'cte_data_emissao')
+        # valor_repassado é calculado automaticamente pelo model.save()
+        read_only_fields = ('valor_repassado', 'criado_em', 'atualizado_em', 'cte_id', 'cte_chave', 'cte_numero', 'cte_data_emissao')
         # CT-e é obrigatório (relação 1:1)
         extra_kwargs = {'cte': {'write_only': True, 'required': True}}
 

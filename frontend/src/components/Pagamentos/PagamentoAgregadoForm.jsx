@@ -205,7 +205,7 @@ function PagamentoAgregadoForm() {
       setLoading(true);
       const result = await pagamentosAPI.agregados.get(id);
       setFormData({
-        cte: result.cte || '',
+        cte: result.cte_id || '',  // Use cte_id (read-only) since cte is write-only
         cte_numero: result.cte_numero || '',
         placa: result.placa || '',
         condutor_nome: result.condutor_nome || '',
@@ -217,6 +217,34 @@ function PagamentoAgregadoForm() {
         status: result.status || 'pendente',
         obs: result.obs || ''
       });
+
+      // Populate the "selected" states so the UI displays the already-selected values
+      // instead of showing empty search boxes
+      if (result.cte_numero || result.cte_id) {
+        setCteSelecionado({
+          id: result.cte_id,  // Use cte_id (read-only) since cte is write-only
+          numero_cte: result.cte_numero,
+          numero: result.cte_numero,
+          cte_chave: result.cte_chave,
+          // These may not be available from the payment API, but we show what we have
+          remetente_nome: null,
+          destinatario_nome: null,
+          valor_total: result.valor_frete_total
+        });
+      }
+
+      if (result.condutor_nome) {
+        setCondutorSelecionado({
+          nome: result.condutor_nome,
+          cpf: result.condutor_cpf
+        });
+      }
+
+      if (result.placa) {
+        setVeiculoSelecionado({
+          placa: result.placa
+        });
+      }
     } catch (err) {
       console.error('Erro ao carregar pagamento:', err);
       setError('Erro ao carregar dados do pagamento.');
@@ -245,14 +273,36 @@ function PagamentoAgregadoForm() {
     setSaving(true);
     setError(null);
 
+    // Validações
+    const valorFrete = parseFloat(formData.valor_frete_total);
+    const percentual = parseFloat(formData.percentual_repasse);
+
+    if (isNaN(valorFrete) || valorFrete <= 0) {
+      toast.warning('Valor do frete deve ser um número válido maior que zero');
+      setSaving(false);
+      return;
+    }
+
+    if (isNaN(percentual) || percentual <= 0 || percentual > 100) {
+      toast.warning('Percentual de repasse deve ser um número válido entre 0 e 100');
+      setSaving(false);
+      return;
+    }
+
+    if (!isEditing && !formData.cte) {
+      toast.warning('Selecione um CT-e para vincular ao pagamento');
+      setSaving(false);
+      return;
+    }
+
     try {
       const data = {
-        cte: formData.cte || null,
+        cte: formData.cte,
         placa: formData.placa.toUpperCase(),
         condutor_nome: formData.condutor_nome,
         condutor_cpf: formData.condutor_cpf || null,
-        valor_frete_total: parseFloat(formData.valor_frete_total),
-        percentual_repasse: parseFloat(formData.percentual_repasse),
+        valor_frete_total: valorFrete,
+        percentual_repasse: percentual,
         data_prevista: formData.data_prevista,
         data_pagamento: formData.data_pagamento || null,
         status: formData.status,
