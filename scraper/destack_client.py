@@ -75,6 +75,7 @@ class DestackClient:
         """
         Envia um arquivo XML para a API do Destack.
         Retorna dict com resultado do processamento.
+        Usa Basic Auth para evitar problemas de CSRF.
         """
         if not os.path.exists(file_path):
             logger.error(f"Arquivo nao encontrado: {file_path}")
@@ -85,11 +86,14 @@ class DestackClient:
 
         try:
             with open(file_path, 'rb') as f:
-                files = {'file': (filename, f, 'application/xml')}
+                # Campo deve ser 'arquivo_xml' conforme esperado pelo serializer
+                files = {'arquivo_xml': (filename, f, 'application/xml')}
 
+                # Usar Basic Auth diretamente para evitar CSRF
                 response = self.session.post(
                     f"{self.base_url}/upload/",
                     files=files,
+                    auth=(DESTACK_USERNAME, DESTACK_PASSWORD),
                     timeout=60
                 )
 
