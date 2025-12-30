@@ -203,8 +203,12 @@ export const authAPI = {
 
   checkAuth: async () => {
     const response = await fetch(`${API_BASE}/auth/user/`, defaultOptions);
-    if (!response.ok) throw new Error('Não autenticado');
-    return response.json();
+    if (!response.ok) {
+      // 401 é esperado quando não está logado - retorna estado não autenticado
+      return { authenticated: false, user: null };
+    }
+    const data = await response.json();
+    return { authenticated: true, user: data };
   },
 
   // Busca CSRF token - o token fica no cookie após esta chamada

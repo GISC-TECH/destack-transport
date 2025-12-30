@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './DateFilter.css';
 
 // Funcao para calcular datas baseadas no periodo (fora do componente)
@@ -41,16 +41,30 @@ const getDateRange = (periodo) => {
 /**
  * Componente de filtro de data reutilizável
  * Inclui botões de período rápido (Hoje, 7 Dias, Mês, Ano) e campos de data
+ * Pode ser usado de forma controlada (passando initialDataInicio/initialDataFim) ou não-controlada
  */
-function DateFilter({ onFilterChange, defaultPeriodo = 'mes', showPeriodButtons = true }) {
-  // Calcula datas iniciais apenas uma vez usando função no useState
+function DateFilter({
+  onFilterChange,
+  defaultPeriodo = 'mes',
+  showPeriodButtons = true,
+  initialDataInicio = null,
+  initialDataFim = null
+}) {
+  // Calcula datas iniciais - usa valores passados ou calcula baseado no periodo
+  const defaultDates = getDateRange(defaultPeriodo);
   const [periodo, setPeriodo] = useState(defaultPeriodo);
-  const [dataInicio, setDataInicio] = useState(() => getDateRange(defaultPeriodo).data_inicio);
-  const [dataFim, setDataFim] = useState(() => getDateRange(defaultPeriodo).data_fim);
+  const [dataInicio, setDataInicio] = useState(initialDataInicio || defaultDates.data_inicio);
+  const [dataFim, setDataFim] = useState(initialDataFim || defaultDates.data_fim);
 
-  // NÃO notifica o componente pai na montagem inicial
-  // Os componentes já carregam os dados no seu próprio useEffect
-  // O DateFilter só notifica quando o usuário INTERAGE (clica nos botões ou muda as datas)
+  // Sincroniza com valores externos se fornecidos
+  useEffect(() => {
+    if (initialDataInicio && initialDataInicio !== dataInicio) {
+      setDataInicio(initialDataInicio);
+    }
+    if (initialDataFim && initialDataFim !== dataFim) {
+      setDataFim(initialDataFim);
+    }
+  }, [initialDataInicio, initialDataFim]);
 
   const handlePeriodoChange = (novoPeriodo) => {
     setPeriodo(novoPeriodo);

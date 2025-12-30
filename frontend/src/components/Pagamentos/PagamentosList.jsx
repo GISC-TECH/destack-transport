@@ -877,6 +877,7 @@ function PagamentosList() {
                   <th>Data Prevista</th>
                   <th>Desconto</th>
                   <th>Valor Repasse</th>
+                  <th>Comprovante</th>
                   <th>Status</th>
                   <th>Acoes</th>
                 </>
@@ -886,7 +887,9 @@ function PagamentosList() {
                   <th>Condutor</th>
                   <th>Placa</th>
                   <th>Data Prevista</th>
+                  <th>KM</th>
                   <th>Valor Repasse</th>
+                  <th>Comprovante</th>
                   <th>Status</th>
                   <th>Acoes</th>
                 </>
@@ -896,7 +899,7 @@ function PagamentosList() {
           <tbody>
             {pagamentos.length === 0 ? (
               <tr>
-                <td colSpan={activeTab === 'agregados' ? 8 : 7} className="text-center">
+                <td colSpan={activeTab === 'agregados' ? 9 : 9} className="text-center">
                   Nenhum pagamento encontrado
                 </td>
               </tr>
@@ -916,6 +919,27 @@ function PagamentosList() {
                       </td>
                       <td className="text-right">
                         <strong>{formatCurrency(pagamento.valor_repassado)}</strong>
+                      </td>
+                      <td className="text-center">
+                        {pagamento.comprovante ? (
+                          <a
+                            href={pagamento.comprovante}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-action"
+                            title="Ver Comprovante"
+                            style={{ color: '#27ae60', display: 'inline-flex' }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                              <polyline points="14 2 14 8 20 8"></polyline>
+                              <line x1="16" y1="13" x2="8" y2="13"></line>
+                              <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                          </a>
+                        ) : (
+                          <span style={{ color: '#999', fontSize: '12px' }}>-</span>
+                        )}
                       </td>
                       <td>{getStatusBadge(pagamento.status)}</td>
                       <td>
@@ -976,8 +1000,30 @@ function PagamentosList() {
                       <td>{pagamento.condutor_nome || pagamento.motorista_nome || '-'}</td>
                       <td>{pagamento.placa || pagamento.veiculo_placa || '-'}</td>
                       <td>{formatDate(pagamento.data_prevista)}</td>
+                      <td className="text-center">{pagamento.km_total_periodo || '-'}</td>
                       <td className="text-right">
                         <strong>{formatCurrency(pagamento.valor_repassado || pagamento.valor_base_faixa)}</strong>
+                      </td>
+                      <td className="text-center">
+                        {pagamento.comprovante ? (
+                          <a
+                            href={pagamento.comprovante}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-action"
+                            title="Ver Comprovante"
+                            style={{ color: '#27ae60', display: 'inline-flex' }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                              <polyline points="14 2 14 8 20 8"></polyline>
+                              <line x1="16" y1="13" x2="8" y2="13"></line>
+                              <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                          </a>
+                        ) : (
+                          <span style={{ color: '#999', fontSize: '12px' }}>-</span>
+                        )}
                       </td>
                       <td>{getStatusBadge(pagamento.status)}</td>
                       <td>

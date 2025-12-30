@@ -25,33 +25,53 @@ function FinanceiroPainel() {
   const [dados, setDados] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filtros, setFiltros] = useState({
-    data_inicio: '',
-    data_fim: ''
-  });
-
-  // Funcao para calcular datas do mes atual
-  const getDefaultDates = () => {
+  // Funcao para calcular datas baseadas no periodo
+  const getDateRange = (periodo) => {
     const hoje = new Date();
-    const dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    let dataInicio, dataFim;
+
+    switch (periodo) {
+      case 'hoje':
+        dataInicio = new Date(hoje);
+        dataFim = new Date(hoje);
+        break;
+      case '7dias':
+        dataFim = new Date(hoje);
+        dataInicio = new Date(hoje);
+        dataInicio.setDate(dataInicio.getDate() - 7);
+        break;
+      case 'mes':
+        dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+        break;
+      case 'ano':
+        dataInicio = new Date(hoje.getFullYear(), 0, 1);
+        dataFim = new Date(hoje.getFullYear(), 11, 31);
+        break;
+      default:
+        dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    }
+
     return {
+      periodo: periodo,
       data_inicio: dataInicio.toISOString().split('T')[0],
       data_fim: dataFim.toISOString().split('T')[0]
     };
   };
+
+  // Inicializa com o periodo 'mes' (mesmo do DateFilter)
+  const [filtros, setFiltros] = useState(() => getDateRange('mes'));
 
   const handleDateFilterChange = (newFiltros) => {
     setFiltros(newFiltros);
     loadDados(newFiltros);
   };
 
-  // Carrega na montagem inicial
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Carrega na montagem inicial usando os filtros ja inicializados
   useEffect(() => {
-    const defaultDates = getDefaultDates();
-    setFiltros(defaultDates);
-    loadDados(defaultDates);
+    loadDados(filtros);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDados = async (customFiltros = null) => {
@@ -127,6 +147,8 @@ function FinanceiroPainel() {
           <DateFilter
             onFilterChange={handleDateFilterChange}
             defaultPeriodo="mes"
+            initialDataInicio={filtros.data_inicio}
+            initialDataFim={filtros.data_fim}
           />
         }
       />

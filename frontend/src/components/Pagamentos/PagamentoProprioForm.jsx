@@ -44,6 +44,7 @@ function PagamentoProprioForm() {
     motorista_cpf: '',
     periodo: new Date().toISOString().slice(0, 7), // AAAA-MM
     data_prevista: new Date().toISOString().split('T')[0],
+    km_total_periodo: '',
     valor_base_faixa: '',
     ajustes: '0',
     status: 'pendente',
@@ -51,6 +52,8 @@ function PagamentoProprioForm() {
     obs: ''
   });
   const [comprovanteFile, setComprovanteFile] = useState(null);
+  const [faixaKmInfo, setFaixaKmInfo] = useState(null);
+  const [calculandoFaixa, setCalculandoFaixa] = useState(false);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -239,6 +242,7 @@ function PagamentoProprioForm() {
         motorista_cpf: result.motorista_cpf || result.condutor_cpf || '',
         periodo: result.periodo || '',
         data_prevista: result.data_prevista || '',
+        km_total_periodo: result.km_total_periodo || '',
         valor_base_faixa: result.valor_base_faixa || result.valor_repassado || '',
         ajustes: result.ajustes || '0',
         status: result.status || 'pendente',
@@ -250,6 +254,35 @@ function PagamentoProprioForm() {
       setError('Erro ao carregar dados do pagamento.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Busca o valor da faixa de KM quando o usuário digita a quilometragem
+  const handleKmChange = async (e) => {
+    const km = e.target.value;
+    setFormData(prev => ({ ...prev, km_total_periodo: km }));
+    setFaixaKmInfo(null);
+
+    if (!km || parseInt(km) <= 0) {
+      return;
+    }
+
+    try {
+      setCalculandoFaixa(true);
+      const resultado = await faixasKmAPI.buscarPorKm(parseInt(km));
+      if (resultado && resultado.faixa) {
+        setFaixaKmInfo(resultado.faixa);
+        setFormData(prev => ({
+          ...prev,
+          valor_base_faixa: resultado.faixa.valor_pago
+        }));
+        toast.info(`Faixa KM: ${resultado.faixa.min_km}-${resultado.faixa.max_km || '+'} km = R$ ${resultado.faixa.valor_pago}`);
+      }
+    } catch (err) {
+      console.warn('Faixa KM não encontrada:', err.message);
+      setFaixaKmInfo(null);
+    } finally {
+      setCalculandoFaixa(false);
     }
   };
 
@@ -282,6 +315,7 @@ function PagamentoProprioForm() {
         dataToSend.append('motorista_nome', formData.motorista_nome);
         if (formData.motorista_cpf) dataToSend.append('motorista_cpf', formData.motorista_cpf);
         if (formData.data_prevista) dataToSend.append('data_prevista', formData.data_prevista);
+        if (formData.km_total_periodo) dataToSend.append('km_total_periodo', parseInt(formData.km_total_periodo) || 0);
         dataToSend.append('valor_base_faixa', parseFloat(formData.valor_base_faixa) || 0);
         dataToSend.append('ajustes', parseFloat(formData.ajustes) || 0);
         dataToSend.append('status', formData.status);
@@ -300,6 +334,7 @@ function PagamentoProprioForm() {
           motorista_nome: formData.motorista_nome,
           motorista_cpf: formData.motorista_cpf || null,
           data_prevista: formData.data_prevista || null,
+          km_total_periodo: formData.km_total_periodo ? parseInt(formData.km_total_periodo) : 0,
           valor_base_faixa: parseFloat(formData.valor_base_faixa) || 0,
           ajustes: parseFloat(formData.ajustes) || 0,
           status: formData.status,
@@ -758,9 +793,29 @@ function PagamentoProprioForm() {
         </div>
 
         <div className="form-section">
-          <h3>Valores</h3>
+          <h3>Quilometragem e Valores</h3>
 
           <div className="form-row">
+            <div className="form-group">
+              <label>Quilometragem (KM)</label>
+              <input
+                type="number"
+                name="km_total_periodo"
+                value={formData.km_total_periodo}
+                onChange={handleKmChange}
+                min="0"
+                placeholder="Digite a KM para calcular o valor"
+              />
+              {calculandoFaixa && (
+                <small className="form-hint" style={{ color: '#3498db' }}>Buscando faixa...</small>
+              )}
+              {faixaKmInfo && (
+                <small className="form-hint" style={{ color: '#27ae60' }}>
+                  Faixa: {faixaKmInfo.min_km} - {faixaKmInfo.max_km || '+'} km = R$ {faixaKmInfo.valor_pago}
+                </small>
+              )}
+            </div>
+
             <div className="form-group">
               <label>Valor Base / Repasse (R$) *</label>
               <input
@@ -773,8 +828,11 @@ function PagamentoProprioForm() {
                 min="0"
                 placeholder="0.00"
               />
+              <small className="form-hint">Calculado pela faixa de KM ou manual</small>
             </div>
+          </div>
 
+          <div className="form-row">
             <div className="form-group">
               <label>Ajustes (R$)</label>
               <input
