@@ -22,7 +22,7 @@ class ManutencaoVeiculoSerializer(serializers.ModelSerializer):
             'id', 'veiculo', 'veiculo_placa', 'veiculo_info',
             'tipo', 'descricao', 'data_agendada', 'data_realizada',
             'quilometragem', 'custo', 'fornecedor', 'status',
-            'observacoes', 'nota_fiscal',
+            'observacoes', 'nota_fiscal', 'arquivo_nota',
             # Campos legados para compatibilidade
             'data_servico', 'servico_realizado', 'oficina',
             'peca_utilizada', 'valor_peca', 'valor_mao_obra', 'valor_total',

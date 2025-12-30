@@ -59,6 +59,13 @@ class CTeDocumento(models.Model):
     pago = models.BooleanField("Pago", default=False, db_index=True)
     data_pagamento = models.DateTimeField("Data do Pagamento", null=True, blank=True)
     observacao_pagamento = models.TextField("Observação do Pagamento", null=True, blank=True)
+    comprovante_pagamento = models.FileField(
+        "Comprovante de Pagamento",
+        upload_to='comprovantes/ctes/%Y/%m/',
+        null=True,
+        blank=True,
+        help_text="Comprovante de pagamento (PDF, imagem)"
+    )
 
     # Relacionamento com MDF-e (definido mais abaixo via add_to_class)
     # mdfe_vinculado = models.ManyToManyField('MDFeDocumento', through='MDFeDocumentosVinculados', related_name='ctes_transportados')
@@ -1178,6 +1185,13 @@ class ManutencaoVeiculo(models.Model):
    status = models.CharField(max_length=20, choices=STATUS_OPCOES, default="agendada")
    observacoes = models.TextField(null=True, blank=True)
    nota_fiscal = models.CharField("Número Nota Fiscal", max_length=44, null=True, blank=True)
+   arquivo_nota = models.FileField(
+       "Arquivo Nota Fiscal",
+       upload_to='manutencoes/notas/%Y/%m/',
+       null=True,
+       blank=True,
+       help_text="Arquivo da nota fiscal (PDF, imagem)"
+   )
 
    # Campos legados (mantidos para compatibilidade com dados existentes)
    data_servico = models.DateField(verbose_name="Data do Serviço", null=True, blank=True)
@@ -1250,11 +1264,19 @@ class PagamentoAgregado(models.Model):
    condutor_nome = models.CharField("Nome Condutor", max_length=120) # Mantém nome para referência
    valor_frete_total = models.DecimalField("Valor Frete (Base)", max_digits=12, decimal_places=2)
    percentual_repasse = models.DecimalField("Percentual Repasse (%)", max_digits=5, decimal_places=2, default=Decimal('25.00'))
+   desconto = models.DecimalField("Desconto (R$)", max_digits=12, decimal_places=2, default=Decimal('0.00'), help_text="Desconto aplicado sobre o valor a repassar")
    valor_repassado = models.DecimalField("Valor Repasse (R$)", max_digits=12, decimal_places=2)
    obs = models.TextField("Observações", blank=True, null=True)
    status = models.CharField("Status", max_length=10, choices=STATUS_PAGAMENTO, default='pendente', db_index=True)
    data_prevista = models.DateField("Data Prevista")
    data_pagamento = models.DateField("Data Pagamento", null=True, blank=True)
+   comprovante = models.FileField(
+       "Comprovante",
+       upload_to='comprovantes/agregados/%Y/%m/',
+       null=True,
+       blank=True,
+       help_text="Comprovante de pagamento (PDF, imagem)"
+   )
    criado_em = models.DateTimeField(auto_now_add=True)
    atualizado_em = models.DateTimeField(auto_now=True)
 
@@ -1264,9 +1286,11 @@ class PagamentoAgregado(models.Model):
        ordering = ['-data_prevista', 'status']
 
    def save(self, *args, **kwargs):
-       # Calcula o valor do repasse automaticamente
+       # Calcula o valor do repasse automaticamente: (frete * percentual / 100) - desconto
        if self.valor_frete_total and self.percentual_repasse:
-           self.valor_repassado = (self.valor_frete_total * self.percentual_repasse) / Decimal('100.0')
+           valor_bruto = (self.valor_frete_total * self.percentual_repasse) / Decimal('100.0')
+           desconto = self.desconto or Decimal('0.00')
+           self.valor_repassado = max(valor_bruto - desconto, Decimal('0.00'))  # Não permite valor negativo
        else:
            self.valor_repassado = Decimal('0.00')
        super().save(*args, **kwargs)
@@ -1299,6 +1323,13 @@ class PagamentoProprio(models.Model):
    valor_total_pagar = models.DecimalField("Valor Total a Pagar (R$)", max_digits=12, decimal_places=2)
    status = models.CharField("Status", max_length=10, choices=STATUS_PAGAMENTO, default='pendente', db_index=True)
    data_pagamento = models.DateField("Data Pagamento", null=True, blank=True)
+   comprovante = models.FileField(
+       "Comprovante",
+       upload_to='comprovantes/proprios/%Y/%m/',
+       null=True,
+       blank=True,
+       help_text="Comprovante de pagamento (PDF, imagem)"
+   )
    obs = models.TextField("Observações", blank=True, null=True)
    criado_em = models.DateTimeField(auto_now_add=True)
    atualizado_em = models.DateTimeField(auto_now=True)

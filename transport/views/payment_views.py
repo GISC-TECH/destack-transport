@@ -110,6 +110,43 @@ class FaixaKMViewSet(viewsets.ModelViewSet):
 
         return queryset.filter(q1 | q2 | q3).exists()
 
+    @action(detail=False, methods=['get'])
+    def buscar_por_km(self, request):
+        """
+        Busca a faixa de KM correspondente a um valor de KM específico.
+        Parâmetros query:
+        - km: quantidade de KM para buscar a faixa correspondente
+        """
+        km = request.query_params.get('km')
+        if not km:
+            return Response({"detail": "Parâmetro 'km' é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            km_valor = int(km)
+            if km_valor < 0:
+                return Response({"detail": "KM deve ser um valor positivo."}, status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, TypeError):
+            return Response({"detail": "KM deve ser um número inteiro válido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Busca a faixa correspondente
+        faixa = FaixaKM.objects.filter(
+            Q(min_km__lte=km_valor) &
+            (Q(max_km__gte=km_valor) | Q(max_km__isnull=True))
+        ).order_by('-min_km').first()
+
+        if not faixa:
+            return Response({"detail": f"Nenhuma faixa de KM encontrada para {km_valor} KM."}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({
+            "km_informado": km_valor,
+            "faixa": {
+                "id": faixa.id,
+                "min_km": faixa.min_km,
+                "max_km": faixa.max_km,
+                "valor_pago": float(faixa.valor_pago)
+            }
+        })
+
 
 class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
     """API para gerenciar pagamentos a motoristas agregados."""

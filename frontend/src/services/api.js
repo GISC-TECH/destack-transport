@@ -40,15 +40,23 @@ const defaultOptions = {
 };
 
 // Helper para requisições POST/PUT/DELETE
-const mutationOptions = (method, data) => ({
-  ...defaultOptions,
-  method,
-  headers: {
+const mutationOptions = (method, data) => {
+  const isFormData = data instanceof FormData;
+  const headers = {
     ...defaultOptions.headers,
     'X-CSRFToken': getCSRFToken(),
-  },
-  body: data ? JSON.stringify(data) : undefined,
-});
+  };
+  // Se for FormData, não define Content-Type (o browser define automaticamente com boundary)
+  if (isFormData) {
+    delete headers['Content-Type'];
+  }
+  return {
+    ...defaultOptions,
+    method,
+    headers,
+    body: data ? (isFormData ? data : JSON.stringify(data)) : undefined,
+  };
+};
 
 // Helper para refresh do CSRF token
 async function refreshCSRFToken() {
@@ -293,8 +301,11 @@ export const motoristasAPI = {
   },
 
   update: async (id, data) => {
-    const response = await fetch(`${API_BASE}/motoristas/${id}/`, mutationOptions('PUT', data));
-    if (!response.ok) throw new Error('Erro ao atualizar motorista');
+    const response = await fetch(`${API_BASE}/motoristas/${id}/`, mutationOptions('PATCH', data));
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(error, 'Erro ao atualizar motorista'));
+    }
     return response.json();
   },
 
@@ -550,15 +561,34 @@ export const cteAPI = {
     await triggerDownload(response, `ctes_${new Date().toISOString().split('T')[0]}.csv`);
   },
 
-  marcarPagamento: async (id, pago, observacao = null, dataPagamento = null) => {
-    const data = { pago };
-    if (observacao !== null) {
-      data.observacao_pagamento = observacao;
+  marcarPagamento: async (id, pago, observacao = null, dataPagamento = null, comprovante = null) => {
+    let requestOptions;
+
+    if (comprovante) {
+      // Se tiver comprovante, usa FormData
+      const formData = new FormData();
+      formData.append('pago', pago);
+      if (observacao !== null) formData.append('observacao_pagamento', observacao);
+      if (dataPagamento !== null) formData.append('data_pagamento', dataPagamento);
+      formData.append('comprovante', comprovante);
+
+      requestOptions = {
+        ...defaultOptions,
+        method: 'PATCH',
+        headers: {
+          'X-CSRFToken': getCSRFToken(),
+        },
+        body: formData,
+      };
+    } else {
+      // Sem comprovante, envia JSON
+      const data = { pago };
+      if (observacao !== null) data.observacao_pagamento = observacao;
+      if (dataPagamento !== null) data.data_pagamento = dataPagamento;
+      requestOptions = mutationOptions('PATCH', data);
     }
-    if (dataPagamento !== null) {
-      data.data_pagamento = dataPagamento;
-    }
-    const response = await fetch(`${API_BASE}/ctes/${id}/pagamento/`, mutationOptions('PATCH', data));
+
+    const response = await fetch(`${API_BASE}/ctes/${id}/pagamento/`, requestOptions);
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Erro ao atualizar status de pagamento');
@@ -751,7 +781,10 @@ export const pagamentosAPI = {
     update: async (id, data) => {
       // Usa PATCH para atualização parcial (ex: dar baixa só com status e data)
       const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/`, mutationOptions('PATCH', data));
-      if (!response.ok) throw new Error('Erro ao atualizar pagamento');
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(error, 'Erro ao atualizar pagamento'));
+      }
       return response.json();
     },
 
@@ -817,7 +850,10 @@ export const pagamentosAPI = {
     update: async (id, data) => {
       // Usa PATCH para atualização parcial (ex: dar baixa só com status e data)
       const response = await fetch(`${API_BASE}/pagamentos/proprios/${id}/`, mutationOptions('PATCH', data));
-      if (!response.ok) throw new Error('Erro ao atualizar pagamento');
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(error, 'Erro ao atualizar pagamento'));
+      }
       return response.json();
     },
 
@@ -1384,6 +1420,16 @@ export const faixasKmAPI = {
     });
     if (!response.ok) throw new Error('Erro ao deletar faixa de KM');
     return true;
+  },
+
+  // Busca a faixa correspondente a um valor de KM
+  buscarPorKm: async (km) => {
+    const response = await fetch(`${API_BASE}/faixas-km/buscar_por_km/?km=${km}`, defaultOptions);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.detail || 'Nenhuma faixa encontrada para este KM');
+    }
+    return response.json();
   }
 };
 

@@ -38,11 +38,12 @@ class MotoristaListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listagem de Motoristas."""
 
     cpf_formatado = serializers.SerializerMethodField(read_only=True)
+    validade_cnh_formatada = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Motorista
         fields = ['id', 'nome', 'cpf', 'cpf_formatado', 'cnh', 'categoria_cnh',
-                  'validade_cnh', 'ativo']
+                  'validade_cnh', 'validade_cnh_formatada', 'ativo']
         read_only_fields = fields
 
     def get_cpf_formatado(self, obj):
@@ -50,3 +51,9 @@ class MotoristaListSerializer(serializers.ModelSerializer):
             cpf = obj.cpf
             return f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}"
         return obj.cpf
+
+    def get_validade_cnh_formatada(self, obj):
+        """Retorna validade CNH formatada (dd/mm/yyyy)."""
+        if obj.validade_cnh:
+            return obj.validade_cnh.strftime('%d/%m/%Y')
+        return None

@@ -34,23 +34,56 @@ function PagamentosPendentes() {
   // Modal para selecionar data de pagamento
   const [modalBaixa, setModalBaixa] = useState({ show: false, cteId: null, cteNumero: null });
   const [dataBaixa, setDataBaixa] = useState(new Date().toISOString().split('T')[0]);
+  const [comprovanteFile, setComprovanteFile] = useState(null);
   // Paginacao da tabela
   const [paginaAtual, setPaginaAtual] = useState(1);
   const itensPorPagina = 10;
 
-  const loadDados = useCallback(async (customFiltros = null) => {
+  // Filtros avançados (multi-select)
+  const [filtrosAvancados, setFiltrosAvancados] = useState({
+    remetentes: [],
+    destinatarios: [],
+    modalidades: []
+  });
+  const [filtrosDisponiveis, setFiltrosDisponiveis] = useState({
+    remetentes: [],
+    destinatarios: [],
+    modalidades: []
+  });
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+
+  const loadDados = useCallback(async (customFiltros = null, customFiltrosAvancados = null) => {
     const filtrosAtivos = customFiltros || filtros;
+    const avancados = customFiltrosAvancados || filtrosAvancados;
     try {
       setLoading(true);
-      const result = await cteAPI.pagamentosPendentes(filtrosAtivos);
+
+      // Monta os parâmetros incluindo filtros avançados
+      const params = { ...filtrosAtivos };
+      if (avancados.remetentes.length > 0) {
+        params.remetentes = avancados.remetentes.join(',');
+      }
+      if (avancados.destinatarios.length > 0) {
+        params.destinatarios = avancados.destinatarios.join(',');
+      }
+      if (avancados.modalidades.length > 0) {
+        params.modalidades = avancados.modalidades.join(',');
+      }
+
+      const result = await cteAPI.pagamentosPendentes(params);
       setDados(result);
+
+      // Atualiza filtros disponíveis (só na primeira carga ou quando muda período)
+      if (result.filtros_disponiveis) {
+        setFiltrosDisponiveis(result.filtros_disponiveis);
+      }
     } catch (err) {
       console.error('Erro ao carregar pagamentos pendentes:', err);
       setDados(null);
     } finally {
       setLoading(false);
     }
-  }, [filtros]);
+  }, [filtros, filtrosAvancados]);
 
   useEffect(() => {
     loadDados(defaultDates);
@@ -60,8 +93,40 @@ function PagamentosPendentes() {
   const handleDateFilterChange = (newFiltros) => {
     setFiltros(newFiltros);
     setPaginaAtual(1); // Reset pagina ao mudar filtros
-    loadDados(newFiltros);
+    // Reseta filtros avançados ao mudar período
+    setFiltrosAvancados({ remetentes: [], destinatarios: [], modalidades: [] });
+    loadDados(newFiltros, { remetentes: [], destinatarios: [], modalidades: [] });
   };
+
+  // Toggle de seleção de filtro (multi-select)
+  const toggleFiltro = (tipo, valor) => {
+    setFiltrosAvancados(prev => {
+      const atual = prev[tipo] || [];
+      const novo = atual.includes(valor)
+        ? atual.filter(v => v !== valor)
+        : [...atual, valor];
+      return { ...prev, [tipo]: novo };
+    });
+  };
+
+  // Aplica os filtros avançados
+  const aplicarFiltros = () => {
+    setPaginaAtual(1);
+    loadDados(filtros, filtrosAvancados);
+  };
+
+  // Limpa todos os filtros avançados
+  const limparFiltros = () => {
+    const limpo = { remetentes: [], destinatarios: [], modalidades: [] };
+    setFiltrosAvancados(limpo);
+    setPaginaAtual(1);
+    loadDados(filtros, limpo);
+  };
+
+  // Conta quantos filtros estão ativos
+  const totalFiltrosAtivos = filtrosAvancados.remetentes.length +
+    filtrosAvancados.destinatarios.length +
+    filtrosAvancados.modalidades.length;
 
   // Paginacao - calculos
   const ctesPendentes = dados?.ctes_pendentes_recentes || [];
@@ -82,6 +147,7 @@ function PagamentosPendentes() {
   // Abre o modal para selecionar data de baixa
   const handleAbrirModalBaixa = (cteId, cteNumero) => {
     setDataBaixa(new Date().toISOString().split('T')[0]); // Reset para data atual
+    setComprovanteFile(null); // Reset comprovante
     setModalBaixa({ show: true, cteId, cteNumero });
   };
 
@@ -91,7 +157,9 @@ function PagamentosPendentes() {
     setAtualizandoPagamento(cteId);
     setModalBaixa({ show: false, cteId: null, cteNumero: null });
     try {
-      await cteAPI.marcarPagamento(cteId, true, null, dataBaixa);
+      await cteAPI.marcarPagamento(cteId, true, null, dataBaixa, comprovanteFile);
+      toast.success('CT-e marcado como pago!');
+      setComprovanteFile(null);
       // Recarrega os dados
       loadDados();
     } catch (err) {
@@ -166,6 +234,147 @@ function PagamentosPendentes() {
           </div>
         }
       />
+
+      {/* Filtros Avançados */}
+      <div className="filtros-avancados-container" style={{ marginBottom: '20px' }}>
+        <button
+          className={`btn ${mostrarFiltros ? 'btn-primary' : 'btn-outline'}`}
+          onClick={() => setMostrarFiltros(!mostrarFiltros)}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          Filtros {totalFiltrosAtivos > 0 && <span className="badge badge-info" style={{ marginLeft: '5px' }}>{totalFiltrosAtivos}</span>}
+        </button>
+
+        {mostrarFiltros && (
+          <div className="filtros-avancados-panel" style={{
+            marginTop: '15px',
+            padding: '20px',
+            background: '#fff',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+
+              {/* Filtro Modalidade */}
+              <div className="filtro-grupo">
+                <label style={{ fontWeight: '600', marginBottom: '10px', display: 'block', color: '#333' }}>
+                  Modalidade
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {(filtrosDisponiveis.modalidades || []).map(modalidade => (
+                    <button
+                      key={modalidade}
+                      className={`btn btn-sm ${filtrosAvancados.modalidades.includes(modalidade) ? 'btn-primary' : 'btn-outline'}`}
+                      onClick={() => toggleFiltro('modalidades', modalidade)}
+                      style={{ padding: '6px 12px', fontSize: '13px' }}
+                    >
+                      {modalidade}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Filtro Remetente */}
+              <div className="filtro-grupo">
+                <label style={{ fontWeight: '600', marginBottom: '10px', display: 'block', color: '#333' }}>
+                  Remetente ({filtrosAvancados.remetentes.length} selecionado{filtrosAvancados.remetentes.length !== 1 ? 's' : ''})
+                </label>
+                <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '8px' }}>
+                  {(filtrosDisponiveis.remetentes || []).map(remetente => (
+                    <label
+                      key={remetente}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 8px',
+                        cursor: 'pointer',
+                        borderRadius: '4px',
+                        transition: 'background 0.2s',
+                        fontSize: '13px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filtrosAvancados.remetentes.includes(remetente)}
+                        onChange={() => toggleFiltro('remetentes', remetente)}
+                        style={{ width: '16px', height: '16px' }}
+                      />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {remetente}
+                      </span>
+                    </label>
+                  ))}
+                  {(filtrosDisponiveis.remetentes || []).length === 0 && (
+                    <span style={{ color: '#999', fontSize: '13px' }}>Nenhum remetente disponível</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Filtro Destinatário */}
+              <div className="filtro-grupo">
+                <label style={{ fontWeight: '600', marginBottom: '10px', display: 'block', color: '#333' }}>
+                  Destinatário ({filtrosAvancados.destinatarios.length} selecionado{filtrosAvancados.destinatarios.length !== 1 ? 's' : ''})
+                </label>
+                <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '8px' }}>
+                  {(filtrosDisponiveis.destinatarios || []).map(destinatario => (
+                    <label
+                      key={destinatario}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 8px',
+                        cursor: 'pointer',
+                        borderRadius: '4px',
+                        transition: 'background 0.2s',
+                        fontSize: '13px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filtrosAvancados.destinatarios.includes(destinatario)}
+                        onChange={() => toggleFiltro('destinatarios', destinatario)}
+                        style={{ width: '16px', height: '16px' }}
+                      />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {destinatario}
+                      </span>
+                    </label>
+                  ))}
+                  {(filtrosDisponiveis.destinatarios || []).length === 0 && (
+                    <span style={{ color: '#999', fontSize: '13px' }}>Nenhum destinatário disponível</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Botões de ação dos filtros */}
+            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-outline"
+                onClick={limparFiltros}
+                disabled={totalFiltrosAtivos === 0}
+              >
+                Limpar Filtros
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={aplicarFiltros}
+              >
+                Aplicar Filtros
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* KPI Cards */}
       <div className="cte-kpi-grid">
@@ -439,6 +648,22 @@ function PagamentosPendentes() {
                   className="input-filter"
                   style={{ width: '100%', padding: '10px' }}
                 />
+              </div>
+
+              <div className="form-group" style={{ marginTop: '15px' }}>
+                <label>Comprovante (opcional)</label>
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+                  className="input-filter"
+                  style={{ width: '100%', padding: '8px' }}
+                />
+                {comprovanteFile && (
+                  <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                    Arquivo: {comprovanteFile.name}
+                  </small>
+                )}
               </div>
             </div>
             <div className="modal-footer">

@@ -44,6 +44,7 @@ function PagamentoAgregadoForm() {
     condutor_cpf: '',
     valor_frete_total: '',
     percentual_repasse: '25.00',
+    desconto: '0.00',
     data_prevista: new Date().toISOString().split('T')[0],
     status: 'pendente',
     obs: ''
@@ -212,6 +213,7 @@ function PagamentoAgregadoForm() {
         condutor_cpf: result.condutor_cpf || '',
         valor_frete_total: result.valor_frete_total || '',
         percentual_repasse: result.percentual_repasse || '25.00',
+        desconto: result.desconto || '0.00',
         data_prevista: result.data_prevista || '',
         data_pagamento: result.data_pagamento || '',
         status: result.status || 'pendente',
@@ -296,13 +298,16 @@ function PagamentoAgregadoForm() {
     }
 
     try {
+      const desconto = parseFloat(formData.desconto) || 0;
+
+      // Dados base para criação e edição
       const data = {
-        cte: formData.cte,
         placa: formData.placa.toUpperCase(),
         condutor_nome: formData.condutor_nome,
         condutor_cpf: formData.condutor_cpf || null,
         valor_frete_total: valorFrete,
         percentual_repasse: percentual,
+        desconto: desconto,
         data_prevista: formData.data_prevista,
         data_pagamento: formData.data_pagamento || null,
         status: formData.status,
@@ -310,9 +315,12 @@ function PagamentoAgregadoForm() {
       };
 
       if (isEditing) {
+        // Na edição, NÃO enviamos o campo cte (não pode mudar o CT-e vinculado)
         await pagamentosAPI.agregados.update(id, data);
         toast.success('Pagamento atualizado com sucesso!');
       } else {
+        // Na criação, incluímos o cte
+        data.cte = formData.cte;
         await pagamentosAPI.agregados.create(data);
         toast.success('Pagamento registrado com sucesso!');
       }
@@ -333,10 +341,12 @@ function PagamentoAgregadoForm() {
     }
   };
 
-  // Calcular valor repassado
-  const valorRepassado = formData.valor_frete_total && formData.percentual_repasse
-    ? (parseFloat(formData.valor_frete_total) * parseFloat(formData.percentual_repasse) / 100).toFixed(2)
-    : '0.00';
+  // Calcular valor repassado: (frete * percentual / 100) - desconto
+  const valorBruto = formData.valor_frete_total && formData.percentual_repasse
+    ? parseFloat(formData.valor_frete_total) * parseFloat(formData.percentual_repasse) / 100
+    : 0;
+  const descontoValor = parseFloat(formData.desconto) || 0;
+  const valorRepassado = Math.max(valorBruto - descontoValor, 0).toFixed(2);
 
   if (loading) return <Loading message="Carregando..." />;
 
@@ -795,6 +805,20 @@ function PagamentoAgregadoForm() {
             </div>
 
             <div className="form-group">
+              <label>Desconto (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                name="desconto"
+                value={formData.desconto}
+                onChange={handleChange}
+                min="0"
+                placeholder="0.00"
+              />
+              <small className="form-hint">Desconto sobre o valor a repassar</small>
+            </div>
+
+            <div className="form-group">
               <label>Valor a Repassar (R$)</label>
               <input
                 type="text"
@@ -802,7 +826,7 @@ function PagamentoAgregadoForm() {
                 disabled
                 className="input-calculated"
               />
-              <small className="form-hint">Calculado automaticamente</small>
+              <small className="form-hint">Calculado: (Frete × %) − Desconto</small>
             </div>
           </div>
         </div>

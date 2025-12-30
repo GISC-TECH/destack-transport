@@ -37,24 +37,43 @@ class PagamentoAgregadoSerializer(serializers.ModelSerializer):
     cte_numero = serializers.IntegerField(source='cte.identificacao.numero', read_only=True, allow_null=True)
     cte_data_emissao = serializers.DateTimeField(source='cte.identificacao.data_emissao', read_only=True, allow_null=True, format='%d/%m/%Y')
 
+    def validate(self, data):
+        """Validação customizada: cte é obrigatório apenas na criação."""
+        # Se é uma criação (não tem instance), cte é obrigatório
+        if self.instance is None and 'cte' not in data:
+            raise serializers.ValidationError({'cte': 'CT-e é obrigatório para criar um pagamento agregado.'})
+        return data
+
     class Meta:
         model = PagamentoAgregado
         # Lista os campos a serem incluídos
         fields = [
             'id', 'cte', 'cte_id', 'cte_chave', 'cte_numero', 'cte_data_emissao', # Campos do CT-e
             'placa', 'condutor_cpf', 'condutor_nome',
-            'valor_frete_total', 'percentual_repasse', 'valor_repassado', # Valor repassado é calculado
-            'obs', 'status', 'data_prevista', 'data_pagamento',
+            'valor_frete_total', 'percentual_repasse', 'desconto', 'valor_repassado', # desconto e valor_repassado (calculado)
+            'obs', 'status', 'data_prevista', 'data_pagamento', 'comprovante',
             'criado_em', 'atualizado_em'
         ]
         # Campos que não podem ser definidos diretamente na criação/atualização
         # valor_repassado é calculado automaticamente pelo model.save()
         read_only_fields = ('valor_repassado', 'criado_em', 'atualizado_em', 'cte_id', 'cte_chave', 'cte_numero', 'cte_data_emissao')
-        # CT-e é obrigatório (relação 1:1)
-        extra_kwargs = {'cte': {'write_only': True, 'required': True}}
+        # CT-e é write_only mas não required no serializer (model constraint garante na criação)
+        # Isso permite PATCH sem enviar cte
+        extra_kwargs = {'cte': {'write_only': True, 'required': False}}
 
 class PagamentoProprioSerializer(serializers.ModelSerializer):
     """ Serializer para o modelo PagamentoProprio. """
+
+    def validate(self, data):
+        """Validação customizada: veiculo e periodo são obrigatórios apenas na criação."""
+        if self.instance is None:
+            # Criação - campos obrigatórios
+            if 'veiculo' not in data:
+                raise serializers.ValidationError({'veiculo': 'Veículo é obrigatório para criar um pagamento próprio.'})
+            if 'periodo' not in data:
+                raise serializers.ValidationError({'periodo': 'Período é obrigatório para criar um pagamento próprio.'})
+        return data
+
     # Campos somente leitura
     veiculo_placa = serializers.CharField(source='veiculo.placa', read_only=True)
     valor_total_pagar = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
@@ -83,7 +102,7 @@ class PagamentoProprioSerializer(serializers.ModelSerializer):
             # Campos de pagamento
             'data_prevista',
             'km_total_periodo', 'valor_base_faixa', 'valor_repassado', 'ajustes', 'valor_total_pagar',
-            'status', 'data_pagamento', 'obs',
+            'status', 'data_pagamento', 'comprovante', 'obs',
             'criado_em', 'atualizado_em'
         ]
         # Campos calculados ou definidos internamente/pela view
@@ -92,9 +111,10 @@ class PagamentoProprioSerializer(serializers.ModelSerializer):
             'veiculo_placa', 'placa', 'condutor_nome', 'condutor_cpf',
             'cte_chave', 'cte_data_emissao'
         )
-        # CT-e e veículo são obrigatórios (relação 1:1)
+        # CT-e e veículo são write_only mas não required no serializer para permitir PATCH
+        # Model constraints garantem na criação
         extra_kwargs = {
-            'veiculo': {'write_only': True, 'required': True},
-            'periodo': {'required': True},
-            'cte': {'write_only': True, 'required': True},
+            'veiculo': {'write_only': True, 'required': False},
+            'periodo': {'required': False},  # Required apenas para criação, não para PATCH
+            'cte': {'write_only': True, 'required': False},
         }

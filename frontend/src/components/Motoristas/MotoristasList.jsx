@@ -251,7 +251,7 @@ function MotoristasList() {
                   <td>
                     <span className="badge badge-categoria">{motorista.categoria_cnh}</span>
                   </td>
-                  <td>{motorista.cnh_validade || '-'}</td>
+                  <td>{motorista.validade_cnh_formatada || motorista.validade_cnh || '-'}</td>
                   <td>
                     <span className={`status ${motorista.ativo ? 'ativo' : 'inativo'}`}>
                       {motorista.ativo ? 'Ativo' : 'Inativo'}

@@ -643,10 +643,12 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         - pago: boolean (obrigatório)
         - data_pagamento: string YYYY-MM-DD (opcional, usa data atual se não informado)
         - observacao_pagamento: string (opcional)
+        - comprovante: arquivo (opcional, PDF ou imagem)
 
         Exemplo de uso:
         PATCH /api/ctes/{id}/pagamento/
         Body: {"pago": true, "data_pagamento": "2024-12-15", "observacao_pagamento": "Pago via transferência"}
+        Ou multipart/form-data com arquivo comprovante
         """
         cte = self.get_object()
 
@@ -664,6 +666,9 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
 
         # Atualiza os campos
         cte.pago = pago
+
+        # Lista de campos a atualizar
+        update_fields = ['pago', 'data_pagamento', 'observacao_pagamento']
 
         # Define a data de pagamento
         if pago:
@@ -687,8 +692,14 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         if observacao is not None:
             cte.observacao_pagamento = observacao
 
+        # Atualiza comprovante se fornecido
+        comprovante = request.FILES.get('comprovante')
+        if comprovante:
+            cte.comprovante_pagamento = comprovante
+            update_fields.append('comprovante_pagamento')
+
         # Salva as alterações
-        cte.save(update_fields=['pago', 'data_pagamento', 'observacao_pagamento'])
+        cte.save(update_fields=update_fields)
 
         # Log da operação
         logger.info(f"CT-e {cte.chave} marcado como {'pago' if pago else 'não pago'} por {request.user}")
@@ -700,7 +711,8 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             "chave": cte.chave,
             "pago": cte.pago,
             "data_pagamento": cte.data_pagamento.isoformat() if cte.data_pagamento else None,
-            "observacao_pagamento": cte.observacao_pagamento
+            "observacao_pagamento": cte.observacao_pagamento,
+            "comprovante_pagamento": cte.comprovante_pagamento.url if cte.comprovante_pagamento else None
         })
 
     @action(detail=False, methods=['get'])
@@ -755,13 +767,16 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         Filtros disponíveis:
         - data_inicio: Data inicial (YYYY-MM-DD)
         - data_fim: Data final (YYYY-MM-DD)
-        - modalidade: CIF ou FOB
+        - modalidades: Lista de modalidades separadas por vírgula (ex: CIF,FOB)
+        - remetentes: Lista de razões sociais separadas por vírgula
+        - destinatarios: Lista de razões sociais separadas por vírgula
 
         Retorna:
         - Totais gerais (quantidade e valor)
         - Distribuição por modalidade
         - Top clientes com mais pendências
         - Lista dos CT-es pendentes mais recentes
+        - Listas de remetentes e destinatários para filtros
         """
         # Usa os mesmos filtros do queryset base, mas filtra apenas não pagos
         queryset = self.get_queryset().filter(pago=False)
@@ -770,6 +785,33 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = queryset.filter(
             Q(cancelamento__isnull=True) | ~Q(cancelamento__c_stat=135)
         )
+
+        # Guarda queryset base para obter listas de filtros
+        queryset_base = queryset
+
+        # Aplica filtros adicionais
+        params = request.query_params
+
+        # Filtro por modalidades (múltiplas, separadas por vírgula)
+        modalidades = params.get('modalidades', '').strip()
+        if modalidades:
+            modalidades_list = [m.strip().upper() for m in modalidades.split(',') if m.strip()]
+            if modalidades_list:
+                queryset = queryset.filter(modalidade__in=modalidades_list)
+
+        # Filtro por remetentes (múltiplos, separados por vírgula)
+        remetentes = params.get('remetentes', '').strip()
+        if remetentes:
+            remetentes_list = [r.strip() for r in remetentes.split(',') if r.strip()]
+            if remetentes_list:
+                queryset = queryset.filter(remetente__razao_social__in=remetentes_list)
+
+        # Filtro por destinatários (múltiplos, separados por vírgula)
+        destinatarios = params.get('destinatarios', '').strip()
+        if destinatarios:
+            destinatarios_list = [d.strip() for d in destinatarios.split(',') if d.strip()]
+            if destinatarios_list:
+                queryset = queryset.filter(destinatario__razao_social__in=destinatarios_list)
 
         # Calcula estatísticas gerais
         stats = queryset.aggregate(
@@ -814,6 +856,28 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             valor_total_pago=Sum('prestacao__valor_total_prestado')
         )
 
+        # Listas distintas para filtros (usando queryset_base sem filtros aplicados)
+        remetentes_distintos = list(
+            queryset_base.exclude(remetente__razao_social__isnull=True)
+            .values_list('remetente__razao_social', flat=True)
+            .distinct()
+            .order_by('remetente__razao_social')[:100]  # Limita a 100 para performance
+        )
+
+        destinatarios_distintos = list(
+            queryset_base.exclude(destinatario__razao_social__isnull=True)
+            .values_list('destinatario__razao_social', flat=True)
+            .distinct()
+            .order_by('destinatario__razao_social')[:100]
+        )
+
+        modalidades_distintas = list(
+            queryset_base.exclude(modalidade__isnull=True)
+            .values_list('modalidade', flat=True)
+            .distinct()
+            .order_by('modalidade')
+        )
+
         return Response({
             "resumo": {
                 "total_pendentes": stats['total_pendentes'] or 0,
@@ -837,5 +901,10 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                     "valor_total": float(item['valor_total'] or 0)
                 } for item in top_clientes
             ],
-            "ctes_pendentes_recentes": ctes_recentes_data
+            "ctes_pendentes_recentes": ctes_recentes_data,
+            "filtros_disponiveis": {
+                "remetentes": remetentes_distintos,
+                "destinatarios": destinatarios_distintos,
+                "modalidades": modalidades_distintas
+            }
         })

@@ -70,24 +70,25 @@ function DateFilter({ onFilterChange, defaultPeriodo = 'mes', showPeriodButtons 
   const handleDataChange = (campo, valor) => {
     setPeriodo('custom');
 
+    // Atualiza o estado local
+    let novaDataInicio = dataInicio;
+    let novaDataFim = dataFim;
+
     if (campo === 'inicio') {
+      novaDataInicio = valor;
       setDataInicio(valor);
-      if (onFilterChange) {
-        onFilterChange({
-          periodo: 'custom',
-          data_inicio: valor,
-          data_fim: dataFim
-        });
-      }
     } else {
+      novaDataFim = valor;
       setDataFim(valor);
-      if (onFilterChange) {
-        onFilterChange({
-          periodo: 'custom',
-          data_inicio: dataInicio,
-          data_fim: valor
-        });
-      }
+    }
+
+    // Chama o callback com os valores atualizados
+    if (onFilterChange) {
+      onFilterChange({
+        periodo: 'custom',
+        data_inicio: novaDataInicio,
+        data_fim: novaDataFim
+      });
     }
   };
 

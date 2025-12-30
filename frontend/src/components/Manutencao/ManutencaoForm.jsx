@@ -29,6 +29,7 @@ function ManutencaoForm() {
     fornecedor: '',
     numero_nota: ''
   });
+  const [arquivoNota, setArquivoNota] = useState(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -89,26 +90,45 @@ function ManutencaoForm() {
     setError(null);
 
     try {
-      // Mapear campos do formulário para a API
-      const data = {
-        veiculo: parseInt(formData.veiculo),
-        tipo: formData.tipo,
-        descricao: formData.descricao,
-        data_agendada: formData.data_agendada,
-        data_realizada: formData.data_realizada || null,
-        quilometragem: formData.km_atual ? parseInt(formData.km_atual) : null,
-        custo: formData.custo ? parseFloat(formData.custo) : 0,
-        status: formData.status,
-        observacoes: formData.observacoes || '',
-        fornecedor: formData.fornecedor || '',
-        nota_fiscal: formData.numero_nota || ''
-      };
+      let dataToSend;
+
+      if (arquivoNota) {
+        // Se tiver arquivo, usa FormData
+        dataToSend = new FormData();
+        dataToSend.append('veiculo', parseInt(formData.veiculo));
+        dataToSend.append('tipo', formData.tipo);
+        dataToSend.append('descricao', formData.descricao);
+        dataToSend.append('data_agendada', formData.data_agendada);
+        if (formData.data_realizada) dataToSend.append('data_realizada', formData.data_realizada);
+        if (formData.km_atual) dataToSend.append('quilometragem', parseInt(formData.km_atual));
+        dataToSend.append('custo', formData.custo ? parseFloat(formData.custo) : 0);
+        dataToSend.append('status', formData.status);
+        dataToSend.append('observacoes', formData.observacoes || '');
+        dataToSend.append('fornecedor', formData.fornecedor || '');
+        dataToSend.append('nota_fiscal', formData.numero_nota || '');
+        dataToSend.append('arquivo_nota', arquivoNota);
+      } else {
+        // Sem arquivo, envia JSON
+        dataToSend = {
+          veiculo: parseInt(formData.veiculo),
+          tipo: formData.tipo,
+          descricao: formData.descricao,
+          data_agendada: formData.data_agendada,
+          data_realizada: formData.data_realizada || null,
+          quilometragem: formData.km_atual ? parseInt(formData.km_atual) : null,
+          custo: formData.custo ? parseFloat(formData.custo) : 0,
+          status: formData.status,
+          observacoes: formData.observacoes || '',
+          fornecedor: formData.fornecedor || '',
+          nota_fiscal: formData.numero_nota || ''
+        };
+      }
 
       if (isEditing) {
-        await manutencaoAPI.update(id, data);
+        await manutencaoAPI.update(id, dataToSend);
         toast.success('Manutencao atualizada com sucesso!');
       } else {
-        await manutencaoAPI.create(data);
+        await manutencaoAPI.create(dataToSend);
         toast.success('Manutencao agendada com sucesso!');
       }
       setTimeout(() => navigate('/manutencoes'), 500);
@@ -283,6 +303,21 @@ function ManutencaoForm() {
                 maxLength={44}
               />
             </div>
+          </div>
+
+          <div className="form-group">
+            <label>Arquivo da Nota Fiscal (opcional)</label>
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setArquivoNota(e.target.files[0] || null)}
+              style={{ padding: '8px' }}
+            />
+            {arquivoNota && (
+              <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                Arquivo selecionado: {arquivoNota.name}
+              </small>
+            )}
           </div>
 
           <div className="form-group">

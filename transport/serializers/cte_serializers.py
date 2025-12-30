@@ -195,6 +195,7 @@ class CTeDocumentoListSerializer(serializers.ModelSerializer):
     valor_total = serializers.DecimalField(source='prestacao.valor_total_prestado', max_digits=15, decimal_places=2, read_only=True, allow_null=True)
     uf_inicio = serializers.CharField(source='identificacao.uf_ini', read_only=True, allow_null=True)
     uf_fim = serializers.CharField(source='identificacao.uf_fim', read_only=True, allow_null=True)
+    dist_km = serializers.IntegerField(source='identificacao.dist_km', read_only=True, allow_null=True)
     placa_principal = serializers.SerializerMethodField() # Obtém a placa via método
     status = serializers.SerializerMethodField() # Obtém o status via método
     tem_pagamento_agregado = serializers.SerializerMethodField() # Indica se já tem pagamento agregado
@@ -203,7 +204,7 @@ class CTeDocumentoListSerializer(serializers.ModelSerializer):
         model = CTeDocumento
         fields = [
             'id', 'chave', 'numero_cte', 'serie_cte', 'modalidade', 'data_emissao', 'remetente_nome',
-            'destinatario_nome', 'uf_inicio', 'uf_fim', 'valor_total',
+            'destinatario_nome', 'uf_inicio', 'uf_fim', 'valor_total', 'dist_km',
             'placa_principal', 'status', 'processado', 'data_upload',
             'pago', 'data_pagamento', 'observacao_pagamento', 'tem_pagamento_agregado'
         ]

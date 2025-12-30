@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { pagamentosAPI, cteAPI, veiculosAPI, motoristasAPI } from '../../services/api';
+import { pagamentosAPI, cteAPI, veiculosAPI, motoristasAPI, faixasKmAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import './Pagamentos.css';
@@ -132,13 +132,32 @@ function PagamentoProprioForm() {
     return () => clearTimeout(timeoutId);
   }, [buscaCte]);
 
-  const handleSelecionarCte = (cte) => {
+  const handleSelecionarCte = async (cte) => {
     setCteSelecionado(cte);
+
+    // Busca o valor baseado na faixa de KM se houver dist_km
+    let valorFaixa = '';
+    if (cte.dist_km && cte.dist_km > 0) {
+      try {
+        const resultado = await faixasKmAPI.buscarPorKm(cte.dist_km);
+        valorFaixa = resultado.faixa.valor_pago;
+        toast.info(`Faixa KM aplicada: ${resultado.faixa.min_km}-${resultado.faixa.max_km || '+'} km = R$ ${valorFaixa}`);
+      } catch (err) {
+        console.warn('Faixa KM não encontrada:', err.message);
+        // Se não encontrar faixa, usa o valor do frete como fallback
+        valorFaixa = cte.valor_total || cte.valor_prestacao || '';
+        toast.warning('Faixa KM não encontrada. Usando valor do frete.');
+      }
+    } else {
+      // Sem distância, usa o valor do frete
+      valorFaixa = cte.valor_total || cte.valor_prestacao || '';
+    }
+
     setFormData(prev => ({
       ...prev,
       cte: cte.id,
       cte_numero: cte.numero_cte || cte.numero || '',
-      valor_base_faixa: cte.valor_total || cte.valor_prestacao || ''
+      valor_base_faixa: valorFaixa
     }));
     setBuscaCte('');
     setMostrarResultados(false);
@@ -254,13 +273,10 @@ function PagamentoProprioForm() {
     setError(null);
 
     try {
+      // Dados base para edição (campos que podem ser alterados)
       const data = {
-        veiculo: formData.veiculo || null,
-        cte: formData.cte || null,
-        cte_numero: formData.cte_numero || null,
         motorista_nome: formData.motorista_nome,
         motorista_cpf: formData.motorista_cpf || null,
-        periodo: formData.periodo,
         data_prevista: formData.data_prevista || null,
         valor_base_faixa: parseFloat(formData.valor_base_faixa) || 0,
         ajustes: parseFloat(formData.ajustes) || 0,
@@ -270,9 +286,15 @@ function PagamentoProprioForm() {
       };
 
       if (isEditing) {
+        // Na edição, NÃO enviamos veiculo, cte, periodo (não podem mudar)
         await pagamentosAPI.proprios.update(id, data);
         toast.success('Pagamento atualizado com sucesso!');
       } else {
+        // Na criação, incluímos todos os campos
+        data.veiculo = formData.veiculo || null;
+        data.cte = formData.cte || null;
+        data.cte_numero = formData.cte_numero || null;
+        data.periodo = formData.periodo;
         await pagamentosAPI.proprios.create(data);
         toast.success('Pagamento registrado com sucesso!');
       }

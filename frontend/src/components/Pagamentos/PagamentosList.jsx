@@ -4,7 +4,6 @@ import { pagamentosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
-import DateFilter from '../Common/DateFilter';
 import './Pagamentos.css';
 
 function PagamentosList() {
@@ -26,6 +25,7 @@ function PagamentosList() {
   // Modal de baixa rápida
   const [modalBaixa, setModalBaixa] = useState({ show: false, id: null, info: '' });
   const [dataBaixa, setDataBaixa] = useState(new Date().toISOString().split('T')[0]);
+  const [comprovanteFile, setComprovanteFile] = useState(null);
   const [processandoBaixa, setProcessandoBaixa] = useState(false);
 
   // Modal de conversão entre agregado e próprio
@@ -43,37 +43,20 @@ function PagamentosList() {
     percentual_repasse: '25',
     data_prevista: new Date().toISOString().split('T')[0]
   });
-  // Função para calcular datas do mês atual
-  const getDefaultPagDates = () => {
-    const hoje = new Date();
-    const dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-    return {
-      data_inicio: dataInicio.toISOString().split('T')[0],
-      data_fim: dataFim.toISOString().split('T')[0]
-    };
-  };
 
-  const defaultDates = getDefaultPagDates();
+  // Filtros sem datas - traz todos os registros
   const [filtros, setFiltros] = useState({
     status: '',
-    data_inicio: defaultDates.data_inicio,
-    data_fim: defaultDates.data_fim,
     busca: ''  // Busca por número CT-e, placa ou condutor
   });
 
-  const handleDateFilterChange = (newFiltros) => {
-    setFiltros(prev => {
-      const newState = {
-        ...prev,
-        data_inicio: newFiltros.data_inicio,
-        data_fim: newFiltros.data_fim
-      };
-      // Carrega pagamentos com o novo estado
-      loadPagamentos(newState);
-      return newState;
-    });
-  };
+  // Paginação
+  const [paginacao, setPaginacao] = useState({
+    page: 1,
+    pageSize: 20,
+    total: 0,
+    totalPages: 0
+  });
 
   // Carrega na montagem inicial
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,20 +71,24 @@ function PagamentosList() {
     };
   }, []);
 
-  // Carrega quando muda a tab
+  // Carrega quando muda a tab - reseta a página
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (filtros.data_inicio && filtros.data_fim) {
-      loadPagamentos();
-    }
+    setPaginacao(prev => ({ ...prev, page: 1 }));
+    loadPagamentos(null, 1);
   }, [activeTab]);
 
-  const loadPagamentos = async (customFiltros = null) => {
+  const loadPagamentos = async (customFiltros = null, customPage = null) => {
     const filtrosAtivos = customFiltros || filtros;
+    const pageAtual = customPage || paginacao.page;
     try {
       setLoading(true);
       setError(null);
-      const params = { ...filtrosAtivos, page_size: 1000 };  // Trazer mais resultados
+      const params = {
+        ...filtrosAtivos,
+        page: pageAtual,
+        page_size: paginacao.pageSize
+      };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
 
       let result;
@@ -112,7 +99,17 @@ function PagamentosList() {
       }
       // Check if component is still mounted before setting state
       if (!isMountedRef.current) return;
-      setPagamentos(result.results || result);
+
+      // Atualiza pagamentos e informações de paginação
+      const items = result.results || result;
+      const total = result.count || items.length;
+      setPagamentos(items);
+      setPaginacao(prev => ({
+        ...prev,
+        page: pageAtual,
+        total: total,
+        totalPages: Math.ceil(total / prev.pageSize)
+      }));
     } catch (err) {
       // Check if component is still mounted before setting state
       if (!isMountedRef.current) return;
@@ -125,6 +122,13 @@ function PagamentosList() {
         setLoading(false);
       }
     }
+  };
+
+  // Muda de página
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > paginacao.totalPages) return;
+    setPaginacao(prev => ({ ...prev, page: newPage }));
+    loadPagamentos(null, newPage);
   };
 
   const handleExport = async () => {
@@ -256,6 +260,7 @@ function PagamentosList() {
     const placa = pagamento.placa || pagamento.veiculo_placa || '';
     const info = `CT-e #${pagamento.cte_numero || '-'} - ${condutor || placa}`;
     setDataBaixa(new Date().toISOString().split('T')[0]);
+    setComprovanteFile(null);
     setModalBaixa({ show: true, id: pagamento.id, info });
   };
 
@@ -263,16 +268,28 @@ function PagamentosList() {
   const handleConfirmarBaixa = async () => {
     setProcessandoBaixa(true);
     try {
-      const data = {
-        status: 'pago',
-        data_pagamento: dataBaixa
-      };
-      if (activeTab === 'agregados') {
-        await pagamentosAPI.agregados.update(modalBaixa.id, data);
+      // Se tiver comprovante, usa FormData
+      let dataToSend;
+      if (comprovanteFile) {
+        dataToSend = new FormData();
+        dataToSend.append('status', 'pago');
+        dataToSend.append('data_pagamento', dataBaixa);
+        dataToSend.append('comprovante', comprovanteFile);
       } else {
-        await pagamentosAPI.proprios.update(modalBaixa.id, data);
+        dataToSend = {
+          status: 'pago',
+          data_pagamento: dataBaixa
+        };
+      }
+
+      if (activeTab === 'agregados') {
+        await pagamentosAPI.agregados.update(modalBaixa.id, dataToSend);
+      } else {
+        await pagamentosAPI.proprios.update(modalBaixa.id, dataToSend);
       }
       setModalBaixa({ show: false, id: null, info: '' });
+      setComprovanteFile(null);
+      toast.success('Pagamento baixado com sucesso!');
       loadPagamentos(); // Recarrega a lista
     } catch (err) {
       console.error('Erro ao baixar pagamento:', err);
@@ -555,6 +572,22 @@ function PagamentosList() {
                   style={{ width: '100%' }}
                 />
               </div>
+
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label>Comprovante (opcional)</label>
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+                  className="input-filter"
+                  style={{ width: '100%', padding: '8px' }}
+                />
+                {comprovanteFile && (
+                  <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                    Arquivo selecionado: {comprovanteFile.name}
+                  </small>
+                )}
+              </div>
             </div>
             <div className="modal-footer">
               <button
@@ -784,13 +817,21 @@ function PagamentosList() {
             placeholder="Buscar por CT-e, placa ou condutor..."
             value={filtros.busca}
             onChange={(e) => setFiltros({...filtros, busca: e.target.value})}
-            onKeyDown={(e) => e.key === 'Enter' && loadPagamentos()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                setPaginacao(prev => ({ ...prev, page: 1 }));
+                loadPagamentos(null, 1);
+              }
+            }}
             className="input-filter"
             style={{ minWidth: '250px' }}
           />
           <button
             type="button"
-            onClick={() => loadPagamentos()}
+            onClick={() => {
+              setPaginacao(prev => ({ ...prev, page: 1 }));
+              loadPagamentos(null, 1);
+            }}
             className="btn-secondary"
             style={{ padding: '8px 16px' }}
           >
@@ -800,7 +841,8 @@ function PagamentosList() {
             value={filtros.status}
             onChange={(e) => {
               setFiltros({...filtros, status: e.target.value});
-              setTimeout(loadPagamentos, 100);
+              setPaginacao(prev => ({ ...prev, page: 1 }));
+              setTimeout(() => loadPagamentos(null, 1), 100);
             }}
             className="select-filter"
           >
@@ -809,15 +851,17 @@ function PagamentosList() {
             <option value="pago">Pago</option>
             <option value="atrasado">Atrasado</option>
           </select>
-          <DateFilter
-            onFilterChange={handleDateFilterChange}
-            defaultPeriodo="mes"
-          />
         </div>
       </div>
 
       <div className="results-info">
-        <p>Total de {pagamentos.length} pagamento{pagamentos.length !== 1 ? 's' : ''}</p>
+        <p>
+          {paginacao.total > 0 ? (
+            <>Mostrando {((paginacao.page - 1) * paginacao.pageSize) + 1} - {Math.min(paginacao.page * paginacao.pageSize, paginacao.total)} de {paginacao.total} pagamento{paginacao.total !== 1 ? 's' : ''}</>
+          ) : (
+            <>Nenhum pagamento encontrado</>
+          )}
+        </p>
       </div>
 
       {/* Tabela */}
@@ -831,6 +875,7 @@ function PagamentosList() {
                   <th>Condutor</th>
                   <th>Placa</th>
                   <th>Data Prevista</th>
+                  <th>Desconto</th>
                   <th>Valor Repasse</th>
                   <th>Status</th>
                   <th>Acoes</th>
@@ -851,7 +896,7 @@ function PagamentosList() {
           <tbody>
             {pagamentos.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center">
+                <td colSpan={activeTab === 'agregados' ? 8 : 7} className="text-center">
                   Nenhum pagamento encontrado
                 </td>
               </tr>
@@ -866,6 +911,9 @@ function PagamentosList() {
                       <td>{pagamento.condutor_nome || '-'}</td>
                       <td>{pagamento.placa || '-'}</td>
                       <td>{formatDate(pagamento.data_prevista)}</td>
+                      <td className="text-right" style={{ color: pagamento.desconto > 0 ? '#e74c3c' : '#999' }}>
+                        {pagamento.desconto > 0 ? `-${formatCurrency(pagamento.desconto)}` : '-'}
+                      </td>
                       <td className="text-right">
                         <strong>{formatCurrency(pagamento.valor_repassado)}</strong>
                       </td>
@@ -989,6 +1037,70 @@ function PagamentosList() {
           </tbody>
         </table>
       </div>
+
+      {/* Paginação */}
+      {paginacao.totalPages > 1 && (
+        <div className="pagination-container">
+          <button
+            className="pagination-btn"
+            onClick={() => handlePageChange(1)}
+            disabled={paginacao.page === 1}
+            title="Primeira página"
+          >
+            &laquo;
+          </button>
+          <button
+            className="pagination-btn"
+            onClick={() => handlePageChange(paginacao.page - 1)}
+            disabled={paginacao.page === 1}
+            title="Página anterior"
+          >
+            &lsaquo;
+          </button>
+
+          {/* Números das páginas */}
+          {(() => {
+            const pages = [];
+            const maxVisible = 5;
+            let start = Math.max(1, paginacao.page - Math.floor(maxVisible / 2));
+            let end = Math.min(paginacao.totalPages, start + maxVisible - 1);
+
+            if (end - start + 1 < maxVisible) {
+              start = Math.max(1, end - maxVisible + 1);
+            }
+
+            for (let i = start; i <= end; i++) {
+              pages.push(
+                <button
+                  key={i}
+                  className={`pagination-btn ${paginacao.page === i ? 'active' : ''}`}
+                  onClick={() => handlePageChange(i)}
+                >
+                  {i}
+                </button>
+              );
+            }
+            return pages;
+          })()}
+
+          <button
+            className="pagination-btn"
+            onClick={() => handlePageChange(paginacao.page + 1)}
+            disabled={paginacao.page === paginacao.totalPages}
+            title="Próxima página"
+          >
+            &rsaquo;
+          </button>
+          <button
+            className="pagination-btn"
+            onClick={() => handlePageChange(paginacao.totalPages)}
+            disabled={paginacao.page === paginacao.totalPages}
+            title="Última página"
+          >
+            &raquo;
+          </button>
+        </div>
+      )}
     </div>
   );
 }
