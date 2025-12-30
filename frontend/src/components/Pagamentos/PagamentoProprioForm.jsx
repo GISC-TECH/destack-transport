@@ -50,6 +50,7 @@ function PagamentoProprioForm() {
     data_pagamento: '',
     obs: ''
   });
+  const [comprovanteFile, setComprovanteFile] = useState(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -273,29 +274,53 @@ function PagamentoProprioForm() {
     setError(null);
 
     try {
-      // Dados base para edição (campos que podem ser alterados)
-      const data = {
-        motorista_nome: formData.motorista_nome,
-        motorista_cpf: formData.motorista_cpf || null,
-        data_prevista: formData.data_prevista || null,
-        valor_base_faixa: parseFloat(formData.valor_base_faixa) || 0,
-        ajustes: parseFloat(formData.ajustes) || 0,
-        status: formData.status,
-        data_pagamento: formData.data_pagamento || null,
-        obs: formData.obs || ''
-      };
+      let dataToSend;
+
+      if (comprovanteFile) {
+        // Se tiver arquivo, usa FormData
+        dataToSend = new FormData();
+        dataToSend.append('motorista_nome', formData.motorista_nome);
+        if (formData.motorista_cpf) dataToSend.append('motorista_cpf', formData.motorista_cpf);
+        if (formData.data_prevista) dataToSend.append('data_prevista', formData.data_prevista);
+        dataToSend.append('valor_base_faixa', parseFloat(formData.valor_base_faixa) || 0);
+        dataToSend.append('ajustes', parseFloat(formData.ajustes) || 0);
+        dataToSend.append('status', formData.status);
+        if (formData.data_pagamento) dataToSend.append('data_pagamento', formData.data_pagamento);
+        dataToSend.append('obs', formData.obs || '');
+        dataToSend.append('comprovante', comprovanteFile);
+        if (!isEditing) {
+          if (formData.veiculo) dataToSend.append('veiculo', formData.veiculo);
+          if (formData.cte) dataToSend.append('cte', formData.cte);
+          if (formData.cte_numero) dataToSend.append('cte_numero', formData.cte_numero);
+          dataToSend.append('periodo', formData.periodo);
+        }
+      } else {
+        // Sem arquivo, envia JSON
+        dataToSend = {
+          motorista_nome: formData.motorista_nome,
+          motorista_cpf: formData.motorista_cpf || null,
+          data_prevista: formData.data_prevista || null,
+          valor_base_faixa: parseFloat(formData.valor_base_faixa) || 0,
+          ajustes: parseFloat(formData.ajustes) || 0,
+          status: formData.status,
+          data_pagamento: formData.data_pagamento || null,
+          obs: formData.obs || ''
+        };
+        if (!isEditing) {
+          dataToSend.veiculo = formData.veiculo || null;
+          dataToSend.cte = formData.cte || null;
+          dataToSend.cte_numero = formData.cte_numero || null;
+          dataToSend.periodo = formData.periodo;
+        }
+      }
 
       if (isEditing) {
         // Na edição, NÃO enviamos veiculo, cte, periodo (não podem mudar)
-        await pagamentosAPI.proprios.update(id, data);
+        await pagamentosAPI.proprios.update(id, dataToSend);
         toast.success('Pagamento atualizado com sucesso!');
       } else {
         // Na criação, incluímos todos os campos
-        data.veiculo = formData.veiculo || null;
-        data.cte = formData.cte || null;
-        data.cte_numero = formData.cte_numero || null;
-        data.periodo = formData.periodo;
-        await pagamentosAPI.proprios.create(data);
+        await pagamentosAPI.proprios.create(dataToSend);
         toast.success('Pagamento registrado com sucesso!');
       }
       setTimeout(() => navigate('/pagamentos'), 500);
@@ -836,6 +861,21 @@ function PagamentoProprioForm() {
               rows="3"
               placeholder="Observacoes adicionais..."
             />
+          </div>
+
+          <div className="form-group">
+            <label>Comprovante de Pagamento (opcional)</label>
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+              style={{ padding: '8px' }}
+            />
+            {comprovanteFile && (
+              <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                Arquivo selecionado: {comprovanteFile.name}
+              </small>
+            )}
           </div>
         </div>
 

@@ -49,6 +49,7 @@ function PagamentoAgregadoForm() {
     status: 'pendente',
     obs: ''
   });
+  const [comprovanteFile, setComprovanteFile] = useState(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -299,29 +300,47 @@ function PagamentoAgregadoForm() {
 
     try {
       const desconto = parseFloat(formData.desconto) || 0;
+      let dataToSend;
 
-      // Dados base para criação e edição
-      const data = {
-        placa: formData.placa.toUpperCase(),
-        condutor_nome: formData.condutor_nome,
-        condutor_cpf: formData.condutor_cpf || null,
-        valor_frete_total: valorFrete,
-        percentual_repasse: percentual,
-        desconto: desconto,
-        data_prevista: formData.data_prevista,
-        data_pagamento: formData.data_pagamento || null,
-        status: formData.status,
-        obs: formData.obs || ''
-      };
+      if (comprovanteFile) {
+        // Se tiver arquivo, usa FormData
+        dataToSend = new FormData();
+        dataToSend.append('placa', formData.placa.toUpperCase());
+        dataToSend.append('condutor_nome', formData.condutor_nome);
+        if (formData.condutor_cpf) dataToSend.append('condutor_cpf', formData.condutor_cpf);
+        dataToSend.append('valor_frete_total', valorFrete);
+        dataToSend.append('percentual_repasse', percentual);
+        dataToSend.append('desconto', desconto);
+        dataToSend.append('data_prevista', formData.data_prevista);
+        if (formData.data_pagamento) dataToSend.append('data_pagamento', formData.data_pagamento);
+        dataToSend.append('status', formData.status);
+        dataToSend.append('obs', formData.obs || '');
+        dataToSend.append('comprovante', comprovanteFile);
+        if (!isEditing && formData.cte) dataToSend.append('cte', formData.cte);
+      } else {
+        // Sem arquivo, envia JSON
+        dataToSend = {
+          placa: formData.placa.toUpperCase(),
+          condutor_nome: formData.condutor_nome,
+          condutor_cpf: formData.condutor_cpf || null,
+          valor_frete_total: valorFrete,
+          percentual_repasse: percentual,
+          desconto: desconto,
+          data_prevista: formData.data_prevista,
+          data_pagamento: formData.data_pagamento || null,
+          status: formData.status,
+          obs: formData.obs || ''
+        };
+        if (!isEditing) dataToSend.cte = formData.cte;
+      }
 
       if (isEditing) {
         // Na edição, NÃO enviamos o campo cte (não pode mudar o CT-e vinculado)
-        await pagamentosAPI.agregados.update(id, data);
+        await pagamentosAPI.agregados.update(id, dataToSend);
         toast.success('Pagamento atualizado com sucesso!');
       } else {
         // Na criação, incluímos o cte
-        data.cte = formData.cte;
-        await pagamentosAPI.agregados.create(data);
+        await pagamentosAPI.agregados.create(dataToSend);
         toast.success('Pagamento registrado com sucesso!');
       }
       setTimeout(() => navigate('/pagamentos'), 500);
@@ -879,6 +898,21 @@ function PagamentoAgregadoForm() {
               rows="3"
               placeholder="Observacoes adicionais..."
             />
+          </div>
+
+          <div className="form-group">
+            <label>Comprovante de Pagamento (opcional)</label>
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+              style={{ padding: '8px' }}
+            />
+            {comprovanteFile && (
+              <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                Arquivo selecionado: {comprovanteFile.name}
+              </small>
+            )}
           </div>
         </div>
 
