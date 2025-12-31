@@ -13,7 +13,6 @@ function PagamentosList() {
   const [activeTab, setActiveTab] = useState('agregados');
   const [pagamentos, setPagamentos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [_error, setError] = useState(null);
   const [showGerarLote, setShowGerarLote] = useState(false);
   const [gerandoLote, setGerandoLote] = useState(false);
   const [loteConfig, setLoteConfig] = useState({
@@ -83,7 +82,6 @@ function PagamentosList() {
     const pageAtual = customPage || paginacao.page;
     try {
       setLoading(true);
-      setError(null);
       const params = {
         ...filtrosAtivos,
         page: pageAtual,
@@ -114,7 +112,6 @@ function PagamentosList() {
       // Check if component is still mounted before setting state
       if (!isMountedRef.current) return;
       console.error('Erro ao carregar pagamentos:', err);
-      setError('Erro ao carregar pagamentos. Tente novamente.');
       setPagamentos([]);
     } finally {
       // Check if component is still mounted before setting state

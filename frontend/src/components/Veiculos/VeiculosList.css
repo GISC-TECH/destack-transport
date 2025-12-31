@@ -45,7 +45,12 @@
 .veiculos-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px;
+}
+
+@media (min-width: 769px) {
+  .veiculos-table {
+    min-width: 600px;
+  }
 }
 
 .veiculos-table thead {

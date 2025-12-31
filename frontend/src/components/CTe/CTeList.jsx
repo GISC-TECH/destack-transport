@@ -31,8 +31,6 @@ function CTeList() {
   }, []);
   const [ctes, setCtes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [_loadingGraficos, setLoadingGraficos] = useState(true);
-  const [_error, setError] = useState(null);
 
   // Modal de detalhes rapidos
   const [modalCte, setModalCte] = useState(null);
@@ -56,7 +54,6 @@ function CTeList() {
   const loadPainelCTe = useCallback(async (customFiltros = null) => {
     const filtrosAtivos = customFiltros || filtrosGraficos;
     try {
-      setLoadingGraficos(true);
       const params = { ...filtrosAtivos };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       const result = await dashboardAPI.cte(params);
@@ -64,8 +61,6 @@ function CTeList() {
     } catch (err) {
       console.error('Erro ao carregar painel CT-e:', err);
       setPainelData(null);
-    } finally {
-      setLoadingGraficos(false);
     }
   }, [filtrosGraficos]);
 
@@ -75,7 +70,6 @@ function CTeList() {
     const pageAtivo = customPage !== null ? customPage : pagination.page;
     try {
       setLoading(true);
-      setError(null);
       const params = { ...filtrosAtivos, page: pageAtivo, page_size: 5 };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       const result = await cteAPI.list(params);
@@ -83,7 +77,6 @@ function CTeList() {
       setPagination(prev => ({ ...prev, total: result.count || (result.results ? result.results.length : result.length) || 0 }));
     } catch (err) {
       console.error('Erro ao carregar CT-es:', err);
-      setError(err.message);
       setCtes([]);
       setPagination(prev => ({ ...prev, total: 0 }));
     } finally {

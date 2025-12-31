@@ -70,19 +70,24 @@ function ToastItem({ toast, onClose }) {
   }, [duration, handleClose]);
 
   return (
-    <div className={`toast toast-${type} ${isExiting ? 'toast-exit' : ''}`}>
-      <div className="toast-icon">{toastConfig.icon}</div>
+    <div
+      className={`toast toast-${type} ${isExiting ? 'toast-exit' : ''}`}
+      role="alert"
+      aria-live={type === 'error' ? 'assertive' : 'polite'}
+      aria-atomic="true"
+    >
+      <div className="toast-icon" aria-hidden="true">{toastConfig.icon}</div>
       <div className="toast-content">
         <h4 className="toast-title">{title || toastConfig.title}</h4>
         <p className="toast-message">{message}</p>
       </div>
-      <button className="toast-close" onClick={handleClose}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <button className="toast-close" onClick={handleClose} aria-label="Fechar notificacao">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
-      <div className="toast-progress">
+      <div className="toast-progress" aria-hidden="true">
         <div
           className="toast-progress-bar"
           style={{ animationDuration: `${duration}ms` }}
@@ -97,7 +102,7 @@ function ToastContainer({ toasts, removeToast }) {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="toast-container">
+    <div className="toast-container" role="region" aria-label="Notificacoes" aria-live="polite">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onClose={removeToast} />
       ))}

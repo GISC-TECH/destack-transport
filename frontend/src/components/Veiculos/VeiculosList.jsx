@@ -11,7 +11,6 @@ function VeiculosList() {
   const toast = useToast();
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [_error, setError] = useState(null);
   const [filtros, setFiltros] = useState({
     ativo: 'true',
     tipo_proprietario: '',
@@ -33,7 +32,6 @@ function VeiculosList() {
   const loadVeiculos = async () => {
     try {
       setLoading(true);
-      setError(null);
 
       const params = Object.fromEntries(
         Object.entries(filtros).filter(([, v]) => v !== '')
@@ -56,7 +54,6 @@ function VeiculosList() {
       }
     } catch (err) {
       console.error('Erro ao carregar veículos:', err);
-      setError('Erro ao carregar veículos. Tente novamente.');
       setVeiculos([]);
       setPagination({ count: 0, next: null, previous: null });
     } finally {

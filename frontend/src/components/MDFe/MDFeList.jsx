@@ -37,8 +37,6 @@ function MDFeList() {
   const defaultDates = getDefaultMDFeDates();
   const [mdfes, setMdfes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [_loadingGraficos, setLoadingGraficos] = useState(true);
-  const [_error, setError] = useState(null);
 
   // Modal de detalhes rapidos
   const [modalMdfe, setModalMdfe] = useState(null);
@@ -60,7 +58,6 @@ function MDFeList() {
   const loadPainelMDFe = async (customFiltros = null) => {
     const filtrosAtivos = customFiltros || filtrosGraficos;
     try {
-      setLoadingGraficos(true);
       const params = { ...filtrosAtivos };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       const result = await dashboardAPI.mdfe(params);
@@ -68,8 +65,6 @@ function MDFeList() {
     } catch (err) {
       console.error('Erro ao carregar painel MDF-e:', err);
       setPainelData(null);
-    } finally {
-      setLoadingGraficos(false);
     }
   };
 
@@ -79,7 +74,6 @@ function MDFeList() {
     const pageAtivo = customPage !== null ? customPage : pagination.page;
     try {
       setLoading(true);
-      setError(null);
       const params = { ...filtrosAtivos, page: pageAtivo, page_size: 5 };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       const result = await mdfeAPI.list(params);
@@ -87,7 +81,6 @@ function MDFeList() {
       setPagination(prev => ({ ...prev, total: result.count || (result.results ? result.results.length : result.length) || 0 }));
     } catch (err) {
       console.error('Erro ao carregar MDF-es:', err);
-      setError(err.message);
       setMdfes([]);
       setPagination(prev => ({ ...prev, total: 0 }));
     } finally {
@@ -142,11 +135,6 @@ function MDFeList() {
     }
   };
 
-  const _formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  };
-
   // Funcao para baixar XML
   const handleDownloadXML = async (mdfeId, numeroMdfe) => {
     try {
@@ -178,18 +166,6 @@ function MDFeList() {
   // Funcao para fechar modal
   const handleCloseModal = () => {
     setModalMdfe(null);
-  };
-
-  const _getStatusBadge = (mdfe) => {
-    if (mdfe.cancelamento) return <span className="badge badge-danger">Cancelado</span>;
-    if (mdfe.encerrado) return <span className="badge badge-info">Encerrado</span>;
-    if (mdfe.processado && mdfe.protocolo?.codigo_status === 100) {
-      return <span className="badge badge-success">Autorizado</span>;
-    }
-    if (mdfe.protocolo && mdfe.protocolo.codigo_status !== 100) {
-      return <span className="badge badge-warning">Rejeitado</span>;
-    }
-    return <span className="badge badge-secondary">Pendente</span>;
   };
 
   // KPIs do painel - conforme API /api/painel/mdfe/

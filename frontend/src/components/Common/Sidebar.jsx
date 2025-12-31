@@ -160,11 +160,13 @@ function Sidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <header className="mobile-header">
+      <header className="mobile-header" role="banner">
         <button
           className="menu-toggle"
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          aria-label="Toggle menu"
+          aria-label={isMobileOpen ? 'Fechar menu de navegacao' : 'Abrir menu de navegacao'}
+          aria-expanded={isMobileOpen}
+          aria-controls="sidebar-nav"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             {isMobileOpen ? (
@@ -191,8 +193,8 @@ function Sidebar() {
           <span>Destack Transport</span>
         </div>
         <div className="mobile-user">
-          <button className="mobile-logout" onClick={handleLogout} aria-label="Logout">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <button className="mobile-logout" onClick={handleLogout} aria-label="Sair do sistema">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
               <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -205,10 +207,14 @@ function Sidebar() {
       <div
         className={`sidebar-overlay ${isMobileOpen ? 'active' : ''}`}
         onClick={() => setIsMobileOpen(false)}
+        aria-hidden="true"
       />
 
       {/* Sidebar */}
-      <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
+      <aside
+        className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}
+        aria-label="Menu principal"
+      >
         {/* Brand */}
         <div className="sidebar-brand">
           <Link to="/dashboard">
@@ -232,20 +238,23 @@ function Sidebar() {
         </div>
 
         {/* Menu */}
-        <nav className="sidebar-nav">
-          <ul className="sidebar-menu">
+        <nav className="sidebar-nav" id="sidebar-nav" role="navigation" aria-label="Navegacao principal">
+          <ul className="sidebar-menu" role="menubar">
             {menuItems.map((item) => (
               <li
                 key={item.id}
                 className={`menu-item ${item.submenu ? 'has-submenu' : ''} ${openMenus[item.id] || isSubmenuActive(item.submenu) ? 'open' : ''}`}
+                role="none"
               >
                 {item.path ? (
                   <Link
                     to={item.path}
                     className={`menu-link ${isActive(item.path) ? 'active' : ''}`}
                     title={isCollapsed ? item.label : ''}
+                    role="menuitem"
+                    aria-current={isActive(item.path) ? 'page' : undefined}
                   >
-                    <span className="menu-icon">{item.icon}</span>
+                    <span className="menu-icon" aria-hidden="true">{item.icon}</span>
                     <span className="menu-label">{item.label}</span>
                   </Link>
                 ) : (
@@ -254,19 +263,25 @@ function Sidebar() {
                       className={`menu-link ${isSubmenuActive(item.submenu) ? 'active' : ''}`}
                       onClick={() => toggleSubmenu(item.id)}
                       title={isCollapsed ? item.label : ''}
+                      role="menuitem"
+                      aria-expanded={openMenus[item.id] || isSubmenuActive(item.submenu)}
+                      aria-haspopup="menu"
+                      aria-controls={`submenu-${item.id}`}
                     >
-                      <span className="menu-icon">{item.icon}</span>
+                      <span className="menu-icon" aria-hidden="true">{item.icon}</span>
                       <span className="menu-label">{item.label}</span>
-                      <svg className="submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg className="submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
                     </button>
-                    <ul className="submenu">
+                    <ul className="submenu" id={`submenu-${item.id}`} role="menu" aria-label={item.label}>
                       {item.submenu.map((subItem) => (
-                        <li key={subItem.path}>
+                        <li key={subItem.path} role="none">
                           <Link
                             to={subItem.path}
                             className={isActive(subItem.path) ? 'active' : ''}
+                            role="menuitem"
+                            aria-current={isActive(subItem.path) ? 'page' : undefined}
                           >
                             {subItem.label}
                           </Link>
@@ -294,8 +309,8 @@ function Sidebar() {
               <span className="user-role">{user?.is_staff ? 'Administrador' : 'Usuário'}</span>
             </div>
           </div>
-          <button className="logout-btn" onClick={handleLogout} title="Sair">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <button className="logout-btn" onClick={handleLogout} title="Sair" aria-label="Sair do sistema">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
               <line x1="21" y1="12" x2="9" y2="12"></line>

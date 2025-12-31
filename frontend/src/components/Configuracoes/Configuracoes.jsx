@@ -37,7 +37,6 @@ function Configuracoes() {
       }
     } catch {
       // Se não existe (404), inicializa com objeto vazio sem mostrar erro
-      console.info('Configuração de empresa não encontrada, criando nova...');
       setEmpresa(getEmpresaVazia());
     } finally {
       setLoading(false);

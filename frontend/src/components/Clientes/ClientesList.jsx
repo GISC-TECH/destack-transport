@@ -25,6 +25,50 @@ function ClientesList() {
     previous: null
   });
 
+  const fetchPage = async (url) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Erro ao carregar clientes');
+      const data = await response.json();
+
+      if (data.results) {
+        setClientes(data.results);
+        setPagination({
+          count: data.count,
+          next: data.next,
+          previous: data.previous
+        });
+      } else if (Array.isArray(data)) {
+        setClientes(data);
+        setPagination({ count: data.length, next: null, previous: null });
+      } else {
+        setClientes([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar clientes:', err);
+      setError('Erro ao carregar clientes. Tente novamente.');
+      setClientes([]);
+      setPagination({ count: 0, next: null, previous: null });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (pagination.previous) {
+      fetchPage(pagination.previous);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pagination.next) {
+      fetchPage(pagination.next);
+    }
+  };
+
   const loadClientes = useCallback(async () => {
     try {
       setLoading(true);
@@ -226,14 +270,14 @@ function ClientesList() {
           <button
             className="btn-page"
             disabled={!pagination.previous}
-            onClick={() => {/* TODO: implementar paginação */}}
+            onClick={handlePreviousPage}
           >
             Anterior
           </button>
           <button
             className="btn-page"
             disabled={!pagination.next}
-            onClick={() => {/* TODO: implementar paginação */}}
+            onClick={handleNextPage}
           >
             Próxima
           </button>

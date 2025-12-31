@@ -100,7 +100,12 @@
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 500px;
+}
+
+@media (min-width: 769px) {
+  .data-table {
+    min-width: 500px;
+  }
 }
 
 .data-table th,

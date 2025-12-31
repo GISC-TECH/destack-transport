@@ -97,7 +97,7 @@
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  min-width: 180px;
+  min-width: min(180px, 90vw);
   padding: 8px 0;
   opacity: 0;
   visibility: hidden;

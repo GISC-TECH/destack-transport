@@ -4,9 +4,15 @@ function Loading({ message = 'Carregando...', size = 'medium', fullScreen = fals
   const containerClass = `loading-container ${fullScreen ? 'loading-fullscreen' : ''} loading-${size}`;
 
   return (
-    <div className={containerClass}>
+    <div
+      className={containerClass}
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+      aria-label={message}
+    >
       <div className="loading-content">
-        <div className="loading-spinner">
+        <div className="loading-spinner" aria-hidden="true">
           <div className="spinner-ring"></div>
           <div className="spinner-ring"></div>
           <div className="spinner-ring"></div>
@@ -20,7 +26,7 @@ function Loading({ message = 'Carregando...', size = 'medium', fullScreen = fals
           </div>
         </div>
         <p className="loading-message">{message}</p>
-        <div className="loading-dots">
+        <div className="loading-dots" aria-hidden="true">
           <span></span>
           <span></span>
           <span></span>

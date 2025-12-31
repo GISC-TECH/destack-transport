@@ -19,7 +19,6 @@ const getTituloFromTipo = (tipo) => {
 function AlertasSistema() {
   const [alertas, setAlertas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [_error, setError] = useState(null);
   const [filtro, setFiltro] = useState('todos');
 
   useEffect(() => {
@@ -31,10 +30,8 @@ function AlertasSistema() {
       setLoading(true);
       const result = await alertasAPI.sistema.list();
       setAlertas(result.results || result);
-      setError(null);
     } catch (err) {
       console.error('Erro ao carregar alertas:', err);
-      setError('Erro ao carregar alertas. Tente novamente.');
       setAlertas([]);
     } finally {
       setLoading(false);

@@ -78,7 +78,6 @@ async function fetchWithCSRFRetry(url, options, retried = false) {
 
   // Se for 403 e ainda não tentamos retry, atualizar CSRF e tentar novamente
   if (response.status === 403 && !retried) {
-    console.log('CSRF token expirado, atualizando...');
     const refreshed = await refreshCSRFToken();
     if (refreshed) {
       // Atualizar o header com novo token
@@ -1704,6 +1703,79 @@ export const usuariosAPI = {
   }
 };
 
+// ======================================
+// EXTERNAL APIs (ViaCEP, BrasilAPI)
+// ======================================
+
+export const externalAPI = {
+  /**
+   * Busca endereco pelo CEP usando a API ViaCEP
+   * @param {string} cep - CEP (apenas numeros, 8 digitos)
+   * @returns {Promise<Object>} Dados do endereco ou erro
+   */
+  buscarCEP: async (cep) => {
+    const cepLimpo = cep.replace(/\D/g, '');
+    if (cepLimpo.length !== 8) {
+      throw new Error('CEP deve ter 8 digitos');
+    }
+
+    const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+    if (!response.ok) {
+      throw new Error('Erro ao consultar CEP. Tente novamente.');
+    }
+
+    const data = await response.json();
+    if (data.erro) {
+      throw new Error('CEP nao encontrado');
+    }
+
+    return {
+      logradouro: data.logradouro || '',
+      bairro: data.bairro || '',
+      cidade: data.localidade || '',
+      estado: data.uf || '',
+      complemento: data.complemento || ''
+    };
+  },
+
+  /**
+   * Busca dados da empresa pelo CNPJ usando a BrasilAPI
+   * @param {string} cnpj - CNPJ (apenas numeros, 14 digitos)
+   * @returns {Promise<Object>} Dados da empresa ou erro
+   */
+  buscarCNPJ: async (cnpj) => {
+    const cnpjLimpo = cnpj.replace(/\D/g, '');
+    if (cnpjLimpo.length !== 14) {
+      throw new Error('CNPJ deve ter 14 digitos');
+    }
+
+    const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('CNPJ nao encontrado na base da Receita Federal');
+      }
+      throw new Error('Erro ao consultar CNPJ. Tente novamente.');
+    }
+
+    const data = await response.json();
+
+    return {
+      razao_social: data.razao_social || '',
+      nome_fantasia: data.nome_fantasia || '',
+      email: data.email || '',
+      telefone: data.ddd_telefone_1 || '',
+      cep: data.cep ? data.cep.toString() : '',
+      logradouro: data.logradouro || '',
+      numero: data.numero || '',
+      complemento: data.complemento || '',
+      bairro: data.bairro || '',
+      cidade: data.municipio || '',
+      estado: data.uf || ''
+    };
+  }
+};
+
 // Exportar tudo
 export default {
   auth: authAPI,
@@ -1724,4 +1796,5 @@ export default {
   faixasKm: faixasKmAPI,
   documentos: documentosAPI,
   usuarios: usuariosAPI,
+  external: externalAPI,
 };

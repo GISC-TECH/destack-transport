@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { clientesAPI } from '../../services/api';
+import { clientesAPI, externalAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
@@ -88,22 +88,21 @@ function ClienteForm() {
 
     toast.info('Buscando CEP...');
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await response.json();
-      if (data.erro) {
-        toast.warning('CEP não encontrado');
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          logradouro: data.logradouro || '',
-          bairro: data.bairro || '',
-          cidade: data.localidade || '',
-          estado: data.uf || ''
-        }));
-      }
+      const data = await externalAPI.buscarCEP(cep);
+      setFormData(prev => ({
+        ...prev,
+        logradouro: data.logradouro,
+        bairro: data.bairro,
+        cidade: data.cidade,
+        estado: data.estado
+      }));
     } catch (err) {
       console.error('Erro ao buscar CEP:', err);
-      toast.error('Erro ao buscar CEP. Tente novamente.');
+      if (err.message === 'CEP nao encontrado') {
+        toast.warning('CEP nao encontrado');
+      } else {
+        toast.error(err.message || 'Erro ao buscar CEP. Tente novamente.');
+      }
     }
   };
 
@@ -116,42 +115,30 @@ function ClienteForm() {
 
     setBuscandoCnpj(true);
     try {
-      // Usando BrasilAPI (gratuita e sem autenticacao)
-      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          toast.error('CNPJ nao encontrado na base da Receita Federal');
-        } else {
-          toast.error('Erro ao consultar CNPJ. Tente novamente.');
-        }
-        return;
-      }
-
-      const data = await response.json();
+      const data = await externalAPI.buscarCNPJ(cnpj);
 
       // Formatar CEP se existir
-      const cepFormatado = data.cep ? formatCEP(data.cep.toString()) : '';
+      const cepFormatado = data.cep ? formatCEP(data.cep) : '';
 
       setFormData(prev => ({
         ...prev,
         razao_social: data.razao_social || prev.razao_social,
         nome_fantasia: data.nome_fantasia || prev.nome_fantasia,
         email: data.email || prev.email,
-        telefone: data.ddd_telefone_1 || prev.telefone,
+        telefone: data.telefone || prev.telefone,
         cep: cepFormatado || prev.cep,
         logradouro: data.logradouro || prev.logradouro,
         numero: data.numero || prev.numero,
         complemento: data.complemento || prev.complemento,
         bairro: data.bairro || prev.bairro,
-        cidade: data.municipio || prev.cidade,
-        estado: data.uf || prev.estado
+        cidade: data.cidade || prev.cidade,
+        estado: data.estado || prev.estado
       }));
 
       toast.success('Dados do CNPJ carregados com sucesso!');
     } catch (err) {
       console.error('Erro ao buscar CNPJ:', err);
-      toast.error('Erro ao consultar CNPJ. Verifique sua conexao.');
+      toast.error(err.message || 'Erro ao consultar CNPJ. Verifique sua conexao.');
     } finally {
       setBuscandoCnpj(false);
     }
