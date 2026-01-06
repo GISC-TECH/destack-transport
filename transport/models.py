@@ -1085,6 +1085,20 @@ class Veiculo(models.Model):
                    'dias_restantes': dias_restantes
                })
 
+       # Verificar documentos anexos com validade
+       for doc_anexo in self.documentos_anexos.filter(validade__isnull=False):
+           if doc_anexo.validade <= data_limite:
+               dias_restantes = (doc_anexo.validade - hoje).days
+               # Usar o nome do documento ou o tipo formatado
+               nome_doc = doc_anexo.nome or doc_anexo.get_tipo_display()
+               documentos_vencendo.append({
+                   'documento': f'{nome_doc} (anexo)',
+                   'validade': doc_anexo.validade,
+                   'vencido': doc_anexo.validade < hoje,
+                   'dias_restantes': dias_restantes,
+                   'documento_anexo_id': str(doc_anexo.id)
+               })
+
        return documentos_vencendo
 
    class Meta:
@@ -1764,6 +1778,20 @@ class Motorista(models.Model):
                 'vencido': self.aso_validade < hoje,
                 'dias_restantes': dias_restantes
             })
+
+        # Verificar documentos anexos com validade
+        for doc_anexo in self.documentos_anexos.filter(validade__isnull=False):
+            if doc_anexo.validade <= data_limite:
+                dias_restantes = (doc_anexo.validade - hoje).days
+                # Usar o nome do documento ou o tipo formatado
+                nome_doc = doc_anexo.nome or doc_anexo.get_tipo_display()
+                documentos_vencendo.append({
+                    'documento': f'{nome_doc} (anexo)',
+                    'validade': doc_anexo.validade,
+                    'vencido': doc_anexo.validade < hoje,
+                    'dias_restantes': dias_restantes,
+                    'documento_anexo_id': str(doc_anexo.id)
+                })
 
         return documentos_vencendo
 
