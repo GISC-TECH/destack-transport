@@ -13,6 +13,43 @@ const TIPOS_DOCUMENTO = {
     { value: 'procuracao', label: 'Procuracao' },
     { value: 'outro', label: 'Outro' },
   ],
+  manutencao: [
+    { value: 'nota_fiscal', label: 'Nota Fiscal' },
+    { value: 'orcamento', label: 'Orcamento' },
+    { value: 'ordem_servico', label: 'Ordem de Servico' },
+    { value: 'laudo_tecnico', label: 'Laudo Tecnico' },
+    { value: 'garantia', label: 'Termo de Garantia' },
+    { value: 'foto_antes', label: 'Foto Antes' },
+    { value: 'foto_depois', label: 'Foto Depois' },
+    { value: 'outro', label: 'Outro' },
+  ],
+  cte: [
+    { value: 'xml_cte', label: 'XML CT-e' },
+    { value: 'dacte', label: 'DACTE (PDF)' },
+    { value: 'comprovante_entrega', label: 'Comprovante de Entrega' },
+    { value: 'canhoto', label: 'Canhoto Assinado' },
+    { value: 'nota_fiscal_mercadoria', label: 'NF-e Mercadoria' },
+    { value: 'romaneio', label: 'Romaneio de Carga' },
+    { value: 'seguro_carga', label: 'Apolice Seguro Carga' },
+    { value: 'outro', label: 'Outro' },
+  ],
+  mdfe: [
+    { value: 'xml_mdfe', label: 'XML MDF-e' },
+    { value: 'damdfe', label: 'DAMDFE (PDF)' },
+    { value: 'encerramento', label: 'Comprovante Encerramento' },
+    { value: 'termo_carga', label: 'Termo de Carga' },
+    { value: 'checklist', label: 'Checklist Viagem' },
+    { value: 'outro', label: 'Outro' },
+  ],
+  pagamento: [
+    { value: 'comprovante_pix', label: 'Comprovante PIX' },
+    { value: 'comprovante_ted', label: 'Comprovante TED/DOC' },
+    { value: 'comprovante_deposito', label: 'Comprovante Deposito' },
+    { value: 'recibo', label: 'Recibo Assinado' },
+    { value: 'boleto', label: 'Boleto Pago' },
+    { value: 'nota_fiscal_servico', label: 'NFS-e' },
+    { value: 'outro', label: 'Outro' },
+  ],
   motorista: [
     // Documentos com validade (atualizam automaticamente)
     { value: 'cnh', label: 'CNH' },
@@ -104,6 +141,14 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
         return documentosAPI.motoristas;
       case 'veiculo':
         return documentosAPI.veiculos;
+      case 'manutencao':
+        return documentosAPI.manutencoes;
+      case 'cte':
+        return documentosAPI.ctes;
+      case 'mdfe':
+        return documentosAPI.mdfes;
+      case 'pagamento':
+        return documentosAPI.pagamentos;
       default:
         throw new Error('Tipo de entidade invalido');
     }

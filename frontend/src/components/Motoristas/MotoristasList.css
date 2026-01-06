@@ -319,3 +319,37 @@
   background-color: #2980b9;
   transform: scale(1.05);
 }
+
+/* Header Buttons */
+.header-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .header-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .header-buttons button,
+  .header-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-buttons {
+    gap: 10px;
+  }
+
+  .alertas-container {
+    gap: 12px;
+  }
+
+  .alerta-card {
+    padding: 14px;
+  }
+}

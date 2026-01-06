@@ -57,6 +57,10 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 .navbar-menu > li > a:hover,

@@ -1160,8 +1160,9 @@
   color: #2c3e50;
   font-weight: 500;
   text-align: right;
-  max-width: 60%;
+  max-width: 65%;
   word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .mobile-card-value.valor {
@@ -1286,6 +1287,43 @@
     justify-content: center;
     padding: 10px 14px;
     font-size: 13px;
+  }
+
+  /* Mobile card improvements for very small screens */
+  .mobile-card-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .mobile-card-value {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .mobile-card-footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobile-card-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mobile-card-pago {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .section-header h3 {
+    font-size: 16px;
   }
 }
 

@@ -694,6 +694,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 140px;
+    display: block;
   }
 
   .doc-cliente {
@@ -701,6 +703,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 120px;
+    display: block;
   }
 
   .doc-valor {

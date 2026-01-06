@@ -4,6 +4,7 @@ import { mdfeAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
+import DocumentosAnexos from '../Common/DocumentosAnexos';
 import '../CTe/CTe.css';
 
 function MDFeDetail() {
@@ -311,6 +312,14 @@ function MDFeDetail() {
               Nenhum documento vinculado
             </p>
           )}
+        </div>
+
+        {/* Documentos Anexos */}
+        <div className="detail-card" style={{gridColumn: '1 / -1'}}>
+          <DocumentosAnexos
+            entidadeTipo="mdfe"
+            entidadeId={id}
+          />
         </div>
       </div>
     </div>

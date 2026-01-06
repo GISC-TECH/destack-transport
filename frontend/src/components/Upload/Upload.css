@@ -284,6 +284,12 @@
 }
 
 /* Responsivo */
+@media (max-width: 992px) {
+  .upload-dropzone {
+    padding: 40px 25px;
+  }
+}
+
 @media (max-width: 768px) {
   .upload-dropzone {
     padding: 35px 20px;

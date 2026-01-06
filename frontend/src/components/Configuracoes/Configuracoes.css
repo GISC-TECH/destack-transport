@@ -181,7 +181,8 @@
 }
 
 .parametro-valor input {
-  width: 180px;
+  width: 100%;
+  max-width: 180px;
   padding: 10px 14px;
   border: 2px solid #e0e0e0;
   border-radius: 6px;
@@ -257,9 +258,19 @@ input:checked + .slider:before {
 }
 
 /* Responsivo */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .form-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .parametro-valor input {
+    width: 140px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .parametro-valor input {
+    width: 120px;
   }
 }
 

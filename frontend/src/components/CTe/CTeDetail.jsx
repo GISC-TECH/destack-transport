@@ -4,6 +4,7 @@ import { cteAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
+import DocumentosAnexos from '../Common/DocumentosAnexos';
 import './CTe.css';
 
 function CTeDetail() {
@@ -344,6 +345,14 @@ function CTeDetail() {
               <span className="value">{cte.identificacao?.dist_km || 0} km</span>
             </div>
           </div>
+        </div>
+
+        {/* Documentos Anexos */}
+        <div className="detail-card" style={{gridColumn: '1 / -1'}}>
+          <DocumentosAnexos
+            entidadeTipo="cte"
+            entidadeId={id}
+          />
         </div>
       </div>
     </div>

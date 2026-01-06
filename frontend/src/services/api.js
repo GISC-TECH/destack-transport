@@ -1637,6 +1637,222 @@ export const documentosAPI = {
       }
       return response.json();
     }
+  },
+
+  // Documentos de Manutencoes
+  manutencoes: {
+    list: async (manutencaoId) => {
+      const response = await fetch(`${API_BASE}/manutencoes/${manutencaoId}/documentos/`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao buscar documentos da manutencao');
+      return response.json();
+    },
+
+    upload: async (manutencaoId, file, dados = {}) => {
+      const formData = new FormData();
+      formData.append('arquivo', file);
+      if (dados.tipo) formData.append('tipo', dados.tipo);
+      if (dados.nome) formData.append('nome', dados.nome);
+      if (dados.validade) formData.append('validade', dados.validade);
+      if (dados.observacoes) formData.append('observacoes', dados.observacoes);
+
+      const response = await fetch(`${API_BASE}/manutencoes/${manutencaoId}/documentos/`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCSRFToken() },
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error, 'Erro ao enviar documento'));
+      }
+      return response.json();
+    },
+
+    delete: async (manutencaoId, documentoId) => {
+      const response = await fetch(`${API_BASE}/manutencoes/${manutencaoId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'DELETE',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+      });
+      if (!response.ok) throw new Error('Erro ao deletar documento');
+      return true;
+    },
+
+    update: async (manutencaoId, documentoId, dados) => {
+      const response = await fetchWithCSRFRetry(`${API_BASE}/manutencoes/${manutencaoId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'PATCH',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+        body: JSON.stringify(dados),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error, 'Erro ao atualizar documento'));
+      }
+      return response.json();
+    }
+  },
+
+  // Documentos de CT-es
+  ctes: {
+    list: async (cteId) => {
+      const response = await fetch(`${API_BASE}/ctes/${cteId}/documentos/`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao buscar documentos do CT-e');
+      return response.json();
+    },
+
+    upload: async (cteId, file, dados = {}) => {
+      const formData = new FormData();
+      formData.append('arquivo', file);
+      if (dados.tipo) formData.append('tipo', dados.tipo);
+      if (dados.nome) formData.append('nome', dados.nome);
+      if (dados.validade) formData.append('validade', dados.validade);
+      if (dados.observacoes) formData.append('observacoes', dados.observacoes);
+
+      const response = await fetch(`${API_BASE}/ctes/${cteId}/documentos/`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCSRFToken() },
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error, 'Erro ao enviar documento'));
+      }
+      return response.json();
+    },
+
+    delete: async (cteId, documentoId) => {
+      const response = await fetch(`${API_BASE}/ctes/${cteId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'DELETE',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+      });
+      if (!response.ok) throw new Error('Erro ao deletar documento');
+      return true;
+    },
+
+    update: async (cteId, documentoId, dados) => {
+      const response = await fetchWithCSRFRetry(`${API_BASE}/ctes/${cteId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'PATCH',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+        body: JSON.stringify(dados),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error, 'Erro ao atualizar documento'));
+      }
+      return response.json();
+    }
+  },
+
+  // Documentos de MDF-es
+  mdfes: {
+    list: async (mdfeId) => {
+      const response = await fetch(`${API_BASE}/mdfes/${mdfeId}/documentos/`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao buscar documentos do MDF-e');
+      return response.json();
+    },
+
+    upload: async (mdfeId, file, dados = {}) => {
+      const formData = new FormData();
+      formData.append('arquivo', file);
+      if (dados.tipo) formData.append('tipo', dados.tipo);
+      if (dados.nome) formData.append('nome', dados.nome);
+      if (dados.validade) formData.append('validade', dados.validade);
+      if (dados.observacoes) formData.append('observacoes', dados.observacoes);
+
+      const response = await fetch(`${API_BASE}/mdfes/${mdfeId}/documentos/`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCSRFToken() },
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error, 'Erro ao enviar documento'));
+      }
+      return response.json();
+    },
+
+    delete: async (mdfeId, documentoId) => {
+      const response = await fetch(`${API_BASE}/mdfes/${mdfeId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'DELETE',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+      });
+      if (!response.ok) throw new Error('Erro ao deletar documento');
+      return true;
+    },
+
+    update: async (mdfeId, documentoId, dados) => {
+      const response = await fetchWithCSRFRetry(`${API_BASE}/mdfes/${mdfeId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'PATCH',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+        body: JSON.stringify(dados),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error, 'Erro ao atualizar documento'));
+      }
+      return response.json();
+    }
+  },
+
+  // Documentos de Pagamentos
+  pagamentos: {
+    list: async (pagamentoId) => {
+      const response = await fetch(`${API_BASE}/pagamentos/${pagamentoId}/documentos/`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao buscar documentos do pagamento');
+      return response.json();
+    },
+
+    upload: async (pagamentoId, file, dados = {}) => {
+      const formData = new FormData();
+      formData.append('arquivo', file);
+      if (dados.tipo) formData.append('tipo', dados.tipo);
+      if (dados.nome) formData.append('nome', dados.nome);
+      if (dados.validade) formData.append('validade', dados.validade);
+      if (dados.observacoes) formData.append('observacoes', dados.observacoes);
+
+      const response = await fetch(`${API_BASE}/pagamentos/${pagamentoId}/documentos/`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCSRFToken() },
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error, 'Erro ao enviar documento'));
+      }
+      return response.json();
+    },
+
+    delete: async (pagamentoId, documentoId) => {
+      const response = await fetch(`${API_BASE}/pagamentos/${pagamentoId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'DELETE',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+      });
+      if (!response.ok) throw new Error('Erro ao deletar documento');
+      return true;
+    },
+
+    update: async (pagamentoId, documentoId, dados) => {
+      const response = await fetchWithCSRFRetry(`${API_BASE}/pagamentos/${pagamentoId}/documentos/${documentoId}/`, {
+        ...defaultOptions,
+        method: 'PATCH',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+        body: JSON.stringify(dados),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error, 'Erro ao atualizar documento'));
+      }
+      return response.json();
+    }
   }
 };
 

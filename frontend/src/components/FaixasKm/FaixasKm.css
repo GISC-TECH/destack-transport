@@ -102,10 +102,9 @@
   border-collapse: collapse;
 }
 
-@media (min-width: 769px) {
-  .data-table {
-    min-width: 500px;
-  }
+/* Always set min-width for horizontal scroll on all screen sizes */
+.faixas-km-page .data-table {
+  min-width: 500px;
 }
 
 .data-table th,
@@ -422,5 +421,19 @@
   .faixa-badge {
     padding: 3px 8px;
     font-size: 11px;
+  }
+
+  /* Improved modal for small screens */
+  .modal-content form {
+    padding: 16px;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .form-group input {
+    padding: 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 }

@@ -15,6 +15,10 @@
   margin-bottom: 0;
   box-shadow: none;
   padding: 8px 12px;
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  flex: 1;
+  min-width: 0;
 }
 
 .period-buttons {
@@ -141,5 +145,62 @@
   .period-btn {
     padding: 10px 8px;
     font-size: 12px;
+  }
+}
+
+/* DateFilter dentro de page-header-actions - Responsivo */
+@media (max-width: 1200px) {
+  .page-header-actions .date-filter {
+    width: 100%;
+    order: 10; /* Move para o final */
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header-actions .date-filter {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .page-header-actions .date-filter .period-buttons {
+    width: 100%;
+  }
+
+  .page-header-actions .date-filter .period-btn {
+    flex: 1;
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  .page-header-actions .date-filter .date-inputs {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .page-header-actions .date-filter .date-input-group {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header-actions .date-filter .period-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+
+  .page-header-actions .date-filter .period-btn {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  .page-header-actions .date-filter .date-inputs {
+    flex-direction: column;
+  }
+
+  .page-header-actions .date-filter .date-input-group {
+    width: 100%;
   }
 }

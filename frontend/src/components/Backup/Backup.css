@@ -198,10 +198,9 @@
   border-collapse: collapse;
 }
 
-@media (min-width: 769px) {
-  .data-table {
-    min-width: 500px;
-  }
+/* Always set min-width for horizontal scroll on all screen sizes */
+.data-table {
+  min-width: 500px;
 }
 
 .data-table th,

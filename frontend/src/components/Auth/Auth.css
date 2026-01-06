@@ -482,12 +482,13 @@
 
 @media (max-width: 480px) {
   .login-container {
-    padding: 15px;
+    padding: 12px;
   }
 
   .login-box {
-    padding: 35px 25px;
-    border-radius: 20px;
+    padding: 30px 20px;
+    border-radius: 18px;
+    max-width: 100%;
   }
 
   .login-logo {

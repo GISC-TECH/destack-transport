@@ -11,8 +11,6 @@ import {
 } from 'recharts';
 import './CTe.css';
 
-const API_BASE = '/api';
-
 // Cores para os graficos
 const COLORS = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6'];
 
@@ -141,13 +139,8 @@ function CTeList() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Erro ao baixar XML:', err);
-      alert('Erro ao baixar XML. Tente novamente.');
+      toast.error('Erro ao baixar XML. Tente novamente.');
     }
-  };
-
-  // Funcao para visualizar XML no navegador
-  const handleViewXML = (cteId) => {
-    window.open(`${API_BASE}/ctes/${cteId}/xml/`, '_blank');
   };
 
   // Funcao para abrir modal de detalhes rapidos
@@ -169,7 +162,7 @@ function CTeList() {
       // Atualiza o CT-e na lista localmente
       setCtes(prev => prev.map(c =>
         c.id === cte.id
-          ? { ...c, pago: novoPago, data_pagamento: novoPago ? new Date().toISOString() : null }
+          ? { ...c, pago: novoPago, data_pagamento: novoPago ? new Date().toISOString().split('T')[0] : null }
           : c
       ));
       toast.success(novoPago ? 'CT-e marcado como pago!' : 'CT-e marcado como pendente!');
@@ -502,18 +495,6 @@ function CTeList() {
                         </svg>
                       </button>
                       <button
-                        className="btn-action btn-xml"
-                        onClick={() => handleViewXML(cte.id)}
-                        title="Ver XML no Navegador"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                          <polyline points="14 2 14 8 20 8"></polyline>
-                          <line x1="16" y1="13" x2="8" y2="13"></line>
-                          <line x1="16" y1="17" x2="8" y2="17"></line>
-                        </svg>
-                      </button>
-                      <button
                         className="btn-action btn-download"
                         onClick={() => handleDownloadXML(cte.id, cte.numero_cte)}
                         title="Baixar XML"
@@ -734,16 +715,6 @@ function CTeList() {
               </div>
             </div>
             <div className="modal-footer">
-              <button
-                className="btn-action btn-xml"
-                onClick={() => handleViewXML(modalCte.id)}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
-                Ver XML
-              </button>
               <button
                 className="btn-action btn-download"
                 onClick={() => handleDownloadXML(modalCte.id, modalCte.numero_cte)}

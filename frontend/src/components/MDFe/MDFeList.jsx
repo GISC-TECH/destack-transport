@@ -11,8 +11,6 @@ import {
 } from 'recharts';
 import '../CTe/CTe.css';
 
-const API_BASE = '/api';
-
 // Cores para os graficos
 const STATUS_COLORS = {
   autorizado: '#27ae60',
@@ -151,11 +149,6 @@ function MDFeList() {
       console.error('Erro ao baixar XML:', err);
       toast.error('Erro ao baixar XML. Tente novamente.');
     }
-  };
-
-  // Funcao para visualizar XML no navegador
-  const handleViewXML = (mdfeId) => {
-    window.open(`${API_BASE}/mdfes/${mdfeId}/xml/`, '_blank');
   };
 
   // Funcao para abrir modal de detalhes rapidos
@@ -501,18 +494,6 @@ function MDFeList() {
                         </svg>
                       </button>
                       <button
-                        className="btn-action btn-xml"
-                        onClick={() => handleViewXML(mdfe.id)}
-                        title="Ver XML no Navegador"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                          <polyline points="14 2 14 8 20 8"></polyline>
-                          <line x1="16" y1="13" x2="8" y2="13"></line>
-                          <line x1="16" y1="17" x2="8" y2="17"></line>
-                        </svg>
-                      </button>
-                      <button
                         className="btn-action btn-download"
                         onClick={() => handleDownloadXML(mdfe.id, mdfe.numero_mdfe)}
                         title="Baixar XML"
@@ -707,16 +688,6 @@ function MDFeList() {
               </div>
             </div>
             <div className="modal-footer">
-              <button
-                className="btn-action btn-xml"
-                onClick={() => handleViewXML(modalMdfe.id)}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
-                Ver XML
-              </button>
               <button
                 className="btn-action btn-download"
                 onClick={() => handleDownloadXML(modalMdfe.id, modalMdfe.numero_mdfe)}

@@ -22,7 +22,10 @@ function MotoristaForm() {
     categoria_cnh: 'E',
     validade_cnh: '',
     nr20_validade: '',
+    nr35_validade: '',
     mopp_validade: '',
+    toxicologico_validade: '',
+    aso_validade: '',
     telefone: '',
     email: '',
     ativo: true
@@ -92,7 +95,10 @@ function MotoristaForm() {
         cpf: formData.cpf.replace(/\D/g, ''),
         validade_cnh: formData.validade_cnh || null,
         nr20_validade: formData.nr20_validade || null,
-        mopp_validade: formData.mopp_validade || null
+        nr35_validade: formData.nr35_validade || null,
+        mopp_validade: formData.mopp_validade || null,
+        toxicologico_validade: formData.toxicologico_validade || null,
+        aso_validade: formData.aso_validade || null
       };
 
       if (isEdit) {
@@ -246,12 +252,47 @@ function MotoristaForm() {
             </div>
 
             <div className="form-group">
+              <label htmlFor="nr35_validade">Validade NR35</label>
+              <input
+                type="date"
+                id="nr35_validade"
+                name="nr35_validade"
+                value={formData.nr35_validade || ''}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
               <label htmlFor="mopp_validade">Validade MOPP</label>
               <input
                 type="date"
                 id="mopp_validade"
                 name="mopp_validade"
                 value={formData.mopp_validade || ''}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="toxicologico_validade">Validade Exame Toxicol.</label>
+              <input
+                type="date"
+                id="toxicologico_validade"
+                name="toxicologico_validade"
+                value={formData.toxicologico_validade || ''}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="aso_validade">Validade ASO</label>
+              <input
+                type="date"
+                id="aso_validade"
+                name="aso_validade"
+                value={formData.aso_validade || ''}
                 onChange={handleChange}
               />
             </div>

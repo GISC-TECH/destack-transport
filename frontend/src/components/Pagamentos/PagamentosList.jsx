@@ -4,6 +4,8 @@ import { pagamentosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
+import DateFilter from '../Common/DateFilter';
+import ComprovantePagamento from './ComprovantePagamento';
 import './Pagamentos.css';
 
 function PagamentosList() {
@@ -34,6 +36,10 @@ function PagamentosList() {
   // Modal de exclusão
   const [modalExcluir, setModalExcluir] = useState({ show: false, id: null, info: '' });
   const [excluindoPagamento, setExcluindoPagamento] = useState(false);
+
+  // Modal de comprovante
+  const [modalComprovante, setModalComprovante] = useState({ show: false, pagamento: null });
+
   const [dadosConversao, setDadosConversao] = useState({
     periodo: '',
     condutor_nome: '',
@@ -43,11 +49,60 @@ function PagamentosList() {
     data_prevista: new Date().toISOString().split('T')[0]
   });
 
-  // Filtros sem datas - traz todos os registros
-  const [filtros, setFiltros] = useState({
-    status: '',
-    busca: ''  // Busca por número CT-e, placa ou condutor
+  // Funcao para calcular datas baseadas no periodo
+  const getDateRange = (periodo) => {
+    const hoje = new Date();
+    let dataInicio, dataFim;
+
+    switch (periodo) {
+      case 'hoje':
+        dataInicio = new Date(hoje);
+        dataFim = new Date(hoje);
+        break;
+      case 'mes':
+        dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+        break;
+      case 'ano':
+        dataInicio = new Date(hoje.getFullYear(), 0, 1);
+        dataFim = new Date(hoje.getFullYear(), 11, 31);
+        break;
+      default:
+        dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    }
+
+    return {
+      periodo: periodo,
+      data_inicio: dataInicio.toISOString().split('T')[0],
+      data_fim: dataFim.toISOString().split('T')[0]
+    };
+  };
+
+  // Filtros com datas - inicializa com mes atual
+  const [filtros, setFiltros] = useState(() => {
+    const defaultDates = getDateRange('mes');
+    return {
+      status: '',
+      busca: '',
+      data_inicio: defaultDates.data_inicio,
+      data_fim: defaultDates.data_fim
+    };
   });
+
+  const handleDateFilterChange = (newFiltros) => {
+    setFiltros(prev => ({
+      ...prev,
+      data_inicio: newFiltros.data_inicio,
+      data_fim: newFiltros.data_fim
+    }));
+    setPaginacao(prev => ({ ...prev, page: 1 }));
+    loadPagamentos({
+      ...filtros,
+      data_inicio: newFiltros.data_inicio,
+      data_fim: newFiltros.data_fim
+    }, 1);
+  };
 
   // Paginação
   const [paginacao, setPaginacao] = useState({
@@ -398,8 +453,13 @@ function PagamentosList() {
     }
   };
 
+  // Abre modal de comprovante
+  const handleAbrirComprovante = (pagamento) => {
+    setModalComprovante({ show: true, pagamento });
+  };
+
   const headerActions = (
-    <div className="header-buttons">
+    <>
       <button
         className="btn btn-outline"
         onClick={handleExport}
@@ -409,7 +469,7 @@ function PagamentosList() {
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        Exportar
+        <span>Exportar</span>
       </button>
       <button
         className="btn btn-secondary"
@@ -421,7 +481,7 @@ function PagamentosList() {
           <line x1="8" y1="2" x2="8" y2="6"></line>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
-        Gerar Lote
+        <span>Gerar Lote</span>
       </button>
       <button
         className="btn btn-primary"
@@ -431,9 +491,9 @@ function PagamentosList() {
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        Novo Pagamento
+        <span>Novo Pagamento</span>
       </button>
-    </div>
+    </>
   );
 
   if (loading && pagamentos.length === 0) return <Loading message="Carregando pagamentos..." />;
@@ -790,6 +850,14 @@ function PagamentosList() {
         </div>
       </div>
 
+      {/* Filtro de Data - abaixo dos cards */}
+      <DateFilter
+        onFilterChange={handleDateFilterChange}
+        defaultPeriodo="mes"
+        initialDataInicio={filtros.data_inicio}
+        initialDataFim={filtros.data_fim}
+      />
+
       {/* Tabs */}
       <div className="tabs-container">
         <button
@@ -941,6 +1009,18 @@ function PagamentosList() {
                       <td>{getStatusBadge(pagamento.status)}</td>
                       <td>
                         <div className="action-buttons">
+                          <button
+                            className="btn-action btn-view"
+                            onClick={() => handleAbrirComprovante(pagamento)}
+                            title="Gerar Comprovante"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                              <polyline points="14 2 14 8 20 8"></polyline>
+                              <line x1="12" y1="18" x2="12" y2="12"></line>
+                              <line x1="9" y1="15" x2="15" y2="15"></line>
+                            </svg>
+                          </button>
                           {pagamento.status !== 'pago' && (
                             <button
                               className="btn-action btn-download"
@@ -1025,6 +1105,18 @@ function PagamentosList() {
                       <td>{getStatusBadge(pagamento.status)}</td>
                       <td>
                         <div className="action-buttons">
+                          <button
+                            className="btn-action btn-view"
+                            onClick={() => handleAbrirComprovante(pagamento)}
+                            title="Gerar Comprovante"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                              <polyline points="14 2 14 8 20 8"></polyline>
+                              <line x1="12" y1="18" x2="12" y2="12"></line>
+                              <line x1="9" y1="15" x2="15" y2="15"></line>
+                            </svg>
+                          </button>
                           {pagamento.status !== 'pago' && (
                             <button
                               className="btn-action btn-download"
@@ -1080,6 +1172,15 @@ function PagamentosList() {
           </tbody>
         </table>
       </div>
+
+      {/* Modal de Comprovante */}
+      {modalComprovante.show && modalComprovante.pagamento && (
+        <ComprovantePagamento
+          pagamento={modalComprovante.pagamento}
+          tipo={activeTab}
+          onClose={() => setModalComprovante({ show: false, pagamento: null })}
+        />
+      )}
 
       {/* Paginação */}
       {paginacao.totalPages > 1 && (

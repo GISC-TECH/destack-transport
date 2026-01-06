@@ -71,7 +71,42 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  max-width: 200px;
+  max-width: 100%;
+}
+
+/* Filtros Form */
+.filtros-section {
+  margin-bottom: 20px;
+}
+
+.filtros-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filtros-form .select-filter,
+.filtros-form .input-filter {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  min-width: 140px;
+  background: white;
+}
+
+@media (max-width: 768px) {
+  .filtros-form {
+    flex-direction: column;
+  }
+
+  .filtros-form .select-filter,
+  .filtros-form .input-filter,
+  .filtros-form .btn-primary {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 /* Demo Badge */

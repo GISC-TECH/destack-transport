@@ -1,7 +1,57 @@
 .pagamentos-page {
   padding: 0;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
+}
+
+/* Botões no header */
+.pagamentos-page .page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagamentos-page .page-header-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  height: 40px;
+}
+
+.pagamentos-page .page-header-actions .btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.pagamentos-page .btn-outline {
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+}
+
+.pagamentos-page .btn-outline:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+/* Mobile - botões só com ícones */
+@media (max-width: 768px) {
+  .pagamentos-page .page-header-actions .btn span {
+    display: none;
+  }
+
+  .pagamentos-page .page-header-actions .btn {
+    padding: 10px 12px;
+  }
 }
 
 /* Summary Cards */
@@ -274,6 +324,12 @@
 @media (max-width: 768px) {
   .pagamentos-page {
     padding: 15px;
+  }
+
+  /* Botoes apenas com icones */
+  .pagamentos-page .page-header-actions .btn {
+    padding: 10px;
+    height: 38px;
   }
 
   .summary-cards {
@@ -651,8 +707,58 @@
   color: white;
 }
 
+/* Filtros Section */
+.filtros-section {
+  margin-bottom: 20px;
+}
+
+.filtros-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filtros-form .input-filter,
+.filtros-form .select-filter {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  flex: 1;
+  min-width: 150px;
+}
+
+.results-info {
+  padding: 12px 0;
+  color: #666;
+  font-size: 13px;
+}
+
+/* Table container scrollable */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
 /* Responsive Form */
 @media (max-width: 768px) {
+  .filtros-form {
+    flex-direction: column;
+  }
+
+  .filtros-form .input-filter,
+  .filtros-form .select-filter,
+  .filtros-form .btn-primary {
+    width: 100%;
+    min-width: 0;
+  }
+
   .pagamento-form-page {
     padding: 15px;
   }
@@ -663,7 +769,7 @@
 
   .form-row {
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 12px;
   }
 
   .form-actions {

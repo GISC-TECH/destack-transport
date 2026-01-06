@@ -109,6 +109,8 @@
   margin: 0;
   letter-spacing: -0.02em;
   line-height: 1.2;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .page-header-text p {
@@ -125,6 +127,7 @@
   gap: 10px;
   flex-wrap: wrap;
   flex-shrink: 0;
+  max-width: 100%;
 }
 
 .page-header-actions .btn,

@@ -1,6 +1,6 @@
 .veiculos-list {
   padding: 0;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
@@ -47,10 +47,9 @@
   border-collapse: collapse;
 }
 
-@media (min-width: 769px) {
-  .veiculos-table {
-    min-width: 600px;
-  }
+/* Always set min-width for horizontal scroll on all screen sizes */
+.veiculos-table {
+  min-width: 600px;
 }
 
 .veiculos-table thead {

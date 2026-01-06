@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { pagamentosAPI, cteAPI, motoristasAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
+import DocumentosAnexos from '../Common/DocumentosAnexos';
 import './Pagamentos.css';
 
 function PagamentoAgregadoForm() {
@@ -298,6 +299,12 @@ function PagamentoAgregadoForm() {
       return;
     }
 
+    if (formData.status === 'pago' && !formData.data_pagamento) {
+      toast.warning('Data de pagamento é obrigatória quando o status é "Pago"');
+      setSaving(false);
+      return;
+    }
+
     try {
       const desconto = parseFloat(formData.desconto) || 0;
       let dataToSend;
@@ -474,21 +481,7 @@ function PagamentoAgregadoForm() {
               <button
                 type="button"
                 onClick={handleRemoverCte}
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  right: '10px',
-                  background: '#e74c3c',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  lineHeight: '24px',
-                  textAlign: 'center'
-                }}
+                className="btn-remove-circle btn-sm"
                 title="Remover CT-e"
               >
                 ×
@@ -606,21 +599,7 @@ function PagamentoAgregadoForm() {
               <button
                 type="button"
                 onClick={handleRemoverCondutor}
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  right: '10px',
-                  background: '#e74c3c',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  lineHeight: '24px',
-                  textAlign: 'center'
-                }}
+                className="btn-remove-circle btn-sm"
                 title="Remover condutor"
               >
                 ×
@@ -700,7 +679,7 @@ function PagamentoAgregadoForm() {
                         {veiculo.placa}
                       </div>
                       <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
-                        {veiculo.modelo || 'Modelo N/I'} {veiculo.marca ? `- ${veiculo.marca}` : ''}
+                        {veiculo.tipo_carroceria || veiculo.tipo_rodado || 'Tipo N/I'}
                       </div>
                       {veiculo.proprietario_nome && (
                         <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>
@@ -731,21 +710,7 @@ function PagamentoAgregadoForm() {
               <button
                 type="button"
                 onClick={handleRemoverVeiculo}
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  right: '10px',
-                  background: '#e74c3c',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  lineHeight: '24px',
-                  textAlign: 'center'
-                }}
+                className="btn-remove-circle btn-sm"
                 title="Remover veiculo"
               >
                 ×
@@ -900,20 +865,23 @@ function PagamentoAgregadoForm() {
             />
           </div>
 
-          <div className="form-group">
-            <label>Comprovante de Pagamento (opcional)</label>
-            <input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
-              style={{ padding: '8px' }}
-            />
-            {comprovanteFile && (
-              <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
-                Arquivo selecionado: {comprovanteFile.name}
-              </small>
-            )}
-          </div>
+          {/* Campo de comprovante apenas na criacao - na edicao usar DocumentosAnexos */}
+          {!isEditing && (
+            <div className="form-group">
+              <label>Comprovante de Pagamento (opcional)</label>
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+                style={{ padding: '8px' }}
+              />
+              {comprovanteFile && (
+                <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                  Arquivo selecionado: {comprovanteFile.name}
+                </small>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="form-actions">
@@ -933,6 +901,16 @@ function PagamentoAgregadoForm() {
           </button>
         </div>
       </form>
+
+      {/* Documentos Anexos - apenas na edicao */}
+      {isEditing && id && (
+        <div style={{ marginTop: '24px' }}>
+          <DocumentosAnexos
+            entidadeTipo="pagamento"
+            entidadeId={id}
+          />
+        </div>
+      )}
     </div>
   );
 }

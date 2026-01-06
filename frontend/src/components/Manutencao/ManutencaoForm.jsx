@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { manutencaoAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
+import DocumentosAnexos from '../Common/DocumentosAnexos';
 import './Manutencao.css';
 
 function ManutencaoForm() {
@@ -175,7 +176,7 @@ function ManutencaoForm() {
                 <option value="">Selecione o veículo</option>
                 {veiculos.map(v => (
                   <option key={v.id} value={String(v.id)}>
-                    {v.placa} - {v.modelo}
+                    {v.placa} {v.proprietario_nome ? `- ${v.proprietario_nome}` : ''}
                   </option>
                 ))}
               </select>
@@ -349,6 +350,16 @@ function ManutencaoForm() {
           </button>
         </div>
       </form>
+
+      {/* Documentos Anexos - apenas na edicao */}
+      {isEditing && id && (
+        <div style={{ marginTop: '24px' }}>
+          <DocumentosAnexos
+            entidadeTipo="manutencao"
+            entidadeId={id}
+          />
+        </div>
+      )}
     </div>
   );
 }
