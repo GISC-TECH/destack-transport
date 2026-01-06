@@ -66,6 +66,19 @@ function DateFilter({
     }
   }, [initialDataInicio, initialDataFim]);
 
+  // Propaga datas iniciais para o componente pai na montagem
+  useEffect(() => {
+    if (onFilterChange) {
+      onFilterChange({
+        periodo: defaultPeriodo,
+        data_inicio: dataInicio,
+        data_fim: dataFim
+      });
+    }
+    // Executa apenas na montagem do componente
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handlePeriodoChange = (novoPeriodo) => {
     setPeriodo(novoPeriodo);
     const dates = getDateRange(novoPeriodo);
