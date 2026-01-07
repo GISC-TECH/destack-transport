@@ -85,6 +85,7 @@ function PagamentosPendentes() {
     }
   }, [filtros, filtrosAvancados]);
 
+  // Carrega dados na montagem inicial
   useEffect(() => {
     loadDados(defaultDates);
     // eslint-disable-next-line react-hooks/exhaustive-deps

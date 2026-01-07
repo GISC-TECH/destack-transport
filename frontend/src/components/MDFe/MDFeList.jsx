@@ -86,11 +86,11 @@ function MDFeList() {
     }
   };
 
-  // Carrega na montagem inicial
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Carrega dados na montagem inicial
   useEffect(() => {
     loadPainelMDFe(defaultDates);
     loadMDFes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handler para filtro de graficos

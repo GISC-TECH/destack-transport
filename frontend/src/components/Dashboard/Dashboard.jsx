@@ -60,10 +60,10 @@ function Dashboard() {
     }
   };
 
-  // Carrega na montagem inicial
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Carrega dados na montagem inicial
   useEffect(() => {
     loadAllData(defaultDates);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFilterChange = useCallback((newFilters) => {

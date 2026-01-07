@@ -66,18 +66,9 @@ function DateFilter({
     }
   }, [initialDataInicio, initialDataFim]);
 
-  // Propaga datas iniciais para o componente pai na montagem
-  useEffect(() => {
-    if (onFilterChange) {
-      onFilterChange({
-        periodo: defaultPeriodo,
-        data_inicio: dataInicio,
-        data_fim: dataFim
-      });
-    }
-    // Executa apenas na montagem do componente
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Nota: Nao propaga datas iniciais automaticamente na montagem
+  // Os componentes pais devem usar seu proprio useEffect para carregar dados iniciais
+  // Isso evita requisicoes duplicadas
 
   const handlePeriodoChange = (novoPeriodo) => {
     setPeriodo(novoPeriodo);

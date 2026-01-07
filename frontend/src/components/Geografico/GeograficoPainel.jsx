@@ -34,10 +34,10 @@ function GeograficoPainel() {
     loadDados(newFiltros);
   }, []);
 
-  // Carrega na montagem inicial
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Carrega dados na montagem inicial
   useEffect(() => {
     loadDados(defaultDates);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDados = async (customFiltros = null) => {

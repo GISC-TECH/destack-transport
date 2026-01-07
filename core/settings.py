@@ -512,9 +512,13 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True  # Apenas HTTPS
     CSRF_COOKIE_SECURE = True     # Apenas HTTPS
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = False  # Nginx já faz o redirect
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    # HSTS - HTTP Strict Transport Security
+    SECURE_HSTS_SECONDS = 31536000  # 1 ano
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # Headers de cache específicos para Django (complementam o Nginx)
 CACHE_MIDDLEWARE_SECONDS = 0  # Desabilita cache middleware

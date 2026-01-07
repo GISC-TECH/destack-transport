@@ -68,7 +68,7 @@ function FinanceiroPainel() {
     loadDados(newFiltros);
   };
 
-  // Carrega na montagem inicial usando os filtros ja inicializados
+  // Carrega dados na montagem inicial
   useEffect(() => {
     loadDados(filtros);
     // eslint-disable-next-line react-hooks/exhaustive-deps

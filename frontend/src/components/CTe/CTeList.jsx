@@ -82,7 +82,7 @@ function CTeList() {
     }
   }, [filtros, pagination.page]);
 
-  // Carrega na montagem inicial
+  // Carrega dados na montagem inicial
   useEffect(() => {
     loadPainelCTe(defaultDates);
     loadCTes();
