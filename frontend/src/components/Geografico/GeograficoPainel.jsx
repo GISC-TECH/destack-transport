@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { dashboardAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
@@ -28,11 +28,10 @@ function GeograficoPainel() {
   const [dados, setDados] = useState(null);
   const [filtros, setFiltros] = useState(defaultDates);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handleDateFilterChange = useCallback((newFiltros) => {
+  const handleDateFilterChange = (newFiltros) => {
     setFiltros(newFiltros);
     loadDados(newFiltros);
-  }, []);
+  };
 
   // Carrega dados na montagem inicial
   useEffect(() => {
@@ -78,8 +77,6 @@ function GeograficoPainel() {
     fill: COLORS[index % COLORS.length]
   }));
 
-  if (loading) return <Loading message="Carregando dados geograficos..." />;
-
   const geoIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="10"></circle>
@@ -99,10 +96,16 @@ function GeograficoPainel() {
           <DateFilter
             onFilterChange={handleDateFilterChange}
             defaultPeriodo="mes"
+            initialDataInicio={filtros.data_inicio}
+            initialDataFim={filtros.data_fim}
           />
         }
       />
 
+      {loading ? (
+        <Loading message="Carregando dados geograficos..." />
+      ) : (
+      <>
       {/* KPI Cards */}
       <div className="geo-kpi-grid">
         <div className="geo-kpi-card">
@@ -331,6 +334,8 @@ function GeograficoPainel() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

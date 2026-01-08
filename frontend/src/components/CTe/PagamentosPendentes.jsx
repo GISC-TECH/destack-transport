@@ -209,8 +209,6 @@ function PagamentosPendentes() {
     </svg>
   );
 
-  if (loading) return <Loading message="Carregando pagamentos pendentes..." />;
-
   const resumo = dados?.resumo || {};
   const percentualPago = resumo.total_pagos + resumo.total_pendentes > 0
     ? ((resumo.total_pagos / (resumo.total_pagos + resumo.total_pendentes)) * 100).toFixed(1)
@@ -225,7 +223,12 @@ function PagamentosPendentes() {
         breadcrumbs={[{ label: 'Documentos' }, { label: 'CT-e' }, { label: 'Pendentes' }]}
         actions={
           <div className="header-buttons">
-            <DateFilter onFilterChange={handleDateFilterChange} defaultPeriodo="mes" />
+            <DateFilter
+              onFilterChange={handleDateFilterChange}
+              defaultPeriodo="mes"
+              initialDataInicio={filtros.data_inicio}
+              initialDataFim={filtros.data_fim}
+            />
             <Link to="/ctes" className="btn btn-outline">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
@@ -236,6 +239,10 @@ function PagamentosPendentes() {
         }
       />
 
+      {loading ? (
+        <Loading message="Carregando pagamentos pendentes..." />
+      ) : (
+      <>
       {/* Filtros Avançados */}
       <div className="filtros-avancados-container" style={{ marginBottom: '20px' }}>
         <button
@@ -619,6 +626,8 @@ function PagamentosPendentes() {
           </div>
         ))}
       </div>
+      </>
+      )}
 
       {/* Modal de Baixa de Pagamento */}
       {modalBaixa.show && (

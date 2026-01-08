@@ -57,14 +57,19 @@ function DateFilter({
   const [dataFim, setDataFim] = useState(initialDataFim || defaultDates.data_fim);
 
   // Sincroniza com valores externos se fornecidos
+  // Nota: Usamos refs para comparar valores anteriores sem adicionar
+  // dataInicio/dataFim como dependencias, evitando loops infinitos
   useEffect(() => {
-    if (initialDataInicio && initialDataInicio !== dataInicio) {
+    if (initialDataInicio) {
       setDataInicio(initialDataInicio);
     }
-    if (initialDataFim && initialDataFim !== dataFim) {
+  }, [initialDataInicio]);
+
+  useEffect(() => {
+    if (initialDataFim) {
       setDataFim(initialDataFim);
     }
-  }, [initialDataInicio, initialDataFim]);
+  }, [initialDataFim]);
 
   // Nota: Nao propaga datas iniciais automaticamente na montagem
   // Os componentes pais devem usar seu proprio useEffect para carregar dados iniciais
@@ -147,20 +152,24 @@ function DateFilter({
 
       <div className="date-inputs">
         <div className="date-input-group">
-          <label>De:</label>
+          <label htmlFor="date-inicio">De:</label>
           <input
+            id="date-inicio"
             type="date"
             value={dataInicio}
             onChange={(e) => handleDataChange('inicio', e.target.value)}
+            onInput={(e) => handleDataChange('inicio', e.target.value)}
             className="date-input"
           />
         </div>
         <div className="date-input-group">
-          <label>Ate:</label>
+          <label htmlFor="date-fim">Ate:</label>
           <input
+            id="date-fim"
             type="date"
             value={dataFim}
             onChange={(e) => handleDataChange('fim', e.target.value)}
+            onInput={(e) => handleDataChange('fim', e.target.value)}
             className="date-input"
           />
         </div>
