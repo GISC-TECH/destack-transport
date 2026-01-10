@@ -3,8 +3,8 @@
    ======================================== */
 
 :root {
-  --sidebar-width: 270px;
-  --sidebar-collapsed-width: 72px;
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 70px;
   --sidebar-bg: linear-gradient(180deg, #1a1f2e 0%, #151926 100%);
   --sidebar-bg-solid: #1a1f2e;
   --sidebar-hover: rgba(52, 152, 219, 0.1);
@@ -13,7 +13,7 @@
   --sidebar-text: #8b95a5;
   --sidebar-text-light: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --mobile-header-height: 64px;
+  --mobile-header-height: 60px;
   --transition-speed: 0.25s;
   --transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
