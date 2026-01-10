@@ -976,14 +976,120 @@ class RelatorioAPIView(APIView):
 
     def _gerar_relatorio_manutencoes(self, data_inicio, data_fim, filtros):
         """Gera dados para o relatório de manutenções."""
+        from django.db.models import Q
+
         logger.info("INFO: Gerando relatório de manutenções com filtros: %s", filtros)
-        # Exemplo básico de busca (sem filtros específicos da API, apenas data)
-        qs = ManutencaoVeiculo.objects.all()
-        if data_inicio: qs = qs.filter(data_servico__gte=data_inicio)
-        if data_fim: qs = qs.filter(data_servico__lte=data_fim)
-        # Aplicar outros filtros de 'filtros' aqui...
-        serializer = ManutencaoVeiculoSerializer(qs, many=True)
-        return serializer.data # Retorna dados serializados para CSV/JSON
+
+        qs = ManutencaoVeiculo.objects.select_related('veiculo').all()
+
+        # Filtro por data - considera data_agendada, data_realizada e data_servico (legado)
+        # Usa OR para que registro seja incluído se QUALQUER uma das datas estiver no período
+        if data_inicio:
+            qs = qs.filter(
+                Q(data_agendada__gte=data_inicio) |
+                Q(data_realizada__gte=data_inicio) |
+                Q(data_servico__gte=data_inicio)
+            )
+        if data_fim:
+            qs = qs.filter(
+                Q(data_agendada__lte=data_fim) |
+                Q(data_realizada__lte=data_fim) |
+                Q(data_servico__lte=data_fim)
+            )
+
+        # Filtros adicionais
+        if 'placa' in filtros and filtros['placa']:
+            qs = qs.filter(veiculo__placa__icontains=filtros['placa'])
+        if 'status' in filtros and filtros['status']:
+            qs = qs.filter(status=filtros['status'])
+        if 'tipo' in filtros and filtros['tipo']:
+            qs = qs.filter(tipo=filtros['tipo'])
+        if 'fornecedor' in filtros and filtros['fornecedor']:
+            qs = qs.filter(fornecedor__icontains=filtros['fornecedor'])
+
+        # Ordena por data mais recente
+        qs = qs.order_by('-data_agendada', '-data_realizada', '-data_servico')[:1000]
+
+        # Formata dados para o relatório
+        dados = []
+        for m in qs:
+            dados.append({
+                'id': m.id,
+                'placa': m.veiculo.placa if m.veiculo else '-',
+                'tipo': m.tipo or '-',
+                'descricao': m.descricao or m.servico_realizado or '-',
+                'data_agendada': m.data_agendada.strftime('%d/%m/%Y') if m.data_agendada else '-',
+                'data_realizada': m.data_realizada.strftime('%d/%m/%Y') if m.data_realizada else '-',
+                'status': m.status or '-',
+                'custo': float(m.custo) if m.custo else 0,
+                'fornecedor': m.fornecedor or m.oficina or '-',
+                'quilometragem': m.quilometragem or '-',
+                'nota_fiscal': m.nota_fiscal or '-',
+            })
+
+        return dados
+
+    # --- Método Auxiliar para Formatar Valores no Padrão Brasileiro ---
+    def _formatar_valor_br(self, valor):
+        """
+        Formata um valor numérico para o padrão brasileiro (vírgula como separador decimal).
+        Exemplos: 1500.00 -> "1500,00", 1234.5 -> "1234,50"
+        """
+        if valor is None or valor == '' or valor == '-':
+            return valor
+
+        try:
+            # Converte para float se for string
+            if isinstance(valor, str):
+                # Se já contém vírgula, retorna como está
+                if ',' in valor and '.' not in valor:
+                    return valor
+                valor = float(valor.replace(',', '.'))
+
+            # Formata com 2 casas decimais e troca ponto por vírgula
+            return f"{valor:.2f}".replace('.', ',')
+        except (ValueError, TypeError):
+            return str(valor) if valor else ''
+
+    def _formatar_dados_br(self, dados):
+        """
+        Formata todos os campos numéricos de uma lista de dicts para o padrão brasileiro.
+        Identifica campos que contêm valores monetários/numéricos pelo nome ou conteúdo.
+        """
+        if not dados or not isinstance(dados, list):
+            return dados
+
+        # Campos que tipicamente contêm valores monetários
+        campos_monetarios = [
+            'valor', 'custo', 'total', 'preco', 'frete', 'icms', 'pedagio',
+            'valor_total', 'valor_frete', 'valor_icms', 'valor_pedagio',
+            'valor_peca', 'valor_mao_obra', 'valor_receber', 'valor_pago',
+            'valor_cte', 'valor_servico', 'valor_prestacao', 'valor_carga',
+            'receita', 'despesa', 'lucro', 'saldo', 'comissao', 'desconto',
+            'km_total', 'quilometragem', 'km'
+        ]
+
+        dados_formatados = []
+        for item in dados:
+            if not isinstance(item, dict):
+                dados_formatados.append(item)
+                continue
+
+            item_formatado = {}
+            for chave, valor in item.items():
+                # Verifica se é um campo monetário/numérico
+                chave_lower = chave.lower()
+                eh_monetario = any(campo in chave_lower for campo in campos_monetarios)
+
+                # Também formata se for um número float
+                if eh_monetario or isinstance(valor, float):
+                    item_formatado[chave] = self._formatar_valor_br(valor)
+                else:
+                    item_formatado[chave] = valor
+
+            dados_formatados.append(item_formatado)
+
+        return dados_formatados
 
     # --- Método Auxiliar para Gerar CSV ---
     def _gerar_csv(self, dados, nome_arquivo):
@@ -994,7 +1100,7 @@ class RelatorioAPIView(APIView):
                 return Response(dados, status=status.HTTP_501_NOT_IMPLEMENTED) # Retorna msg de não implementado
             return Response({"detail": "Formato de dados inválido para gerar CSV."},
                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
         # Se a lista estiver vazia, retorna CSV vazio com mensagem
         if len(dados) == 0:
             output = StringIO()
@@ -1002,19 +1108,23 @@ class RelatorioAPIView(APIView):
             response = HttpResponse(output.getvalue(), content_type='text/csv; charset=utf-8')
             response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
             return response
-            
+
         # Verifica se o primeiro item é um dicionário
         if not isinstance(dados[0], dict):
             return Response({"detail": "Formato de dados inválido para gerar CSV."},
                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        # Formata valores numéricos para o padrão brasileiro (vírgula)
+        dados_formatados = self._formatar_dados_br(dados)
+
         # Pega cabeçalhos do primeiro dicionário
-        fieldnames = list(dados[0].keys())
+        fieldnames = list(dados_formatados[0].keys())
         output = StringIO()
-        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        # Usa ponto-e-vírgula como delimitador para melhor compatibilidade com Excel BR
+        writer = csv.DictWriter(output, fieldnames=fieldnames, delimiter=';')
 
         writer.writeheader()
-        writer.writerows(dados)
+        writer.writerows(dados_formatados)
 
         response = HttpResponse(output.getvalue(), content_type='text/csv; charset=utf-8') # Adiciona charset
         response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
@@ -1031,18 +1141,21 @@ class RelatorioAPIView(APIView):
         if len(dados) == 0:
              return Response({"message": "Nenhum dado encontrado."}, status=status.HTTP_204_NO_CONTENT)
 
+        # Formata valores numéricos para o padrão brasileiro (vírgula)
+        dados_formatados = self._formatar_dados_br(dados)
+
         # Cria workbook e sheet
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Relatório"
 
         # Cabeçalhos
-        if isinstance(dados[0], dict):
-            headers = list(dados[0].keys())
+        if isinstance(dados_formatados[0], dict):
+            headers = list(dados_formatados[0].keys())
             ws.append(headers)
-            
+
             # Dados
-            for item in dados:
+            for item in dados_formatados:
                 ws.append([str(item.get(h, '')) for h in headers])
 
         # Salva em buffer
