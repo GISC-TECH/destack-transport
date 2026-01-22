@@ -594,11 +594,14 @@ class RelatorioAPIView(APIView):
     # --- Métodos Auxiliares de Geração (NÃO IMPLEMENTADOS) ---
     def _gerar_relatorio_faturamento(self, data_inicio, data_fim, filtros):
         """Gera dados agregados de faturamento por mês."""
+        from datetime import timedelta
         qs = CTePrestacaoServico.objects.select_related('cte__identificacao')
         if data_inicio:
             qs = qs.filter(cte__identificacao__data_emissao__date__gte=data_inicio)
         if data_fim:
-            qs = qs.filter(cte__identificacao__data_emissao__date__lte=data_fim)
+            # Usa lt com data_fim + 1 dia para incluir todo o dia final
+            data_fim_query = data_fim + timedelta(days=1)
+            qs = qs.filter(cte__identificacao__data_emissao__date__lt=data_fim_query)
 
         agregados = qs.annotate(mes=TruncMonth('cte__identificacao__data_emissao'))\
             .values('mes')\
@@ -623,6 +626,7 @@ class RelatorioAPIView(APIView):
 
     def _gerar_relatorio_ctes(self, data_inicio, data_fim, filtros):
         """Gera dados para o relatório de CT-es."""
+        from datetime import timedelta
         logger.info("INFO: Gerando relatório de CT-es com filtros: %s", filtros)
 
         # Busca CT-es com dados básicos - FILTRA apenas CT-es com identificacao (dados completos)
@@ -636,7 +640,9 @@ class RelatorioAPIView(APIView):
         if data_inicio:
             qs = qs.filter(identificacao__data_emissao__date__gte=data_inicio)
         if data_fim:
-            qs = qs.filter(identificacao__data_emissao__date__lte=data_fim)
+            # Usa lt com data_fim + 1 dia para incluir todo o dia final
+            data_fim_query = data_fim + timedelta(days=1)
+            qs = qs.filter(identificacao__data_emissao__date__lt=data_fim_query)
 
         # Filtros específicos
         if 'chave' in filtros and filtros['chave']:
@@ -692,6 +698,7 @@ class RelatorioAPIView(APIView):
 
     def _gerar_relatorio_mdfes(self, data_inicio, data_fim, filtros):
         """Gera dados para o relatório de MDF-es."""
+        from datetime import timedelta
         logger.info("INFO: Gerando relatório de MDF-es com filtros: %s", filtros)
 
         # Busca MDF-es com dados básicos - FILTRA apenas MDF-es com identificacao (dados completos)
@@ -709,7 +716,9 @@ class RelatorioAPIView(APIView):
         if data_inicio:
             qs = qs.filter(identificacao__dh_emi__date__gte=data_inicio)
         if data_fim:
-            qs = qs.filter(identificacao__dh_emi__date__lte=data_fim)
+            # Usa lt com data_fim + 1 dia para incluir todo o dia final
+            data_fim_query = data_fim + timedelta(days=1)
+            qs = qs.filter(identificacao__dh_emi__date__lt=data_fim_query)
 
         # Filtros específicos
         if 'chave' in filtros and filtros['chave']:
@@ -782,20 +791,23 @@ class RelatorioAPIView(APIView):
 
     def _gerar_relatorio_pagamentos(self, data_inicio, data_fim, filtros):
         """Gera dados para o relatório de pagamentos (agregados e próprios)."""
+        from datetime import timedelta
         logger.info("INFO: Gerando relatório de pagamentos com filtros: %s", filtros)
-        
+
         dados = []
         tipo_pagamento = filtros.get('tipo', 'todos')  # 'agregado', 'proprio' ou 'todos'
-        
+
         # Pagamentos Agregados
         if tipo_pagamento in ['agregado', 'todos']:
             qs_agregados = PagamentoAgregado.objects.select_related('cte__identificacao')
-            
+
             # Filtros por data (usando data_prevista)
             if data_inicio:
                 qs_agregados = qs_agregados.filter(data_prevista__gte=data_inicio)
             if data_fim:
-                qs_agregados = qs_agregados.filter(data_prevista__lte=data_fim)
+                # Usa lt com data_fim + 1 dia para incluir todo o dia final
+                data_fim_query = data_fim + timedelta(days=1)
+                qs_agregados = qs_agregados.filter(data_prevista__lt=data_fim_query)
                 
             # Filtros específicos
             if 'status' in filtros and filtros['status']:
@@ -875,21 +887,24 @@ class RelatorioAPIView(APIView):
 
     def _gerar_relatorio_km_rodado(self, data_inicio, data_fim, filtros):
         """Gera dados para o relatório de KM rodado baseado em CT-es e manutenções."""
+        from datetime import timedelta
         logger.info("INFO: Gerando relatório de KM rodado com filtros: %s", filtros)
-        
+
         dados = []
-        
+
         # Agrupa dados por placa para calcular KM total
         km_por_placa = {}
-        
+
         # KM dos CT-es (campo dist_km)
         qs_ctes = CTeDocumento.objects.select_related('identificacao').prefetch_related('modal_rodoviario__veiculos')
-        
+
         # Filtros por data
         if data_inicio:
             qs_ctes = qs_ctes.filter(identificacao__data_emissao__date__gte=data_inicio)
         if data_fim:
-            qs_ctes = qs_ctes.filter(identificacao__data_emissao__date__lte=data_fim)
+            # Usa lt com data_fim + 1 dia para incluir todo o dia final
+            data_fim_query = data_fim + timedelta(days=1)
+            qs_ctes = qs_ctes.filter(identificacao__data_emissao__date__lt=data_fim_query)
             
         # Filtro por placa se especificado
         if 'placa' in filtros and filtros['placa']:
@@ -918,12 +933,14 @@ class RelatorioAPIView(APIView):
         
         # KM das manutenções (quilometragem registrada)
         qs_manutencoes = ManutencaoVeiculo.objects.select_related('veiculo')
-        
+
         # Filtros por data
         if data_inicio:
             qs_manutencoes = qs_manutencoes.filter(data_servico__gte=data_inicio)
         if data_fim:
-            qs_manutencoes = qs_manutencoes.filter(data_servico__lte=data_fim)
+            # Usa lt com data_fim + 1 dia para incluir todo o dia final
+            data_fim_manutencao = data_fim + timedelta(days=1)
+            qs_manutencoes = qs_manutencoes.filter(data_servico__lt=data_fim_manutencao)
             
         # Filtro por placa se especificado
         if 'placa' in filtros and filtros['placa']:
@@ -977,6 +994,7 @@ class RelatorioAPIView(APIView):
     def _gerar_relatorio_manutencoes(self, data_inicio, data_fim, filtros):
         """Gera dados para o relatório de manutenções."""
         from django.db.models import Q
+        from datetime import timedelta
 
         logger.info("INFO: Gerando relatório de manutenções com filtros: %s", filtros)
 
@@ -991,10 +1009,12 @@ class RelatorioAPIView(APIView):
                 Q(data_servico__gte=data_inicio)
             )
         if data_fim:
+            # Usa lt com data_fim + 1 dia para incluir todo o dia final
+            data_fim_query = data_fim + timedelta(days=1)
             qs = qs.filter(
-                Q(data_agendada__lte=data_fim) |
-                Q(data_realizada__lte=data_fim) |
-                Q(data_servico__lte=data_fim)
+                Q(data_agendada__lt=data_fim_query) |
+                Q(data_realizada__lt=data_fim_query) |
+                Q(data_servico__lt=data_fim_query)
             )
 
         # Filtros adicionais
