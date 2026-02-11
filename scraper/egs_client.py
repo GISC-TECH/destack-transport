@@ -40,60 +40,104 @@ class EGSClient:
         self.browser = browser
         self.logged_in = False
 
-    def login(self) -> bool:
+    def login(self, max_retries: int = 3) -> bool:
         """
         Realiza login no sistema EGS.
         Trata conflitos de sessão (outro usuário já logado).
+        Possui retry automático em caso de falha.
         """
         logger.info("Iniciando login no EGS Sistemas...")
 
-        try:
-            # Navegar para página de login
-            if not self.browser.get(EGS_LOGIN_URL):
-                logger.error("Falha ao carregar página de login")
-                return False
+        for attempt in range(1, max_retries + 1):
+            try:
+                if attempt > 1:
+                    logger.info(f"Tentativa de login {attempt}/{max_retries}...")
+                    # Limpar estado do browser antes de re-tentar
+                    self._clear_browser_state()
+                    time.sleep(2)
 
-            time.sleep(3)  # Aguardar Angular carregar
-            self.browser.screenshot('01_login_page.png')
+                # Navegar para página de login
+                if not self.browser.get(EGS_LOGIN_URL):
+                    logger.error("Falha ao carregar página de login")
+                    continue
 
-            # Preencher credenciais
-            if not self._fill_login_form():
-                return False
+                time.sleep(3)  # Aguardar Angular carregar
+                self.browser.screenshot('01_login_page.png')
 
-            # Clicar no botão de login
-            if not self._click_login_button():
-                return False
-
-            time.sleep(10)  # Aguardar resposta do servidor (aumentado para 10s)
-
-            # Verificar se há conflito de sessão
-            if self._check_session_conflict():
-                logger.warning("Conflito de sessão detectado. Tentando resolver...")
-                if not self._handle_session_conflict():
-                    logger.error("Falha ao resolver conflito de sessão")
-                    return False
-
-                # Fazer login novamente após resolver conflito
-                time.sleep(2)
+                # Preencher credenciais
                 if not self._fill_login_form():
-                    return False
+                    continue
+
+                # Clicar no botão de login
                 if not self._click_login_button():
-                    return False
-                time.sleep(5)
+                    continue
 
-            # Verificar se login foi bem sucedido
-            if not self._verify_login_success():
-                return False
+                time.sleep(10)  # Aguardar resposta do servidor
 
-            self.logged_in = True
-            logger.info("Login realizado com sucesso!")
-            self.browser.screenshot('02_login_success.png')
-            return True
+                # Verificar se há conflito de sessão
+                if self._check_session_conflict():
+                    logger.warning("Conflito de sessão detectado. Tentando resolver...")
+                    if not self._handle_session_conflict():
+                        logger.error("Falha ao resolver conflito de sessão")
+                        continue
 
+                    # Limpar cookies e estado do browser após resolver conflito
+                    logger.info("Limpando estado do browser após resolver conflito...")
+                    self._clear_browser_state()
+                    time.sleep(2)
+
+                    # Navegar para página de login limpa
+                    logger.info("Navegando para página de login limpa após resolver conflito...")
+                    if not self.browser.get(EGS_LOGIN_URL):
+                        logger.error("Falha ao carregar página de login após conflito")
+                        continue
+                    time.sleep(5)  # Aguardar mais tempo para Angular carregar do zero
+
+                    # Fazer login novamente após resolver conflito
+                    if not self._fill_login_form():
+                        continue
+                    if not self._click_login_button():
+                        continue
+                    time.sleep(10)
+
+                # Verificar se login foi bem sucedido
+                if self._verify_login_success():
+                    self.logged_in = True
+                    logger.info("Login realizado com sucesso!")
+                    self.browser.screenshot('02_login_success.png')
+                    return True
+
+                # Login falhou - se ainda tem tentativas, limpar e tentar novamente
+                logger.warning(f"Login falhou na tentativa {attempt}/{max_retries}")
+                if attempt < max_retries:
+                    wait_time = attempt * 5  # Backoff: 5s, 10s
+                    logger.info(f"Aguardando {wait_time}s antes de tentar novamente...")
+                    time.sleep(wait_time)
+
+            except Exception as e:
+                logger.error(f"Erro durante login (tentativa {attempt}): {e}")
+                self.browser.screenshot(f'login_exception_attempt{attempt}.png')
+                if attempt < max_retries:
+                    time.sleep(5)
+
+        logger.error(f"Login falhou após {max_retries} tentativas")
+        self.browser.screenshot('login_failed_all_attempts.png')
+        return False
+
+    def _clear_browser_state(self):
+        """Limpa cookies, localStorage e sessionStorage do browser"""
+        try:
+            logger.info("Limpando cookies do browser...")
+            self.browser.driver.delete_all_cookies()
+
+            # Limpar localStorage e sessionStorage
+            self.browser.driver.execute_script("""
+                try { window.localStorage.clear(); } catch(e) {}
+                try { window.sessionStorage.clear(); } catch(e) {}
+            """)
+            logger.info("Estado do browser limpo (cookies + storage)")
         except Exception as e:
-            logger.error(f"Erro durante login: {e}")
-            self.browser.screenshot('login_exception.png')
-            return False
+            logger.warning(f"Erro ao limpar estado do browser: {e}")
 
     def _fill_login_form(self) -> bool:
         """Preenche o formulário de login"""
@@ -499,11 +543,10 @@ class EGSClient:
         except:
             pass
 
-    def _verify_login_success(self) -> bool:
+    def _verify_login_success(self, max_wait: int = 15) -> bool:
         """Verifica se o login foi bem sucedido"""
         try:
             current_url = self.browser.driver.current_url
-            logger.debug(f"URL atual: {current_url}")
             logger.info(f"Verificando sucesso do login. URL: {current_url}")
 
             # Se a URL mudou para algo diferente de login, provavelmente funcionou
@@ -511,14 +554,16 @@ class EGSClient:
                 logger.info("Login bem sucedido - URL mudou de /login")
                 return True
 
-            # Se ainda está na página de login, verificar se há erro ou se o Angular ainda está carregando
-            time.sleep(3)  # Dar mais tempo para o Angular processar
+            # Aguardar a URL mudar (Angular pode demorar para redirecionar)
+            for i in range(max_wait):
+                time.sleep(1)
+                current_url = self.browser.driver.current_url
+                if 'login' not in current_url.lower():
+                    logger.info(f"Login bem sucedido após {i+1}s - URL: {current_url}")
+                    return True
 
-            # Re-verificar a URL
-            current_url = self.browser.driver.current_url
-            if 'login' not in current_url.lower():
-                logger.info("Login bem sucedido após espera adicional")
-                return True
+            # Se após max_wait segundos a URL ainda é /login, o login falhou
+            logger.info(f"URL ainda é /login após {max_wait}s. Verificando estado da página...")
 
             # Verificar mensagens de erro
             error_selectors = [
@@ -535,26 +580,20 @@ class EGSClient:
                         self.browser.screenshot('login_failed.png')
                         return False
 
-            # Verificar elementos que indicam sucesso (dashboard, menu, etc.)
-            success_indicators = [
-                (By.CSS_SELECTOR, '.box-menu'),
-                (By.CSS_SELECTOR, '.menu-dashboard'),
-                (By.CSS_SELECTOR, '#menu-container-main'),
-                (By.CSS_SELECTOR, '.box-company-name'),
-                (By.XPATH, '//div[contains(@class, "box-main")]'),
-                (By.CSS_SELECTOR, '.navbar'),
-                (By.CSS_SELECTOR, '[ng-controller]'),  # AngularJS controller carregado
-                (By.CSS_SELECTOR, '.sidebar'),
-                (By.CSS_SELECTOR, '.content-wrapper'),
-            ]
+            # URL ainda é /login - verificar indicadores visuais mas COM navegação de teste
+            # Tentar navegar para uma página protegida para confirmar se a sessão é válida
+            logger.info("Testando sessão com navegação para página protegida...")
+            self.browser.driver.get(f"{EGS_BASE_URL}/dashboard")
+            time.sleep(5)
 
-            for by, selector in success_indicators:
-                element = self.browser.find_element_safe(by, selector)
-                if element:
-                    logger.info(f"Indicador de sucesso encontrado: {selector}")
-                    return True
+            current_url = self.browser.driver.current_url
+            logger.info(f"URL após navegar para /dashboard: {current_url}")
 
-            logger.error("Login falhou - ainda na pagina de login")
+            if 'login' not in current_url.lower():
+                logger.info("Sessão válida confirmada via navegação para /dashboard")
+                return True
+
+            logger.error("Login falhou - sessão inválida (redirecionou para /login)")
             self.browser.screenshot('login_failed.png')
             return False
 

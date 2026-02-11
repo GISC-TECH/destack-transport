@@ -199,6 +199,25 @@ def download_cte_daily(client: EGSClient, output_folder: str) -> int:
         current_url = client.browser.driver.current_url
         logger.info(f"URL atual: {current_url}")
 
+        # Verificar se foi redirecionado para login (sessão expirada)
+        if 'login' in current_url.lower():
+            logger.warning("Sessão expirada! Redirecionado para /login. Tentando re-login...")
+            if not client.login():
+                logger.error("Re-login falhou!")
+                return 0
+            # Navegar novamente após re-login
+            close_banner(client)
+            time.sleep(1)
+            client.browser.driver.get('https://app.egssistemas.com.br/cte-tela-xml')
+            time.sleep(5)
+            close_banner(client)
+            time.sleep(1)
+            current_url = client.browser.driver.current_url
+            logger.info(f"URL após re-login: {current_url}")
+            if 'login' in current_url.lower():
+                logger.error("Ainda na página de login após re-login!")
+                return 0
+
         # Aguardar grid (timeout maior para conexões lentas)
         client._wait_for_devexpress_grid(timeout=90)
 
@@ -279,6 +298,24 @@ def download_mdfe_daily(client: EGSClient, output_folder: str) -> int:
 
         close_banner(client)
         time.sleep(1)
+
+        # Verificar se foi redirecionado para login (sessão expirada)
+        current_url = client.browser.driver.current_url
+        if 'login' in current_url.lower():
+            logger.warning("Sessão expirada no MDF-e! Tentando re-login...")
+            if not client.login():
+                logger.error("Re-login falhou!")
+                return 0
+            close_banner(client)
+            time.sleep(1)
+            client.browser.driver.get('https://app.egssistemas.com.br/mdfe')
+            time.sleep(5)
+            close_banner(client)
+            time.sleep(1)
+            current_url = client.browser.driver.current_url
+            if 'login' in current_url.lower():
+                logger.error("Ainda na página de login após re-login no MDF-e!")
+                return 0
 
         # Aguardar grid (timeout maior para conexões lentas)
         client._wait_for_devexpress_grid(timeout=90)
