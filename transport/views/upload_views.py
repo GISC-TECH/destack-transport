@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -680,3 +680,38 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
             'sucesso': sucesso_count, 'erros': erro_count, 'ignorados': ignorado_count,
             'resultados_detalhados': resultados_finais
         }, status=final_code)
+
+    @action(detail=False, methods=['post'], parser_classes=[JSONParser])
+    def check_exists(self, request):
+        """
+        Verifica quais chaves (44 dígitos) já existem no banco.
+        Recebe: {"chaves": ["44digits", ...]}
+        Retorna: {"existing": [...], "total_checked": N, "total_existing": N}
+        """
+        chaves = request.data.get('chaves', [])
+        if not isinstance(chaves, list):
+            return Response(
+                {"detail": "Campo 'chaves' deve ser uma lista."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        existing = set()
+        chunk_size = 500
+
+        for i in range(0, len(chaves), chunk_size):
+            chunk = chaves[i:i + chunk_size]
+            cte_chaves = set(
+                CTeDocumento.objects.filter(chave__in=chunk)
+                .values_list('chave', flat=True)
+            )
+            mdfe_chaves = set(
+                MDFeDocumento.objects.filter(chave__in=chunk)
+                .values_list('chave', flat=True)
+            )
+            existing.update(cte_chaves | mdfe_chaves)
+
+        return Response({
+            "existing": list(existing),
+            "total_checked": len(chaves),
+            "total_existing": len(existing),
+        })

@@ -106,6 +106,7 @@ urlpatterns = [
 
     # Rota manual para a action batch_upload da UnifiedUploadViewSet
     path("upload/batch_upload/", UnifiedUploadViewSet.as_view({'post': 'batch_upload'}), name="upload-batch-action"),
+    path("upload/check_exists/", UnifiedUploadViewSet.as_view({'post': 'check_exists'}), name="upload-check-exists"),
 
     # APIViews avulsas (não gerenciadas pelo router)
     path("dashboard/", DashboardGeralAPIView.as_view(), name="dashboard-geral"),

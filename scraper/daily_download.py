@@ -8,6 +8,7 @@ Uso:
 """
 import os
 import sys
+import re
 import time
 import glob
 import zipfile
@@ -103,7 +104,7 @@ def download_daily_xmls(target_date: str = None):
             logger.info("Enviando XMLs para API do Destack...")
             logger.info("-" * 40)
             upload_result = upload_xmls_to_api(output_folder)
-            logger.info(f"Enviados: {upload_result['success']} | Duplicados: {upload_result['duplicates']} | Falhas: {upload_result['failed']}")
+            logger.info(f"Enviados: {upload_result['success']} | Ignorados (já existem): {upload_result['skipped']} | Duplicados: {upload_result['duplicates']} | Falhas: {upload_result['failed']}")
         else:
             logger.info("Nenhum XML para enviar")
 
@@ -129,12 +130,19 @@ def download_daily_xmls(target_date: str = None):
                 pass
 
 
+def extract_chave_from_filename(filename: str):
+    """Extrai chave de 44 dígitos do nome do arquivo."""
+    match = re.search(r'(\d{44})', filename)
+    return match.group(1) if match else None
+
+
 def upload_xmls_to_api(folder_path: str) -> dict:
     """
-    Envia todos os XMLs de uma pasta para a API do Destack.
+    Envia XMLs novos de uma pasta para a API do Destack.
+    Pré-verifica quais chaves já existem para evitar reprocessamento.
     Retorna estatísticas do envio.
     """
-    result = {'success': 0, 'failed': 0, 'duplicates': 0, 'total': 0}
+    result = {'success': 0, 'failed': 0, 'duplicates': 0, 'skipped': 0, 'total': 0}
 
     # Encontrar todos os XMLs na pasta
     xml_files = glob.glob(os.path.join(folder_path, "**/*.xml"), recursive=True)
@@ -144,7 +152,21 @@ def upload_xmls_to_api(folder_path: str) -> dict:
         logger.info("Nenhum arquivo XML encontrado para enviar")
         return result
 
-    logger.info(f"Encontrados {len(xml_files)} arquivos XML para enviar")
+    logger.info(f"Encontrados {len(xml_files)} arquivos XML")
+
+    # Fase 1: Extrair chaves dos filenames
+    files_with_chaves = {}  # chave -> [file_paths]
+    files_without_chaves = []
+
+    for xml_path in xml_files:
+        filename = os.path.basename(xml_path)
+        chave = extract_chave_from_filename(filename)
+        if chave:
+            files_with_chaves.setdefault(chave, []).append(xml_path)
+        else:
+            files_without_chaves.append(xml_path)
+
+    logger.info(f"Chaves extraídas: {len(files_with_chaves)} únicas, {len(files_without_chaves)} sem chave")
 
     # Conectar à API
     destack = DestackClient()
@@ -153,8 +175,37 @@ def upload_xmls_to_api(folder_path: str) -> dict:
         result['failed'] = len(xml_files)
         return result
 
-    # Enviar cada XML
-    for xml_path in xml_files:
+    # Fase 2: Consultar API para saber quais já existem
+    all_chaves = list(files_with_chaves.keys())
+    check_result = destack.check_existing_chaves(all_chaves)
+    existing_chaves = check_result['existing']
+    missing_chaves = check_result['missing']
+
+    # Fase 3: Filtrar - separar novos dos existentes
+    files_to_upload = []
+    for chave in missing_chaves:
+        files_to_upload.extend(files_with_chaves[chave])
+
+    skipped_count = 0
+    for chave in existing_chaves:
+        skipped_count += len(files_with_chaves[chave])
+
+    result['skipped'] = skipped_count
+
+    # Arquivos sem chave sempre são enviados (a API decidirá)
+    files_to_upload.extend(files_without_chaves)
+
+    logger.info(
+        f"Pré-verificação: {skipped_count} XMLs ignorados (já existem), "
+        f"{len(files_to_upload)} XMLs para enviar"
+    )
+
+    if not files_to_upload:
+        logger.info("Todos os XMLs já existem na API. Nada a enviar.")
+        return result
+
+    # Fase 4: Upload dos novos
+    for xml_path in files_to_upload:
         filename = os.path.basename(xml_path)
         try:
             upload_result = destack.upload_xml(xml_path)
@@ -171,7 +222,11 @@ def upload_xmls_to_api(folder_path: str) -> dict:
             result['failed'] += 1
             logger.error(f"Erro ao enviar {filename}: {e}")
 
-    logger.info(f"Upload concluído: {result['success']} enviados, {result['duplicates']} duplicados, {result['failed']} falhas")
+    logger.info(
+        f"Upload concluído: {result['success']} enviados, "
+        f"{result['skipped']} ignorados (pré-check), "
+        f"{result['duplicates']} duplicados, {result['failed']} falhas"
+    )
     return result
 
 

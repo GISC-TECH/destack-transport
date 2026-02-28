@@ -42,6 +42,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: destack_web
+    env_file:
+      - .env
     restart: unless-stopped
     environment:
       - DEBUG=False
@@ -94,10 +96,10 @@ services:
       - EGS_BASE_URL=https://app.egssistemas.com.br
       - EGS_LOGIN_URL=https://app.egssistemas.com.br/login
       - EGS_USERNAME=${EGS_USERNAME:-DESTACK}
-      - EGS_PASSWORD=${EGS_PASSWORD:-1234567}
+      - EGS_PASSWORD=destack789
       - EGS_ACCESS_KEY=${EGS_ACCESS_KEY:-57226}
-      # Destack API
-      - DESTACK_API_URL=http://web:8000/api
+      # Destack API (produção: destack_app na rede apps_backend)
+      - DESTACK_API_URL=${DESTACK_API_URL:-http://destack:8000/api}
       - DESTACK_USERNAME=${DESTACK_USERNAME:-admin}
       - DESTACK_PASSWORD=${DESTACK_PASSWORD:-admin123}
       # Collector
@@ -112,6 +114,7 @@ services:
       - web
     networks:
       - destack_network
+      - apps_backend
 
   # Celery Worker (para tarefas assincronas)
   celery_worker:
@@ -172,3 +175,5 @@ volumes:
 networks:
   destack_network:
     driver: bridge
+  apps_backend:
+    external: true

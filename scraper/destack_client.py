@@ -162,6 +162,44 @@ class DestackClient:
 
         return results
 
+    def check_existing_chaves(self, chaves: List[str], chunk_size: int = 500) -> Dict:
+        """
+        Consulta a API para verificar quais chaves já existem no banco.
+        Retorna dict com sets 'existing' e 'missing'.
+        Fallback seguro: se falhar, trata todas como novas.
+        """
+        all_existing = set()
+        all_chaves = set(chaves)
+
+        try:
+            for i in range(0, len(chaves), chunk_size):
+                chunk = chaves[i:i + chunk_size]
+                response = self.session.post(
+                    f"{self.base_url}/upload/check_exists/",
+                    json={"chaves": chunk},
+                    auth=(DESTACK_USERNAME, DESTACK_PASSWORD),
+                    timeout=30
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    all_existing.update(data.get('existing', []))
+                else:
+                    logger.warning(
+                        f"check_exists retornou HTTP {response.status_code} "
+                        f"para chunk {i}-{i+len(chunk)}. "
+                        f"Fallback: tratando todas como novas."
+                    )
+                    return {'existing': set(), 'missing': all_chaves}
+
+        except Exception as e:
+            logger.warning(f"Erro ao consultar check_exists: {e}. Fallback: tratando todas como novas.")
+            return {'existing': set(), 'missing': all_chaves}
+
+        missing = all_chaves - all_existing
+        logger.info(f"Check exists: {len(all_existing)} existentes, {len(missing)} novas de {len(all_chaves)} total")
+        return {'existing': all_existing, 'missing': missing}
+
     def check_health(self) -> bool:
         """Verifica se a API esta acessivel"""
         try:
