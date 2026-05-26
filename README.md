@@ -237,8 +237,7 @@ docker-compose -f docker-compose.local.yml up -d --build
 - Swagger: http://localhost:8001/api/swagger/
 
 ### Credenciais Padrao (Dev)
-- **Usuario:** admin
-- **Senha:** admin123
+Crie ou defina as credenciais locais no arquivo `.env.local`; nao versione senhas reais.
 
 ## API Endpoints
 
@@ -398,3 +397,18 @@ MIT License - Veja o arquivo LICENSE para detalhes.
 
 - **Email:** contato@destacktransportes.com.br
 - **GitHub:** https://github.com/GISC-TECH/destack-transport
+
+---
+
+## Atualizações Recentes
+
+### 2026-02-25
+- Credenciais do EGS Sistemas atualizadas no ambiente de produção.
+- Rebuild do container scraper com Chrome/ChromeDriver atualizados.
+- Healthcheck adicionado para auto-restart do scraper.
+- Documentação operacional atualizada.
+
+### 2026-02-22
+- Corrigido problema de acesso ao perfil EGS.
+- Robô voltou a baixar CT-es normalmente.
+- 895 registros processados.

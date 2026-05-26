@@ -115,3 +115,6 @@ nul
 # Pastas de backup/antigas (não rastrear)
 antigo/
 OLD/
+
+# Timestamped backup files
+*.backup.*

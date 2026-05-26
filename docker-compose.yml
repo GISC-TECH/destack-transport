@@ -96,12 +96,12 @@ services:
       - EGS_BASE_URL=https://app.egssistemas.com.br
       - EGS_LOGIN_URL=https://app.egssistemas.com.br/login
       - EGS_USERNAME=${EGS_USERNAME:-DESTACK}
-      - EGS_PASSWORD=destack789
-      - EGS_ACCESS_KEY=${EGS_ACCESS_KEY:-57226}
+      - EGS_PASSWORD=${EGS_PASSWORD:?set EGS_PASSWORD in .env}
+      - EGS_ACCESS_KEY=${EGS_ACCESS_KEY:?set EGS_ACCESS_KEY in .env}
       # Destack API (produção: destack_app na rede apps_backend)
       - DESTACK_API_URL=${DESTACK_API_URL:-http://destack:8000/api}
       - DESTACK_USERNAME=${DESTACK_USERNAME:-admin}
-      - DESTACK_PASSWORD=${DESTACK_PASSWORD:-admin123}
+      - DESTACK_PASSWORD=${DESTACK_PASSWORD:?set DESTACK_PASSWORD in .env}
       # Collector
       - COLLECT_INTERVAL_MINUTES=60
       - DAYS_LOOKBACK=7
