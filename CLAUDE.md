@@ -14,6 +14,64 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Cache:** Redis 7
 - **Infrastructure:** Docker, Docker Compose
 
+## Current Production Status
+
+Last verified: 2026-05-27 00:55 UTC.
+
+Production host and repo:
+- SSH host: `31.97.247.165`
+- Repository path: `/root/apps/destack`
+- Branch: `main`
+- Synced commit: `64de607 chore: sync production deployment config`
+- Remote: `git@github.com:GISC-TECH/destack-transport.git`
+
+Public access:
+- Public URL: `https://destacktransporte.site/`
+- HTTPS check returned `HTTP/2 200`.
+- TLS verification passed for `destacktransporte.site`.
+- Current certificate expires at `2026-07-24 19:32:27 UTC`.
+
+Certbot status:
+- `systemctl --failed` returned zero failed units.
+- `certbot.service` last run completed with `status=0/SUCCESS`.
+- Active certificates on this server are only:
+  - `destacktransporte.site` / `www.destacktransporte.site`
+  - `fabrafarma.com.br` / `www.fabrafarma.com.br`
+- Obsolete certificates removed from Certbot on 2026-05-26 UTC:
+  - `admin.mypila.gisctech.com.br`
+  - `flutter.mypila.gisctech.com.br`
+  - `gisctech.com.br`
+  - `mypila.gisctech.com.br`
+
+Runtime layout:
+- Public reverse proxy is managed by the `/root/apps` compose project.
+- Public Nginx container: `nginx_multi_django` (`healthy`).
+- Destack frontend container served by public proxy: `destack_frontend_app` (`healthy`).
+- Destack backend container served by public proxy: `destack_app` (`healthy`).
+- Separate Destack app stack lives in `/root/apps/destack` and includes `destack_web`, `destack_postgres`, `destack_redis`, and `destack_scraper`.
+- `destack_scraper` currently has no Docker health state in this compose stack; confirm it through process/log checks until a healthcheck is added and the container is recreated.
+
+Health checks verified:
+```bash
+curl -fsS http://localhost:8001/health/
+curl -fsS http://localhost:8000/health/
+curl -k -fsS https://localhost/health/
+```
+
+All three returned:
+```json
+{"status": "healthy", "message": "Django is running"}
+```
+
+Recent log scan:
+- `nginx_multi_django`: no recent `error`, `critical`, `certificate`, or upstream failure lines in the last hour.
+- `destack_app`: no recent `error`, `exception`, `traceback`, or critical failure lines in the last hour.
+- `destack_scraper`: no recent error/traceback lines in the last two hours.
+
+Known non-blocking maintenance:
+- GitHub Dependabot reported 43 vulnerabilities on `GISC-TECH/destack-transport` after the latest push. Treat this as dependency maintenance, not an active outage.
+- Credentials that appeared in older history should be rotated; current committed files must not contain real passwords.
+
 ## Development Commands
 
 ### Docker Environment (Recommended)
@@ -67,8 +125,7 @@ npm run lint     # Run ESLint
 | Django Admin | http://localhost:8001/admin/ | Admin interface |
 
 ### Default Credentials (Dev)
-- **Username:** admin
-- **Password:** admin123
+Do not document or commit real passwords. Create local development users with `createsuperuser` or define local-only credentials in `.env.local`.
 
 ## Architecture
 
@@ -190,13 +247,25 @@ Detail views return full nested objects with related data.
 
 ## Environment Variables
 
-Key variables in `.env.local`:
+Real credentials belong only in ignored environment files (`.env`, `.env.local`) on the server or developer machine. Do not commit real passwords, access keys, or tokens.
+
+Key local variables in `.env.local`:
 ```
-DJANGO_SECRET_KEY=...
+DJANGO_SECRET_KEY=change_me
 DEBUG=True
-DATABASE_URL=postgresql://destack_user:password@postgres:5432/destack_db
+DATABASE_URL=postgresql://destack_user:change_me@postgres:5432/destack_db
 REDIS_URL=redis://redis:6379/0
+EGS_USERNAME=DESTACK
+EGS_PASSWORD=change_me
+EGS_ACCESS_KEY=change_me
+DESTACK_USERNAME=admin
+DESTACK_PASSWORD=change_me
 ```
+
+Production `docker-compose.yml` requires these scraper credentials from the server `.env` file:
+- `EGS_PASSWORD`
+- `EGS_ACCESS_KEY`
+- `DESTACK_PASSWORD`
 
 ## Model Relationships
 
@@ -227,11 +296,44 @@ All components use:
 # Health check
 curl http://localhost:8001/api/health/
 
-# Login test
+# Login test - replace with local-only credentials
 curl -X POST http://localhost:8001/api/auth/login/ \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"<local-user>","password":"<local-password>"}'
 
 # Container status
 docker-compose -f docker-compose.local.yml ps
 ```
+
+## Production Operations
+
+Common checks on the server:
+```bash
+cd /root/apps/destack
+git status --short
+git log -1 --oneline --decorate
+docker compose config --quiet
+docker compose ps
+
+cd /root/apps
+docker compose ps
+
+systemctl --failed --no-pager
+systemctl status certbot --no-pager -l
+certbot certificates
+```
+
+Certificate renewal hook:
+- Versioned reference: `deploy/certbot/reload-docker-nginx.sh`
+- Live hook path: `/etc/letsencrypt/renewal-hooks/deploy/reload-docker-nginx.sh`
+- Purpose: reload `nginx_multi_django` after Certbot renews a certificate so Nginx serves the new cert immediately.
+
+Production Nginx reference:
+- Versioned reference: `deploy/nginx/destack.conf`
+- Live public config: `/root/apps/nginx/sites/destack.conf`
+- Public Nginx config is mounted into container `nginx_multi_django`.
+
+Secret hygiene:
+- `.env`, `.env.local`, logs, media/static outputs, SQL/dump backups, `node_modules`, and Python caches are intentionally ignored.
+- Never add real EGS, Django, database, Redis, SSH, or GitHub credentials to committed files.
+- If a credential appears in Git history, rotate it instead of relying only on deletion from the latest commit.
