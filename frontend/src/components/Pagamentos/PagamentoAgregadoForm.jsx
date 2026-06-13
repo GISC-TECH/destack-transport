@@ -571,7 +571,7 @@ function PagamentoAgregadoForm() {
                         </div>
                       )}
                       {motorista.categoria_cnh && (
-                        <div style={{ fontSize: '12px', color: '#3498db', marginTop: '2px' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--primary-color)', marginTop: '2px' }}>
                           CNH: {motorista.categoria_cnh}
                         </div>
                       )}
@@ -590,7 +590,7 @@ function PagamentoAgregadoForm() {
             /* Condutor selecionado - exibe card com detalhes */
             <div className="condutor-selecionado" style={{
               background: '#f8f9fa',
-              border: '1px solid #3498db',
+              border: '1px solid var(--primary-color)',
               borderRadius: '8px',
               padding: '15px',
               position: 'relative',
@@ -606,7 +606,7 @@ function PagamentoAgregadoForm() {
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <span style={{
-                  background: '#3498db',
+                  background: 'var(--primary-color)',
                   color: '#fff',
                   padding: '4px 8px',
                   borderRadius: '4px',

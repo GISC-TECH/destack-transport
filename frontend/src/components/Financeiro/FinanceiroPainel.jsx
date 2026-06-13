@@ -12,14 +12,14 @@ import './Financeiro.css';
 
 // Cores para graficos
 const COLORS = {
-  cif: '#3498db',
+  cif: '#0d9488',
   fob: '#f39c12',
   faturamento: '#27ae60',
   custos: '#e74c3c',
   lucro: '#9b59b6'
 };
 
-const PIE_COLORS = ['#3498db', '#f39c12', '#27ae60', '#e74c3c', '#9b59b6'];
+const PIE_COLORS = ['#0d9488', '#f39c12', '#27ae60', '#e74c3c', '#9b59b6'];
 
 function FinanceiroPainel() {
   const [dados, setDados] = useState(null);

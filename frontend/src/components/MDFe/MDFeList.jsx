@@ -14,7 +14,7 @@ import '../CTe/CTe.css';
 // Cores para os graficos
 const STATUS_COLORS = {
   autorizado: '#27ae60',
-  encerrado: '#3498db',
+  encerrado: '#0d9488',
   cancelado: '#e74c3c',
   pendente: '#95a5a6'
 };
@@ -342,7 +342,7 @@ function MDFeList() {
                 <XAxis dataKey="categoria" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(value) => `${value} MDF-es`} />
-                <Bar dataKey="contagem" fill="#3498db" radius={[4, 4, 0, 0]} name="MDF-es" />
+                <Bar dataKey="contagem" fill="#0d9488" radius={[4, 4, 0, 0]} name="MDF-es" />
               </BarChart>
             </ResponsiveContainer>
           ) : (

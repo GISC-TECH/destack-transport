@@ -27,7 +27,7 @@
 }
 
 .documentos-header h3 svg {
-  color: #3498db;
+  color: var(--primary-color);
 }
 
 /* Botoes */
@@ -42,12 +42,12 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #2980b9 0%, #2471a3 100%);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-dark) 100%);
   transform: translateY(-1px);
 }
 
@@ -144,8 +144,8 @@
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(39, 164, 106, 0.1);
 }
 
 .file-input-group {
@@ -241,7 +241,7 @@
   display: inline-block;
   padding: 0.25rem 0.6rem;
   background: #e8f4fd;
-  color: #2980b9;
+  color: var(--primary-dark);
   border-radius: 4px;
   font-size: 0.8rem;
   font-weight: 500;
@@ -317,11 +317,11 @@
 
 .btn-view {
   background: #e8f4fd;
-  color: #3498db;
+  color: var(--primary-color);
 }
 
 .btn-view:hover {
-  background: #3498db;
+  background: var(--primary-color);
   color: white;
 }
 

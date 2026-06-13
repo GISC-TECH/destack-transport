@@ -52,7 +52,7 @@
 
 .periodo-btn.active {
   background: white;
-  color: #3498db;
+  color: var(--primary-color);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
@@ -81,7 +81,7 @@
 }
 
 .fin-kpi-card.principal {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1f9e5f 0%, #136b42 100%);
   color: white;
 }
 
@@ -107,12 +107,12 @@
   justify-content: center;
   flex-shrink: 0;
   background: #f0f4f8;
-  color: #3498db;
+  color: var(--primary-color);
 }
 
 .fin-kpi-icon.cif {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #d6efe6;
+  color: var(--info-color);
 }
 
 .fin-kpi-icon.fob {
@@ -151,7 +151,7 @@
 }
 
 .fin-kpi-percent.cif {
-  color: #1976d2;
+  color: var(--info-color);
 }
 
 .fin-kpi-percent.fob {
@@ -268,7 +268,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1f9e5f 0%, #136b42 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -303,7 +303,7 @@
 
 .cliente-bar {
   height: 100%;
-  background: linear-gradient(90deg, #3498db 0%, #2ecc71 100%);
+  background: linear-gradient(90deg, var(--primary-color) 0%, #2ecc71 100%);
   border-radius: 3px;
   transition: width 0.5s ease;
 }

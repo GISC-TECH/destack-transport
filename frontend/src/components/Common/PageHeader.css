@@ -40,8 +40,8 @@
 }
 
 .breadcrumbs a:hover {
-  color: #3498db;
-  background: rgba(52, 152, 219, 0.08);
+  color: var(--primary-color);
+  background: rgba(39, 164, 106, 0.08);
 }
 
 .breadcrumbs a svg {
@@ -82,12 +82,12 @@
 .page-header-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.25);
+  box-shadow: 0 4px 15px rgba(39, 164, 106, 0.25);
   flex-shrink: 0;
 }
 
@@ -292,7 +292,7 @@
 
 .page-header-actions .periodo-btn.active {
   background: white;
-  color: #3498db;
+  color: var(--primary-color);
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 

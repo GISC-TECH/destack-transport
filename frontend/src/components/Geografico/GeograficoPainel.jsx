@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import './Geografico.css';
 
-const COLORS = ['#3498db', '#27ae60', '#f39c12', '#9b59b6', '#e74c3c', '#1abc9c', '#34495e', '#e67e22'];
+const COLORS = ['#0d9488', '#27ae60', '#f39c12', '#9b59b6', '#e74c3c', '#1abc9c', '#34495e', '#e67e22'];
 
 // Funcao para calcular datas do mes atual
 const getDefaultGeoDates = () => {
@@ -181,7 +181,7 @@ function GeograficoPainel() {
               <Bar
                 yAxisId="left"
                 dataKey="total"
-                fill="#3498db"
+                fill="#0d9488"
                 radius={[4, 4, 0, 0]}
                 name="CT-es"
               />

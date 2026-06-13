@@ -230,7 +230,7 @@ function ClienteForm() {
                   disabled={buscandoCnpj || formData.cnpj.replace(/\D/g, '').length !== 14}
                   style={{
                     padding: '10px 20px',
-                    background: buscandoCnpj ? '#95a5a6' : '#3498db',
+                    background: buscandoCnpj ? '#95a5a6' : 'var(--primary-color)',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '4px',

@@ -67,7 +67,7 @@
 }
 
 .geo-kpi-icon.blue {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
 }
 
@@ -82,7 +82,7 @@
 }
 
 .geo-kpi-icon.purple {
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  background: linear-gradient(135deg, var(--info-color) 0%, #0a6f64 100%);
   color: white;
 }
 
@@ -177,7 +177,7 @@
   display: inline-block;
   padding: 3px 8px;
   background: #e8f4fd;
-  color: #2980b9;
+  color: var(--primary-dark);
   border-radius: 4px;
   font-weight: 600;
   font-size: 13px;
@@ -240,8 +240,8 @@
 
 .select-filter:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(39, 164, 106, 0.1);
 }
 
 /* Responsivo */
