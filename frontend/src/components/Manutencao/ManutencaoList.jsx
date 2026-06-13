@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import './Manutencao.css';
 
-const COLORS = ['#0d9488', '#f39c12', '#27ae60', '#9b59b6', '#e74c3c'];
+const COLORS = ['#0d9488', '#f39c12', '#27ae60', '#C8A951', '#e74c3c'];
 
 function ManutencaoList() {
   const toast = useToast();
@@ -268,7 +268,7 @@ function ManutencaoList() {
                   <XAxis dataKey="tipo" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
                   <Tooltip formatter={(value) => formatCurrency(value)} />
-                  <Bar dataKey="custo" fill="#9b59b6" radius={[4, 4, 0, 0]} name="Custo Total" />
+                  <Bar dataKey="custo" fill="#C8A951" radius={[4, 4, 0, 0]} name="Custo Total" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

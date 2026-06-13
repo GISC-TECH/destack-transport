@@ -12,7 +12,7 @@ import {
 import './CTe.css';
 
 // Cores para os graficos
-const COLORS = ['#0d9488', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6'];
+const COLORS = ['#0d9488', '#2ecc71', '#e74c3c', '#f39c12', '#C8A951'];
 
 function CTeList() {
   const toast = useToast();

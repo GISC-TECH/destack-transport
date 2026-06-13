@@ -75,8 +75,8 @@
 }
 
 .alertas-summary .summary-icon.total {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--green-200);
+  color: var(--primary-color);
 }
 
 .alertas-summary .summary-icon.nao-lidos {
@@ -133,8 +133,8 @@
 }
 
 .tab-btn.active {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
   color: white;
 }
 
@@ -194,8 +194,8 @@
 }
 
 .alerta-icon.tipo-manutencao {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--green-200);
+  color: var(--primary-color);
 }
 
 .alerta-icon.tipo-pagamento {
@@ -264,8 +264,8 @@
 }
 
 .badge-info {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--green-200);
+  color: var(--primary-color);
 }
 
 .badge-secondary {

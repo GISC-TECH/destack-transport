@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import './Dashboard.css';
 
-const COLORS = ['#0d9488', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+const COLORS = ['#0d9488', '#e74c3c', '#2ecc71', '#f39c12', '#C8A951', '#1abc9c'];
 
 function Dashboard() {
   // useMemo ensures defaultDates is stable across renders
@@ -385,8 +385,8 @@ function Dashboard() {
               <AreaChart data={performanceChartData}>
                 <defs>
                   <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#9b59b6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#9b59b6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#C8A951" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#C8A951" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -401,7 +401,7 @@ function Dashboard() {
                   type="monotone"
                   dataKey="valor"
                   name="Valor"
-                  stroke="#9b59b6"
+                  stroke="#C8A951"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorValor)"

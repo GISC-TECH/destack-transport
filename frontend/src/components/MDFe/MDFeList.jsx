@@ -324,7 +324,7 @@ function MDFeList() {
                 <XAxis type="number" tick={{ fontSize: 12 }} />
                 <YAxis type="category" dataKey="placa" tick={{ fontSize: 11 }} width={80} />
                 <Tooltip formatter={(value) => `${value} MDF-es`} />
-                <Bar dataKey="total" fill="#9b59b6" radius={[0, 4, 4, 0]} name="MDF-es" />
+                <Bar dataKey="total" fill="#C8A951" radius={[0, 4, 4, 0]} name="MDF-es" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -640,7 +640,7 @@ function MDFeList() {
       {modalMdfe && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content mdfe-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)' }}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #40916C 0%, #2D6A4F 100%)' }}>
               <h2>MDF-e #{modalMdfe.numero_mdfe}</h2>
               <button className="modal-close" onClick={handleCloseModal}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -122,7 +122,7 @@
 .filtros-relatorio .form-group label {
   font-size: 14px;
   font-weight: 600;
-  color: #34495e;
+  color: var(--text-primary);
 }
 
 .filtros-relatorio .form-group input,

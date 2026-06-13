@@ -94,7 +94,7 @@
 .form-group label {
   font-size: 14px;
   font-weight: 600;
-  color: #34495e;
+  color: var(--text-primary);
 }
 
 .form-group input,

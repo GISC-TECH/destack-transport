@@ -625,7 +625,7 @@
 }
 
 .faixas-table-mini tr.faixa-ativa {
-  background: #dbeafe;
+  background: var(--green-200);
 }
 
 .faixas-table-mini tr.faixa-ativa td {
@@ -688,12 +688,12 @@
 }
 
 .btn-action.btn-edit {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--green-200);
+  color: var(--primary-color);
 }
 
 .btn-action.btn-edit:hover {
-  background: #2563eb;
+  background: var(--primary-color);
   color: white;
 }
 
