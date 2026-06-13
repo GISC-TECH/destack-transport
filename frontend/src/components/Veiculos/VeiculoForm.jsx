@@ -126,16 +126,16 @@ function VeiculoForm() {
 
       if (isEdit) {
         await veiculosAPI.update(id, dataToSend);
-        toast.success('Veiculo atualizado com sucesso!');
+        toast.success('Veículo atualizado com sucesso!');
       } else {
         await veiculosAPI.create(dataToSend);
-        toast.success('Veiculo cadastrado com sucesso!');
+        toast.success('Veículo cadastrado com sucesso!');
       }
 
       setTimeout(() => navigate('/veiculos'), 500);
     } catch (err) {
       setError(err.message);
-      toast.error('Erro ao salvar veiculo. Verifique os dados.');
+      toast.error('Erro ao salvar veículo. Verifique os dados.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);

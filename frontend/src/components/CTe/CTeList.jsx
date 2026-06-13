@@ -380,7 +380,7 @@ function CTeList() {
         <form onSubmit={handleFiltrar} className="filtros-form">
           <input
             type="text"
-            placeholder="Buscar por chave, numero, remetente..."
+            placeholder="Buscar por chave, número, remetente..."
             value={filtros.q}
             onChange={(e) => setFiltros({...filtros, q: e.target.value})}
             className="input-filter"
@@ -417,15 +417,15 @@ function CTeList() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Numero</th>
-              <th>Data Emissao</th>
+              <th>Número</th>
+              <th>Data Emissão</th>
               <th>Remetente</th>
               <th>Destinatario</th>
               <th>Valor</th>
               <th>Modalidade</th>
               <th>Status</th>
               <th>Pago</th>
-              <th>Acoes</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -677,11 +677,11 @@ function CTeList() {
             <div className="modal-body">
               <div className="modal-info-grid">
                 <div className="modal-info-item">
-                  <span className="modal-info-label">Numero</span>
+                  <span className="modal-info-label">Número</span>
                   <span className="modal-info-value">{modalCte.numero_cte || '-'}</span>
                 </div>
                 <div className="modal-info-item">
-                  <span className="modal-info-label">Data Emissao</span>
+                  <span className="modal-info-label">Data Emissão</span>
                   <span className="modal-info-value">{modalCte.data_emissao || '-'}</span>
                 </div>
                 <div className="modal-info-item">

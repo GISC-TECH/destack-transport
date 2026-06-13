@@ -98,8 +98,8 @@ function ClienteForm() {
       }));
     } catch (err) {
       console.error('Erro ao buscar CEP:', err);
-      if (err.message === 'CEP nao encontrado') {
-        toast.warning('CEP nao encontrado');
+      if (err.message === 'CEP não encontrado') {
+        toast.warning('CEP não encontrado');
       } else {
         toast.error(err.message || 'Erro ao buscar CEP. Tente novamente.');
       }
@@ -209,7 +209,7 @@ function ClienteForm() {
 
       <form onSubmit={handleSubmit} className="form-container">
         <div className="form-section">
-          <h3>Identificacao</h3>
+          <h3>Identificação</h3>
 
           <div className="form-row">
             <div className="form-group">
@@ -249,24 +249,24 @@ function ClienteForm() {
             </div>
 
             <div className="form-group">
-              <label>Inscricao Estadual</label>
+              <label>Inscrição Estadual</label>
               <input
                 type="text"
                 name="ie"
                 value={formData.ie}
                 onChange={handleChange}
-                placeholder="Isento ou numero"
+                placeholder="Isento ou número"
                 maxLength={20}
               />
               <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
-                A IE nao esta disponivel na consulta CNPJ (registro estadual)
+                A IE não está disponível na consulta CNPJ (registro estadual)
               </small>
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>Razao Social *</label>
+              <label>Razão Social *</label>
               <input
                 type="text"
                 name="razao_social"
@@ -318,7 +318,7 @@ function ClienteForm() {
         </div>
 
         <div className="form-section">
-          <h3>Endereco</h3>
+          <h3>Endereço</h3>
 
           <div className="form-row">
             <div className="form-group" style={{ maxWidth: '150px' }}>
@@ -346,7 +346,7 @@ function ClienteForm() {
             </div>
 
             <div className="form-group" style={{ maxWidth: '100px' }}>
-              <label>Numero</label>
+              <label>Número</label>
               <input
                 type="text"
                 name="numero"
@@ -437,16 +437,16 @@ function ClienteForm() {
         </div>
 
         <div className="form-section">
-          <h3>Informacoes Adicionais</h3>
+          <h3>Informações Adicionais</h3>
 
           <div className="form-group">
-            <label>Observacoes</label>
+            <label>Observações</label>
             <textarea
               name="observacoes"
               value={formData.observacoes}
               onChange={handleChange}
               rows="3"
-              placeholder="Observacoes sobre o cliente..."
+              placeholder="Observações sobre o cliente..."
             />
           </div>
 

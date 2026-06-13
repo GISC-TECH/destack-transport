@@ -168,7 +168,7 @@ function FinanceiroPainel() {
               {formatCurrency(dados?.cards?.faturamento_total)}
             </span>
             <span className="fin-kpi-subtext">
-              Periodo: {dados?.filtros?.data_inicio} a {dados?.filtros?.data_fim}
+              Período: {dados?.filtros?.data_inicio} a {dados?.filtros?.data_fim}
             </span>
           </div>
         </div>
@@ -321,9 +321,9 @@ function FinanceiroPainel() {
           </div>
         </div>
 
-        {/* Historico Mensal */}
+        {/* Histórico Mensal */}
         <div className="fin-chart-card top-clientes">
-          <h3>Historico por Mes</h3>
+          <h3>Histórico por Mes</h3>
           <div className="clientes-list">
             {(dados?.grafico_cif_fob || []).slice(-5).reverse().map((item, index) => (
               <div key={index} className="cliente-item">
@@ -347,7 +347,7 @@ function FinanceiroPainel() {
 
         {/* Resumo Rapido */}
         <div className="fin-chart-card resumo">
-          <h3>Resumo do Periodo</h3>
+          <h3>Resumo do Período</h3>
           <div className="resumo-grid">
             <div className="resumo-item">
               <span className="resumo-label">Total de CT-es</span>

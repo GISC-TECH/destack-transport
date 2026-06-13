@@ -445,7 +445,7 @@ function PagamentosList() {
       } else {
         await pagamentosAPI.proprios.delete(modalExcluir.id);
       }
-      toast.success('Pagamento excluido com sucesso!');
+      toast.success('Pagamento excluído com sucesso!');
       setModalExcluir({ show: false, id: null, info: '' });
       loadPagamentos();
     } catch (err) {
@@ -505,7 +505,7 @@ function PagamentosList() {
     <div className="pagamentos-page">
       <PageHeader
         title="Pagamentos"
-        subtitle="Gerencie pagamentos de agregados e proprios"
+        subtitle="Gerencie pagamentos de agregados e próprios"
         icon={pagamentosIcon}
         breadcrumbs={[{ label: 'Financeiro' }, { label: 'Pagamentos' }]}
         actions={headerActions}
@@ -947,7 +947,7 @@ function PagamentosList() {
                   <th>Valor Repasse</th>
                   <th>Comprovante</th>
                   <th>Status</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </>
               ) : (
                 <>
@@ -959,7 +959,7 @@ function PagamentosList() {
                   <th>Valor Repasse</th>
                   <th>Comprovante</th>
                   <th>Status</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </>
               )}
             </tr>

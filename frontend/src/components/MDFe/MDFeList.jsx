@@ -314,9 +314,9 @@ function MDFeList() {
 
       {/* Graficos */}
       <div className="cte-charts-grid">
-        {/* Grafico de Top Veiculos */}
+        {/* Grafico de Top Veículos */}
         <div className="cte-chart-card">
-          <h3>Top 5 Veiculos</h3>
+          <h3>Top 5 Veículos</h3>
           {veiculosData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={veiculosData} layout="vertical">
@@ -384,7 +384,7 @@ function MDFeList() {
 
         {/* Eficiencia */}
         <div className="cte-chart-card cte-chart-small">
-          <h3>Eficiencia de Encerramento</h3>
+          <h3>Eficiência de Encerramento</h3>
           <div className="eficiencia-display">
             <div className="eficiencia-value">{kpis.eficiencia.toFixed(1)}%</div>
             <div className="eficiencia-label">MDF-es Encerrados</div>
@@ -406,7 +406,7 @@ function MDFeList() {
         <form onSubmit={handleFiltrar} className="filtros-form">
           <input
             type="text"
-            placeholder="Buscar por chave, numero, placa..."
+            placeholder="Buscar por chave, número, placa..."
             value={filtros.q}
             onChange={(e) => setFiltros({...filtros, q: e.target.value})}
             className="input-filter"
@@ -434,14 +434,14 @@ function MDFeList() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Numero</th>
-              <th>Data Emissao</th>
+              <th>Número</th>
+              <th>Data Emissão</th>
               <th>UF Origem</th>
               <th>UF Destino</th>
-              <th>Veiculo</th>
+              <th>Veículo</th>
               <th>CT-es</th>
               <th>Status</th>
-              <th>Acoes</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -548,7 +548,7 @@ function MDFeList() {
                     </span>
                   </div>
                   <div className="mobile-card-row">
-                    <span className="mobile-card-label">Veiculo</span>
+                    <span className="mobile-card-label">Veículo</span>
                     <span className="mobile-card-value" style={{ fontWeight: 700 }}>{mdfe.placa_tracao || '-'}</span>
                   </div>
                   <div className="mobile-card-row">
@@ -652,11 +652,11 @@ function MDFeList() {
             <div className="modal-body">
               <div className="modal-info-grid">
                 <div className="modal-info-item">
-                  <span className="modal-info-label">Numero</span>
+                  <span className="modal-info-label">Número</span>
                   <span className="modal-info-value">{modalMdfe.numero_mdfe || '-'}</span>
                 </div>
                 <div className="modal-info-item">
-                  <span className="modal-info-label">Data Emissao</span>
+                  <span className="modal-info-label">Data Emissão</span>
                   <span className="modal-info-value">{modalMdfe.data_emissao || '-'}</span>
                 </div>
                 <div className="modal-info-item">
@@ -668,7 +668,7 @@ function MDFeList() {
                   <span className="badge badge-secondary">{modalMdfe.uf_fim || '-'}</span>
                 </div>
                 <div className="modal-info-item">
-                  <span className="modal-info-label">Veiculo (Placa)</span>
+                  <span className="modal-info-label">Veículo (Placa)</span>
                   <span className="modal-info-value" style={{ fontWeight: 700 }}>{modalMdfe.placa_tracao || '-'}</span>
                 </div>
                 <div className="modal-info-item">

@@ -88,8 +88,8 @@ function GeograficoPainel() {
   return (
     <div className="geografico-page">
       <PageHeader
-        title="Painel Geografico"
-        subtitle="Analise de operacoes por regiao e rotas"
+        title="Painel Geográfico"
+        subtitle="Análise de operações por região e rotas"
         icon={geoIcon}
         breadcrumbs={[{ label: 'Analises' }, { label: 'Geografico' }]}
         actions={
@@ -117,7 +117,7 @@ function GeograficoPainel() {
           </div>
           <div className="geo-kpi-content">
             <span className="geo-kpi-value">{totais.ctes.toLocaleString()}</span>
-            <span className="geo-kpi-label">CT-es no Periodo</span>
+            <span className="geo-kpi-label">CT-es no Período</span>
           </div>
         </div>
 

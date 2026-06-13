@@ -157,7 +157,7 @@ function Dashboard() {
     <div className="dashboard">
       <PageHeader
         title="Dashboard"
-        subtitle="Visao geral do sistema de transporte"
+        subtitle="Visão geral do sistema de transporte"
         icon={dashboardIcon}
       />
 
@@ -211,7 +211,7 @@ function Dashboard() {
             </svg>
           </div>
           <div className="kpi-content">
-            <span className="kpi-label">Veiculos Ativos</span>
+            <span className="kpi-label">Veículos Ativos</span>
             <span className="kpi-value">{frotaData?.cards?.veiculos_ativos || 0}/{frotaData?.cards?.total_veiculos || 0}</span>
             <span className="kpi-change neutral">
               {frotaData?.cards?.total_motoristas || 0} motoristas
@@ -305,7 +305,7 @@ function Dashboard() {
             </svg>
           </div>
           <div className="kpi-content-small">
-            <span className="kpi-label-small">Taxa Aprovacao</span>
+            <span className="kpi-label-small">Taxa Aprovação</span>
             <span className="kpi-value-small">{performanceData?.cards?.taxa_aprovacao || 0}%</span>
           </div>
         </div>
@@ -344,7 +344,7 @@ function Dashboard() {
             </svg>
           </div>
           <div className="kpi-content-small">
-            <span className="kpi-label-small">Manutencoes</span>
+            <span className="kpi-label-small">Manutenções</span>
             <span className="kpi-value-small">{manutencaoData?.total_manutencoes || 0}</span>
           </div>
         </Link>
@@ -379,7 +379,7 @@ function Dashboard() {
 
         {/* Grafico de Performance */}
         <div className="chart-card">
-          <h3>Evolucao Diaria</h3>
+          <h3>Evolução Diária</h3>
           {performanceChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={performanceChartData}>
@@ -413,9 +413,9 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Grafico de Pizza - Distribuicao CIF/FOB */}
+        {/* Grafico de Pizza - Distribuição CIF/FOB */}
         <div className="chart-card chart-card-small">
-          <h3>Distribuicao CIF/FOB</h3>
+          <h3>Distribuição CIF/FOB</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -445,7 +445,7 @@ function Dashboard() {
               <span className="alert-summary-icon warning">!</span>
               <div className="alert-summary-content">
                 <span className="alert-summary-value">{frotaData?.cards?.docs_vencendo || 0}</span>
-                <span className="alert-summary-label">Docs Veiculos Vencendo</span>
+                <span className="alert-summary-label">Docs Veículos Vencendo</span>
               </div>
             </div>
             <div className="alert-summary-item">
@@ -473,11 +473,11 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Secao de Acoes Rapidas e Ultimos Documentos */}
+      {/* Secao de Ações Rápidas e Últimos Documentos */}
       <div className="bottom-section">
-        {/* Acoes Rapidas */}
+        {/* Ações Rápidas */}
         <div className="quick-actions-card">
-          <h3>Acoes Rapidas</h3>
+          <h3>Ações Rápidas</h3>
           <div className="quick-actions-grid">
             <Link to="/upload" className="quick-action-btn">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -510,7 +510,7 @@ function Dashboard() {
                 <circle cx="5.5" cy="18.5" r="2.5"></circle>
                 <circle cx="18.5" cy="18.5" r="2.5"></circle>
               </svg>
-              Veiculos
+              Veículos
             </Link>
             <Link to="/financeiro" className="quick-action-btn">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -529,9 +529,9 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Ultimos CT-es */}
+        {/* Últimos CT-es */}
         <div className="recent-docs-card">
-          <h3>Ultimos CT-es</h3>
+          <h3>Últimos CT-es</h3>
           <div className="recent-docs-list">
             {(data?.ultimos_lancamentos?.ctes || []).length > 0 ? (
               data.ultimos_lancamentos.ctes.map((cte, index) => (
@@ -553,9 +553,9 @@ function Dashboard() {
           <Link to="/ctes" className="view-all-link">Ver todos os CT-es</Link>
         </div>
 
-        {/* Ultimos MDF-es */}
+        {/* Últimos MDF-es */}
         <div className="recent-docs-card">
-          <h3>Ultimos MDF-es</h3>
+          <h3>Últimos MDF-es</h3>
           <div className="recent-docs-list">
             {(data?.ultimos_lancamentos?.mdfes || []).length > 0 ? (
               data.ultimos_lancamentos.mdfes.map((mdfe, index) => (
@@ -577,9 +577,9 @@ function Dashboard() {
           <Link to="/mdfes" className="view-all-link">Ver todos os MDF-es</Link>
         </div>
 
-        {/* Top Veiculos */}
+        {/* Top Veículos */}
         <div className="recent-docs-card">
-          <h3>Top Veiculos</h3>
+          <h3>Top Veículos</h3>
           <div className="recent-docs-list">
             {(frotaData?.top_veiculos || []).length > 0 ? (
               frotaData.top_veiculos.map((veiculo, index) => (

@@ -96,7 +96,7 @@ function Navbar() {
           <ul className="dropdown-menu">
             <li><Link to="/clientes" onClick={closeDropdown}>Clientes</Link></li>
             <li><Link to="/motoristas" onClick={closeDropdown}>Motoristas</Link></li>
-            <li><Link to="/veiculos" onClick={closeDropdown}>Veiculos</Link></li>
+            <li><Link to="/veiculos" onClick={closeDropdown}>Veículos</Link></li>
           </ul>
         </li>
 
@@ -152,8 +152,8 @@ function Navbar() {
             </svg>
           </span>
           <ul className="dropdown-menu">
-            <li><Link to="/relatorios" onClick={closeDropdown}>Relatorios Gerais</Link></li>
-            <li><Link to="/geografico" onClick={closeDropdown}>Painel Geografico</Link></li>
+            <li><Link to="/relatorios" onClick={closeDropdown}>Relatórios Gerais</Link></li>
+            <li><Link to="/geografico" onClick={closeDropdown}>Painel Geográfico</Link></li>
           </ul>
         </li>
 

@@ -255,12 +255,12 @@ function Configuracoes() {
                 />
               </div>
               <div className="form-group">
-                <label>Cidade/Municipio</label>
+                <label>Cidade/Município</label>
                 <input
                   type="text"
                   value={empresa.municipio || ''}
                   onChange={(e) => handleEmpresaChange('municipio', e.target.value)}
-                  placeholder="Municipio"
+                  placeholder="Município"
                 />
               </div>
               <div className="form-group">

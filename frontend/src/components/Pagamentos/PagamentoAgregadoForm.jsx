@@ -30,7 +30,7 @@ function PagamentoAgregadoForm() {
   const [condutorSelecionado, setCondutorSelecionado] = useState(null);
   const [mostrarResultadosCondutor, setMostrarResultadosCondutor] = useState(false);
 
-  // Busca de Veiculo (por placa)
+  // Busca de Veículo (por placa)
   const [buscaVeiculo, setBuscaVeiculo] = useState('');
   const [resultadosVeiculo, setResultadosVeiculo] = useState([]);
   const [loadingVeiculo, setLoadingVeiculo] = useState(false);
@@ -136,7 +136,7 @@ function PagamentoAgregadoForm() {
     return () => clearTimeout(timeoutId);
   }, [buscaCondutor]);
 
-  // Busca Veiculo por placa quando usuario digita
+  // Busca Veículo por placa quando usuario digita
   useEffect(() => {
     const buscarVeiculo = async () => {
       if (!buscaVeiculo || buscaVeiculo.length < 2) {
@@ -406,7 +406,7 @@ function PagamentoAgregadoForm() {
                 type="text"
                 value={buscaCte}
                 onChange={(e) => setBuscaCte(e.target.value)}
-                placeholder="Digite o numero do CT-e..."
+                placeholder="Digite o número do CT-e..."
                 autoComplete="off"
               />
               {loadingBusca && (
@@ -627,10 +627,10 @@ function PagamentoAgregadoForm() {
             </div>
           )}
 
-          {/* Busca de Veiculo por Placa */}
+          {/* Busca de Veículo por Placa */}
           {!veiculoSelecionado ? (
             <div className="form-group" style={{ position: 'relative', marginBottom: '20px' }}>
-              <label>Placa do Veiculo *</label>
+              <label>Placa do Veículo *</label>
               <small className="form-hint" style={{ display: 'block', marginBottom: '8px', color: '#666' }}>
                 Digite a placa do veiculo para buscar e vincular automaticamente
               </small>
@@ -638,7 +638,7 @@ function PagamentoAgregadoForm() {
                 type="text"
                 value={buscaVeiculo}
                 onChange={(e) => setBuscaVeiculo(e.target.value.toUpperCase())}
-                placeholder="Digite a placa do veiculo..."
+                placeholder="Digite a placa do veículo..."
                 autoComplete="off"
                 style={{ textTransform: 'uppercase' }}
               />
@@ -698,7 +698,7 @@ function PagamentoAgregadoForm() {
               )}
             </div>
           ) : (
-            /* Veiculo selecionado - exibe card com detalhes */
+            /* Veículo selecionado - exibe card com detalhes */
             <div className="veiculo-selecionado" style={{
               background: '#f8f9fa',
               border: '1px solid #e67e22',
@@ -711,7 +711,7 @@ function PagamentoAgregadoForm() {
                 type="button"
                 onClick={handleRemoverVeiculo}
                 className="btn-remove-circle btn-sm"
-                title="Remover veiculo"
+                title="Remover veículo"
               >
                 ×
               </button>
@@ -855,13 +855,13 @@ function PagamentoAgregadoForm() {
           </div>
 
           <div className="form-group">
-            <label>Observacoes</label>
+            <label>Observações</label>
             <textarea
               name="obs"
               value={formData.obs}
               onChange={handleChange}
               rows="3"
-              placeholder="Observacoes adicionais..."
+              placeholder="Observações adicionais..."
             />
           </div>
 

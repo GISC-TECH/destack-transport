@@ -9,7 +9,7 @@ const TIPOS_DOCUMENTO = {
     { value: 'proposta', label: 'Proposta Comercial' },
     { value: 'cnpj', label: 'Cartao CNPJ' },
     { value: 'contrato_social', label: 'Contrato Social' },
-    { value: 'inscricao_estadual', label: 'Inscricao Estadual' },
+    { value: 'inscricao_estadual', label: 'Inscrição Estadual' },
     { value: 'procuracao', label: 'Procuracao' },
     { value: 'outro', label: 'Outro' },
   ],
@@ -68,7 +68,7 @@ const TIPOS_DOCUMENTO = {
     { value: 'cpf', label: 'CPF' },
     { value: 'titulo_eleitor', label: 'Titulo de Eleitor' },
     { value: 'reservista', label: 'Certificado de Reservista' },
-    { value: 'comprovante_endereco', label: 'Comprovante de Endereco' },
+    { value: 'comprovante_endereco', label: 'Comprovante de Endereço' },
     { value: 'certidao_nascimento', label: 'Certidao de Nascimento' },
     { value: 'certidao_casamento', label: 'Certidao de Casamento' },
     // Trabalhista
@@ -88,7 +88,7 @@ const TIPOS_DOCUMENTO = {
     { value: 'afericao', label: 'Afericao Tacografo (IBAMETRO/INMETRO)' },
     { value: 'laudo_cronotacografo', label: 'Cronotacografo (Disco/Digital)' },
     // Seguros
-    { value: 'seguro', label: 'Seguro do Veiculo' },
+    { value: 'seguro', label: 'Seguro do Veículo' },
     { value: 'seguro_carga', label: 'Seguro de Carga (RCT-C)' },
     { value: 'seguro_ambiental', label: 'Seguro Ambiental' },
     // ANTT e Licencas
@@ -103,8 +103,8 @@ const TIPOS_DOCUMENTO = {
     { value: 'contrato_agregado', label: 'Contrato de Agregado' },
     { value: 'contrato_arrendamento', label: 'Contrato de Arrendamento' },
     // Outros
-    { value: 'nota_fiscal', label: 'Nota Fiscal do Veiculo' },
-    { value: 'manual', label: 'Manual do Veiculo' },
+    { value: 'nota_fiscal', label: 'Nota Fiscal do Veículo' },
+    { value: 'manual', label: 'Manual do Veículo' },
     { value: 'outro', label: 'Outro' },
   ],
 };
@@ -383,12 +383,12 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
               />
             </div>
             <div className="form-group">
-              <label>Observacoes</label>
+              <label>Observações</label>
               <input
                 type="text"
                 value={uploadData.observacoes}
                 onChange={(e) => setUploadData(prev => ({ ...prev, observacoes: e.target.value }))}
-                placeholder="Observacoes (opcional)"
+                placeholder="Observações (opcional)"
               />
             </div>
           </div>
@@ -470,12 +470,12 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
                 />
               </div>
               <div className="form-group">
-                <label>Observacoes</label>
+                <label>Observações</label>
                 <input
                   type="text"
                   value={editData.observacoes}
                   onChange={(e) => setEditData(prev => ({ ...prev, observacoes: e.target.value }))}
-                  placeholder="Observacoes (opcional)"
+                  placeholder="Observações (opcional)"
                 />
               </div>
             </div>
@@ -520,7 +520,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
                 <th>Tamanho</th>
                 <th>Validade</th>
                 <th>Data Upload</th>
-                <th>Acoes</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>

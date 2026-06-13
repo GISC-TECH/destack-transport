@@ -127,15 +127,15 @@ function ManutencaoForm() {
 
       if (isEditing) {
         await manutencaoAPI.update(id, dataToSend);
-        toast.success('Manutencao atualizada com sucesso!');
+        toast.success('Manutenção atualizada com sucesso!');
       } else {
         await manutencaoAPI.create(dataToSend);
-        toast.success('Manutencao agendada com sucesso!');
+        toast.success('Manutenção agendada com sucesso!');
       }
       setTimeout(() => navigate('/manutencoes'), 500);
     } catch (err) {
       console.error('Erro ao salvar manutenção:', err);
-      toast.error('Erro ao salvar manutencao. Verifique os dados.');
+      toast.error('Erro ao salvar manutenção. Verifique os dados.');
       setError('Erro ao salvar manutenção. Verifique os dados e tente novamente.');
     } finally {
       setSaving(false);

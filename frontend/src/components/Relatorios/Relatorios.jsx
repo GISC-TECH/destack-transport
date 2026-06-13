@@ -52,7 +52,7 @@ function Relatorios() {
     },
     {
       id: 'veiculos',
-      nome: 'Veiculos',
+      nome: 'Veículos',
       descricao: 'Relatorio da frota de veiculos cadastrados',
       icon: 'truck'
     },

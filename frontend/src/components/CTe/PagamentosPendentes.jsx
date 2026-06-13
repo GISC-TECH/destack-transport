@@ -442,9 +442,9 @@ function PagamentosPendentes() {
 
       {/* Graficos */}
       <div className="cte-charts-grid">
-        {/* Top Clientes com Pendencias */}
+        {/* Top Clientes com Pendências */}
         <div className="cte-chart-card">
-          <h3>Top Clientes com Pendencias</h3>
+          <h3>Top Clientes com Pendências</h3>
           {barData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={barData} layout="vertical">
@@ -462,7 +462,7 @@ function PagamentosPendentes() {
 
         {/* Distribuicao por Modalidade */}
         <div className="cte-chart-card cte-chart-small">
-          <h3>Pendencias por Modalidade</h3>
+          <h3>Pendências por Modalidade</h3>
           {pieData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -506,13 +506,13 @@ function PagamentosPendentes() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Numero</th>
-              <th>Data Emissao</th>
+              <th>Número</th>
+              <th>Data Emissão</th>
               <th>Remetente</th>
               <th>Destinatario</th>
               <th>Valor</th>
               <th>Modalidade</th>
-              <th>Acoes</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>

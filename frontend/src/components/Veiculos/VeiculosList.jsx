@@ -182,7 +182,7 @@ function VeiculosList() {
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        Novo Veiculo
+        Novo Veículo
       </button>
     </div>
   );
@@ -191,10 +191,10 @@ function VeiculosList() {
   return (
     <div className="veiculos-list">
       <PageHeader
-        title="Veiculos"
+        title="Veículos"
         subtitle={`${pagination.count} registros`}
         icon={veiculosIcon}
-        breadcrumbs={[{ label: 'Cadastros' }, { label: 'Veiculos' }]}
+        breadcrumbs={[{ label: 'Cadastros' }, { label: 'Veículos' }]}
         actions={headerActions}
       />
 

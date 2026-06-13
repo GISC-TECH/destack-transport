@@ -197,7 +197,7 @@ function ComprovantePagamento({ pagamento, tipo, onClose }) {
 
           <hr className="cupom-divider" />
 
-          {/* Informacoes do Documento */}
+          {/* Informações do Documento */}
           <div className="cupom-section-title">Dados do Pagamento</div>
 
           <div className="cupom-linha">
@@ -292,11 +292,11 @@ function ComprovantePagamento({ pagamento, tipo, onClose }) {
              pagamento.status === 'atrasado' ? 'ATRASADO' : pagamento.status?.toUpperCase()}
           </div>
 
-          {/* Observacoes */}
+          {/* Observações */}
           {pagamento.obs && (
             <>
               <hr className="cupom-divider" />
-              <div className="cupom-section-title">Observacoes</div>
+              <div className="cupom-section-title">Observações</div>
               <div className="cupom-obs">{pagamento.obs}</div>
             </>
           )}
