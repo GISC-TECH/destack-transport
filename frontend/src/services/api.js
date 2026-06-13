@@ -1697,6 +1697,9 @@ export const documentosAPI = {
   ctes: {
     list: async (cteId) => {
       const response = await fetch(`${API_BASE}/ctes/${cteId}/documentos/`, defaultOptions);
+      // O endpoint de anexos de CT-e ainda nao existe no backend (404).
+      // Degrada para lista vazia em vez de erro, para nao quebrar o detalhe.
+      if (response.status === 404) return [];
       if (!response.ok) throw new Error('Erro ao buscar documentos do CT-e');
       return response.json();
     },
