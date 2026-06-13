@@ -1886,6 +1886,13 @@ class DocumentoAnexo(models.Model):
         null=True,
         blank=True
     )
+    cte = models.ForeignKey(
+        'CTeDocumento',
+        on_delete=models.CASCADE,
+        related_name='documentos_anexos',
+        null=True,
+        blank=True
+    )
 
     # Dados do documento
     tipo = models.CharField(

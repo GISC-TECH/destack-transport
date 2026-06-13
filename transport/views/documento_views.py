@@ -9,7 +9,7 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 import mimetypes
 
-from ..models import DocumentoAnexo, Cliente, Motorista, Veiculo
+from ..models import DocumentoAnexo, Cliente, Motorista, Veiculo, CTeDocumento
 from ..serializers.documento_serializers import (
     DocumentoAnexoSerializer,
     DocumentoAnexoListSerializer,
@@ -366,6 +366,80 @@ class VeiculoDocumentoViewSet(viewsets.ViewSet):
         """Remove documento do veiculo."""
         veiculo = get_object_or_404(Veiculo, pk=veiculo_pk)
         documento = get_object_or_404(DocumentoAnexo, pk=pk, veiculo=veiculo)
+
+        if documento.arquivo:
+            documento.arquivo.delete(save=False)
+
+        documento.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CTeDocumentoAnexoViewSet(viewsets.ViewSet):
+    """
+    ViewSet para documentos anexos de um CT-e específico.
+
+    Endpoints:
+    - GET /api/ctes/{cte_pk}/documentos/ - Listar documentos do CT-e
+    - POST /api/ctes/{cte_pk}/documentos/ - Adicionar documento ao CT-e
+    - DELETE /api/ctes/{cte_pk}/documentos/{id}/ - Remover documento do CT-e
+    """
+
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def list(self, request, cte_pk=None):
+        """Lista documentos do CT-e."""
+        cte = get_object_or_404(CTeDocumento, pk=cte_pk)
+        documentos = DocumentoAnexo.objects.filter(cte=cte).order_by('-criado_em')
+        serializer = DocumentoAnexoListSerializer(documentos, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def create(self, request, cte_pk=None):
+        """Adiciona documento ao CT-e."""
+        cte = get_object_or_404(CTeDocumento, pk=cte_pk)
+
+        upload_serializer = DocumentoAnexoUploadSerializer(data=request.data)
+        if not upload_serializer.is_valid():
+            return Response(upload_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = upload_serializer.validated_data
+        arquivo = data['arquivo']
+
+        documento = DocumentoAnexo.objects.create(
+            cte=cte,
+            tipo=data.get('tipo', 'outro'),
+            nome=data.get('nome') or arquivo.name,
+            arquivo=arquivo,
+            validade=data.get('validade'),
+            observacoes=data.get('observacoes', ''),
+            criado_por=request.user if request.user.is_authenticated else None
+        )
+
+        serializer = DocumentoAnexoSerializer(documento, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, cte_pk=None, pk=None):
+        """Atualiza documento do CT-e (validade, nome, tipo, observacoes)."""
+        cte = get_object_or_404(CTeDocumento, pk=cte_pk)
+        documento = get_object_or_404(DocumentoAnexo, pk=pk, cte=cte)
+
+        if 'validade' in request.data:
+            documento.validade = request.data['validade'] or None
+        if 'nome' in request.data:
+            documento.nome = request.data['nome']
+        if 'tipo' in request.data:
+            documento.tipo = request.data['tipo']
+        if 'observacoes' in request.data:
+            documento.observacoes = request.data['observacoes']
+
+        documento.save()
+        serializer = DocumentoAnexoSerializer(documento, context={'request': request})
+        return Response(serializer.data)
+
+    def destroy(self, request, cte_pk=None, pk=None):
+        """Remove documento do CT-e."""
+        cte = get_object_or_404(CTeDocumento, pk=cte_pk)
+        documento = get_object_or_404(DocumentoAnexo, pk=pk, cte=cte)
 
         if documento.arquivo:
             documento.arquivo.delete(save=False)

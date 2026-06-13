@@ -24,7 +24,8 @@ from .views.documento_views import (
     DocumentoAnexoViewSet,
     ClienteDocumentoViewSet,
     MotoristaDocumentoViewSet,
-    VeiculoDocumentoViewSet
+    VeiculoDocumentoViewSet,
+    CTeDocumentoAnexoViewSet
 )
 from .views.dashboard_views import (
     DashboardGeralAPIView, CtePainelAPIView, MdfePainelAPIView,
@@ -94,6 +95,10 @@ clientes_router.register(r"documentos", ClienteDocumentoViewSet, basename="clien
 motoristas_router = routers.NestedSimpleRouter(router, r"motoristas", lookup="motorista")
 motoristas_router.register(r"documentos", MotoristaDocumentoViewSet, basename="motorista-documento")
 
+# Rotas aninhadas para documentos anexos de CT-e
+ctes_router = routers.NestedSimpleRouter(router, r"ctes", lookup="cte")
+ctes_router.register(r"documentos", CTeDocumentoAnexoViewSet, basename="cte-documento")
+
 # ------------------------------------------------------------------ #
 # URL patterns - APENAS APIs
 # ------------------------------------------------------------------ #
@@ -103,6 +108,7 @@ urlpatterns = [
     path("", include(veiculos_router.urls)),  # Inclui as rotas aninhadas de veiculos
     path("", include(clientes_router.urls)),  # Inclui as rotas aninhadas de clientes
     path("", include(motoristas_router.urls)),  # Inclui as rotas aninhadas de motoristas
+    path("", include(ctes_router.urls)),  # Inclui as rotas aninhadas de documentos de CT-e
 
     # Rota manual para a action batch_upload da UnifiedUploadViewSet
     path("upload/batch_upload/", UnifiedUploadViewSet.as_view({'post': 'batch_upload'}), name="upload-batch-action"),
