@@ -118,8 +118,11 @@ function PagamentosList() {
     loadPagamentos();
   }, []);
 
-  // Cleanup on unmount to prevent race conditions
+  // Cleanup on unmount to prevent race conditions.
+  // Reseta true no mount: em StrictMode (React 19 dev) o componente monta,
+  // desmonta e remonta — sem isto o ref ficava false e a tela travava no loading.
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
