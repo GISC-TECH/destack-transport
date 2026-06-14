@@ -211,14 +211,20 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
             root_tag_com_ns = next(iter(xml_dict), "")
             root_tag_no_ns = _get_tag_sem_namespace(root_tag_com_ns)
 
-            # 1. Documentos Principais (CT-e, MDF-e)
-            if root_tag_no_ns in ('CTe', 'procCTe', 'cteProc'):
-                tipo_xml = "CT"
+            # 1. Documentos Principais (CT-e mod 57, CT-e OS mod 67, MDF-e, GTV-e mod 64)
+            if root_tag_no_ns in ('CTe', 'procCTe', 'cteProc',
+                                   'CTeOS', 'procCTeOS', 'cteOSProc'):
+                tipo_xml = "CT"  # CT-e OS é processado pelo mesmo pipeline de CT-e
                 chave_doc = self._get_chave_from_dict(xml_dict, "CTe") or self._get_chave_from_regex(content, "CTe")
             elif root_tag_no_ns in ('MDFe', 'procMDFe', 'mdfeProc'):
                 tipo_xml = "MDFE"
                 chave_doc = self._get_chave_from_dict(xml_dict, "MDFe") or self._get_chave_from_regex(content, "MDFe")
-            
+            elif root_tag_no_ns in ('GTVe', 'procGTVe', 'gtveProc'):
+                tipo_xml = "GTVE"
+                # Chave do GTV-e: primeiro atributo Id com 44 dígitos (prefixo varia)
+                m_id = re.search(r'\sId\s*=\s*["\'][A-Za-z]*(\d{44})["\']', content)
+                chave_doc = m_id.group(1) if m_id else None
+
             # 2. Eventos (envio, procEvento, retEvento)
             # Prioriza a identificação mais específica (procEvento, retEvento) sobre evento de envio puro
             elif root_tag_no_ns in ('procEventoCTe', 'procEventoMDFe'):
@@ -369,6 +375,8 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                 return self._process_cte(xml_content_principal, arquivo_principal_obj, xml_dict_principal)
             elif tipo_detectado == "MDFE": # Usa o tipo detectado
                 return self._process_mdfe(xml_content_principal, arquivo_principal_obj, xml_dict_principal)
+            elif tipo_detectado == "GTVE": # GTV-e (mod 64) — recepção genérica sem perda
+                return self._process_gtve(xml_content_principal, arquivo_principal_obj, xml_dict_principal)
             elif "EVENTO" in tipo_detectado: # Inclui PROC_EVENTO, RET_EVENTO, EVENTO
                  # Se for PROC_EVENTO ou RET_EVENTO, xml_content_retorno opcional é redundante mas não prejudica.
                  # Se for EVENTO puro, xml_content_retorno (se houver) será usado.
@@ -426,6 +434,60 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
         except Exception as parse_err:
             mdfe.processado = False; mdfe.save(update_fields=['processado'])
             return Response({"detail": f"Erro parser MDF-e: {str(parse_err)}", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def _process_gtve(self, xml_content, arquivo_obj, xml_dict_principal):
+        """Recepção de GTV-e (mod 64). Persiste sem perda em DocumentoFiscalGenerico:
+        cabeçalho indexável + XML e JSON completos."""
+        from ..models import DocumentoFiscalGenerico
+        # Localiza o nó interno <GTVe> (com ou sem wrapper de processamento)
+        gtve = safe_get(xml_dict_principal, 'procGTVe.GTVe') or \
+               safe_get(xml_dict_principal, 'gtveProc.GTVe') or \
+               safe_get(xml_dict_principal, 'GTVe') or {}
+        inf = safe_get(gtve, 'infCte') or safe_get(gtve, 'infGTVe') or {}
+        ide = safe_get(inf, 'ide', {}) or {}
+        emit = safe_get(inf, 'emit', {}) or {}
+
+        m_id = re.search(r'\sId\s*=\s*["\'][A-Za-z]*(\d{44})["\']', xml_content)
+        chave = m_id.group(1) if m_id else None
+        if not chave:
+            return Response({"detail": "Chave GTV-e não identificada.", "filename": arquivo_obj.name},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        from ..services.parser_cte import to_decimal, parse_datetime
+        valor = to_decimal(safe_get(inf, 'vGTV') or safe_get(safe_get(inf, 'prest', {}) or {}, 'vTPrest'), default=None)
+
+        defaults = {
+            'tipo': 'GTVE',
+            'modelo': safe_get(ide, 'mod') or '64',
+            'numero': safe_get(ide, 'nCT') or safe_get(ide, 'nGTV') or safe_get(ide, 'nDoc'),
+            'serie': safe_get(ide, 'serie'),
+            'data_emissao': parse_datetime(safe_get(ide, 'dhEmi')),
+            'emitente_cnpj': safe_get(emit, 'CNPJ'),
+            'emitente_nome': safe_get(emit, 'xNome'),
+            'valor_total': valor,
+            'xml_original': xml_content,
+            'dados_json': self._to_jsonable(gtve),
+            'processado': True,
+        }
+        try:
+            obj, created = DocumentoFiscalGenerico.objects.update_or_create(chave=chave, defaults=defaults)
+        except Exception as db_err:
+            return Response({"detail": f"DB Error (GTV-e {chave}): {str(db_err)}", "filename": arquivo_obj.name},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({
+            "message": f"GTV-e {'reprocessado' if not created else 'recebido'}.",
+            "id": str(obj.id), "chave": chave, "reprocessamento": not created, "filename": arquivo_obj.name,
+        }, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
+
+    @staticmethod
+    def _to_jsonable(value):
+        import json as _json
+        if value is None:
+            return None
+        try:
+            return _json.loads(_json.dumps(value, default=str))
+        except (TypeError, ValueError):
+            return None
 
     def _process_evento(self, xml_content_principal_evento, xml_content_retorno_opcional, arquivo_obj_principal_evento):
         # ... (Mantido, mas garantir que `parse_evento` em `services/parser_eventos.py` está robusto)
@@ -500,7 +562,7 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                     arquivos_por_chave[chave] = {'principais': [], 'eventos_envio': [], 'retornos_e_proc_eventos': []}
                 
                 grupo = arquivos_por_chave[chave]
-                if arq_info['tipo_xml'] in ["CT", "MDFE"]:
+                if arq_info['tipo_xml'] in ["CT", "MDFE", "GTVE"]:
                     # Lógica para evitar duplicidade de principais, se necessário
                     if not any(p['name'] == arq_info['name'] for p in grupo['principais']):
                         grupo['principais'].append(arq_info)
@@ -557,7 +619,9 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                         resp_obj = self._process_cte(doc_principal_a_processar['content'], doc_principal_a_processar['obj'], doc_principal_a_processar['xml_dict'])
                     elif doc_principal_a_processar['tipo_xml'] == "MDFE":
                         resp_obj = self._process_mdfe(doc_principal_a_processar['content'], doc_principal_a_processar['obj'], doc_principal_a_processar['xml_dict'])
-                    else: 
+                    elif doc_principal_a_processar['tipo_xml'] == "GTVE":
+                        resp_obj = self._process_gtve(doc_principal_a_processar['content'], doc_principal_a_processar['obj'], doc_principal_a_processar['xml_dict'])
+                    else:
                         resultado_p['erro'] = f"Tipo principal inesperado '{doc_principal_a_processar['tipo_xml']}' para processamento."
                         erro_count +=1; resultados_finais.append(resultado_p); continue
                     

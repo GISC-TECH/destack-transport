@@ -1,6 +1,7 @@
 # transport/services/parser_cte.py
 
 import logging
+import json
 import xmltodict
 import traceback
 from decimal import Decimal, InvalidOperation
@@ -24,8 +25,20 @@ from transport.models import (
     CTeModalRodoviario, CTeVeiculoRodoviario, CTeMotorista, CTeAutXML,
     CTeResponsavelTecnico, CTeProtocoloAutorizacao, CTeSuplementar,
     CTeCancelamento, CTeOrdemColeta, CTeValePedagio, CTeCobranca,
-    CTeDuplicata, CTeFluxoPassagem
+    CTeDuplicata, CTeFluxoPassagem,
+    CTeModalAereo, CTeModalAquaviario, CTeModalFerroviario,
+    CTeModalDutoviario, CTeModalMultimodal, CTeOSInfo
 )
+
+
+def to_jsonable(value):
+    """Converte OrderedDict/estruturas do xmltodict em algo serializável p/ JSONField."""
+    if value is None:
+        return None
+    try:
+        return json.loads(json.dumps(value, default=str))
+    except (TypeError, ValueError):
+        return None
 
 # --- Helper Functions (Funções Auxiliares) ---
 
@@ -144,38 +157,39 @@ def parse_endereco(endereco_dict):
     }
 
 def get_cte_infcte(xml_dict):
-    """Encontra o bloco <infCte> no dicionário XML parseado."""
-    proc_cte = xml_dict.get('procCTe')
-    cte_proc = xml_dict.get('cteProc')
-
-    # Verifica as estruturas mais comuns primeiro
-    if proc_cte and 'CTe' in proc_cte and 'infCte' in proc_cte['CTe']:
-        return proc_cte['CTe']['infCte'], proc_cte.get('@versao')
-    elif cte_proc and 'CTe' in cte_proc and 'infCte' in cte_proc['CTe']:
-        return cte_proc['CTe']['infCte'], cte_proc.get('@versao')
-    # Tenta a estrutura sem 'proc'
-    elif 'CTe' in xml_dict and 'infCte' in xml_dict['CTe']:
-         return xml_dict['CTe']['infCte'], xml_dict['CTe'].get('@versao')
-    else:
-        raise ValueError("Não foi possível encontrar o bloco <infCte> ou <CTe> no XML.")
+    """Encontra o bloco <infCte> no dicionário XML parseado.
+    Cobre CT-e mod 57 (<CTe>/<cteProc>/<procCTe>) e CT-e OS mod 67
+    (<CTeOS>/<cteOSProc>/<procCTeOS>)."""
+    # Tenta cada wrapper de processamento, para CT-e e CT-e OS
+    for proc_key, doc_key in (
+        ('procCTe', 'CTe'), ('cteProc', 'CTe'),
+        ('procCTeOS', 'CTeOS'), ('cteOSProc', 'CTeOS'),
+    ):
+        proc = xml_dict.get(proc_key)
+        if proc and doc_key in proc and 'infCte' in proc[doc_key]:
+            return proc[doc_key]['infCte'], proc.get('@versao')
+    # Estruturas sem o wrapper 'proc'
+    for doc_key in ('CTe', 'CTeOS'):
+        if doc_key in xml_dict and 'infCte' in xml_dict[doc_key]:
+            return xml_dict[doc_key]['infCte'], xml_dict[doc_key].get('@versao')
+    raise ValueError("Não foi possível encontrar o bloco <infCte> ou <CTe> no XML.")
 
 def get_cte_protocolo(xml_dict):
-    """Encontra o bloco <protCTe> no dicionário XML parseado."""
-    proc_cte = xml_dict.get('procCTe')
-    cte_proc = xml_dict.get('cteProc')
-
-    if proc_cte and 'protCTe' in proc_cte:
-        return proc_cte['protCTe']
-    elif cte_proc and 'protCTe' in cte_proc:
-        return cte_proc['protCTe']
+    """Encontra o bloco <protCTe> no dicionário XML parseado (CT-e e CT-e OS)."""
+    for proc_key in ('procCTe', 'cteProc', 'procCTeOS', 'cteOSProc'):
+        proc = xml_dict.get(proc_key)
+        if proc and 'protCTe' in proc:
+            return proc['protCTe']
     return None
 
 def get_cte_suplementar(xml_dict):
-    """Encontra o bloco <infCTeSupl> no dicionário XML parseado."""
-    # Ele geralmente está dentro de <CTe>, não dentro de <procCTe> ou <cteProc>
+    """Encontra o bloco <infCTeSupl> no dicionário XML parseado (CT-e e CT-e OS)."""
     cte_node = xml_dict.get('procCTe', {}).get('CTe') or \
                xml_dict.get('cteProc', {}).get('CTe') or \
-               xml_dict.get('CTe')
+               xml_dict.get('procCTeOS', {}).get('CTeOS') or \
+               xml_dict.get('cteOSProc', {}).get('CTeOS') or \
+               xml_dict.get('CTe') or \
+               xml_dict.get('CTeOS')
     if cte_node:
         return safe_get(cte_node, 'infCTeSupl')
     return None
@@ -795,6 +809,133 @@ def parse_cte_modal_rodoviario(cte_doc, infcte):
         logger.error(f"ERRO ao processar modal rodoviário para CT-e {cte_doc.chave}: {e}")
         raise
 
+def parse_cte_os_info(cte_doc, infcte):
+    """Parseia o bloco específico de CT-e OS (mod 67): <infCTeNormOS>.
+    Idempotente: remove dados anteriores e recria se o bloco existir."""
+    inf_os = safe_get(infcte, 'infCTeNormOS')
+    CTeOSInfo.objects.filter(cte=cte_doc).delete()
+    if not inf_os:
+        return None
+
+    inf_servico = safe_get(inf_os, 'infServico', {}) or {}
+    seg = safe_get(inf_os, 'seg', {}) or {}
+    inf_seg = safe_get(seg, 'infSeg', {}) or {}
+    doc_ref = safe_get(inf_os, 'infDocRef')
+
+    return CTeOSInfo.objects.create(
+        cte=cte_doc,
+        descricao_servico=safe_get(inf_servico, 'xDescServ'),
+        quantidade_carga=to_decimal(safe_get(inf_servico, 'infQ.qCarga'), default=None),
+        seguradora=safe_get(inf_seg, 'xSeg') or safe_get(seg, 'respSeg'),
+        numero_apolice=safe_get(seg, 'nApol'),
+        numero_averbacao=safe_get(seg, 'nAver'),
+        documentos_referenciados=to_jsonable(doc_ref),
+        info_completa=to_jsonable(inf_os),
+    )
+
+
+def parse_cte_modais_extras(cte_doc, infcte):
+    """Parseia modais não-rodoviários: <aereo>, <aquav>, <ferrov>, <duto>, <multimodal>.
+    Limpa todos os modais extras a cada parse e popula o que estiver presente.
+    """
+    inf_modal = safe_get(infcte, 'infCteNorm.infModal') \
+        or safe_get(infcte, 'infCTeNormOS.infModal') \
+        or safe_get(infcte, 'infModal')
+
+    # Limpa qualquer modal extra anterior (idempotência no reprocesso)
+    CTeModalAereo.objects.filter(cte=cte_doc).delete()
+    CTeModalAquaviario.objects.filter(cte=cte_doc).delete()
+    CTeModalFerroviario.objects.filter(cte=cte_doc).delete()
+    CTeModalDutoviario.objects.filter(cte=cte_doc).delete()
+    CTeModalMultimodal.objects.filter(cte=cte_doc).delete()
+
+    if not inf_modal:
+        return None
+
+    # --- Aéreo ---
+    aereo = safe_get(inf_modal, 'aereo')
+    if aereo:
+        tarifa = safe_get(aereo, 'tarifa', {}) or {}
+        nat = safe_get(aereo, 'natCarga', {}) or {}
+        CTeModalAereo.objects.create(
+            cte=cte_doc,
+            numero_minuta=safe_get(aereo, 'nMinu'),
+            numero_oca=safe_get(aereo, 'nOCA'),
+            data_prevista_entrega=parse_date(safe_get(aereo, 'dPrevAereo')),
+            classe_tarifa=safe_get(tarifa, 'CL'),
+            codigo_tarifa=safe_get(tarifa, 'cTar'),
+            valor_tarifa=to_decimal(safe_get(tarifa, 'vTar'), default=None),
+            dimensao=safe_get(nat, 'xDime'),
+            dados_completos=to_jsonable(aereo),
+        )
+        return 'aereo'
+
+    # --- Aquaviário ---
+    aquav = safe_get(inf_modal, 'aquav')
+    if aquav:
+        CTeModalAquaviario.objects.create(
+            cte=cte_doc,
+            valor_prestacao=to_decimal(safe_get(aquav, 'vPrest'), default=None),
+            valor_afrmm=to_decimal(safe_get(aquav, 'vAFRMM'), default=None),
+            numero_booking=safe_get(aquav, 'nBooking'),
+            numero_controle=safe_get(aquav, 'nCtrl'),
+            nome_navio=safe_get(aquav, 'xNavio'),
+            numero_viagem=safe_get(aquav, 'nViag'),
+            direcao=safe_get(aquav, 'direc'),
+            irin=safe_get(aquav, 'irin'),
+            porto_embarque=safe_get(aquav, 'prtEmb'),
+            porto_destino=safe_get(aquav, 'prtDest'),
+            tipo_navegacao=safe_get(aquav, 'tpNav'),
+            dados_completos=to_jsonable(aquav),
+        )
+        return 'aquav'
+
+    # --- Ferroviário ---
+    ferrov = safe_get(inf_modal, 'ferrov')
+    if ferrov:
+        traf_mut = safe_get(ferrov, 'trafMut', {}) or {}
+        CTeModalFerroviario.objects.create(
+            cte=cte_doc,
+            tipo_trafego=safe_get(ferrov, 'tpTraf'),
+            fluxo=safe_get(ferrov, 'fluxo'),
+            id_trem=safe_get(ferrov, 'idTrem'),
+            valor_frete=to_decimal(safe_get(ferrov, 'vFrete'), default=None),
+            resp_faturamento=safe_get(traf_mut, 'respFat'),
+            ferrovia_emitente=safe_get(traf_mut, 'ferrEmi'),
+            dados_completos=to_jsonable(ferrov),
+        )
+        return 'ferrov'
+
+    # --- Dutoviário ---
+    duto = safe_get(inf_modal, 'duto')
+    if duto:
+        CTeModalDutoviario.objects.create(
+            cte=cte_doc,
+            valor_tarifa=to_decimal(safe_get(duto, 'vTar'), default=None),
+            data_inicio=parse_date(safe_get(duto, 'dIni')),
+            data_fim=parse_date(safe_get(duto, 'dFim')),
+            dados_completos=to_jsonable(duto),
+        )
+        return 'duto'
+
+    # --- Multimodal ---
+    multi = safe_get(inf_modal, 'multimodal')
+    if multi:
+        seg = safe_get(multi, 'seg', {}) or {}
+        CTeModalMultimodal.objects.create(
+            cte=cte_doc,
+            numero_cotm=safe_get(multi, 'COTM'),
+            indicador_negociavel=safe_get(multi, 'indNegociavel'),
+            seguradora=safe_get(seg, 'respSeg'),
+            numero_apolice=safe_get(seg, 'nApol'),
+            numero_averbacao=safe_get(seg, 'nAver'),
+            dados_completos=to_jsonable(multi),
+        )
+        return 'multimodal'
+
+    return None
+
+
 @transaction.atomic
 def parse_cte_autorizados_xml(cte_doc, infcte):
     """Parseia o bloco <autXML>."""
@@ -1058,6 +1199,10 @@ def parse_cte_completo(cte_doc):
             parse_cte_seguro(cte_doc, infcte)
             # Modal Rodoviário
             parse_cte_modal_rodoviario(cte_doc, infcte)
+            # Demais modais (aéreo/aquaviário/ferroviário/dutoviário/multimodal)
+            parse_cte_modais_extras(cte_doc, infcte)
+            # CT-e OS (mod 67) — bloco infCTeNormOS
+            parse_cte_os_info(cte_doc, infcte)
             # Cobrança e Fluxo (Fase B)
             parse_cte_cobranca(cte_doc, infcte)
             parse_cte_fluxo(cte_doc, infcte)

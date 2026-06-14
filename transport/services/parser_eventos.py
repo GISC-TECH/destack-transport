@@ -1,5 +1,6 @@
 # transport/services/parser_eventos.py
 
+import json
 import xmltodict
 import traceback
 from decimal import Decimal, InvalidOperation
@@ -38,9 +39,27 @@ except ImportError:
 
 # Importar Modelos relevantes
 from transport.models import (
-    CTeDocumento, CTeCancelamento,
-    MDFeDocumento, MDFeCancelamento, MDFeCondutor, MDFeCancelamentoEncerramento
+    CTeDocumento, CTeCancelamento, CTeCartaCorrecao,
+    MDFeDocumento, MDFeCancelamento, MDFeCondutor, MDFeCancelamentoEncerramento,
+    DocumentoEvento
 )
+
+# Descrições por tpEvento (CT-e e MDF-e) — usado no registro genérico
+DESCRICAO_EVENTOS = {
+    '110110': 'Carta de Correção',
+    '110111': 'Cancelamento',
+    '110112': 'Encerramento (MDF-e)',
+    '110113': 'EPEC / Cancelamento de Encerramento',
+    '110114': 'Inclusão de Condutor (MDF-e)',
+    '110115': 'Inclusão de DF-e (MDF-e)',
+    '110116': 'Pagamento Operação Transporte (MDF-e)',
+    '110117': 'Confirmação Serviço de Transporte',
+    '110180': 'Comprovante de Entrega (CT-e)',
+    '110181': 'Cancelamento Comprovante de Entrega (CT-e)',
+    '110160': 'Registro de Passagem',
+    '610110': 'Prestação do Serviço em Desacordo',
+    '610111': 'Cancelamento Prestação em Desacordo',
+}
 
 # === Constantes de Tipos de Evento (Manter como referência) ===
 EVENTO_CANCELAMENTO = '110111'
@@ -133,6 +152,53 @@ def _get_retorno_evento_info(ret_evento_raiz):
         'dh_reg_evento': parse_datetime(safe_get(inf_evento_ret, 'dhRegEvento')),
         'n_prot_retorno': safe_get(inf_evento_ret, 'nProt'), # Protocolo do evento
     }
+
+# === Registro genérico universal de eventos ===
+
+def _evento_to_jsonable(value):
+    if value is None:
+        return None
+    try:
+        return json.loads(json.dumps(value, default=str))
+    except (TypeError, ValueError):
+        return None
+
+
+def _registrar_evento_generico(doc_principal, tipo_doc, evento_info, ret_evento_info, xml_evento_original):
+    """Upsert de DocumentoEvento — captura universal de QUALQUER evento recebido,
+    com ou sem handler estruturado dedicado. Garante que nenhum evento seja descartado."""
+    tp = evento_info.get('tp_evento')
+    n_seq = evento_info.get('n_seq_evento')
+    c_stat = ret_evento_info.get('c_stat') if ret_evento_info else None
+    # cStat de evento registrado/vinculado com sucesso (varia por evento): 134,135,136
+    confirmado = c_stat in (134, 135, 136) if c_stat is not None else False
+
+    defaults = {
+        'tipo_documento': tipo_doc,
+        'cte': doc_principal if tipo_doc == 'CTE' else None,
+        'mdfe': doc_principal if tipo_doc == 'MDFE' else None,
+        'descricao_evento': DESCRICAO_EVENTOS.get(tp, 'Evento'),
+        'data_evento': evento_info.get('dh_evento'),
+        'protocolo': ret_evento_info.get('n_prot_retorno') if ret_evento_info else None,
+        'orgao': evento_info.get('c_orgao'),
+        'codigo_status': str(c_stat) if c_stat is not None else None,
+        'motivo_status': ret_evento_info.get('x_motivo') if ret_evento_info else None,
+        'confirmado': confirmado,
+        'detalhe_json': _evento_to_jsonable(evento_info.get('det_evento')),
+        'xml_evento': xml_evento_original,
+    }
+    try:
+        obj, _created = DocumentoEvento.objects.update_or_create(
+            chave_documento=evento_info.get('ch_documento'),
+            tipo_evento=tp,
+            sequencia_evento=n_seq,
+            defaults=defaults,
+        )
+        return obj
+    except Exception as e:
+        print(f"WARN: Falha ao registrar evento genérico {tp} para {evento_info.get('ch_documento')}: {e}")
+        return None
+
 
 # === Handlers Específicos por Tipo de Evento ===
 
@@ -253,42 +319,60 @@ def _handle_cce_cte(cte_doc, evento_info, ret_evento_info, xml_evento_original):
     if not det_evento:
         raise ValueError("Detalhes do evento CCE (<detEvento>) não encontrados.")
 
-    # Verifica o status do retorno (135 ou 136 para CCE)
-    status_sucesso = False
-    if ret_evento_info:
-        if ret_evento_info.get('ch_documento') and ret_evento_info.get('ch_documento') != cte_doc.chave:
-             raise ValueError(f"Chave do documento no retorno do evento CCE ({ret_evento_info.get('ch_documento')}) não confere com CT-e ({cte_doc.chave}).")
-        if ret_evento_info.get('c_stat') in [135, 136]: # 135 ou 136 (evento registrado)
-             status_sucesso = True
-        else:
-             print(f"WARN: Evento CCE para CT-e {cte_doc.chave} recebido com status {ret_evento_info.get('c_stat')} - {ret_evento_info.get('x_motivo')}. CCE NÃO será aplicada/registrada.")
-             return None
+    # Resolve o retorno: usa o explícito; senão tenta o retEvento embutido no procEventoCTe.
+    if not ret_evento_info:
+        try:
+            doc_completo = xmltodict.parse(xml_evento_original)
+            ret_raiz = safe_get(doc_completo, 'procEventoCTe.retEventoCTe')
+            if ret_raiz:
+                ret_evento_info = _get_retorno_evento_info(ret_raiz)
+        except Exception as e:
+            print(f"WARN: Falha ao extrair retEvento embutido da CC-e (CT-e {cte_doc.chave}): {e}")
 
-    if not status_sucesso:
-        print(f"INFO: CCE para CT-e {cte_doc.chave} não confirmada pela SEFAZ.")
-        return None
+    if ret_evento_info and ret_evento_info.get('ch_documento') \
+            and ret_evento_info.get('ch_documento') != cte_doc.chave:
+        raise ValueError(
+            f"Chave do documento no retorno da CC-e ({ret_evento_info.get('ch_documento')}) "
+            f"não confere com CT-e ({cte_doc.chave})."
+        )
 
-    # --- Lógica para CCE ---
-    # Atualmente, apenas loga as informações.
-    # Para armazenar, crie um modelo CTeCartaCorrecao similar ao CTeCancelamento
-    # e popule-o aqui com os dados de evento_info, ret_evento_info e os detalhes da correção.
+    c_stat = ret_evento_info.get('c_stat') if ret_evento_info else None
+    if c_stat is not None and c_stat not in (135, 136):
+        # Recebida mas rejeitada pela SEFAZ — ainda assim registramos para auditoria.
+        print(f"WARN: CC-e para CT-e {cte_doc.chave} com status {c_stat} - "
+              f"{ret_evento_info.get('x_motivo')}. Registrada como não-homologada.")
+
+    # --- Persiste a Carta de Correção (CTeCartaCorrecao) — recepção sem perda ---
     inf_correcao_list = safe_get(det_evento, 'evCCeCTe.infCorrecao', [])
-    if not isinstance(inf_correcao_list, list): inf_correcao_list = [inf_correcao_list]
+    if not isinstance(inf_correcao_list, list):
+        inf_correcao_list = [inf_correcao_list]
 
-    print(f"INFO: Evento CCE (Seq:{evento_info.get('n_seq_evento')}, Prot:{ret_evento_info.get('n_prot_retorno')}) registrado com sucesso para CT-e {cte_doc.chave}.")
-    if not inf_correcao_list:
-         print("  - Nenhuma informação de correção (<infCorrecao>) encontrada no detalhe do evento.")
-    else:
-        for item in inf_correcao_list:
-            if isinstance(item, dict):
-                print(f"  - Grupo: {safe_get(item, 'grupoAlterado')} / Campo: {safe_get(item, 'campoAlterado')} / Valor: {safe_get(item, 'valorAlterado')}")
+    correcoes = [
+        {
+            'grupo': safe_get(i, 'grupoAlterado'),
+            'campo': safe_get(i, 'campoAlterado'),
+            'valor': safe_get(i, 'valorAlterado'),
+            'num_item': safe_get(i, 'nroItemAlterado'),
+        }
+        for i in inf_correcao_list if isinstance(i, dict)
+    ]
 
-    # Exemplo: Se fosse salvar em um campo JSON no CT-e
-    # correcoes = [{'grupo': safe_get(i, 'grupoAlterado'), 'campo': safe_get(i, 'campoAlterado'), 'valor': safe_get(i, 'valorAlterado')} for i in inf_correcao_list if isinstance(i, dict)]
-    # cte_doc.ultima_cce_info = {'protocolo': ret_evento_info.get('n_prot_retorno'), 'data': ret_evento_info.get('dh_reg_evento'), 'correcoes': correcoes}
-    # cte_doc.save()
-
-    return True # Indica que o evento foi processado (logado)
+    carta, _created = CTeCartaCorrecao.objects.update_or_create(
+        cte=cte_doc,
+        sequencia_evento=evento_info.get('n_seq_evento'),
+        defaults={
+            'data_evento': evento_info.get('dh_evento'),
+            'protocolo': ret_evento_info.get('n_prot_retorno') if ret_evento_info else None,
+            'codigo_status': ret_evento_info.get('c_stat') if ret_evento_info else None,
+            'motivo_status': ret_evento_info.get('x_motivo') if ret_evento_info else None,
+            'correcoes': correcoes or None,
+            'arquivo_xml_evento': xml_evento_original,
+        },
+    )
+    print(f"INFO: Carta de Correção (Seq:{evento_info.get('n_seq_evento')}, "
+          f"Prot:{ret_evento_info.get('n_prot_retorno') if ret_evento_info else None}) "
+          f"persistida com {len(correcoes)} correção(ões) para CT-e {cte_doc.chave}.")
+    return carta
 
 
 @transaction.atomic
@@ -596,6 +680,19 @@ def parse_evento(xml_evento_text, xml_retorno_text=None):
                  print(f"WARN: Falha ao parsear XML de retorno para evento {evento_info.get('tp_evento')} chave {evento_info.get('ch_documento')}: {parse_ret_err}")
                  # Continua sem o retorno
 
+        # Se não veio retorno separado, tenta o retEvento embutido no procEvento*.
+        if ret_evento_info is None:
+            try:
+                ret_embutido = None
+                if 'procEventoCTe' in doc_evento and 'retEventoCTe' in doc_evento['procEventoCTe']:
+                    ret_embutido = doc_evento['procEventoCTe']['retEventoCTe']
+                elif 'procEventoMDFe' in doc_evento and 'retEventoMDFe' in doc_evento['procEventoMDFe']:
+                    ret_embutido = doc_evento['procEventoMDFe']['retEventoMDFe']
+                if ret_embutido:
+                    ret_evento_info = _get_retorno_evento_info(ret_embutido)
+            except Exception as emb_err:
+                print(f"WARN: Falha ao extrair retEvento embutido do procEvento: {emb_err}")
+
         # --- Identifica o documento principal (CT-e ou MDF-e) ---
         chave_doc = evento_info.get('ch_documento')
         if not chave_doc or len(chave_doc) != 44:
@@ -619,18 +716,23 @@ def parse_evento(xml_evento_text, xml_retorno_text=None):
         # --- Chama o handler apropriado ---
         tp_evento = evento_info.get('tp_evento')
 
+        # Registro genérico universal PRIMEIRO: nenhum evento recebido é descartado,
+        # mesmo os que não têm handler estruturado dedicado.
+        evento_generico = _registrar_evento_generico(
+            doc_principal, tipo_doc, evento_info, ret_evento_info, xml_evento_text
+        )
+
         if tipo_doc == 'CTE':
             if tp_evento == EVENTO_CANCELAMENTO:
                 return _handle_cancelamento_cte(doc_principal, evento_info, ret_evento_info, xml_evento_text)
             elif tp_evento == EVENTO_CARTA_CORRECAO:
                 return _handle_cce_cte(doc_principal, evento_info, ret_evento_info, xml_evento_text)
-            # Adicionar handlers para outros eventos CT-e (EPEC, etc.)
-            elif tp_evento == EVENTO_EPEC:
-                print(f"WARN: Evento EPEC (110113) para CT-e {chave_doc} não implementado ainda.")
-                return None
             else:
-                print(f"WARN: Tipo de evento CT-e não suportado pelo parser: {tp_evento} para chave {chave_doc}")
-                return None # Indica que não foi processado
+                # EPEC (110113), Comprovante de Entrega (110180/110181), Desacordo (610110),
+                # Registro de Passagem (110160), etc. — recebidos e persistidos via registro genérico.
+                print(f"INFO: Evento CT-e {tp_evento} ({DESCRICAO_EVENTOS.get(tp_evento, 'desconhecido')}) "
+                      f"para {chave_doc} recebido via registro genérico.")
+                return evento_generico
 
         elif tipo_doc == 'MDFE':
             if tp_evento == EVENTO_CANCELAMENTO:
@@ -642,8 +744,10 @@ def parse_evento(xml_evento_text, xml_retorno_text=None):
             elif tp_evento == EVENTO_MDFE_CANCEL_ENCERRAMENTO:
                 return _handle_cancel_encerramento_mdfe(doc_principal, evento_info, ret_evento_info, xml_evento_text)
             else:
-                print(f"WARN: Tipo de evento MDF-e não suportado pelo parser: {tp_evento} para chave {chave_doc}")
-                return None # Indica que não foi processado
+                # Inclusão DF-e (110115), Pagamento Operação (110116), etc. — via registro genérico.
+                print(f"INFO: Evento MDF-e {tp_evento} ({DESCRICAO_EVENTOS.get(tp_evento, 'desconhecido')}) "
+                      f"para {chave_doc} recebido via registro genérico.")
+                return evento_generico
         else:
             # Nunca deve chegar aqui se a busca funcionou
             raise RuntimeError("Tipo de documento principal não determinado.")

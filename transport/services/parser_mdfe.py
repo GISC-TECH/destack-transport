@@ -134,8 +134,21 @@ from transport.models import (
     MDFeSeguroCarga, MDFeAverbacaoSeguro, MDFeProdutoPredominante, MDFeTotais,
     MDFeLacreRodoviario, MDFeAutXML, MDFeInformacoesAdicionais,
     MDFeResponsavelTecnico, MDFeProtocoloAutorizacao, MDFeSuplementar,
-    MDFeCancelamento, MDFeObservacao
+    MDFeCancelamento, MDFeObservacao,
+    MDFeModalAereo, MDFeModalAquaviario, MDFeModalFerroviario
 )
+
+try:
+    from .parser_cte import to_jsonable
+except ImportError:
+    def to_jsonable(value):
+        import json as _json
+        if value is None:
+            return None
+        try:
+            return _json.loads(_json.dumps(value, default=str))
+        except (TypeError, ValueError):
+            return None
 
 # --- Helper Functions Específicas (se necessário) ---
 
@@ -428,6 +441,70 @@ def parse_mdfe_modal_rodoviario(mdfe_doc, infmdfe):
 
 
 @transaction.atomic
+def parse_mdfe_modais_extras(mdfe_doc, infmdfe):
+    """Parseia modais não-rodoviários do MDF-e: <aereo>, <aquav>, <ferrov>.
+    Limpa todos os modais extras a cada parse e popula o que estiver presente.
+    """
+    inf_modal = safe_get(infmdfe, 'infModal')
+
+    MDFeModalAereo.objects.filter(mdfe=mdfe_doc).delete()
+    MDFeModalAquaviario.objects.filter(mdfe=mdfe_doc).delete()
+    MDFeModalFerroviario.objects.filter(mdfe=mdfe_doc).delete()
+
+    if not inf_modal:
+        return None
+
+    # --- Aéreo ---
+    aereo = safe_get(inf_modal, 'aereo')
+    if aereo:
+        MDFeModalAereo.objects.create(
+            mdfe=mdfe_doc,
+            nacionalidade=safe_get(aereo, 'nac'),
+            matricula=safe_get(aereo, 'matr'),
+            numero_voo=safe_get(aereo, 'nVoo'),
+            aerodromo_embarque=safe_get(aereo, 'cAerEmb'),
+            aerodromo_destino=safe_get(aereo, 'cAerDes'),
+            data_voo=parse_date(safe_get(aereo, 'dVoo')),
+            dados_completos=to_jsonable(aereo),
+        )
+        return 'aereo'
+
+    # --- Aquaviário ---
+    aquav = safe_get(inf_modal, 'aquav')
+    if aquav:
+        MDFeModalAquaviario.objects.create(
+            mdfe=mdfe_doc,
+            cnpj_agente_navegacao=safe_get(aquav, 'CNPJAgeNav'),
+            codigo_embarcacao=safe_get(aquav, 'cEmbar'),
+            nome_embarcacao=safe_get(aquav, 'xEmbar'),
+            numero_viagem=safe_get(aquav, 'nViag'),
+            tipo_embarcacao=safe_get(aquav, 'tpEmb'),
+            tipo_navegacao=safe_get(aquav, 'tpNav'),
+            irin=safe_get(aquav, 'irin'),
+            porto_embarque=safe_get(aquav, 'cPrtEmb'),
+            porto_destino=safe_get(aquav, 'cPrtDest'),
+            dados_completos=to_jsonable(aquav),
+        )
+        return 'aquav'
+
+    # --- Ferroviário ---
+    ferrov = safe_get(inf_modal, 'ferrov')
+    if ferrov:
+        trem = safe_get(ferrov, 'trem', {}) or {}
+        MDFeModalFerroviario.objects.create(
+            mdfe=mdfe_doc,
+            prefixo_trem=safe_get(trem, 'xPref'),
+            data_hora_trem=parse_datetime(safe_get(trem, 'dhTrem')),
+            origem_trem=safe_get(trem, 'xOri'),
+            destino_trem=safe_get(trem, 'xDest'),
+            qtd_vagoes=to_int(safe_get(trem, 'qVag')),
+            dados_completos=to_jsonable(ferrov),
+        )
+        return 'ferrov'
+
+    return None
+
+
 def parse_mdfe_documentos(mdfe_doc, infmdfe):
     """Parseia o bloco <infDoc> (municípios de descarga e documentos vinculados)."""
     inf_doc = safe_get(infmdfe, 'infDoc')
@@ -864,7 +941,9 @@ def parse_mdfe_completo(mdfe_doc):
             emitente = parse_mdfe_emitente(mdfe_doc, infmdfe)
             totais = parse_mdfe_totais(mdfe_doc, infmdfe)
             modal = parse_mdfe_modal_rodoviario(mdfe_doc, infmdfe)
-            
+            # Demais modais (aéreo/aquaviário/ferroviário)
+            parse_mdfe_modais_extras(mdfe_doc, infmdfe)
+
             # Parsear seções opcionais ou dependentes
             produto = parse_mdfe_produto_predominante(mdfe_doc, infmdfe)
             documentos = parse_mdfe_documentos(mdfe_doc, infmdfe)

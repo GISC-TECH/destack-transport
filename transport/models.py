@@ -497,6 +497,136 @@ class CTeMotorista(models.Model):
         verbose_name = "CT-e – Motorista"
         verbose_name_plural = verbose_name
 
+# --- Modais não-rodoviários (mod 57) ---
+class CTeModalAereo(models.Model):
+    """<infModal><aereo>"""
+    cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="modal_aereo")
+    numero_minuta = models.CharField("Número Minuta", max_length=12, null=True, blank=True)  # <nMinu>
+    numero_oca = models.CharField("Número Operacional Conhecimento Aéreo", max_length=11, null=True, blank=True)  # <nOCA>
+    data_prevista_entrega = models.DateField("Data Prevista Entrega", null=True, blank=True)  # <dPrevAereo>
+    classe_tarifa = models.CharField("Classe Tarifa", max_length=10, null=True, blank=True)  # <tarifa><CL>
+    codigo_tarifa = models.CharField("Código Tarifa", max_length=10, null=True, blank=True)  # <tarifa><cTar>
+    valor_tarifa = models.DecimalField("Valor Tarifa", max_digits=15, decimal_places=2, null=True, blank=True)  # <tarifa><vTar>
+    dimensao = models.CharField("Dimensão Carga", max_length=20, null=True, blank=True)  # <natCarga><xDime>
+    dados_completos = JSONField("Bloco aéreo completo", null=True, blank=True)
+
+    class Meta:
+        db_table = "cte_modal_aereo"
+        verbose_name = "CT-e – Modal Aéreo"
+        verbose_name_plural = verbose_name
+
+
+class CTeModalAquaviario(models.Model):
+    """<infModal><aquav>"""
+    cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="modal_aquaviario")
+    valor_prestacao = models.DecimalField("Valor Prestação Base Cálculo", max_digits=15, decimal_places=2, null=True, blank=True)  # <vPrest>
+    valor_afrmm = models.DecimalField("Valor AFRMM", max_digits=15, decimal_places=2, null=True, blank=True)  # <vAFRMM>
+    numero_booking = models.CharField("Número Booking", max_length=10, null=True, blank=True)  # <nBooking>
+    numero_controle = models.CharField("Número Controle", max_length=10, null=True, blank=True)  # <nCtrl>
+    nome_navio = models.CharField("Identificação do Navio", max_length=60, null=True, blank=True)  # <xNavio>
+    numero_viagem = models.CharField("Número Viagem", max_length=10, null=True, blank=True)  # <nViag>
+    direcao = models.CharField("Direção", max_length=1, null=True, blank=True)  # <direc> N/L/O/S
+    irin = models.CharField("IRIN do Navio", max_length=10, null=True, blank=True)  # <irin>
+    porto_embarque = models.CharField("Porto Embarque", max_length=60, null=True, blank=True)  # <prtEmb>
+    porto_destino = models.CharField("Porto Destino", max_length=60, null=True, blank=True)  # <prtDest>
+    tipo_navegacao = models.CharField("Tipo Navegação", max_length=1, null=True, blank=True)  # <tpNav>
+    dados_completos = JSONField("Bloco aquaviário completo", null=True, blank=True)
+
+    class Meta:
+        db_table = "cte_modal_aquav"
+        verbose_name = "CT-e – Modal Aquaviário"
+        verbose_name_plural = verbose_name
+
+
+class CTeModalFerroviario(models.Model):
+    """<infModal><ferrov>"""
+    cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="modal_ferroviario")
+    tipo_trafego = models.CharField("Tipo Tráfego", max_length=1, null=True, blank=True)  # <tpTraf>
+    fluxo = models.CharField("Fluxo Ferroviário", max_length=10, null=True, blank=True)  # <fluxo>
+    id_trem = models.CharField("Identificação Trem", max_length=36, null=True, blank=True)  # <idTrem>
+    valor_frete = models.DecimalField("Valor Frete", max_digits=15, decimal_places=2, null=True, blank=True)  # <vFrete>
+    resp_faturamento = models.CharField("Responsável Faturamento", max_length=1, null=True, blank=True)  # <trafMut><respFat>
+    ferrovia_emitente = models.CharField("Ferrovia Emitente", max_length=1, null=True, blank=True)  # <trafMut><ferrEmi>
+    dados_completos = JSONField("Bloco ferroviário completo", null=True, blank=True)
+
+    class Meta:
+        db_table = "cte_modal_ferrov"
+        verbose_name = "CT-e – Modal Ferroviário"
+        verbose_name_plural = verbose_name
+
+
+class CTeModalDutoviario(models.Model):
+    """<infModal><duto>"""
+    cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="modal_dutoviario")
+    valor_tarifa = models.DecimalField("Valor Tarifa", max_digits=15, decimal_places=2, null=True, blank=True)  # <vTar>
+    data_inicio = models.DateField("Data Início Prestação", null=True, blank=True)  # <dIni>
+    data_fim = models.DateField("Data Fim Prestação", null=True, blank=True)  # <dFim>
+    dados_completos = JSONField("Bloco dutoviário completo", null=True, blank=True)
+
+    class Meta:
+        db_table = "cte_modal_duto"
+        verbose_name = "CT-e – Modal Dutoviário"
+        verbose_name_plural = verbose_name
+
+
+class CTeModalMultimodal(models.Model):
+    """<infModal><multimodal>"""
+    cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="modal_multimodal")
+    numero_cotm = models.CharField("Número COTM", max_length=20, null=True, blank=True)  # <COTM>
+    indicador_negociavel = models.CharField("Indicador Negociável", max_length=1, null=True, blank=True)  # <indNegociavel>
+    seguradora = models.CharField("Seguradora Responsável", max_length=30, null=True, blank=True)  # <seg><respSeg>
+    numero_apolice = models.CharField("Número Apólice", max_length=20, null=True, blank=True)  # <seg><nApol>
+    numero_averbacao = models.CharField("Número Averbação", max_length=20, null=True, blank=True)  # <seg><nAver>
+    dados_completos = JSONField("Bloco multimodal completo", null=True, blank=True)
+
+    class Meta:
+        db_table = "cte_modal_multi"
+        verbose_name = "CT-e – Modal Multimodal"
+        verbose_name_plural = verbose_name
+
+
+# --- CT-e OS (mod 67) — bloco específico <infCTeNormOS> ---
+class CTeOSInfo(models.Model):
+    """Dados específicos do CT-e Outros Serviços (mod 67): <infCTeNormOS>."""
+    cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="os_info")
+    descricao_servico = models.CharField("Descrição do Serviço", max_length=300, null=True, blank=True)  # <infServico><xDescServ>
+    quantidade_carga = models.DecimalField("Quantidade de Carga", max_digits=15, decimal_places=4, null=True, blank=True)  # <infServico><infQ><qCarga>
+    seguradora = models.CharField("Seguradora", max_length=60, null=True, blank=True)  # <seg><infSeg><xSeg>
+    numero_apolice = models.CharField("Número Apólice", max_length=20, null=True, blank=True)  # <seg><nApol>
+    numero_averbacao = models.CharField("Número Averbação", max_length=20, null=True, blank=True)  # <seg><nAver>
+    documentos_referenciados = JSONField("Documentos Referenciados", null=True, blank=True)  # <infDocRef>
+    info_completa = JSONField("Bloco infCTeNormOS completo", null=True, blank=True)
+
+    class Meta:
+        db_table = "cte_os_info"
+        verbose_name = "CT-e OS – Informações (mod 67)"
+        verbose_name_plural = verbose_name
+
+
+# --- Carta de Correção Eletrônica (CC-e) — evento 110110 ---
+class CTeCartaCorrecao(models.Model):
+    """Evento de Carta de Correção Eletrônica (110110) de CT-e: <evCCeCTe>."""
+    cte = models.ForeignKey(CTeDocumento, on_delete=models.CASCADE, related_name="cartas_correcao")
+    sequencia_evento = models.PositiveIntegerField("Sequência do Evento (nSeqEvento)", null=True, blank=True)
+    data_evento = models.DateTimeField("Data/Hora do Evento", null=True, blank=True)
+    protocolo = models.CharField("Protocolo do Evento", max_length=20, null=True, blank=True)
+    codigo_status = models.IntegerField("Status SEFAZ (cStat)", null=True, blank=True)
+    motivo_status = models.CharField("Motivo (xMotivo)", max_length=255, null=True, blank=True)
+    correcoes = JSONField("Grupos Alterados (infCorrecao)", null=True, blank=True)
+    arquivo_xml_evento = models.TextField("XML do Evento", null=True, blank=True)
+    criado_em = models.DateTimeField("Criado em", auto_now_add=True)
+
+    class Meta:
+        db_table = "cte_carta_correcao"
+        verbose_name = "CT-e – Carta de Correção"
+        verbose_name_plural = "CT-e – Cartas de Correção"
+        unique_together = ('cte', 'sequencia_evento')
+        ordering = ['-data_evento']
+
+    def __str__(self):
+        return f"CC-e seq {self.sequencia_evento} – CT-e {self.cte_id}"
+
+
 # --- Autorizados a obter XML ---
 class CTeAutXML(models.Model):
     """<autXML>"""
@@ -818,6 +948,60 @@ class MDFeMunicipioDescarga(models.Model):
        verbose_name = "MDF-e – Município Descarga"
        verbose_name_plural = "MDF-e – Municípios Descarga"
        unique_together = ('mdfe', 'c_mun_descarga')
+
+# --- Modais não-rodoviários (mod 58) ---
+class MDFeModalAereo(models.Model):
+   """<infModal><aereo>"""
+   mdfe = models.OneToOneField(MDFeDocumento, on_delete=models.CASCADE, related_name="modal_aereo")
+   nacionalidade = models.CharField("Nacionalidade da Aeronave", max_length=4, null=True, blank=True)  # <nac>
+   matricula = models.CharField("Matrícula da Aeronave", max_length=6, null=True, blank=True)  # <matr>
+   numero_voo = models.CharField("Número do Voo", max_length=9, null=True, blank=True)  # <nVoo>
+   aerodromo_embarque = models.CharField("Aeródromo de Embarque", max_length=4, null=True, blank=True)  # <cAerEmb>
+   aerodromo_destino = models.CharField("Aeródromo de Destino", max_length=4, null=True, blank=True)  # <cAerDes>
+   data_voo = models.DateField("Data do Voo", null=True, blank=True)  # <dVoo>
+   dados_completos = JSONField("Bloco aéreo completo", null=True, blank=True)
+
+   class Meta:
+       db_table = "mdfe_modal_aereo"
+       verbose_name = "MDF-e – Modal Aéreo"
+       verbose_name_plural = verbose_name
+
+
+class MDFeModalAquaviario(models.Model):
+   """<infModal><aquav>"""
+   mdfe = models.OneToOneField(MDFeDocumento, on_delete=models.CASCADE, related_name="modal_aquaviario")
+   cnpj_agente_navegacao = models.CharField("CNPJ Agente de Navegação", max_length=14, null=True, blank=True)  # <CNPJAgeNav>
+   codigo_embarcacao = models.CharField("Código da Embarcação", max_length=10, null=True, blank=True)  # <cEmbar>
+   nome_embarcacao = models.CharField("Nome da Embarcação", max_length=60, null=True, blank=True)  # <xEmbar>
+   numero_viagem = models.CharField("Número da Viagem", max_length=10, null=True, blank=True)  # <nViag>
+   tipo_embarcacao = models.CharField("Tipo de Embarcação", max_length=2, null=True, blank=True)  # <tpEmb>
+   tipo_navegacao = models.CharField("Tipo de Navegação", max_length=1, null=True, blank=True)  # <tpNav>
+   irin = models.CharField("IRIN", max_length=10, null=True, blank=True)  # <irin>
+   porto_embarque = models.CharField("Código Porto Embarque", max_length=10, null=True, blank=True)  # <cPrtEmb>
+   porto_destino = models.CharField("Código Porto Destino", max_length=10, null=True, blank=True)  # <cPrtDest>
+   dados_completos = JSONField("Bloco aquaviário completo", null=True, blank=True)
+
+   class Meta:
+       db_table = "mdfe_modal_aquav"
+       verbose_name = "MDF-e – Modal Aquaviário"
+       verbose_name_plural = verbose_name
+
+
+class MDFeModalFerroviario(models.Model):
+   """<infModal><ferrov>"""
+   mdfe = models.OneToOneField(MDFeDocumento, on_delete=models.CASCADE, related_name="modal_ferroviario")
+   prefixo_trem = models.CharField("Prefixo do Trem", max_length=10, null=True, blank=True)  # <trem><xPref>
+   data_hora_trem = models.DateTimeField("Data/Hora Liberação do Trem", null=True, blank=True)  # <trem><dhTrem>
+   origem_trem = models.CharField("Origem do Trem", max_length=100, null=True, blank=True)  # <trem><xOri>
+   destino_trem = models.CharField("Destino do Trem", max_length=100, null=True, blank=True)  # <trem><xDest>
+   qtd_vagoes = models.IntegerField("Quantidade de Vagões", null=True, blank=True)  # <trem><qVag>
+   dados_completos = JSONField("Bloco ferroviário completo (trem + vagões)", null=True, blank=True)
+
+   class Meta:
+       db_table = "mdfe_modal_ferrov"
+       verbose_name = "MDF-e – Modal Ferroviário"
+       verbose_name_plural = verbose_name
+
 
 # Modelo Intermediário para Relacionar MDF-e e CT-e
 class MDFeDocumentosVinculados(models.Model):
@@ -2119,6 +2303,75 @@ class DocumentoAnexo(models.Model):
                 raise ValidationError({
                     'arquivo': f'Extensão não permitida. Use: {", ".join(extensoes_permitidas)}'
                 })
+
+
+# --------------------------------------------------
+#  R E C E P Ç Ã O   G E N É R I C A
+# --------------------------------------------------
+
+class DocumentoFiscalGenerico(models.Model):
+    """Recepção sem perda de documentos fiscais que não são CT-e mod 57 nem MDF-e
+    mod 58 de primeira classe (ex.: GTV-e mod 64). Guarda o XML e o JSON completos
+    para nunca descartar dados, com alguns campos de cabeçalho indexáveis."""
+    TIPO_CHOICES = [
+        ('GTVE', 'GTV-e (mod 64)'),
+        ('OUTRO', 'Outro'),
+    ]
+    tipo = models.CharField("Tipo", max_length=10, choices=TIPO_CHOICES, default='OUTRO')
+    modelo = models.CharField("Modelo", max_length=2, null=True, blank=True)
+    chave = models.CharField("Chave de Acesso", max_length=44, unique=True)
+    numero = models.CharField("Número", max_length=20, null=True, blank=True)
+    serie = models.CharField("Série", max_length=5, null=True, blank=True)
+    data_emissao = models.DateTimeField("Data de Emissão", null=True, blank=True)
+    emitente_cnpj = models.CharField("CNPJ Emitente", max_length=14, null=True, blank=True)
+    emitente_nome = models.CharField("Nome Emitente", max_length=120, null=True, blank=True)
+    valor_total = models.DecimalField("Valor Total", max_digits=15, decimal_places=2, null=True, blank=True)
+    xml_original = models.TextField("XML Original")
+    dados_json = JSONField("Documento completo (JSON)", null=True, blank=True)
+    processado = models.BooleanField("Processado", default=False)
+    criado_em = models.DateTimeField("Criado em", auto_now_add=True)
+
+    class Meta:
+        db_table = "documento_fiscal_generico"
+        verbose_name = "Documento Fiscal Genérico"
+        verbose_name_plural = "Documentos Fiscais Genéricos"
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} {self.chave}"
+
+
+class DocumentoEvento(models.Model):
+    """Recepção genérica de QUALQUER evento de CT-e/MDF-e (cancelamento, CC-e, EPEC,
+    encerramento, inclusão de condutor/DF-e, comprovante de entrega, desacordo, etc.).
+    Serve de fallback universal: nenhum evento recebido é descartado, mesmo os sem
+    handler estruturado dedicado."""
+    DOC_CHOICES = [('CTE', 'CT-e'), ('MDFE', 'MDF-e')]
+    tipo_documento = models.CharField("Documento", max_length=4, choices=DOC_CHOICES)
+    chave_documento = models.CharField("Chave do Documento", max_length=44, db_index=True)
+    cte = models.ForeignKey(CTeDocumento, on_delete=models.CASCADE, related_name="eventos", null=True, blank=True)
+    mdfe = models.ForeignKey(MDFeDocumento, on_delete=models.CASCADE, related_name="eventos", null=True, blank=True)
+    tipo_evento = models.CharField("Tipo do Evento (tpEvento)", max_length=6, db_index=True)
+    descricao_evento = models.CharField("Descrição do Evento", max_length=120, null=True, blank=True)
+    sequencia_evento = models.PositiveIntegerField("Sequência (nSeqEvento)", null=True, blank=True)
+    data_evento = models.DateTimeField("Data/Hora do Evento", null=True, blank=True)
+    protocolo = models.CharField("Protocolo", max_length=20, null=True, blank=True)
+    orgao = models.CharField("Órgão (cOrgao)", max_length=2, null=True, blank=True)
+    codigo_status = models.CharField("Status SEFAZ (cStat)", max_length=3, null=True, blank=True)
+    motivo_status = models.CharField("Motivo (xMotivo)", max_length=255, null=True, blank=True)
+    confirmado = models.BooleanField("Confirmado pela SEFAZ", default=False)
+    detalhe_json = JSONField("Detalhe do Evento (JSON)", null=True, blank=True)
+    xml_evento = models.TextField("XML do Evento", null=True, blank=True)
+    criado_em = models.DateTimeField("Criado em", auto_now_add=True)
+
+    class Meta:
+        db_table = "documento_evento"
+        verbose_name = "Documento – Evento"
+        verbose_name_plural = "Documentos – Eventos"
+        unique_together = ('chave_documento', 'tipo_evento', 'sequencia_evento')
+        ordering = ['-data_evento']
+
+    def __str__(self):
+        return f"Evento {self.tipo_evento} ({self.tipo_documento} {self.chave_documento})"
 
 
 # --------------------------------------------------
