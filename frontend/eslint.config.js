@@ -24,6 +24,14 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // O ruleset do eslint-plugin-react-hooks v7 inclui regras preview do
+      // React Compiler (immutability/set-state-in-effect/static-components) que
+      // sinalizam padrões intencionais e funcionais deste código (init em effect,
+      // load() em useEffect). Mantemos como aviso durante a migração — sem reescrever
+      // ~30 componentes em produção. rules-of-hooks segue como erro (correção real).
+      'react-hooks/immutability': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/static-components': 'warn',
     },
   },
 ])
