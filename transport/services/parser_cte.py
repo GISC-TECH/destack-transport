@@ -23,7 +23,8 @@ from transport.models import (
     CTeCarga, CTeQuantidadeCarga, CTeDocumentoTransportado, CTeSeguro,
     CTeModalRodoviario, CTeVeiculoRodoviario, CTeMotorista, CTeAutXML,
     CTeResponsavelTecnico, CTeProtocoloAutorizacao, CTeSuplementar,
-    CTeCancelamento
+    CTeCancelamento, CTeOrdemColeta, CTeValePedagio, CTeCobranca,
+    CTeDuplicata, CTeFluxoPassagem
 )
 
 # --- Helper Functions (Funções Auxiliares) ---
@@ -670,6 +671,7 @@ def parse_cte_seguro(cte_doc, infcte):
                     numero_apolice=safe_get(seg, 'nApol'),
                     numero_averbacao=safe_get(seg, 'nAver'),
                     valor_carga_averbada=to_decimal(safe_get(seg, 'vCarga'), default=None),
+                    valor_seguro=to_decimal(safe_get(seg, 'vSeg') or safe_get(seg, 'valSeg'), default=None),
                 )
                 count += 1
         return count
@@ -692,23 +694,51 @@ def parse_cte_modal_rodoviario(cte_doc, infcte):
         return None # Não é modal rodoviário
 
     try:
-        # Garantir RNTRC obrigatório
-        rntrc = safe_get(rodo, 'RNTRC')
-        if not rntrc:
-            rntrc = "00000000"  # Valor padrão
-            logger.warning(f"RNTRC não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
-
+        # Integridade: RNTRC real ou None. CIOT extraído (compliance ANTT).
         modal_data = {
-            'rntrc': rntrc,
+            'rntrc': safe_get(rodo, 'RNTRC'),
+            'ciot': safe_get(rodo, 'infCIOT.CIOT') or safe_get(rodo, 'CIOT'),
             'data_prevista_entrega': parse_date(safe_get(rodo, 'dPrev')),
             'lotacao': to_boolean(safe_get(rodo, 'lota', '0')), # Indicador de Lotação
-            # <occ> (Ordem de Coleta) omitido
         }
         modal_data_cleaned = {k: v for k, v in modal_data.items() if v is not None}
         modal, created = CTeModalRodoviario.objects.update_or_create(
             cte=cte_doc,
             defaults=modal_data_cleaned
         )
+
+        # --- Ordens de Coleta <occ> ---
+        occ_list = safe_get(rodo, 'occ', [])
+        if not isinstance(occ_list, list): occ_list = [occ_list]
+        CTeOrdemColeta.objects.filter(modal=modal).delete()
+        for occ in occ_list:
+            if isinstance(occ, dict):
+                emi = safe_get(occ, 'emiOCC', {})
+                CTeOrdemColeta.objects.create(
+                    modal=modal,
+                    serie=safe_get(occ, 'serie'),
+                    numero=safe_get(occ, 'nOcc'),
+                    data_emissao=parse_date(safe_get(occ, 'dEmi')),
+                    cnpj_emissor=safe_get(emi, 'CNPJ'),
+                    cpf_emissor=safe_get(emi, 'CPF'),
+                    telefone_emissor=safe_get(emi, 'fone'),
+                )
+
+        # --- Vale-Pedágio <valePed/disp> ---
+        disp_list = safe_get(rodo, 'valePed.disp', [])
+        if not isinstance(disp_list, list): disp_list = [disp_list]
+        CTeValePedagio.objects.filter(cte=cte_doc).delete()
+        for disp in disp_list:
+            if isinstance(disp, dict):
+                CTeValePedagio.objects.create(
+                    cte=cte_doc,
+                    cnpj_fornecedor=safe_get(disp, 'CNPJForn'),
+                    cnpj_responsavel=safe_get(disp, 'CNPJPg'),
+                    cpf_responsavel=safe_get(disp, 'CPFPg'),
+                    numero_comprovante=safe_get(disp, 'nCompra'),
+                    valor=to_decimal(safe_get(disp, 'vValePed'), default=None),
+                    tipo_vale=safe_get(rodo, 'valePed.tpValePed'),
+                )
 
         # --- Veículos <veic> ---
         veic_list = safe_get(rodo, 'veic', [])
@@ -723,7 +753,7 @@ def parse_cte_modal_rodoviario(cte_doc, infcte):
                     veic_data = {
                         'placa': placa,
                         'renavam': safe_get(veic, 'RENAVAM'),
-                        'tara': to_int(safe_get(veic, 'tara')) or 0,  # Garante valor default
+                        'tara': to_int(safe_get(veic, 'tara')),
                         'cap_kg': to_int(safe_get(veic, 'capKG')),
                         'cap_m3': to_int(safe_get(veic, 'capM3')),
                         'tipo_proprietario': safe_get(veic, 'tpProp'),
@@ -927,6 +957,55 @@ def parse_cte_suplementar(cte_doc, inf_supl):
 
 # --- Main Parser Orchestrator ---
 
+@transaction.atomic
+def parse_cte_cobranca(cte_doc, infcte):
+    """Parseia o bloco <cobr> (fatura + duplicatas)."""
+    cobr = safe_get(infcte, 'cobr')
+    if not cobr:
+        CTeCobranca.objects.filter(cte=cte_doc).delete()
+        return None
+
+    fat = safe_get(cobr, 'fat', {})
+    cobranca, _ = CTeCobranca.objects.update_or_create(
+        cte=cte_doc,
+        defaults={k: v for k, v in {
+            'numero_fatura': safe_get(fat, 'nFat'),
+            'valor_original': to_decimal(safe_get(fat, 'vOrig'), default=None),
+            'valor_desconto': to_decimal(safe_get(fat, 'vDesc'), default=None),
+            'valor_liquido': to_decimal(safe_get(fat, 'vLiq'), default=None),
+        }.items() if v is not None}
+    )
+
+    dup_list = safe_get(cobr, 'dup', [])
+    if not isinstance(dup_list, list): dup_list = [dup_list]
+    CTeDuplicata.objects.filter(cobranca=cobranca).delete()
+    for dup in dup_list:
+        if isinstance(dup, dict):
+            CTeDuplicata.objects.create(
+                cobranca=cobranca,
+                numero=safe_get(dup, 'nDup'),
+                data_vencimento=parse_date(safe_get(dup, 'dVenc')),
+                valor=to_decimal(safe_get(dup, 'vDup'), default=None),
+            )
+    return cobranca
+
+
+@transaction.atomic
+def parse_cte_fluxo(cte_doc, infcte):
+    """Parseia <compl><fluxo><pass> (passagens da rota)."""
+    fluxo = safe_get(infcte, 'compl.fluxo')
+    CTeFluxoPassagem.objects.filter(cte=cte_doc).delete()
+    if not fluxo:
+        return None
+    pass_list = safe_get(fluxo, 'pass', [])
+    if not isinstance(pass_list, list): pass_list = [pass_list]
+    for ordem, passagem in enumerate(pass_list, start=1):
+        nome = passagem if isinstance(passagem, str) else safe_get(passagem, 'xPass')
+        if nome:
+            CTeFluxoPassagem.objects.create(cte=cte_doc, nome_passagem=nome, ordem=ordem)
+    return True
+
+
 def parse_cte_completo(cte_doc):
     """
     Função principal para parsear todo o XML do CTeDocumento.
@@ -977,6 +1056,9 @@ def parse_cte_completo(cte_doc):
             parse_cte_seguro(cte_doc, infcte)
             # Modal Rodoviário
             parse_cte_modal_rodoviario(cte_doc, infcte)
+            # Cobrança e Fluxo (Fase B)
+            parse_cte_cobranca(cte_doc, infcte)
+            parse_cte_fluxo(cte_doc, infcte)
             # Outros
             parse_cte_autorizados_xml(cte_doc, infcte)
             parse_cte_responsavel_tecnico(cte_doc, infcte)

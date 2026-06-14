@@ -369,6 +369,7 @@ class CTeSeguro(models.Model):
     numero_apolice = models.CharField("Número Apólice", max_length=20, null=True, blank=True)
     numero_averbacao = models.CharField("Número Averbação", max_length=20, null=True, blank=True)
     valor_carga_averbada = models.DecimalField("Valor Carga (Averbação)", max_digits=15, decimal_places=2, null=True, blank=True)
+    valor_seguro = models.DecimalField("Valor do Seguro", max_digits=15, decimal_places=2, null=True, blank=True)  # <vSeg>/<valSeg>
 
     class Meta:
         db_table = "cte_seguro"
@@ -379,8 +380,8 @@ class CTeSeguro(models.Model):
 class CTeModalRodoviario(models.Model):
     """<infModal versaoModal="4.00"><rodo>"""
     cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="modal_rodoviario")
-    rntrc = models.CharField("RNTRC", max_length=8)
-    # <occ> omitido por complexidade, adicionar se necessário
+    rntrc = models.CharField("RNTRC", max_length=8, null=True, blank=True)
+    ciot = models.CharField("CIOT", max_length=12, null=True, blank=True)  # <infCIOT>/<CIOT>
     data_prevista_entrega = models.DateField("Data Prevista Entrega", null=True, blank=True)
     lotacao = models.BooleanField("Indicador Lotação", default=False) # 0=Não; 1=Sim
 
@@ -388,6 +389,72 @@ class CTeModalRodoviario(models.Model):
         db_table = "cte_modal_rodo"
         verbose_name = "CT-e – Modal Rodoviário"
         verbose_name_plural = verbose_name
+
+class CTeOrdemColeta(models.Model):
+    """<occ> — Ordem de Coleta associada ao modal rodoviário."""
+    modal = models.ForeignKey(CTeModalRodoviario, on_delete=models.CASCADE, related_name="ordens_coleta")
+    serie = models.CharField("Série OC", max_length=3, null=True, blank=True)
+    numero = models.CharField("Número OC", max_length=9, null=True, blank=True)
+    data_emissao = models.DateField("Data Emissão OC", null=True, blank=True)
+    cnpj_emissor = models.CharField("CNPJ Emissor OC", max_length=14, null=True, blank=True)
+    cpf_emissor = models.CharField("CPF Emissor OC", max_length=11, null=True, blank=True)
+    telefone_emissor = models.CharField("Telefone Emissor OC", max_length=14, null=True, blank=True)
+
+    class Meta:
+        db_table = "cte_ordem_coleta"
+        verbose_name = "CT-e – Ordem de Coleta"
+        verbose_name_plural = "CT-e – Ordens de Coleta"
+
+class CTeValePedagio(models.Model):
+    """<infModal/rodo/valePed/disp> — vale-pedágio."""
+    cte = models.ForeignKey(CTeDocumento, on_delete=models.CASCADE, related_name="vales_pedagio")
+    cnpj_fornecedor = models.CharField("CNPJ Fornecedor", max_length=14, null=True, blank=True)
+    cnpj_responsavel = models.CharField("CNPJ Responsável Pgto", max_length=14, null=True, blank=True)
+    cpf_responsavel = models.CharField("CPF Responsável Pgto", max_length=11, null=True, blank=True)
+    numero_comprovante = models.CharField("Nº Comprovante", max_length=20, null=True, blank=True)
+    valor = models.DecimalField("Valor Vale-Pedágio", max_digits=15, decimal_places=2, null=True, blank=True)
+    tipo_vale = models.CharField("Tipo Vale", max_length=2, null=True, blank=True)  # <tpValePed>
+
+    class Meta:
+        db_table = "cte_vale_pedagio"
+        verbose_name = "CT-e – Vale-Pedágio"
+        verbose_name_plural = "CT-e – Vales-Pedágio"
+
+class CTeCobranca(models.Model):
+    """<cobr> — fatura e duplicatas."""
+    cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="cobranca")
+    numero_fatura = models.CharField("Número Fatura", max_length=60, null=True, blank=True)  # <fat><nFat>
+    valor_original = models.DecimalField("Valor Original", max_digits=15, decimal_places=2, null=True, blank=True)  # <vOrig>
+    valor_desconto = models.DecimalField("Valor Desconto", max_digits=15, decimal_places=2, null=True, blank=True)  # <vDesc>
+    valor_liquido = models.DecimalField("Valor Líquido", max_digits=15, decimal_places=2, null=True, blank=True)  # <vLiq>
+
+    class Meta:
+        db_table = "cte_cobranca"
+        verbose_name = "CT-e – Cobrança"
+        verbose_name_plural = verbose_name
+
+class CTeDuplicata(models.Model):
+    """<cobr><dup> — duplicata de cobrança."""
+    cobranca = models.ForeignKey(CTeCobranca, on_delete=models.CASCADE, related_name="duplicatas")
+    numero = models.CharField("Número Duplicata", max_length=60, null=True, blank=True)  # <nDup>
+    data_vencimento = models.DateField("Vencimento", null=True, blank=True)  # <dVenc>
+    valor = models.DecimalField("Valor Duplicata", max_digits=15, decimal_places=2, null=True, blank=True)  # <vDup>
+
+    class Meta:
+        db_table = "cte_duplicata"
+        verbose_name = "CT-e – Duplicata"
+        verbose_name_plural = "CT-e – Duplicatas"
+
+class CTeFluxoPassagem(models.Model):
+    """<compl><fluxo><pass> — passagens/rota do fluxo."""
+    cte = models.ForeignKey(CTeDocumento, on_delete=models.CASCADE, related_name="fluxo_passagens")
+    nome_passagem = models.CharField("Sigla/Nome Passagem", max_length=15, null=True, blank=True)  # <xPass>
+    ordem = models.PositiveSmallIntegerField("Ordem", null=True, blank=True)
+
+    class Meta:
+        db_table = "cte_fluxo_passagem"
+        verbose_name = "CT-e – Fluxo (Passagem)"
+        verbose_name_plural = "CT-e – Fluxo (Passagens)"
 
 class CTeVeiculoRodoviario(models.Model):
     """<veic>"""
