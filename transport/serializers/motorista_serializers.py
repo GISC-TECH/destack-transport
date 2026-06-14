@@ -39,11 +39,13 @@ class MotoristaListSerializer(serializers.ModelSerializer):
 
     cpf_formatado = serializers.SerializerMethodField(read_only=True)
     validade_cnh_formatada = serializers.SerializerMethodField(read_only=True)
+    cadastro_completo = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Motorista
         fields = ['id', 'nome', 'cpf', 'cpf_formatado', 'cnh', 'categoria_cnh',
-                  'validade_cnh', 'validade_cnh_formatada', 'ativo']
+                  'validade_cnh', 'validade_cnh_formatada', 'ativo',
+                  'cadastro_automatico', 'cadastro_completo']
         read_only_fields = fields
 
     def get_cpf_formatado(self, obj):

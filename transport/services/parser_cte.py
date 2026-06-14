@@ -798,10 +798,14 @@ def parse_cte_modal_rodoviario(cte_doc, infcte):
                 cpf = safe_get(moto, 'CPF')
                 
                 if nome and cpf:  # Garante que nome e CPF existam
+                    # Auto-cadastra/vincula o motorista mestre (antes era manual)
+                    from transport.services.cadastro import sincronizar_motorista
+                    cadastro = sincronizar_motorista(nome, cpf)
                     CTeMotorista.objects.create(
                         modal=modal,
                         nome=nome,
-                        cpf=cpf
+                        cpf=cpf,
+                        motorista=cadastro,
                     )
 
         return modal

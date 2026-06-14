@@ -358,10 +358,13 @@ def parse_mdfe_modal_rodoviario(mdfe_doc, infmdfe):
                 cpf_condutor = safe_get(condutor, 'CPF')
                 nome_condutor = safe_get(condutor, 'xNome')
                 if cpf_condutor and nome_condutor:
+                    # Auto-cadastra/vincula o motorista mestre (antes era manual)
+                    from transport.services.cadastro import sincronizar_motorista
+                    cadastro = sincronizar_motorista(nome_condutor, cpf_condutor)
                     MDFeCondutor.objects.update_or_create( # Evita duplicar se CPF já existe
                         mdfe=mdfe_doc,
                         cpf=cpf_condutor,
-                        defaults={'nome': nome_condutor}
+                        defaults={'nome': nome_condutor, 'motorista': cadastro}
                     )
 
     # --- Veículos Reboque <veicReboque> (ForeignKey com Modal) ---

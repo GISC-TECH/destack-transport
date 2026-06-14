@@ -491,6 +491,10 @@ class CTeMotorista(models.Model):
     modal = models.ForeignKey(CTeModalRodoviario, on_delete=models.CASCADE, related_name="motoristas")
     nome = models.CharField("Nome Motorista", max_length=60)
     cpf = models.CharField("CPF Motorista", max_length=11)
+    # Vínculo automático com o cadastro mestre (preenchido no parse via CPF)
+    motorista = models.ForeignKey(
+        'Motorista', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="ctes_como_condutor")
 
     class Meta:
         db_table = "cte_motorista"
@@ -892,6 +896,10 @@ class MDFeCondutor(models.Model):
    mdfe = models.ForeignKey(MDFeDocumento, on_delete=models.CASCADE, related_name="condutores")
    nome = models.CharField("Nome Condutor", max_length=60)
    cpf = models.CharField("CPF Condutor", max_length=11)
+   # Vínculo automático com o cadastro mestre (preenchido no parse via CPF)
+   motorista = models.ForeignKey(
+       'Motorista', on_delete=models.SET_NULL, null=True, blank=True,
+       related_name="mdfes_como_condutor")
 
    class Meta:
        db_table = "mdfe_condutor"
@@ -1914,8 +1922,9 @@ class Motorista(models.Model):
     nome = models.CharField("Nome Completo", max_length=255)
     cpf = models.CharField("CPF", max_length=14, unique=True, db_index=True)
 
-    # CNH
-    cnh = models.CharField("CNH", max_length=20, unique=True, db_index=True)
+    # CNH (nullable para permitir auto-cadastro a partir do XML, que não traz CNH;
+    # unique continua valendo — múltiplos NULL não colidem no Postgres)
+    cnh = models.CharField("CNH", max_length=20, unique=True, db_index=True, blank=True, null=True)
     categoria_cnh = models.CharField(
         "Categoria CNH",
         max_length=5,
@@ -1975,9 +1984,18 @@ class Motorista(models.Model):
 
     # Metadados
     ativo = models.BooleanField("Ativo", default=True)
+    cadastro_automatico = models.BooleanField(
+        "Cadastro automático (via XML)", default=False,
+        help_text="Criado automaticamente a partir de um condutor de CT-e/MDF-e; pode estar incompleto (sem CNH/validades)."
+    )
     observacoes = models.TextField("Observações", blank=True, null=True)
     criado_em = models.DateTimeField("Criado em", auto_now_add=True)
     atualizado_em = models.DateTimeField("Atualizado em", auto_now=True)
+
+    @property
+    def cadastro_completo(self):
+        """True se os dados essenciais de compliance estão preenchidos."""
+        return bool(self.cnh and self.validade_cnh)
 
     class Meta:
         db_table = "motorista"
