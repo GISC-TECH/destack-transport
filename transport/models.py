@@ -279,10 +279,23 @@ class CTeComponenteValor(models.Model):
 class CTeTributos(models.Model):
     """<imp>"""
     cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="tributos")
-    icms = JSONField("Detalhes ICMS", null=True, blank=True, help_text="Estrutura JSON com os detalhes do ICMS aplicável (CST, vBC, pICMS, vICMS, etc.)")
+    icms = JSONField("Detalhes ICMS (bruto)", null=True, blank=True, help_text="Estrutura JSON bruta do ICMS aplicável.")
     valor_total_tributos = models.DecimalField("Valor Total Tributos", max_digits=15, decimal_places=2, null=True, blank=True) # <vTotTrib>
     info_ad_fisco = models.TextField("Informações Adicionais Fisco", null=True, blank=True) # <infAdFisco>
-    # ICMSUFFim omitido por complexidade
+
+    # Campos ICMS explícitos (consultáveis) — Fase B
+    icms_tipo = models.CharField("Grupo ICMS", max_length=12, null=True, blank=True, help_text="ICMS00/20/45/60/90/OutraUF/SN")
+    icms_cst = models.CharField("CST ICMS", max_length=2, null=True, blank=True)
+    icms_vbc = models.DecimalField("Base de Cálculo ICMS", max_digits=15, decimal_places=2, null=True, blank=True)
+    icms_pred_bc = models.DecimalField("% Redução Base ICMS", max_digits=7, decimal_places=4, null=True, blank=True)
+    icms_picms = models.DecimalField("Alíquota ICMS", max_digits=7, decimal_places=4, null=True, blank=True)
+    icms_vicms = models.DecimalField("Valor ICMS", max_digits=15, decimal_places=2, null=True, blank=True)
+    icms_vcred = models.DecimalField("Crédito ICMS (SN)", max_digits=15, decimal_places=2, null=True, blank=True)
+    icms_picms_st = models.DecimalField("Alíquota ICMS ST", max_digits=7, decimal_places=4, null=True, blank=True)
+    icms_vbc_st = models.DecimalField("Base de Cálculo ICMS ST", max_digits=15, decimal_places=2, null=True, blank=True)
+    icms_vicms_st = models.DecimalField("Valor ICMS ST", max_digits=15, decimal_places=2, null=True, blank=True)
+    # ICMSUFFim (partilha) — extraído em JSON quando presente
+    icms_uffim = JSONField("ICMS UF Fim (partilha)", null=True, blank=True)
 
     class Meta:
         db_table = "cte_tributos"

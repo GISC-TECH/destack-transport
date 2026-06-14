@@ -460,16 +460,15 @@ def parse_cte_valores(cte_doc, infcte):
         # Armazenar como JSON é a abordagem mais flexível
         icms_node = safe_get(imp, 'ICMS', {})
         icms_data = {}
-        # Verifica qual tipo de ICMS está presente
-        if 'ICMS00' in icms_node: icms_data = safe_get(icms_node, 'ICMS00')
-        elif 'ICMS20' in icms_node: icms_data = safe_get(icms_node, 'ICMS20')
-        elif 'ICMS45' in icms_node: icms_data = safe_get(icms_node, 'ICMS45')
-        elif 'ICMS60' in icms_node: icms_data = safe_get(icms_node, 'ICMS60')
-        elif 'ICMS90' in icms_node: icms_data = safe_get(icms_node, 'ICMS90')
-        elif 'ICMSOutraUF' in icms_node: icms_data = safe_get(icms_node, 'ICMSOutraUF')
-        elif 'ICMSSN' in icms_node: icms_data = safe_get(icms_node, 'ICMSSN')
-        # Adicionar ICMSST se necessário
-        elif 'ICMSST' in icms_node: icms_data = safe_get(icms_node, 'ICMSST')
+        icms_tipo = None
+        # Identifica qual grupo de ICMS está presente (Fase B: tipo + campos explícitos)
+        if isinstance(icms_node, dict):
+            for grupo in ('ICMS00', 'ICMS20', 'ICMS45', 'ICMS60', 'ICMS90',
+                          'ICMSOutraUF', 'ICMSSN', 'ICMSST'):
+                if grupo in icms_node:
+                    icms_tipo = grupo
+                    icms_data = safe_get(icms_node, grupo)
+                    break
 
         # Verifica se icms_data é um dicionário antes de usar
         if not isinstance(icms_data, dict):
@@ -478,9 +477,20 @@ def parse_cte_valores(cte_doc, infcte):
         try:
             trib_data = {
                 'icms': icms_data if icms_data else None,
-                'valor_total_tributos': to_decimal(safe_get(imp, 'vTotTrib')),
+                'valor_total_tributos': to_decimal(safe_get(imp, 'vTotTrib'), default=None),
                 'info_ad_fisco': safe_get(imp, 'infAdFisco'),
-                # ICMSUFFim (<ICMSUFFim>) é complexo, pode ser adicionado como JSON se necessário
+                # ICMS — campos explícitos consultáveis
+                'icms_tipo': icms_tipo,
+                'icms_cst': safe_get(icms_data, 'CST'),
+                'icms_vbc': to_decimal(safe_get(icms_data, 'vBC'), default=None),
+                'icms_pred_bc': to_decimal(safe_get(icms_data, 'pRedBC'), default=None),
+                'icms_picms': to_decimal(safe_get(icms_data, 'pICMS'), default=None),
+                'icms_vicms': to_decimal(safe_get(icms_data, 'vICMS'), default=None),
+                'icms_vcred': to_decimal(safe_get(icms_data, 'vCred'), default=None),
+                'icms_picms_st': to_decimal(safe_get(icms_data, 'pICMSST'), default=None),
+                'icms_vbc_st': to_decimal(safe_get(icms_data, 'vBCST'), default=None),
+                'icms_vicms_st': to_decimal(safe_get(icms_data, 'vICMSST'), default=None),
+                'icms_uffim': safe_get(imp, 'ICMSUFFim') if isinstance(safe_get(imp, 'ICMSUFFim'), dict) else None,
             }
             trib_data_cleaned = {k: v for k, v in trib_data.items() if v is not None}
             tributos, created_trib = CTeTributos.objects.update_or_create(
