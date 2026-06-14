@@ -772,7 +772,7 @@ class MDFeCondutor(models.Model):
 class MDFeCIOT(models.Model):
    """<rodo><infCIOT>"""
    modal = models.ForeignKey(MDFeModalRodoviario, on_delete=models.CASCADE, related_name="ciots")
-   ciot = models.CharField("CIOT", max_length=12)
+   ciot = models.CharField("CIOT", max_length=12, null=True, blank=True)
    cnpj_responsavel = models.CharField("CNPJ Responsável", max_length=14, null=True, blank=True)
    cpf_responsavel = models.CharField("CPF Responsável", max_length=11, null=True, blank=True)
 
