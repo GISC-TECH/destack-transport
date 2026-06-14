@@ -348,6 +348,9 @@ class CTeDocumentoTransportado(models.Model):
     cfop_pred_nf = models.CharField("CFOP Predominante NF", max_length=4, null=True, blank=True)
     peso_total_kg_nf = models.DecimalField("Peso Total (Kg) NF", max_digits=15, decimal_places=3, null=True, blank=True)
     pin_suframa_nf = models.CharField("PIN SUFRAMA NF", max_length=9, null=True, blank=True)
+    data_prevista_nf = models.DateField("Data Prevista Entrega NF", null=True, blank=True)  # <dPrev>
+    # Unidades de carga/transporte (infUnidCarga/infUnidTransp) — capturado integralmente em JSON (Fase C)
+    unidades_transporte = JSONField("Unidades de Transporte/Carga", null=True, blank=True)
     # Campos para Outros
     tipo_doc_outros = models.CharField("Tipo Doc Outros", max_length=2, null=True, blank=True)
     desc_outros = models.CharField("Descrição Outros", max_length=100, null=True, blank=True)
@@ -826,6 +829,8 @@ class MDFeDocumentosVinculados(models.Model):
    chave_documento = models.CharField("Chave Documento Vinculado", max_length=44, db_index=True)
    seg_cod_barras = models.CharField("Segundo Código Barras (CT-e)", max_length=36, null=True, blank=True) # <segCodBarra>
    ind_reentrega = models.BooleanField("Indicador Reentrega", default=False)
+   # Unidades de transporte/carga (infUnidTransp/infUnidCarga) — capturado em JSON (Fase C)
+   unidades_transporte = JSONField("Unidades de Transporte/Carga", null=True, blank=True)
 
    # Tenta relacionar com o CTeDocumento se a chave existir
    cte_relacionado = models.ForeignKey(CTeDocumento, on_delete=models.SET_NULL, null=True, blank=True, related_name='mdfe_transportador', to_field='chave')

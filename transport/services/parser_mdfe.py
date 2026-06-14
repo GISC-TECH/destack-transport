@@ -481,6 +481,7 @@ def parse_mdfe_documentos(mdfe_doc, infmdfe):
                     'municipio_descarga': municipio, # Associa ao município atual
                     'seg_cod_barras': safe_get(cte_dict, 'segCodBarra'),
                     'ind_reentrega': to_boolean(safe_get(cte_dict, 'indReentrega', '0')),
+                    'unidades_transporte': safe_get(cte_dict, 'infUnidTransp'),
                     'cte_relacionado': cte_relacionado_obj # Associa se encontrou
                     # infUnidCarga/infUnidTransp omitidos
                 }
@@ -524,6 +525,7 @@ def parse_mdfe_documentos(mdfe_doc, infmdfe):
                      'municipio_descarga': municipio,
                      'seg_cod_barras': safe_get(nfe_dict, 'segCodBarra'),
                      'ind_reentrega': to_boolean(safe_get(nfe_dict, 'indReentrega', '0')),
+                     'unidades_transporte': safe_get(nfe_dict, 'infUnidTransp'),
                      # 'nfe_relacionada': nfe_relacionada_obj # Associa se encontrou
                      # infUnidCarga/infUnidTransp omitidos
                  }

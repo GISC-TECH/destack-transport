@@ -587,6 +587,8 @@ def parse_cte_documentos(cte_doc, infcte):
                         tipo_documento='NFe',
                         chave_nfe=chave_nfe,
                         pin_suframa_nf=safe_get(nfe, 'PIN'),
+                        data_prevista_nf=parse_date(safe_get(nfe, 'dPrev')),
+                        unidades_transporte=safe_get(nfe, 'infUnidTransp'),
                     )
                     count += 1
 
