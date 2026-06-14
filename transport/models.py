@@ -889,12 +889,31 @@ class MDFeProdutoPredominante(models.Model):
    tp_carga = models.CharField("Tipo Carga", max_length=2, null=True, blank=True) # Ver tabela ANTT
    x_prod = models.CharField("Descrição Produto", max_length=120, null=True, blank=True)
    ncm = models.CharField("NCM", max_length=8, null=True, blank=True)
-   # <infLotacao> omitido por simplicidade, pode ser JSONField
+   # <infLotacao> — local de carregamento/descarregamento (Fase C)
+   cep_carrega = models.CharField("CEP Local Carregamento", max_length=8, null=True, blank=True)
+   lat_carrega = models.CharField("Latitude Carregamento", max_length=15, null=True, blank=True)
+   long_carrega = models.CharField("Longitude Carregamento", max_length=15, null=True, blank=True)
+   cep_descarrega = models.CharField("CEP Local Descarregamento", max_length=8, null=True, blank=True)
+   lat_descarrega = models.CharField("Latitude Descarregamento", max_length=15, null=True, blank=True)
+   long_descarrega = models.CharField("Longitude Descarregamento", max_length=15, null=True, blank=True)
 
    class Meta:
        db_table = "mdfe_prod_pred"
        verbose_name = "MDF-e – Produto Predominante"
        verbose_name_plural = verbose_name
+
+class MDFeObservacao(models.Model):
+    """<obsCont>/<obsFisco> — observações do contribuinte ou do fisco."""
+    TIPO_CHOICES = [('cont', 'Contribuinte'), ('fisco', 'Fisco')]
+    mdfe = models.ForeignKey(MDFeDocumento, on_delete=models.CASCADE, related_name="observacoes")
+    tipo = models.CharField("Tipo", max_length=5, choices=TIPO_CHOICES)
+    campo = models.CharField("Identificação Campo", max_length=20, null=True, blank=True)  # @xCampo
+    texto = models.TextField("Conteúdo", null=True, blank=True)  # <xTexto>
+
+    class Meta:
+        db_table = "mdfe_observacao"
+        verbose_name = "MDF-e – Observação"
+        verbose_name_plural = "MDF-e – Observações"
 
 # --- Totalizadores ---
 class MDFeTotais(models.Model):

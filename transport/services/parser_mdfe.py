@@ -134,7 +134,7 @@ from transport.models import (
     MDFeSeguroCarga, MDFeAverbacaoSeguro, MDFeProdutoPredominante, MDFeTotais,
     MDFeLacreRodoviario, MDFeAutXML, MDFeInformacoesAdicionais,
     MDFeResponsavelTecnico, MDFeProtocoloAutorizacao, MDFeSuplementar,
-    MDFeCancelamento
+    MDFeCancelamento, MDFeObservacao
 )
 
 # --- Helper Functions Específicas (se necessário) ---
@@ -618,11 +618,17 @@ def parse_mdfe_produto_predominante(mdfe_doc, infmdfe):
         MDFeProdutoPredominante.objects.filter(mdfe=mdfe_doc).delete() # Limpa
         return None
 
-    # Integridade: valores reais do XML (ou None se ausentes).
+    # Integridade: valores reais do XML (ou None se ausentes). infLotacao completo (Fase C).
     prod_data = {
         'tp_carga': safe_get(prod_pred_dict, 'tpCarga'),
         'x_prod': safe_get(prod_pred_dict, 'xProd'),
-        'ncm': safe_get(prod_pred_dict, 'infLotacao.NCM') or safe_get(prod_pred_dict, 'NCM'), # Tenta pegar de dentro de infLotacao primeiro
+        'ncm': safe_get(prod_pred_dict, 'infLotacao.NCM') or safe_get(prod_pred_dict, 'NCM'),
+        'cep_carrega': safe_get(prod_pred_dict, 'infLotacao.infLocalCarrega.CEP'),
+        'lat_carrega': safe_get(prod_pred_dict, 'infLotacao.infLocalCarrega.latitude'),
+        'long_carrega': safe_get(prod_pred_dict, 'infLotacao.infLocalCarrega.longitude'),
+        'cep_descarrega': safe_get(prod_pred_dict, 'infLotacao.infLocalDescarrega.CEP'),
+        'lat_descarrega': safe_get(prod_pred_dict, 'infLotacao.infLocalDescarrega.latitude'),
+        'long_descarrega': safe_get(prod_pred_dict, 'infLotacao.infLocalDescarrega.longitude'),
     }
     prod_data_cleaned = {k: v for k, v in prod_data.items() if v is not None}
 
@@ -724,6 +730,20 @@ def parse_mdfe_informacoes_adicionais(mdfe_doc, infmdfe):
         mdfe=mdfe_doc,
         defaults=adic_data_cleaned
     )
+
+    # Observações do contribuinte/fisco (Fase C)
+    MDFeObservacao.objects.filter(mdfe=mdfe_doc).delete()
+    for tipo, tag in (('cont', 'obsCont'), ('fisco', 'obsFisco')):
+        obs_list = safe_get(inf_adic, tag, [])
+        if not isinstance(obs_list, list):
+            obs_list = [obs_list]
+        for obs in obs_list:
+            if isinstance(obs, dict):
+                MDFeObservacao.objects.create(
+                    mdfe=mdfe_doc, tipo=tipo,
+                    campo=safe_get(obs, '@xCampo'),
+                    texto=safe_get(obs, 'xTexto'),
+                )
     return obj
 
 @transaction.atomic
