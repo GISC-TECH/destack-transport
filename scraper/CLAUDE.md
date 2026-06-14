@@ -1,10 +1,13 @@
-# CLAUDE.md
+# CLAUDE.md - EGS XML Collector
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
 **EGS XML Collector** is a Selenium-based web scraper that downloads CT-e (Conhecimento de Transporte Eletrônico) and MDF-e (Manifesto de Documentos Fiscais Eletrônicos) XML files from the EGS Sistemas web application (https://app.egssistemas.com.br). It runs as a scheduled background service inside Docker, executing every 6 hours.
+
+**Last Updated:** 2026-02-25  
+**EGS Password:** definida via variável de ambiente `EGS_PASSWORD` (`.env`, fora do versionamento). Solicite ao responsável pelo ambiente.
 
 ## Development Commands
 
@@ -28,19 +31,19 @@ python -c "from download_xmls import download_all_xmls; download_all_xmls(2025)"
 python scheduler.py
 ```
 
-### Docker
+### Docker (Production)
 ```bash
-# Build image
-docker build -t egs-scraper ./scraper
-
-# Run container
-docker run -d --name egs-scraper \
-  -v $(pwd)/downloads:/app/downloads \
-  -e RUN_ON_START=true \
-  egs-scraper
+# Build and start all services
+docker-compose up -d --build scraper
 
 # View logs
-docker logs -f egs-scraper
+docker logs -f destack_scraper
+
+# Check environment variables
+docker exec destack_scraper env | grep EGS
+
+# Restart scraper
+docker-compose restart scraper
 ```
 
 ## Architecture
@@ -119,7 +122,7 @@ This is handled automatically by `egs_client._handle_session_conflict()`
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `EGS_USERNAME` | DESTACK | EGS login username |
-| `EGS_PASSWORD` | 1234567 | EGS login password |
+| `EGS_PASSWORD` | _(via .env)_ | EGS login password — nunca versionar; definir em `.env` |
 | `EGS_ACCESS_KEY` | 57226 | EGS access key |
 | `SELENIUM_HEADLESS` | false | Run Chrome headless |
 | `RUN_ON_START` | true | Execute download immediately on scheduler start |
@@ -135,6 +138,13 @@ downloads/
 └── xmls_DD-MM-YYYY/    # Daily downloads (scheduler)
 ```
 
+## Recent Updates (2026-02-25)
+
+- ✅ Senha do EGS rotacionada (valor agora apenas em `.env`, fora do versionamento)
+- ✅ Container rebuilt and restarted successfully
+- ✅ Healthcheck implemented for auto-restart
+- ✅ All dependencies updated (Chrome 145, ChromeDriver)
+
 ## Common Issues
 
 1. **Session conflict**: Another user is logged in. The scraper auto-handles this by disconnecting the other session.
@@ -147,3 +157,5 @@ downloads/
 3. **Grid filter not working**: The EGS system doesn't properly filter by date range. Use `download_all_xmls()` instead of filtered downloads.
 
 4. **Download timeout**: Increase timeout in `wait_for_download_and_extract()`. Default is 180 seconds.
+
+5. **Password expired/invalid**: Check with EGS admin or client. Update in `docker-compose.yml` and restart container.

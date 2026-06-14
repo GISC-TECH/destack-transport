@@ -398,3 +398,19 @@ MIT License - Veja o arquivo LICENSE para detalhes.
 
 - **Email:** contato@destacktransportes.com.br
 - **GitHub:** https://github.com/GISC-TECH/destack-transport
+
+---
+
+## Atualizações Recentes
+
+### 2026-02-25
+- ✅ Senha do EGS Sistemas rotacionada (valor mantido apenas em `.env`, fora do versionamento)
+- ✅ Rebuild do container scraper com Chrome 145
+- ✅ Implementado healthcheck para auto-restart
+- ✅ Atualizada documentação CLAUDE.md
+
+### 2026-02-22
+- ✅ Corrigido problema de acesso ao perfil EGS
+- ✅ Robô voltou a baixar CT-es normalmente
+- ✅ 895 registros processados
+

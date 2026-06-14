@@ -96,7 +96,7 @@ services:
       - EGS_BASE_URL=https://app.egssistemas.com.br
       - EGS_LOGIN_URL=https://app.egssistemas.com.br/login
       - EGS_USERNAME=${EGS_USERNAME:-DESTACK}
-      - EGS_PASSWORD=destack789
+      - EGS_PASSWORD=${EGS_PASSWORD:?defina EGS_PASSWORD no .env}
       - EGS_ACCESS_KEY=${EGS_ACCESS_KEY:-57226}
       # Destack API (produção: destack_app na rede apps_backend)
       - DESTACK_API_URL=${DESTACK_API_URL:-http://destack:8000/api}
