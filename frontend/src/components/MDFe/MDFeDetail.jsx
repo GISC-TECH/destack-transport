@@ -314,6 +314,56 @@ function MDFeDetail() {
           )}
         </div>
 
+        {/* Modais não-rodoviários */}
+        {mdfe.modal_aereo && (
+          <div className="detail-card">
+            <h3>Modal Aéreo</h3>
+            <div className="detail-content">
+              <div className="detail-row"><span className="label">Matrícula:</span><span className="value">{mdfe.modal_aereo.matricula || '-'}</span></div>
+              <div className="detail-row"><span className="label">Voo:</span><span className="value">{mdfe.modal_aereo.numero_voo || '-'}</span></div>
+              <div className="detail-row"><span className="label">Emb./Dest.:</span><span className="value">{mdfe.modal_aereo.aerodromo_embarque || '-'} → {mdfe.modal_aereo.aerodromo_destino || '-'}</span></div>
+            </div>
+          </div>
+        )}
+        {mdfe.modal_aquaviario && (
+          <div className="detail-card">
+            <h3>Modal Aquaviário</h3>
+            <div className="detail-content">
+              <div className="detail-row"><span className="label">Embarcação:</span><span className="value">{mdfe.modal_aquaviario.nome_embarcacao || '-'}</span></div>
+              <div className="detail-row"><span className="label">Viagem:</span><span className="value">{mdfe.modal_aquaviario.numero_viagem || '-'}</span></div>
+              <div className="detail-row"><span className="label">Porto Emb./Dest.:</span><span className="value">{mdfe.modal_aquaviario.porto_embarque || '-'} → {mdfe.modal_aquaviario.porto_destino || '-'}</span></div>
+            </div>
+          </div>
+        )}
+        {mdfe.modal_ferroviario && (
+          <div className="detail-card">
+            <h3>Modal Ferroviário</h3>
+            <div className="detail-content">
+              <div className="detail-row"><span className="label">Prefixo Trem:</span><span className="value">{mdfe.modal_ferroviario.prefixo_trem || '-'}</span></div>
+              <div className="detail-row"><span className="label">Origem/Destino:</span><span className="value">{mdfe.modal_ferroviario.origem_trem || '-'} → {mdfe.modal_ferroviario.destino_trem || '-'}</span></div>
+              {mdfe.modal_ferroviario.qtd_vagoes != null && <div className="detail-row"><span className="label">Vagões:</span><span className="value">{mdfe.modal_ferroviario.qtd_vagoes}</span></div>}
+            </div>
+          </div>
+        )}
+
+        {/* Linha do tempo de eventos */}
+        {mdfe.eventos?.length > 0 && (
+          <div className="detail-card" style={{gridColumn: '1 / -1'}}>
+            <h3>Eventos</h3>
+            <div className="detail-content">
+              {mdfe.eventos.map((e, i) => (
+                <div className="detail-row" key={i}>
+                  <span className="label">{e.descricao_evento || e.tipo_evento} {e.sequencia_evento ? `#${e.sequencia_evento}` : ''}:</span>
+                  <span className="value">
+                    {formatDate(e.data_evento)} · {e.confirmado ? '✓ confirmado' : 'pendente'}
+                    {e.protocolo ? ` · prot. ${e.protocolo}` : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Documentos Anexos */}
         <div className="detail-card" style={{gridColumn: '1 / -1'}}>
           <DocumentosAnexos

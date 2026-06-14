@@ -347,6 +347,149 @@ function CTeDetail() {
           </div>
         </div>
 
+        {/* ICMS detalhado */}
+        {cte.tributos?.icms_cst && (
+          <div className="detail-card">
+            <h3>ICMS</h3>
+            <div className="detail-content">
+              <div className="detail-row"><span className="label">CST:</span><span className="value">{cte.tributos.icms_cst}</span></div>
+              {cte.tributos.icms_vbc != null && <div className="detail-row"><span className="label">Base de Cálculo:</span><span className="value">{formatCurrency(cte.tributos.icms_vbc)}</span></div>}
+              {cte.tributos.icms_picms != null && <div className="detail-row"><span className="label">Alíquota:</span><span className="value">{cte.tributos.icms_picms}%</span></div>}
+              {cte.tributos.icms_vicms != null && <div className="detail-row"><span className="label">Valor ICMS:</span><span className="value">{formatCurrency(cte.tributos.icms_vicms)}</span></div>}
+              {cte.tributos.valor_total_tributos != null && <div className="detail-row"><span className="label">Total Tributos:</span><span className="value">{formatCurrency(cte.tributos.valor_total_tributos)}</span></div>}
+            </div>
+          </div>
+        )}
+
+        {/* CT-e OS (mod 67) */}
+        {cte.os_info && (
+          <div className="detail-card">
+            <h3>CT-e OS (Outros Serviços)</h3>
+            <div className="detail-content">
+              <div className="detail-row"><span className="label">Serviço:</span><span className="value">{cte.os_info.descricao_servico || '-'}</span></div>
+              {cte.os_info.quantidade_carga != null && <div className="detail-row"><span className="label">Qtd. Carga:</span><span className="value">{cte.os_info.quantidade_carga}</span></div>}
+              {cte.os_info.seguradora && <div className="detail-row"><span className="label">Seguradora:</span><span className="value">{cte.os_info.seguradora}</span></div>}
+            </div>
+          </div>
+        )}
+
+        {/* Modais não-rodoviários */}
+        {cte.modal_aereo && (
+          <div className="detail-card">
+            <h3>Modal Aéreo</h3>
+            <div className="detail-content">
+              <div className="detail-row"><span className="label">Minuta:</span><span className="value">{cte.modal_aereo.numero_minuta || '-'}</span></div>
+              <div className="detail-row"><span className="label">Nº OCA:</span><span className="value">{cte.modal_aereo.numero_oca || '-'}</span></div>
+              {cte.modal_aereo.valor_tarifa != null && <div className="detail-row"><span className="label">Tarifa:</span><span className="value">{formatCurrency(cte.modal_aereo.valor_tarifa)}</span></div>}
+            </div>
+          </div>
+        )}
+        {cte.modal_aquaviario && (
+          <div className="detail-card">
+            <h3>Modal Aquaviário</h3>
+            <div className="detail-content">
+              <div className="detail-row"><span className="label">Navio:</span><span className="value">{cte.modal_aquaviario.nome_navio || '-'}</span></div>
+              <div className="detail-row"><span className="label">Viagem:</span><span className="value">{cte.modal_aquaviario.numero_viagem || '-'}</span></div>
+              <div className="detail-row"><span className="label">Porto Emb./Dest.:</span><span className="value">{cte.modal_aquaviario.porto_embarque || '-'} → {cte.modal_aquaviario.porto_destino || '-'}</span></div>
+            </div>
+          </div>
+        )}
+        {cte.modal_ferroviario && (
+          <div className="detail-card">
+            <h3>Modal Ferroviário</h3>
+            <div className="detail-content">
+              <div className="detail-row"><span className="label">Trem:</span><span className="value">{cte.modal_ferroviario.id_trem || '-'}</span></div>
+              <div className="detail-row"><span className="label">Fluxo:</span><span className="value">{cte.modal_ferroviario.fluxo || '-'}</span></div>
+              {cte.modal_ferroviario.valor_frete != null && <div className="detail-row"><span className="label">Frete:</span><span className="value">{formatCurrency(cte.modal_ferroviario.valor_frete)}</span></div>}
+            </div>
+          </div>
+        )}
+        {cte.modal_dutoviario && (
+          <div className="detail-card">
+            <h3>Modal Dutoviário</h3>
+            <div className="detail-content">
+              {cte.modal_dutoviario.valor_tarifa != null && <div className="detail-row"><span className="label">Tarifa:</span><span className="value">{formatCurrency(cte.modal_dutoviario.valor_tarifa)}</span></div>}
+              <div className="detail-row"><span className="label">Período:</span><span className="value">{formatDate(cte.modal_dutoviario.data_inicio)} → {formatDate(cte.modal_dutoviario.data_fim)}</span></div>
+            </div>
+          </div>
+        )}
+        {cte.modal_multimodal && (
+          <div className="detail-card">
+            <h3>Modal Multimodal</h3>
+            <div className="detail-content">
+              <div className="detail-row"><span className="label">COTM:</span><span className="value">{cte.modal_multimodal.numero_cotm || '-'}</span></div>
+              {cte.modal_multimodal.numero_apolice && <div className="detail-row"><span className="label">Apólice:</span><span className="value">{cte.modal_multimodal.numero_apolice}</span></div>}
+            </div>
+          </div>
+        )}
+
+        {/* Cobrança / Duplicatas */}
+        {cte.cobranca && (
+          <div className="detail-card">
+            <h3>Cobrança</h3>
+            <div className="detail-content">
+              {cte.cobranca.numero_fatura && <div className="detail-row"><span className="label">Fatura:</span><span className="value">{cte.cobranca.numero_fatura}</span></div>}
+              {cte.cobranca.valor_liquido != null && <div className="detail-row"><span className="label">Valor Líquido:</span><span className="value">{formatCurrency(cte.cobranca.valor_liquido)}</span></div>}
+              {(cte.cobranca.duplicatas || []).map((d, i) => (
+                <div className="detail-row" key={i}>
+                  <span className="label">Dup. {d.numero || i + 1}:</span>
+                  <span className="value">{formatCurrency(d.valor)} {d.data_vencimento ? `(venc. ${formatDate(d.data_vencimento)})` : ''}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Vale-Pedágio */}
+        {cte.vales_pedagio?.length > 0 && (
+          <div className="detail-card">
+            <h3>Vale-Pedágio</h3>
+            <div className="detail-content">
+              {cte.vales_pedagio.map((v, i) => (
+                <div className="detail-row" key={i}>
+                  <span className="label">Comprovante {v.numero_comprovante || i + 1}:</span>
+                  <span className="value">{formatCurrency(v.valor)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Cartas de Correção */}
+        {cte.cartas_correcao?.length > 0 && (
+          <div className="detail-card">
+            <h3>Cartas de Correção</h3>
+            <div className="detail-content">
+              {cte.cartas_correcao.map((c, i) => (
+                <div key={i} style={{ marginBottom: 8 }}>
+                  <div className="detail-row"><span className="label">Seq. {c.sequencia_evento}:</span><span className="value">{formatDate(c.data_evento)} · prot. {c.protocolo || '-'}</span></div>
+                  {(c.correcoes || []).map((cor, j) => (
+                    <div className="detail-row" key={j}><span className="label">{cor.grupo}/{cor.campo}:</span><span className="value">{cor.valor}</span></div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Linha do tempo de eventos */}
+        {cte.eventos?.length > 0 && (
+          <div className="detail-card" style={{gridColumn: '1 / -1'}}>
+            <h3>Eventos</h3>
+            <div className="detail-content">
+              {cte.eventos.map((e, i) => (
+                <div className="detail-row" key={i}>
+                  <span className="label">{e.descricao_evento || e.tipo_evento} {e.sequencia_evento ? `#${e.sequencia_evento}` : ''}:</span>
+                  <span className="value">
+                    {formatDate(e.data_evento)} · {e.confirmado ? '✓ confirmado' : 'pendente'}
+                    {e.protocolo ? ` · prot. ${e.protocolo}` : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Documentos Anexos */}
         <div className="detail-card" style={{gridColumn: '1 / -1'}}>
           <DocumentosAnexos
