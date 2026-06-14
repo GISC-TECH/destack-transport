@@ -380,7 +380,7 @@ function CTeList() {
         <form onSubmit={handleFiltrar} className="filtros-form">
           <input
             type="text"
-            placeholder="Buscar por chave, número, remetente..."
+            placeholder="Buscar por chave, número, remetente, condutor..."
             value={filtros.q}
             onChange={(e) => setFiltros({...filtros, q: e.target.value})}
             className="input-filter"

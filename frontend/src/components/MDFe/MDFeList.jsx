@@ -406,7 +406,7 @@ function MDFeList() {
         <form onSubmit={handleFiltrar} className="filtros-form">
           <input
             type="text"
-            placeholder="Buscar por chave, número, placa..."
+            placeholder="Buscar por chave, número, placa, condutor..."
             value={filtros.q}
             onChange={(e) => setFiltros({...filtros, q: e.target.value})}
             className="input-filter"

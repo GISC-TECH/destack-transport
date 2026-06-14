@@ -20,6 +20,7 @@ from .views.vehicle_views import VeiculoViewSet, ManutencaoVeiculoViewSet, Manut
 from .views.payment_views import FaixaKMViewSet, PagamentoAgregadoViewSet, PagamentoProprioViewSet
 from .views.cliente_views import ClienteViewSet
 from .views.motorista_views import MotoristaViewSet
+from .views.recepcao_views import DocumentoFiscalGenericoViewSet, DocumentoEventoViewSet
 from .views.documento_views import (
     DocumentoAnexoViewSet,
     ClienteDocumentoViewSet,
@@ -80,6 +81,8 @@ router.register(r"configuracoes/empresa", ConfiguracaoEmpresaViewSet, basename="
 router.register(r"configuracoes/parametros", ParametroSistemaViewSet, basename="parametros-sistema")
 router.register(r"backup", BackupAPIView, basename="backup")
 router.register(r"documentos", DocumentoAnexoViewSet, basename="documento-anexo")
+router.register(r"recepcao/genericos", DocumentoFiscalGenericoViewSet, basename="recepcao-generico")
+router.register(r"recepcao/eventos", DocumentoEventoViewSet, basename="recepcao-evento")
 
 # Rotas aninhadas para manutenções e compartimentação de veículos
 veiculos_router = routers.NestedSimpleRouter(router, r"veiculos", lookup="veiculo")

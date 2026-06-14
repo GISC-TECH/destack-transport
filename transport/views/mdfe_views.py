@@ -168,13 +168,23 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
              is_closed = encerrado.lower() == 'true'
              queryset = queryset.filter(encerrado=is_closed)
 
-        # Filtro por texto (chave, número MDF-e, placa)
+        # Filtro por condutor/motorista (nome ou CPF do vínculo automático)
+        condutor = params.get('condutor')
+        if condutor:
+            queryset = queryset.filter(condutores__nome__icontains=condutor)
+        motorista_cpf = params.get('motorista_cpf')
+        if motorista_cpf:
+            cpf_digits = ''.join(ch for ch in str(motorista_cpf) if ch.isdigit())
+            queryset = queryset.filter(condutores__cpf=cpf_digits)
+
+        # Filtro por texto (chave, número MDF-e, placa, condutor)
         texto = params.get('q')
         if texto:
             queryset = queryset.filter(
                 Q(chave__icontains=texto) |
                 Q(identificacao__n_mdf__icontains=texto) |
-                Q(modal_rodoviario__veiculo_tracao__placa__icontains=texto)
+                Q(modal_rodoviario__veiculo_tracao__placa__icontains=texto) |
+                Q(condutores__nome__icontains=texto)
             )
 
         return queryset.distinct()

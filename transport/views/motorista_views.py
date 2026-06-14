@@ -52,6 +52,16 @@ class MotoristaViewSet(viewsets.ModelViewSet):
         if categoria:
             queryset = queryset.filter(categoria_cnh=categoria.upper())
 
+        # Filtro por origem do cadastro (automático via XML)
+        cadastro_automatico = params.get('cadastro_automatico')
+        if cadastro_automatico is not None:
+            queryset = queryset.filter(cadastro_automatico=cadastro_automatico.lower() == 'true')
+
+        # Filtro por cadastro incompleto (sem CNH ou sem validade de CNH)
+        incompletos = params.get('incompletos')
+        if incompletos is not None and incompletos.lower() == 'true':
+            queryset = queryset.filter(Q(cnh__isnull=True) | Q(cnh='') | Q(validade_cnh__isnull=True))
+
         # Busca geral (nome, CPF, CNH)
         q = params.get('q')
         if q:

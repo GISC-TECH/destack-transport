@@ -23,6 +23,28 @@ admin.site.register(MDFeInformacoesAdicionais)
 admin.site.register(MDFeProtocoloAutorizacao)
 admin.site.register(MDFeSuplementar)
 
+# === Recepção genérica (GTV-e e eventos) ===
+from ..models import DocumentoFiscalGenerico, DocumentoEvento
+
+
+@admin.register(DocumentoFiscalGenerico)
+class DocumentoFiscalGenericoAdmin(admin.ModelAdmin):
+    list_display = ('tipo', 'modelo', 'chave', 'numero', 'emitente_nome', 'valor_total', 'data_emissao', 'processado')
+    list_filter = ('tipo', 'processado')
+    search_fields = ('chave', 'numero', 'emitente_cnpj', 'emitente_nome')
+    readonly_fields = ('criado_em',)
+    ordering = ('-criado_em',)
+
+
+@admin.register(DocumentoEvento)
+class DocumentoEventoAdmin(admin.ModelAdmin):
+    list_display = ('tipo_documento', 'tipo_evento', 'descricao_evento', 'chave_documento',
+                    'sequencia_evento', 'data_evento', 'confirmado')
+    list_filter = ('tipo_documento', 'tipo_evento', 'confirmado')
+    search_fields = ('chave_documento', 'tipo_evento', 'protocolo')
+    readonly_fields = ('criado_em',)
+    ordering = ('-data_evento',)
+
 # Opcional: Criar e registrar o Admin site personalizado
 # transport_admin = TransporteDashboardAdmin(name='transport_admin')
 # transport_admin.register(CTeDocumento, CTeDocumentoAdmin)

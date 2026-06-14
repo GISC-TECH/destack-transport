@@ -16,6 +16,7 @@ function MotoristasList() {
   const [filtros, setFiltros] = useState({
     ativo: 'true',
     categoria_cnh: '',
+    cadastro: '',
     q: ''
   });
   const [pagination, setPagination] = useState({
@@ -39,6 +40,11 @@ function MotoristasList() {
       const params = Object.fromEntries(
         Object.entries(filtros).filter(([, v]) => v !== '')
       );
+
+      // Traduz o filtro de cadastro para os params do backend
+      if (params.cadastro === 'incompletos') params.incompletos = 'true';
+      else if (params.cadastro === 'automaticos') params.cadastro_automatico = 'true';
+      delete params.cadastro;
 
       const data = await motoristasAPI.list(params);
 
@@ -217,6 +223,16 @@ function MotoristasList() {
           <option value="">Todos</option>
         </select>
 
+        <select
+          className="select-filter"
+          value={filtros.cadastro || ''}
+          onChange={(e) => handleFiltroChange('cadastro', e.target.value)}
+        >
+          <option value="">Todos os cadastros</option>
+          <option value="incompletos">Incompletos</option>
+          <option value="automaticos">Automáticos (via XML)</option>
+        </select>
+
         <button className="btn btn-outline" onClick={handleExport}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -245,9 +261,20 @@ function MotoristasList() {
             <tbody>
               {motoristas.map((motorista) => (
                 <tr key={motorista.id}>
-                  <td>{motorista.nome}</td>
+                  <td>
+                    {motorista.nome}
+                    {motorista.cadastro_completo === false && (
+                      <span
+                        className="badge badge-warning"
+                        title="Cadastro incompleto — falta CNH e/ou validade"
+                        style={{ marginLeft: 8 }}
+                      >
+                        {motorista.cadastro_automatico ? 'Auto · incompleto' : 'Incompleto'}
+                      </span>
+                    )}
+                  </td>
                   <td>{motorista.cpf_formatado || motorista.cpf}</td>
-                  <td>{motorista.cnh}</td>
+                  <td>{motorista.cnh || '-'}</td>
                   <td>
                     <span className="badge badge-categoria">{motorista.categoria_cnh}</span>
                   </td>

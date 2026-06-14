@@ -253,7 +253,20 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         if placa:
             queryset = queryset.filter(
                 modal_rodoviario__veiculos__placa__iexact=placa
-            )
+            ).distinct()
+
+        # Filtro por condutor/motorista (nome ou CPF do vínculo automático)
+        condutor = params.get('condutor')
+        if condutor:
+            queryset = queryset.filter(
+                modal_rodoviario__motoristas__nome__icontains=condutor
+            ).distinct()
+        motorista_cpf = params.get('motorista_cpf')
+        if motorista_cpf:
+            cpf_digits = ''.join(ch for ch in str(motorista_cpf) if ch.isdigit())
+            queryset = queryset.filter(
+                modal_rodoviario__motoristas__cpf=cpf_digits
+            ).distinct()
 
         # Filtro por status de processamento
         processado = params.get('processado')
@@ -321,8 +334,9 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 Q(identificacao__numero__icontains=texto) |
                 Q(remetente__razao_social__icontains=texto) |
                 Q(destinatario__razao_social__icontains=texto) |
-                Q(emitente__razao_social__icontains=texto)
-            )
+                Q(emitente__razao_social__icontains=texto) |
+                Q(modal_rodoviario__motoristas__nome__icontains=texto)
+            ).distinct()
 
         # Ordenação customizada
         ordering = params.get('ordering')
