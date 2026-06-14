@@ -1,5 +1,6 @@
 # transport/services/parser_mdfe.py
 
+import logging
 import xmltodict
 import traceback
 from decimal import Decimal, InvalidOperation
@@ -7,6 +8,8 @@ from datetime import datetime
 from dateutil import parser as date_parser # pip install python-dateutil
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+
+logger = logging.getLogger(__name__)
 
 # Reutilizar helpers do parser_cte (ou copiar/colar aqui)
 # Certifique-se de que essas funções estejam acessíveis.
@@ -86,7 +89,7 @@ except ImportError:
             dt = date_parser.parse(value)
             return dt
         except (ValueError, TypeError, OverflowError):
-            print(f"WARN: Falha ao converter data/hora: {value}")
+            logger.warning(f"Falha ao converter data/hora: {value}")
             return default
 
     def parse_date(value, default=None):
@@ -178,7 +181,7 @@ def parse_mdfe_identificacao(mdfe_doc, infmdfe):
     """Parseia o bloco <ide> do MDF-e."""
     ide = safe_get(infmdfe, 'ide')
     if not ide:
-        print(f"WARN: Bloco <ide> não encontrado para MDF-e {mdfe_doc.chave}")
+        logger.warning(f"Bloco <ide> não encontrado para MDF-e {mdfe_doc.chave}")
         MDFeIdentificacao.objects.filter(mdfe=mdfe_doc).delete() # Limpa anterior
         return None
 
@@ -242,7 +245,7 @@ def parse_mdfe_emitente(mdfe_doc, infmdfe):
     """Parseia o bloco <emit> do MDF-e."""
     emit_dict = safe_get(infmdfe, 'emit')
     if not emit_dict:
-        print(f"WARN: Bloco <emit> não encontrado para MDF-e {mdfe_doc.chave}")
+        logger.warning(f"Bloco <emit> não encontrado para MDF-e {mdfe_doc.chave}")
         MDFeEmitente.objects.filter(mdfe=mdfe_doc).delete() # Limpa anterior
         return None
 
@@ -440,7 +443,7 @@ def parse_mdfe_documentos(mdfe_doc, infmdfe):
         # Cria o Município de Descarga
         c_mun = safe_get(mun_dict, 'cMunDescarga')
         if not c_mun:
-            print(f"WARN: Município de descarga sem código para MDF-e {mdfe_doc.chave}. Pulando...")
+            logger.warning(f"Município de descarga sem código para MDF-e {mdfe_doc.chave}. Pulando...")
             continue
 
         municipio, created_mun = MDFeMunicipioDescarga.objects.get_or_create(
@@ -548,7 +551,7 @@ def parse_mdfe_seguro(mdfe_doc, infmdfe):
     # Se não houver seguros, limpamos os anteriores
     if not seg_list or len(seg_list) == 0:
         MDFeSeguroCarga.objects.filter(mdfe=mdfe_doc).delete()
-        print(f"INFO: Nenhum bloco <seg> encontrado para MDF-e {mdfe_doc.chave}.")
+        logger.info(f"Nenhum bloco <seg> encontrado para MDF-e {mdfe_doc.chave}.")
         return 0
 
     MDFeSeguroCarga.objects.filter(mdfe=mdfe_doc).delete() # Limpa seguros anteriores
@@ -563,42 +566,19 @@ def parse_mdfe_seguro(mdfe_doc, infmdfe):
         # Dados da Seguradora
         inf_seg = safe_get(seg_dict, 'infSeg')
         if not inf_seg:
-            print(f"WARN: Bloco <seg> sem <infSeg> para MDF-e {mdfe_doc.chave}. Pulando...")
+            logger.warning(f"Bloco <seg> sem <infSeg> para MDF-e {mdfe_doc.chave}. Pulando...")
             continue
 
-        # CORREÇÃO: Garantir que responsavel sempre tenha um valor válido
-        responsavel = safe_get(seg_dict, 'respSeg')
-        if not responsavel:
-            responsavel = '1'  # Valor padrão (1 = Emitente MDF-e)
-            print(f"WARN: <respSeg> não encontrado para MDF-e {mdfe_doc.chave}. Usando valor padrão: {responsavel}")
-
-        # Garantir que nome_seguradora e cnpj_seguradora tenham valores
-        nome_seguradora = safe_get(inf_seg, 'xSeg')
-        if not nome_seguradora:
-            nome_seguradora = "SEGURADORA NÃO INFORMADA"
-            print(f"WARN: <xSeg> não encontrado para MDF-e {mdfe_doc.chave}. Usando valor padrão.")
-
-        cnpj_seguradora = safe_get(inf_seg, 'CNPJ')
-        if not cnpj_seguradora:
-            cnpj_seguradora = "00000000000000"  # CNPJ padrão
-            print(f"WARN: <CNPJ> da seguradora não encontrado para MDF-e {mdfe_doc.chave}. Usando valor padrão.")
-
-        numero_apolice = safe_get(inf_seg, 'nApol')
-        if not numero_apolice:
-            numero_apolice = "APOLICE-PADRAO"
-            print(f"WARN: <nApol> não encontrado para MDF-e {mdfe_doc.chave}. Usando valor padrão.")
-
+        # Integridade: valores reais do XML (ou None se ausentes), sem fabricar.
         try:
             seguro = MDFeSeguroCarga.objects.create(
                 mdfe=mdfe_doc,
-                responsavel=responsavel,  # Agora garantimos que tem valor
-                # Dados do responsável (se houver)
+                responsavel=safe_get(seg_dict, 'respSeg'),
                 cnpj_responsavel=safe_get(inf_resp, 'CNPJ'),
                 cpf_responsavel=safe_get(inf_resp, 'CPF'),
-                # Dados da seguradora (garantindo valores)
-                nome_seguradora=nome_seguradora,
-                cnpj_seguradora=cnpj_seguradora,
-                numero_apolice=numero_apolice,
+                nome_seguradora=safe_get(inf_seg, 'xSeg'),
+                cnpj_seguradora=safe_get(inf_seg, 'CNPJ'),
+                numero_apolice=safe_get(inf_seg, 'nApol'),
             )
             count += 1
 
@@ -616,7 +596,7 @@ def parse_mdfe_seguro(mdfe_doc, infmdfe):
                         numero=numero_averbacao
                     )
         except Exception as e:
-            print(f"ERRO ao criar seguro para MDF-e {mdfe_doc.chave}: {e}")
+            logger.error(f"ERRO ao criar seguro para MDF-e {mdfe_doc.chave}: {e}")
             # Continua tentando processar outros seguros
     
     return count
@@ -629,22 +609,10 @@ def parse_mdfe_produto_predominante(mdfe_doc, infmdfe):
         MDFeProdutoPredominante.objects.filter(mdfe=mdfe_doc).delete() # Limpa
         return None
 
-    # Certifique-se de que o campo tp_carga tenha um valor (obrigatório)
-    tp_carga = safe_get(prod_pred_dict, 'tpCarga')
-    if not tp_carga:
-        tp_carga = "01"  # Carga Geral (valor padrão)
-        print(f"WARN: <tpCarga> não encontrado em <prodPred> para MDF-e {mdfe_doc.chave}. Usando valor padrão.")
-
-    # Certifique-se de que o campo x_prod tenha um valor (obrigatório)
-    x_prod = safe_get(prod_pred_dict, 'xProd')
-    if not x_prod:
-        x_prod = "PRODUTO PREDOMINANTE NÃO ESPECIFICADO"
-        print(f"WARN: <xProd> não encontrado em <prodPred> para MDF-e {mdfe_doc.chave}. Usando valor padrão.")
-
-    # infLotacao omitido por simplicidade (pode ser JSON)
+    # Integridade: valores reais do XML (ou None se ausentes).
     prod_data = {
-        'tp_carga': tp_carga,
-        'x_prod': x_prod,
+        'tp_carga': safe_get(prod_pred_dict, 'tpCarga'),
+        'x_prod': safe_get(prod_pred_dict, 'xProd'),
         'ncm': safe_get(prod_pred_dict, 'infLotacao.NCM') or safe_get(prod_pred_dict, 'NCM'), # Tenta pegar de dentro de infLotacao primeiro
     }
     prod_data_cleaned = {k: v for k, v in prod_data.items() if v is not None}
@@ -663,28 +631,13 @@ def parse_mdfe_totais(mdfe_doc, infmdfe):
         MDFeTotais.objects.filter(mdfe=mdfe_doc).delete() # Limpa
         return None
 
-    # Garantir que campos obrigatórios estejam preenchidos
-    v_carga = to_decimal(safe_get(tot_dict, 'vCarga'))
-    if v_carga is None or v_carga == 0:
-        v_carga = Decimal('0.01')  # Valor mínimo permitido
-        print(f"WARN: <vCarga> não encontrado ou zero em <tot> para MDF-e {mdfe_doc.chave}. Usando valor padrão.")
-
-    c_unid = safe_get(tot_dict, 'cUnid')
-    if not c_unid:
-        c_unid = "01"  # KG (unidade de medida padrão)
-        print(f"WARN: <cUnid> não encontrado em <tot> para MDF-e {mdfe_doc.chave}. Usando valor padrão.")
-
-    q_carga = to_decimal(safe_get(tot_dict, 'qCarga'))
-    if q_carga is None or q_carga == 0:
-        q_carga = Decimal('0.0001')  # Valor mínimo permitido
-        print(f"WARN: <qCarga> não encontrado ou zero em <tot> para MDF-e {mdfe_doc.chave}. Usando valor padrão.")
-
+    # Integridade: valores reais do XML (ou None se ausentes).
     tot_data = {
         'q_cte': to_int(safe_get(tot_dict, 'qCTe')),
         'q_nfe': to_int(safe_get(tot_dict, 'qNFe')),
-        'v_carga': v_carga,
-        'c_unid': c_unid,
-        'q_carga': q_carga,
+        'v_carga': to_decimal(safe_get(tot_dict, 'vCarga'), default=None),
+        'c_unid': safe_get(tot_dict, 'cUnid'),
+        'q_carga': to_decimal(safe_get(tot_dict, 'qCarga'), default=None),
     }
     tot_data_cleaned = {k: v for k, v in tot_data.items() if v is not None}
 
@@ -800,7 +753,7 @@ def parse_mdfe_protocolo(mdfe_doc, prot_mdfe):
 
     chave_protocolo = safe_get(inf_prot, 'chMDFe')
     if chave_protocolo and chave_protocolo != mdfe_doc.chave:
-        print(f"ERROR: Chave no protocolo MDF-e ({chave_protocolo}) diferente da chave do documento ({mdfe_doc.chave})")
+        logger.error(f"Chave no protocolo MDF-e ({chave_protocolo}) diferente da chave do documento ({mdfe_doc.chave})")
         return None # Ignora protocolo inconsistente
 
     prot_data = {
@@ -832,7 +785,7 @@ def parse_mdfe_suplementar(mdfe_doc, inf_supl):
     }
     supl_data_cleaned = {k: v for k, v in supl_data.items() if v is not None}
     if not supl_data_cleaned.get('qr_code_url'):
-        print(f"WARN: Bloco <infMDFeSupl> presente mas sem <qrCodMDFe> para MDF-e {mdfe_doc.chave}")
+        logger.warning(f"Bloco <infMDFeSupl> presente mas sem <qrCodMDFe> para MDF-e {mdfe_doc.chave}")
         MDFeSuplementar.objects.filter(mdfe=mdfe_doc).delete()
         return None
 
@@ -851,7 +804,7 @@ def parse_mdfe_completo(mdfe_doc):
     Retorna True se o processamento foi bem-sucedido, False caso contrário.
     """
     if not mdfe_doc.xml_original:
-        print(f"ERROR: MDF-e {mdfe_doc.chave} não possui XML original para processar.")
+        logger.error(f"MDF-e {mdfe_doc.chave} não possui XML original para processar.")
         mdfe_doc.processado = False
         mdfe_doc.save(update_fields=['processado'])
         return False
@@ -867,7 +820,7 @@ def parse_mdfe_completo(mdfe_doc):
             mdfe_doc.versao = versao_proc or infmdfe.get('@versao', '3.00') # Default 3.00
 
     except Exception as e:
-        print(f"ERROR: Falha ao parsear XML base ou encontrar <infMDFe> para MDF-e {mdfe_doc.chave}: {e}")
+        logger.error(f"Falha ao parsear XML base ou encontrar <infMDFe> para MDF-e {mdfe_doc.chave}: {e}")
         mdfe_doc.processado = False
         mdfe_doc.save(update_fields=['processado', 'versao']) # Salva erro e versão
         return False
@@ -899,17 +852,17 @@ def parse_mdfe_completo(mdfe_doc):
             mdfe_doc.processado = True
             mdfe_doc.save() # Salva o documento com status processado e versão
 
-        print(f"INFO: MDF-e {mdfe_doc.chave} processado com sucesso.")
+        logger.info(f"MDF-e {mdfe_doc.chave} processado com sucesso.")
         return True
 
     except Exception as e:
-        print(f"ERROR: Falha ao processar dados detalhados do MDF-e {mdfe_doc.chave}. Erro: {e}")
-        print(traceback.format_exc())
+        logger.error(f"Falha ao processar dados detalhados do MDF-e {mdfe_doc.chave}. Erro: {e}")
+        logger.debug(traceback.format_exc())
         # A transação será revertida. Tenta marcar como não processado.
         try:
             mdfe_doc_error = MDFeDocumento.objects.get(pk=mdfe_doc.pk)
             mdfe_doc_error.processado = False
             mdfe_doc_error.save(update_fields=['processado'])
         except Exception as save_err:
-             print(f"ERROR: Falha ao salvar status de erro para MDF-e {mdfe_doc.chave}: {save_err}")
+             logger.error(f"Falha ao salvar status de erro para MDF-e {mdfe_doc.chave}: {save_err}")
         return False

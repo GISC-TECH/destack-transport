@@ -1,5 +1,6 @@
 # transport/services/parser_cte.py
 
+import logging
 import xmltodict
 import traceback
 from decimal import Decimal, InvalidOperation
@@ -10,6 +11,8 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.utils import timezone
 from dateutil import parser as date_parser
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 # Importar todos os modelos CT-e e o Endereco base
 from transport.models import (
@@ -102,7 +105,7 @@ def parse_datetime(value, default=None):
              dt = timezone.make_naive(dt, timezone.get_default_timezone())
         return dt
     except (ValueError, TypeError, OverflowError):
-        print(f"WARN: Falha ao converter data/hora: {value}")
+        logger.warning(f"Falha ao converter data/hora: {value}")
         return default
 
 def parse_date(value, default=None):
@@ -183,7 +186,7 @@ def parse_cte_identificacao(cte_doc, infcte):
     """Parseia o bloco <ide> e salva em CTeIdentificacao."""
     ide = safe_get(infcte, 'ide')
     if not ide:
-        print(f"WARN: Bloco <ide> não encontrado para CT-e {cte_doc.chave}")
+        logger.warning(f"Bloco <ide> não encontrado para CT-e {cte_doc.chave}")
         return None
 
     # Tratamento do Tomador (pode ser <toma3> ou <toma4>)
@@ -198,7 +201,7 @@ def parse_cte_identificacao(cte_doc, infcte):
     else:
         toma_node = {} # Default vazio se não encontrar
         toma_tipo = '0'  # Default 0 (Remetente)
-        print(f"WARN: Tomador <toma3> ou <toma4> não encontrado para CT-e {cte_doc.chave}. Usando padrão '0'.")
+        logger.warning(f"Tomador <toma3> ou <toma4> não encontrado para CT-e {cte_doc.chave}. Usando padrão '0'.")
 
     # Preparar dados do endereço do tomador (somente se toma=4)
     tomador_endereco = None
@@ -209,52 +212,42 @@ def parse_cte_identificacao(cte_doc, infcte):
             # Considerar get_or_create se houver chance de reutilização e um critério único.
             tomador_endereco = Endereco.objects.create(**endereco_tomador_data)
 
-    # Garantir campos obrigatórios
-    codigo_uf = to_int(safe_get(ide, 'cUF'))
-    if not codigo_uf:
-        codigo_uf = 42  # SC (valor padrão)
-        print(f"WARN: <cUF> não encontrado para CT-e {cte_doc.chave}. Usando valor padrão.")
-
-    cfop = safe_get(ide, 'CFOP')
-    if not cfop:
-        cfop = "6353"  # Prestação de serviço de transporte (valor padrão)
-        print(f"WARN: <CFOP> não encontrado para CT-e {cte_doc.chave}. Usando valor padrão.")
-
+    # Integridade: não fabricamos mais valores. Campo ausente no XML -> None (gravado como NULL).
     ident_data = {
-        'codigo_uf': codigo_uf,
+        'codigo_uf': to_int(safe_get(ide, 'cUF')),
         'codigo_control': safe_get(ide, 'cCT'),
-        'cfop': cfop,
-        'natureza_operacao': safe_get(ide, 'natOp') or "PRESTAÇÃO DE SERVIÇO DE TRANSPORTE",
-        'modelo': safe_get(ide, 'mod') or "57",
-        'serie': to_int(safe_get(ide, 'serie')) or 0,
-        'numero': to_int(safe_get(ide, 'nCT')) or 0,
-        'data_emissao': parse_datetime(safe_get(ide, 'dhEmi')) or datetime.now(),
-        'tipo_impressao': to_int(safe_get(ide, 'tpImp')) or 1,
-        'tipo_emissao': to_int(safe_get(ide, 'tpEmis')) or 1,
-        'digito_verificador': to_int(safe_get(ide, 'cDV')) or 0,
-        'ambiente': to_int(safe_get(ide, 'tpAmb')) or 2,  # 2 = Homologação padrão
-        'tipo_cte': to_int(safe_get(ide, 'tpCTe')) or 0,  # 0 = Normal padrão
-        'processo_emissao': to_int(safe_get(ide, 'procEmi')) or 0,
-        'versao_processo': safe_get(ide, 'verProc') or "1.0",
+        'cfop': safe_get(ide, 'CFOP'),
+        'natureza_operacao': safe_get(ide, 'natOp'),
+        'modelo': safe_get(ide, 'mod'),
+        'serie': to_int(safe_get(ide, 'serie')),
+        'numero': to_int(safe_get(ide, 'nCT')),
+        'data_emissao': parse_datetime(safe_get(ide, 'dhEmi')),
+        'tipo_impressao': to_int(safe_get(ide, 'tpImp')),
+        'tipo_emissao': to_int(safe_get(ide, 'tpEmis')),
+        'digito_verificador': to_int(safe_get(ide, 'cDV')),
+        'ambiente': to_int(safe_get(ide, 'tpAmb')),
+        'tipo_cte': to_int(safe_get(ide, 'tpCTe')),
+        'processo_emissao': to_int(safe_get(ide, 'procEmi')),
+        'versao_processo': safe_get(ide, 'verProc'),
         # Chave referenciada pode estar em locais diferentes dependendo do tipo de CT-e
         'chave_referenciada': safe_get(ide, 'infCteAnu.chCte') or \
                              safe_get(ide, 'infCTeNorm.infDocRef.chCTe') or \
                              safe_get(ide, 'infCteComp.chCTe'), # Verificar outros casos se necessário
-        'codigo_mun_envio': safe_get(ide, 'cMunEnv') or "4200000",  # Município padrão
-        'nome_mun_envio': safe_get(ide, 'xMunEnv') or "MUNICÍPIO NÃO INFORMADO",
-        'uf_envio': safe_get(ide, 'UFEnv') or "SC",  # UF padrão
-        'modal': safe_get(ide, 'modal') or "01",  # Rodoviário padrão
-        'tipo_servico': safe_get(ide, 'tpServ') or "0",  # Normal padrão
-        'codigo_mun_ini': safe_get(ide, 'cMunIni') or "4200000",
-        'nome_mun_ini': safe_get(ide, 'xMunIni') or "MUNICÍPIO NÃO INFORMADO",
-        'uf_ini': safe_get(ide, 'UFIni') or "SC",
-        'codigo_mun_fim': safe_get(ide, 'cMunFim') or "4200000",
-        'nome_mun_fim': safe_get(ide, 'xMunFim') or "MUNICÍPIO NÃO INFORMADO",
-        'uf_fim': safe_get(ide, 'UFFim') or "SC",
+        'codigo_mun_envio': safe_get(ide, 'cMunEnv'),
+        'nome_mun_envio': safe_get(ide, 'xMunEnv'),
+        'uf_envio': safe_get(ide, 'UFEnv'),
+        'modal': safe_get(ide, 'modal'),
+        'tipo_servico': safe_get(ide, 'tpServ'),
+        'codigo_mun_ini': safe_get(ide, 'cMunIni'),
+        'nome_mun_ini': safe_get(ide, 'xMunIni'),
+        'uf_ini': safe_get(ide, 'UFIni'),
+        'codigo_mun_fim': safe_get(ide, 'cMunFim'),
+        'nome_mun_fim': safe_get(ide, 'xMunFim'),
+        'uf_fim': safe_get(ide, 'UFFim'),
         'retira': to_boolean(safe_get(ide, 'retira', '0')), # Default '0' se ausente
         'detalhes_retira': safe_get(ide, 'xDetRetira'),
-        'ind_ie_tomador': to_int(safe_get(toma_node, 'indIEToma')) or 9, # Padrão 9 = Não contribuinte
-        'toma': to_int(toma_tipo) or 0, # 0=Rem, 1=Exp, 2=Rec, 3=Dest, 4=Outros
+        'ind_ie_tomador': to_int(safe_get(toma_node, 'indIEToma')),
+        'toma': to_int(toma_tipo), # 0=Rem, 1=Exp, 2=Rec, 3=Dest, 4=Outros
         # Dados do Tomador (se toma=4)
         'tomador_cnpj': safe_get(toma_node, 'CNPJ') if toma_tipo == '4' else None,
         'tomador_cpf': safe_get(toma_node, 'CPF') if toma_tipo == '4' else None,
@@ -264,7 +257,7 @@ def parse_cte_identificacao(cte_doc, infcte):
         'tomador_telefone': safe_get(toma_node, 'fone') if toma_tipo == '4' else None,
         'tomador_endereco': tomador_endereco, # Objeto Endereco ou None
         # Novo campo de distância KM
-        'dist_km': to_int(safe_get(ide, 'infGlobalizado.distCont') or safe_get(ide, 'infCTeNorm.infModal.rodo.dist')) or 0,
+        'dist_km': to_int(safe_get(ide, 'infGlobalizado.distCont') or safe_get(ide, 'infCTeNorm.infModal.rodo.dist')),
     }
 
     # Remove chaves com valor None para evitar sobrescrever com null no update_or_create
@@ -277,7 +270,7 @@ def parse_cte_identificacao(cte_doc, infcte):
         )
         return identificacao
     except Exception as e:
-        print(f"ERRO ao criar identificação para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao criar identificação para CT-e {cte_doc.chave}: {e}")
         # Re-raise para a transação reverter
         raise
 
@@ -355,7 +348,7 @@ def parse_cte_complemento(cte_doc, infcte):
 
         return complemento
     except Exception as e:
-        print(f"ERRO ao processar complemento para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar complemento para CT-e {cte_doc.chave}: {e}")
         raise
 
 @transaction.atomic
@@ -365,7 +358,7 @@ def parse_entidade(cte_doc, infcte, tag, model_class):
     if not entidade_dict:
         # É normal expedidor e recebedor não existirem, não logar warning para eles
         if tag not in ['exped', 'receb']:
-           print(f"WARN: Bloco <{tag}> não encontrado para CT-e {cte_doc.chave}")
+           logger.warning(f"Bloco <{tag}> não encontrado para CT-e {cte_doc.chave}")
         # Garante que qualquer registro antigo seja deletado se o bloco não vier mais
         model_class.objects.filter(cte=cte_doc).delete()
         return None
@@ -374,29 +367,15 @@ def parse_entidade(cte_doc, infcte, tag, model_class):
     endereco_tag = 'ender' + tag.capitalize()
     endereco_data = parse_endereco(safe_get(entidade_dict, endereco_tag))
 
-    # Garante que pelo menos um identificador (CNPJ/CPF) e nome existam
+    # Integridade: não fabricamos CNPJ/CPF/razão/município/UF. Ausente -> None (NULL).
     if not safe_get(entidade_dict, 'CNPJ') and not safe_get(entidade_dict, 'CPF'):
-        print(f"WARN: Nem CNPJ nem CPF informados para <{tag}> no CT-e {cte_doc.chave}. Usando valores padrão.")
-        if tag == 'emit':  # Para emitente, usamos CNPJ padrão
-            cnpj_padrao = "00000000000000"
-            cpf_padrao = None
-        else:  # Para outros, usamos CPF padrão
-            cnpj_padrao = None
-            cpf_padrao = "00000000000"
-    else:
-        cnpj_padrao = None
-        cpf_padrao = None
-
-    razao_social = safe_get(entidade_dict, 'xNome')
-    if not razao_social:
-        razao_social = f"{tag.upper()} NÃO INFORMADO"
-        print(f"WARN: Razão social não informada para <{tag}> no CT-e {cte_doc.chave}. Usando valor padrão.")
+        logger.warning("Nem CNPJ nem CPF informados para <%s> no CT-e %s.", tag, cte_doc.chave)
 
     entidade_data = {
-        'cnpj': safe_get(entidade_dict, 'CNPJ') or cnpj_padrao,
-        'cpf': safe_get(entidade_dict, 'CPF') or cpf_padrao,
+        'cnpj': safe_get(entidade_dict, 'CNPJ'),
+        'cpf': safe_get(entidade_dict, 'CPF'),
         'ie': safe_get(entidade_dict, 'IE'),
-        'razao_social': razao_social,
+        'razao_social': safe_get(entidade_dict, 'xNome'),
         'nome_fantasia': safe_get(entidade_dict, 'xFant'),
         'telefone': safe_get(entidade_dict, 'fone'),
         'email': safe_get(entidade_dict, 'email'), # Campo adicionado ao modelo base
@@ -406,13 +385,6 @@ def parse_entidade(cte_doc, infcte, tag, model_class):
         # Adiciona os campos do endereço extraído
         **endereco_data
     }
-    
-    # Se nome_municipio ou uf estiverem ausentes no endereco, define valores padrão
-    if 'nome_municipio' not in endereco_data or not endereco_data['nome_municipio']:
-        entidade_data['nome_municipio'] = "MUNICÍPIO NÃO INFORMADO"
-    
-    if 'uf' not in endereco_data or not endereco_data['uf']:
-        entidade_data['uf'] = "SC"  # UF padrão
 
     entidade_data_cleaned = {k: v for k, v in entidade_data.items() if v is not None}
 
@@ -426,7 +398,7 @@ def parse_entidade(cte_doc, infcte, tag, model_class):
         )
         return obj
     except Exception as e:
-        print(f"ERRO ao processar entidade <{tag}> para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar entidade <{tag}> para CT-e {cte_doc.chave}: {e}")
         raise
 
 @transaction.atomic
@@ -439,16 +411,11 @@ def parse_cte_valores(cte_doc, infcte):
         CTeTributos.objects.filter(cte=cte_doc).delete()
         return None, None # Retorna None para prestacao e tributos
 
-    # Garante que valores obrigatórios estejam presentes
-    valor_total = to_decimal(safe_get(vprest, 'vTPrest'))
-    if valor_total is None or valor_total == 0:
-        valor_total = Decimal('0.01')  # Valor mínimo positivo
-        print(f"WARN: Valor total da prestação não informado ou zero para CT-e {cte_doc.chave}. Usando valor padrão.")
-
-    valor_recebido = to_decimal(safe_get(vprest, 'vRec'))
-    if valor_recebido is None:
-        valor_recebido = valor_total  # Usa o mesmo valor do total se não informado
-        print(f"WARN: Valor a receber não informado para CT-e {cte_doc.chave}. Usando valor total.")
+    # Integridade: gravamos o valor real do XML (ou None se ausente). to_decimal com default None.
+    valor_total = to_decimal(safe_get(vprest, 'vTPrest'), default=None)
+    valor_recebido = to_decimal(safe_get(vprest, 'vRec'), default=None)
+    if valor_total is None:
+        logger.warning("Valor total da prestação (vTPrest) ausente para CT-e %s.", cte_doc.chave)
 
     # --- Prestação de Serviço ---
     prest_data = {
@@ -482,7 +449,7 @@ def parse_cte_valores(cte_doc, infcte):
                         valor=valor_comp
                     )
     except Exception as e:
-        print(f"ERRO ao processar valores de prestação para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar valores de prestação para CT-e {cte_doc.chave}: {e}")
         raise
 
     # --- Impostos ---
@@ -521,7 +488,7 @@ def parse_cte_valores(cte_doc, infcte):
                 defaults=trib_data_cleaned
             )
         except Exception as e:
-            print(f"ERRO ao processar tributos para CT-e {cte_doc.chave}: {e}")
+            logger.error(f"ERRO ao processar tributos para CT-e {cte_doc.chave}: {e}")
             # Tenta continuar sem criar tributos
             tributos = None
     else:
@@ -541,16 +508,9 @@ def parse_cte_carga(cte_doc, infcte):
         CTeCarga.objects.filter(cte=cte_doc).delete() # Limpa carga anterior
         return None
 
-    # Garantir que campos obrigatórios existam
-    valor_carga = to_decimal(safe_get(inf_carga, 'vCarga'))
-    if valor_carga is None or valor_carga == 0:
-        valor_carga = Decimal('0.01')  # Valor mínimo
-        print(f"WARN: Valor da carga não informado ou zero para CT-e {cte_doc.chave}. Usando valor padrão.")
-
+    # Integridade: valor/produto reais do XML (ou None se ausentes).
+    valor_carga = to_decimal(safe_get(inf_carga, 'vCarga'), default=None)
     produto_predominante = safe_get(inf_carga, 'proPred')
-    if not produto_predominante:
-        produto_predominante = "MERCADORIA DIVERSA"
-        print(f"WARN: Produto predominante não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
 
     try:
         carga_data = {
@@ -584,7 +544,7 @@ def parse_cte_carga(cte_doc, infcte):
                     )
         return carga
     except Exception as e:
-        print(f"ERRO ao processar carga para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar carga para CT-e {cte_doc.chave}: {e}")
         raise
 
 @transaction.atomic
@@ -672,7 +632,7 @@ def parse_cte_documentos(cte_doc, infcte):
 
         return count
     except Exception as e:
-        print(f"ERRO ao processar documentos transportados para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar documentos transportados para CT-e {cte_doc.chave}: {e}")
         raise
 
 @transaction.atomic
@@ -692,40 +652,19 @@ def parse_cte_seguro(cte_doc, infcte):
         count = 0
         for seg in seg_list:
              if isinstance(seg, dict):
-                # Garantir valores obrigatórios
-                responsavel = safe_get(seg, 'respSeg')
-                if not responsavel:
-                    responsavel = '5'  # 5 = Emitente CT-e (valor padrão)
-                    print(f"WARN: Responsável pelo seguro não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
-
-                nome_seguradora = safe_get(seg, 'xSeg')
-                if not nome_seguradora:
-                    nome_seguradora = "SEGURADORA NÃO INFORMADA"
-                    print(f"WARN: Nome da seguradora não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
-
-                numero_apolice = safe_get(seg, 'nApol')
-                if not numero_apolice:
-                    numero_apolice = "APÓLICE NÃO INFORMADA"
-                    print(f"WARN: Número da apólice não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
-
-                # Valor da carga é obrigatório
-                valor_carga = to_decimal(safe_get(seg, 'vCarga'))
-                if valor_carga is None or valor_carga == 0:
-                    valor_carga = Decimal('0.01')  # Valor mínimo
-                    print(f"WARN: Valor da carga no seguro não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
-
+                # Integridade: valores reais do XML (ou None se ausentes).
                 CTeSeguro.objects.create(
                     cte=cte_doc,
-                    responsavel=responsavel,
-                    nome_seguradora=nome_seguradora,
-                    numero_apolice=numero_apolice,
+                    responsavel=safe_get(seg, 'respSeg'),
+                    nome_seguradora=safe_get(seg, 'xSeg'),
+                    numero_apolice=safe_get(seg, 'nApol'),
                     numero_averbacao=safe_get(seg, 'nAver'),
-                    valor_carga_averbada=valor_carga,
+                    valor_carga_averbada=to_decimal(safe_get(seg, 'vCarga'), default=None),
                 )
                 count += 1
         return count
     except Exception as e:
-        print(f"ERRO ao processar seguro para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar seguro para CT-e {cte_doc.chave}: {e}")
         raise
 
 @transaction.atomic
@@ -747,7 +686,7 @@ def parse_cte_modal_rodoviario(cte_doc, infcte):
         rntrc = safe_get(rodo, 'RNTRC')
         if not rntrc:
             rntrc = "00000000"  # Valor padrão
-            print(f"WARN: RNTRC não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
+            logger.warning(f"RNTRC não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
 
         modal_data = {
             'rntrc': rntrc,
@@ -811,7 +750,7 @@ def parse_cte_modal_rodoviario(cte_doc, infcte):
 
         return modal
     except Exception as e:
-        print(f"ERRO ao processar modal rodoviário para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar modal rodoviário para CT-e {cte_doc.chave}: {e}")
         raise
 
 @transaction.atomic
@@ -837,7 +776,7 @@ def parse_cte_autorizados_xml(cte_doc, infcte):
                     count += 1
         return count
     except Exception as e:
-        print(f"ERRO ao processar autorizados XML para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar autorizados XML para CT-e {cte_doc.chave}: {e}")
         raise
 
 @transaction.atomic
@@ -853,22 +792,22 @@ def parse_cte_responsavel_tecnico(cte_doc, infcte):
         cnpj = safe_get(resp_tec, 'CNPJ')
         if not cnpj:
             cnpj = "00000000000000"  # Valor padrão
-            print(f"WARN: CNPJ do responsável técnico não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
+            logger.warning(f"CNPJ do responsável técnico não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
 
         contato = safe_get(resp_tec, 'xContato')
         if not contato:
             contato = "CONTATO NÃO INFORMADO"
-            print(f"WARN: Nome do contato técnico não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
+            logger.warning(f"Nome do contato técnico não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
 
         email = safe_get(resp_tec, 'email')
         if not email:
             email = "email@nao.informado"
-            print(f"WARN: Email do contato técnico não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
+            logger.warning(f"Email do contato técnico não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
 
         telefone = safe_get(resp_tec, 'fone')
         if not telefone:
             telefone = "0000000000"
-            print(f"WARN: Telefone do contato técnico não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
+            logger.warning(f"Telefone do contato técnico não informado para CT-e {cte_doc.chave}. Usando valor padrão.")
 
         resp_data = {
             'cnpj': cnpj,
@@ -886,7 +825,7 @@ def parse_cte_responsavel_tecnico(cte_doc, infcte):
         )
         return obj
     except Exception as e:
-        print(f"ERRO ao processar responsável técnico para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar responsável técnico para CT-e {cte_doc.chave}: {e}")
         raise
 
 @transaction.atomic
@@ -905,7 +844,7 @@ def parse_cte_protocolo(cte_doc, prot_cte):
     # Verifica se a chave do protocolo bate com a chave do documento
     chave_protocolo = safe_get(inf_prot, 'chCTe')
     if chave_protocolo and chave_protocolo != cte_doc.chave:
-        print(f"ERROR: Chave no protocolo ({chave_protocolo}) diferente da chave do CT-e ({cte_doc.chave})")
+        logger.error(f"Chave no protocolo ({chave_protocolo}) diferente da chave do CT-e ({cte_doc.chave})")
         # Decidir como tratar: ignorar protocolo, logar erro, etc.
         return None # Ignora protocolo inconsistente
 
@@ -914,12 +853,12 @@ def parse_cte_protocolo(cte_doc, prot_cte):
         codigo_status = to_int(safe_get(inf_prot, 'cStat'))
         if codigo_status is None:
             codigo_status = 0  # Valor padrão
-            print(f"WARN: Código de status não informado no protocolo para CT-e {cte_doc.chave}. Usando valor padrão.")
+            logger.warning(f"Código de status não informado no protocolo para CT-e {cte_doc.chave}. Usando valor padrão.")
 
         motivo_status = safe_get(inf_prot, 'xMotivo')
         if not motivo_status:
             motivo_status = "MOTIVO NÃO INFORMADO"
-            print(f"WARN: Motivo do status não informado no protocolo para CT-e {cte_doc.chave}. Usando valor padrão.")
+            logger.warning(f"Motivo do status não informado no protocolo para CT-e {cte_doc.chave}. Usando valor padrão.")
 
         prot_data = {
             'ambiente': to_int(safe_get(inf_prot, 'tpAmb')) or 2,  # 2 = Homologação padrão
@@ -942,7 +881,7 @@ def parse_cte_protocolo(cte_doc, prot_cte):
         )
         return obj
     except Exception as e:
-        print(f"ERRO ao processar protocolo para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar protocolo para CT-e {cte_doc.chave}: {e}")
         # Continue sem o protocolo
         return None
 
@@ -957,7 +896,7 @@ def parse_cte_suplementar(cte_doc, inf_supl):
         # Garantir URL QR Code obrigatória
         qr_code_url = safe_get(inf_supl, 'qrCodCTe')
         if not qr_code_url:
-            print(f"WARN: QR Code não informado para CT-e {cte_doc.chave}. Ignorando bloco suplementar.")
+            logger.warning(f"QR Code não informado para CT-e {cte_doc.chave}. Ignorando bloco suplementar.")
             CTeSuplementar.objects.filter(cte=cte_doc).delete()
             return None
 
@@ -972,7 +911,7 @@ def parse_cte_suplementar(cte_doc, inf_supl):
         )
         return obj
     except Exception as e:
-        print(f"ERRO ao processar dados suplementares para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"ERRO ao processar dados suplementares para CT-e {cte_doc.chave}: {e}")
         # Continue sem dados suplementares
         return None
 
@@ -985,7 +924,7 @@ def parse_cte_completo(cte_doc):
     Retorna True se o processamento foi bem-sucedido (mesmo que parcial), False se houve erro crítico.
     """
     if not cte_doc.xml_original:
-        print(f"ERROR: CT-e {cte_doc.chave} não possui XML original para processar.")
+        logger.error(f"CT-e {cte_doc.chave} não possui XML original para processar.")
         cte_doc.processado = False
         cte_doc.save(update_fields=['processado']) # Marca como não processado
         return False
@@ -1001,7 +940,7 @@ def parse_cte_completo(cte_doc):
             cte_doc.versao = versao_proc or infcte.get('@versao', '4.00') # Pega do proc ou do infCte
 
     except Exception as e:
-        print(f"ERROR: Falha ao parsear XML base ou encontrar <infCte> para CT-e {cte_doc.chave}: {e}")
+        logger.error(f"Falha ao parsear XML base ou encontrar <infCte> para CT-e {cte_doc.chave}: {e}")
         cte_doc.processado = False
         cte_doc.save(update_fields=['processado', 'versao']) # Salva o status de erro e versão
         return False # Indica falha no processamento
@@ -1075,19 +1014,19 @@ def parse_cte_completo(cte_doc):
             # Valor padrão se não conseguiu detectar
             if not modalidade_frete:
                 modalidade_frete = 'CIF'  # Valor padrão se não identificar
-                print(f"INFO: Não foi possível determinar modalidade CIF/FOB para CT-e {cte_doc.chave}. Usando valor padrão CIF.")
+                logger.info(f"Não foi possível determinar modalidade CIF/FOB para CT-e {cte_doc.chave}. Usando valor padrão CIF.")
 
             cte_doc.modalidade = modalidade_frete
             cte_doc.processado = True # Marcar como processado se chegou até aqui
             cte_doc.save() # Salva CTeDocumento com status e modalidade
 
-        print(f"INFO: CT-e {cte_doc.chave} processado com sucesso.")
+        logger.info(f"CT-e {cte_doc.chave} processado com sucesso.")
         return True # Sucesso
 
     except Exception as e:
         # Log detalhado do erro
-        print(f"ERROR: Falha ao processar dados detalhados do CT-e {cte_doc.chave}. Erro: {e}")
-        print(traceback.format_exc())
+        logger.error(f"Falha ao processar dados detalhados do CT-e {cte_doc.chave}. Erro: {e}")
+        logger.debug(traceback.format_exc())
         # A transação será revertida automaticamente pelo @transaction.atomic
         # Garante que o status processado continue False (ou volte a False se já tinha sido salvo)
         # Tenta salvar o status de erro mesmo com o rollback
@@ -1096,6 +1035,6 @@ def parse_cte_completo(cte_doc):
             cte_doc_error.processado = False
             cte_doc_error.save(update_fields=['processado'])
         except Exception as save_err:
-             print(f"ERROR: Falha ao salvar status de erro para CT-e {cte_doc.chave}: {save_err}")
+             logger.error(f"Falha ao salvar status de erro para CT-e {cte_doc.chave}: {save_err}")
 
         return False # Indica falha no processamento

@@ -30,7 +30,7 @@ class EntidadeFiscal(Endereco):
     cnpj = models.CharField(max_length=14, null=True, blank=True)
     cpf = models.CharField(max_length=11, null=True, blank=True)
     ie = models.CharField("Inscrição Estadual", max_length=14, null=True, blank=True)
-    razao_social = models.CharField("Razão Social/Nome", max_length=60)
+    razao_social = models.CharField("Razão Social/Nome", max_length=60, null=True, blank=True)
     nome_fantasia = models.CharField("Nome Fantasia", max_length=60, null=True, blank=True)
     telefone = models.CharField(max_length=14, null=True, blank=True)
     email = models.EmailField(null=True, blank=True) # Adicionado para abranger casos
@@ -86,33 +86,34 @@ class CTeDocumento(models.Model):
 class CTeIdentificacao(models.Model):
     """<ide>"""
     cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="identificacao")
-    codigo_uf = models.PositiveSmallIntegerField("Código UF Emitente")
-    codigo_control = models.CharField("Código Numérico Chave", max_length=8)
-    cfop = models.CharField("CFOP", max_length=4)
-    natureza_operacao = models.CharField("Natureza da Operação", max_length=60)
-    modelo = models.CharField("Modelo", max_length=2)
-    serie = models.PositiveSmallIntegerField("Série")
-    numero = models.PositiveIntegerField("Número CT-e")
-    data_emissao = models.DateTimeField("Data/Hora Emissão", db_index=True) # Adicionado índice
-    tipo_impressao = models.PositiveSmallIntegerField("Tipo Impressão DACTE")
-    tipo_emissao = models.PositiveSmallIntegerField("Tipo Emissão")
-    digito_verificador = models.PositiveSmallIntegerField("Dígito Verificador Chave")
-    ambiente = models.PositiveSmallIntegerField("Ambiente (1=Prod, 2=Hom)")
-    tipo_cte = models.PositiveSmallIntegerField("Tipo CT-e (0=Normal, 1=Compl, 2=Anul, 3=Subst)")
-    processo_emissao = models.PositiveSmallIntegerField("Processo Emissão")
-    versao_processo = models.CharField("Versão Processo Emissão", max_length=60)
+    # Campos tornados nullable: o parser não fabrica mais valores padrão quando ausentes (integridade de dados)
+    codigo_uf = models.PositiveSmallIntegerField("Código UF Emitente", null=True, blank=True)
+    codigo_control = models.CharField("Código Numérico Chave", max_length=8, null=True, blank=True)
+    cfop = models.CharField("CFOP", max_length=4, null=True, blank=True)
+    natureza_operacao = models.CharField("Natureza da Operação", max_length=60, null=True, blank=True)
+    modelo = models.CharField("Modelo", max_length=2, null=True, blank=True)
+    serie = models.PositiveSmallIntegerField("Série", null=True, blank=True)
+    numero = models.PositiveIntegerField("Número CT-e", null=True, blank=True)
+    data_emissao = models.DateTimeField("Data/Hora Emissão", db_index=True, null=True, blank=True)
+    tipo_impressao = models.PositiveSmallIntegerField("Tipo Impressão DACTE", null=True, blank=True)
+    tipo_emissao = models.PositiveSmallIntegerField("Tipo Emissão", null=True, blank=True)
+    digito_verificador = models.PositiveSmallIntegerField("Dígito Verificador Chave", null=True, blank=True)
+    ambiente = models.PositiveSmallIntegerField("Ambiente (1=Prod, 2=Hom)", null=True, blank=True)
+    tipo_cte = models.PositiveSmallIntegerField("Tipo CT-e (0=Normal, 1=Compl, 2=Anul, 3=Subst)", null=True, blank=True)
+    processo_emissao = models.PositiveSmallIntegerField("Processo Emissão", null=True, blank=True)
+    versao_processo = models.CharField("Versão Processo Emissão", max_length=60, null=True, blank=True)
     chave_referenciada = models.CharField("Chave CT-e Referenciada", max_length=44, null=True, blank=True)
-    codigo_mun_envio = models.CharField("Código Município Envio", max_length=7)
-    nome_mun_envio = models.CharField("Nome Município Envio", max_length=60)
-    uf_envio = models.CharField("UF Envio", max_length=2)
-    modal = models.CharField("Modal", max_length=2)
-    tipo_servico = models.CharField("Tipo Serviço", max_length=1)
-    codigo_mun_ini = models.CharField("Código Município Início Prest.", max_length=7)
-    nome_mun_ini = models.CharField("Nome Município Início Prest.", max_length=60)
-    uf_ini = models.CharField("UF Início Prest.", max_length=2)
-    codigo_mun_fim = models.CharField("Código Município Fim Prest.", max_length=7)
-    nome_mun_fim = models.CharField("Nome Município Fim Prest.", max_length=60)
-    uf_fim = models.CharField("UF Fim Prest.", max_length=2)
+    codigo_mun_envio = models.CharField("Código Município Envio", max_length=7, null=True, blank=True)
+    nome_mun_envio = models.CharField("Nome Município Envio", max_length=60, null=True, blank=True)
+    uf_envio = models.CharField("UF Envio", max_length=2, null=True, blank=True)
+    modal = models.CharField("Modal", max_length=2, null=True, blank=True)
+    tipo_servico = models.CharField("Tipo Serviço", max_length=1, null=True, blank=True)
+    codigo_mun_ini = models.CharField("Código Município Início Prest.", max_length=7, null=True, blank=True)
+    nome_mun_ini = models.CharField("Nome Município Início Prest.", max_length=60, null=True, blank=True)
+    uf_ini = models.CharField("UF Início Prest.", max_length=2, null=True, blank=True)
+    codigo_mun_fim = models.CharField("Código Município Fim Prest.", max_length=7, null=True, blank=True)
+    nome_mun_fim = models.CharField("Nome Município Fim Prest.", max_length=60, null=True, blank=True)
+    uf_fim = models.CharField("UF Fim Prest.", max_length=2, null=True, blank=True)
     retira = models.BooleanField("Retira Mercadoria", default=False)
     detalhes_retira = models.TextField("Detalhes Retira", null=True, blank=True)
     ind_ie_tomador = models.PositiveSmallIntegerField("Indicador IE Tomador", null=True, blank=True)
@@ -204,7 +205,7 @@ class CTeObservacaoFisco(models.Model):
 class CTeEmitente(EntidadeFiscal):
     """<emit>"""
     cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="emitente")
-    crt = models.CharField("CRT", max_length=1) # 1=SN; 2=SN Excesso; 3=Regime Normal
+    crt = models.CharField("CRT", max_length=1, null=True, blank=True) # 1=SN; 2=SN Excesso; 3=Regime Normal
 
     class Meta:
         db_table = "cte_emitente"
@@ -252,8 +253,8 @@ class CTEDestinatario(EntidadeFiscal):
 class CTePrestacaoServico(models.Model):
     """<vPrest>"""
     cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="prestacao")
-    valor_total_prestado = models.DecimalField("Valor Total Prestação", max_digits=15, decimal_places=2)
-    valor_recebido = models.DecimalField("Valor a Receber", max_digits=15, decimal_places=2)
+    valor_total_prestado = models.DecimalField("Valor Total Prestação", max_digits=15, decimal_places=2, null=True, blank=True)
+    valor_recebido = models.DecimalField("Valor a Receber", max_digits=15, decimal_places=2, null=True, blank=True)
     # Novos campos CIF/FOB
     valor_cif = models.DecimalField("Valor Frete CIF", max_digits=15, decimal_places=2, null=True, blank=True) # NOVO CAMPO
     valor_fob = models.DecimalField("Valor Frete FOB", max_digits=15, decimal_places=2, null=True, blank=True) # NOVO CAMPO
@@ -292,8 +293,8 @@ class CTeTributos(models.Model):
 class CTeCarga(models.Model):
     """<infCarga>"""
     cte = models.OneToOneField(CTeDocumento, on_delete=models.CASCADE, related_name="carga")
-    valor_carga = models.DecimalField("Valor Total Mercadorias", max_digits=15, decimal_places=2)
-    produto_predominante = models.CharField("Produto Predominante", max_length=60)
+    valor_carga = models.DecimalField("Valor Total Mercadorias", max_digits=15, decimal_places=2, null=True, blank=True)
+    produto_predominante = models.CharField("Produto Predominante", max_length=60, null=True, blank=True)
     outras_caracteristicas = models.CharField("Outras Características Carga", max_length=30, null=True, blank=True)
     valor_carga_averbada = models.DecimalField("Valor Carga Averbada (Seguro)", max_digits=15, decimal_places=2, null=True, blank=True) # <vCargaAverb>
 
@@ -350,11 +351,11 @@ class CTeDocumentoTransportado(models.Model):
 class CTeSeguro(models.Model):
     """<seg>"""
     cte = models.ForeignKey(CTeDocumento, on_delete=models.CASCADE, related_name="seguros")
-    responsavel = models.CharField("Responsável Seguro", max_length=1) # 0=Remetente; 1=Expedidor; ... 5=Emitente CT-e; 6=Tomador
-    nome_seguradora = models.CharField("Nome Seguradora", max_length=30)
-    numero_apolice = models.CharField("Número Apólice", max_length=20)
+    responsavel = models.CharField("Responsável Seguro", max_length=1, null=True, blank=True) # 0=Remetente; 1=Expedidor; ... 5=Emitente CT-e; 6=Tomador
+    nome_seguradora = models.CharField("Nome Seguradora", max_length=30, null=True, blank=True)
+    numero_apolice = models.CharField("Número Apólice", max_length=20, null=True, blank=True)
     numero_averbacao = models.CharField("Número Averbação", max_length=20, null=True, blank=True)
-    valor_carga_averbada = models.DecimalField("Valor Carga (Averbação)", max_digits=15, decimal_places=2)
+    valor_carga_averbada = models.DecimalField("Valor Carga (Averbação)", max_digits=15, decimal_places=2, null=True, blank=True)
 
     class Meta:
         db_table = "cte_seguro"
@@ -766,14 +767,14 @@ class MDFeProdutoPerigoso(models.Model):
 class MDFeSeguroCarga(models.Model):
    """<seg>"""
    mdfe = models.ForeignKey(MDFeDocumento, on_delete=models.CASCADE, related_name="seguros_carga")
-   responsavel = models.CharField("Responsável Seguro", max_length=1) # 1=Emitente MDF-e; 2=Responsável pela contratação (contratante)
+   responsavel = models.CharField("Responsável Seguro", max_length=1, null=True, blank=True) # 1=Emitente MDF-e; 2=Responsável pela contratação (contratante)
    cnpj_responsavel = models.CharField("CNPJ Responsável", max_length=14, null=True, blank=True)
    cpf_responsavel = models.CharField("CPF Responsável", max_length=11, null=True, blank=True)
 
    # <infSeg>
-   nome_seguradora = models.CharField("Nome Seguradora", max_length=30)
-   cnpj_seguradora = models.CharField("CNPJ Seguradora", max_length=14)
-   numero_apolice = models.CharField("Número Apólice", max_length=20)
+   nome_seguradora = models.CharField("Nome Seguradora", max_length=30, null=True, blank=True)
+   cnpj_seguradora = models.CharField("CNPJ Seguradora", max_length=14, null=True, blank=True)
+   numero_apolice = models.CharField("Número Apólice", max_length=20, null=True, blank=True)
    # <nAver> (ocorrências múltiplas)
 
    class Meta:
@@ -795,8 +796,8 @@ class MDFeAverbacaoSeguro(models.Model):
 class MDFeProdutoPredominante(models.Model):
    """<prodPred>"""
    mdfe = models.OneToOneField(MDFeDocumento, on_delete=models.CASCADE, related_name="prod_pred")
-   tp_carga = models.CharField("Tipo Carga", max_length=2) # Ver tabela ANTT
-   x_prod = models.CharField("Descrição Produto", max_length=120)
+   tp_carga = models.CharField("Tipo Carga", max_length=2, null=True, blank=True) # Ver tabela ANTT
+   x_prod = models.CharField("Descrição Produto", max_length=120, null=True, blank=True)
    ncm = models.CharField("NCM", max_length=8, null=True, blank=True)
    # <infLotacao> omitido por simplicidade, pode ser JSONField
 
@@ -812,9 +813,9 @@ class MDFeTotais(models.Model):
    q_cte = models.PositiveIntegerField("Qtd. CT-e", null=True, blank=True)
    q_nfe = models.PositiveIntegerField("Qtd. NF-e", null=True, blank=True)
    # qCT omitido (obsoleto)
-   v_carga = models.DecimalField("Valor Total Carga", max_digits=15, decimal_places=2)
-   c_unid = models.CharField("Código Unidade Peso Bruto", max_length=2) # 01=KG; 02=TON
-   q_carga = models.DecimalField("Peso Bruto Total Carga", max_digits=15, decimal_places=4)
+   v_carga = models.DecimalField("Valor Total Carga", max_digits=15, decimal_places=2, null=True, blank=True)
+   c_unid = models.CharField("Código Unidade Peso Bruto", max_length=2, null=True, blank=True) # 01=KG; 02=TON
+   q_carga = models.DecimalField("Peso Bruto Total Carga", max_digits=15, decimal_places=4, null=True, blank=True)
 
    class Meta:
        db_table = "mdfe_totais"
