@@ -1,41 +1,15 @@
 # Dockerfile para o EGS XML Collector
-FROM python:3.11-slim
+# Fixado em bookworm (Debian 12): o .deb do Google Chrome depende de libasound2,
+# que no trixie (Debian 13) foi renomeado para libasound2t64 e quebra a instalação.
+# Build apenas em amd64 — o Google Chrome não tem .deb para arm64.
+FROM python:3.11-slim-bookworm
 
-# Instalar dependencias do sistema para Selenium/Chrome
-RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    unzip \
-    curl \
-    ca-certificates \
-    # Dependencias do Chrome
-    fonts-liberation \
-    libasound2t64 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libatspi2.0-0 \
-    libcups2 \
-    libdbus-1-3 \
-    libdrm2 \
-    libgbm1 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libwayland-client0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxkbcommon0 \
-    libxrandr2 \
-    xdg-utils \
-    libu2f-udev \
-    libvulkan1 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Instalar Chrome usando a nova forma recomendada (sem apt-key)
-RUN wget -q -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && apt-get update \
-    && apt-get install -y /tmp/google-chrome.deb \
+# Instalar dependencias do sistema + Google Chrome numa única transação apt,
+# deixando o apt resolver automaticamente todas as dependências do .deb do Chrome.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget gnupg unzip curl ca-certificates fonts-liberation \
+    && wget -q -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get install -y --no-install-recommends /tmp/google-chrome.deb \
     && rm /tmp/google-chrome.deb \
     && rm -rf /var/lib/apt/lists/*
 

@@ -86,6 +86,8 @@ services:
 
   # EGS XML Collector - Robot para coleta automatica de XMLs
   scraper:
+    # Google Chrome só tem build amd64; em hosts arm64 (Apple Silicon) roda via emulação.
+    platform: linux/amd64
     build:
       context: ./scraper
       dockerfile: Dockerfile
