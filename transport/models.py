@@ -683,10 +683,19 @@ class MDFeModalRodoviario(models.Model):
    """<infModal versaoModal="3.00"><rodo>"""
    mdfe = models.OneToOneField(MDFeDocumento, on_delete=models.CASCADE, related_name="modal_rodoviario")
    rntrc = models.CharField("RNTRC", max_length=8, null=True, blank=True)
+   tp_rntrc = models.CharField("Tipo RNTRC", max_length=2, null=True, blank=True)  # <tpRntrc>
    # <veicTracao> é um modelo separado
    # <veicReboque> é um modelo separado
    # <condutor> é um modelo separado
    codigo_agendamento_porto = models.CharField("Código Agendamento Porto", max_length=10, null=True, blank=True) # <codAgPorto>
+   # infANTT — financeiro/administrativo (Fase C)
+   val_resp_frete = models.DecimalField("Valor Repasse Responsável Frete", max_digits=15, decimal_places=2, null=True, blank=True)  # <valORespFrete>
+   val_etarifa = models.DecimalField("Valor E-Tarifa ANTT", max_digits=15, decimal_places=2, null=True, blank=True)  # <valETarifa>
+   val_apagar = models.DecimalField("Valor a Pagar Total", max_digits=15, decimal_places=2, null=True, blank=True)  # <valAPagar>
+   id_tac = models.CharField("ID Transportador Autônomo (TAC)", max_length=14, null=True, blank=True)  # <idtac>
+   id_ac = models.CharField("ID Agenciador de Cargas (AC)", max_length=14, null=True, blank=True)  # <idtAC>
+   nro_ocrim = models.CharField("Nº Ocorrência Criminal", max_length=20, null=True, blank=True)  # <nroOCrim>
+   nro_proc = models.CharField("Nº Processo Administrativo", max_length=30, null=True, blank=True)  # <nroProc>
 
    class Meta:
        db_table = "mdfe_modal_rodo"
@@ -831,12 +840,13 @@ class MDFeDocumentosVinculados(models.Model):
 class MDFeProdutoPerigoso(models.Model):
    """<infDoc><peri>"""
    documento_vinculado = models.ForeignKey(MDFeDocumentosVinculados, on_delete=models.CASCADE, related_name="produtos_perigosos")
-   n_onu = models.CharField("Número ONU", max_length=4)
+   n_onu = models.CharField("Número ONU", max_length=4, null=True, blank=True)
    x_nome_ae = models.CharField("Nome Apropriado Embarque", max_length=150, null=True, blank=True)
    x_cla_risco = models.CharField("Classe Risco", max_length=40, null=True, blank=True)
    gr_emb = models.CharField("Grupo Embalagem", max_length=6, null=True, blank=True)
-   q_tot_prod = models.CharField("Quantidade Total Produto", max_length=20) # Pode ser número ou texto (ex: "2 Tambores")
+   q_tot_prod = models.CharField("Quantidade Total Produto", max_length=20, null=True, blank=True) # Pode ser número ou texto (ex: "2 Tambores")
    q_vol_tipo = models.CharField("Quantidade e Tipo Volumes", max_length=60, null=True, blank=True)
+   ponto_fulgor = models.CharField("Ponto de Fulgor", max_length=6, null=True, blank=True)  # <pontoFulgor>
 
    class Meta:
        db_table = "mdfe_produto_perigoso"
@@ -896,6 +906,7 @@ class MDFeTotais(models.Model):
    v_carga = models.DecimalField("Valor Total Carga", max_digits=15, decimal_places=2, null=True, blank=True)
    c_unid = models.CharField("Código Unidade Peso Bruto", max_length=2, null=True, blank=True) # 01=KG; 02=TON
    q_carga = models.DecimalField("Peso Bruto Total Carga", max_digits=15, decimal_places=4, null=True, blank=True)
+   q_unid = models.PositiveIntegerField("Qtd. Unidades de Carga", null=True, blank=True)  # <qUnid>
 
    class Meta:
        db_table = "mdfe_totais"

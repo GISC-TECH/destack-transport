@@ -287,7 +287,16 @@ def parse_mdfe_modal_rodoviario(mdfe_doc, infmdfe):
     modal_data = {
         # RNTRC pode estar em <infANTT> ou diretamente em <rodo> em versões antigas
         'rntrc': safe_get(inf_antt, 'RNTRC') or safe_get(rodo, 'RNTRC'),
+        'tp_rntrc': safe_get(inf_antt, 'tpRntrc'),
         'codigo_agendamento_porto': safe_get(rodo, 'codAgPorto'), # Opcional
+        # infANTT financeiro/administrativo (Fase C)
+        'val_resp_frete': to_decimal(safe_get(inf_antt, 'infCIOT.valORespFrete') or safe_get(inf_antt, 'valORespFrete'), default=None),
+        'val_etarifa': to_decimal(safe_get(inf_antt, 'valETarifa'), default=None),
+        'val_apagar': to_decimal(safe_get(inf_antt, 'valAPagar'), default=None),
+        'id_tac': safe_get(inf_antt, 'idtac'),
+        'id_ac': safe_get(inf_antt, 'idtAC'),
+        'nro_ocrim': safe_get(inf_antt, 'nroOCrim'),
+        'nro_proc': safe_get(inf_antt, 'nroProc'),
     }
     modal_data_cleaned = {k: v for k, v in modal_data.items() if v is not None}
     modal, created_modal = MDFeModalRodoviario.objects.update_or_create(
@@ -492,8 +501,8 @@ def parse_mdfe_documentos(mdfe_doc, infmdfe):
                          x_cla_risco=safe_get(peri_dict, 'xClaRisco'),
                          gr_emb=safe_get(peri_dict, 'grEmb'),
                          q_tot_prod=safe_get(peri_dict, 'qTotProd'),
-                         q_vol_tipo=safe_get(peri_dict, 'qVolTipo')
-                         # pontoFulgor omitido
+                         q_vol_tipo=safe_get(peri_dict, 'qVolTipo'),
+                         ponto_fulgor=safe_get(peri_dict, 'pontoFulgor')
                      )
 
         # --- NF-es Vinculadas <infNFe> ---
@@ -534,8 +543,8 @@ def parse_mdfe_documentos(mdfe_doc, infmdfe):
                           x_cla_risco=safe_get(peri_dict, 'xClaRisco'),
                           gr_emb=safe_get(peri_dict, 'grEmb'),
                           q_tot_prod=safe_get(peri_dict, 'qTotProd'),
-                          q_vol_tipo=safe_get(peri_dict, 'qVolTipo')
-                          # pontoFulgor omitido
+                          q_vol_tipo=safe_get(peri_dict, 'qVolTipo'),
+                          ponto_fulgor=safe_get(peri_dict, 'pontoFulgor')
                       )
 
         # --- MDF-e Anteriores <infMDFeTransp> --- (Omitido por complexidade)
@@ -638,6 +647,7 @@ def parse_mdfe_totais(mdfe_doc, infmdfe):
         'v_carga': to_decimal(safe_get(tot_dict, 'vCarga'), default=None),
         'c_unid': safe_get(tot_dict, 'cUnid'),
         'q_carga': to_decimal(safe_get(tot_dict, 'qCarga'), default=None),
+        'q_unid': to_int(safe_get(tot_dict, 'qUnid')),
     }
     tot_data_cleaned = {k: v for k, v in tot_data.items() if v is not None}
 
