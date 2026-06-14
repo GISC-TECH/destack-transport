@@ -67,6 +67,12 @@ function Relatorios() {
       nome: 'KM Rodado',
       descricao: 'Relatorio de quilometragem por veiculo',
       icon: 'compass'
+    },
+    {
+      id: 'motoristas',
+      nome: 'Motoristas',
+      descricao: 'Cadastro, viagens, repasses e validades (CNH/NR/MOPP/ASO) vencendo',
+      icon: 'user'
     }
   ];
 

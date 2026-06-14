@@ -60,6 +60,7 @@ from ..models import (
     PagamentoAgregado,
     PagamentoProprio,
     ManutencaoVeiculo,
+    Motorista,
 )
 
 # ===============================================================
@@ -568,6 +569,8 @@ class RelatorioAPIView(APIView):
                 dados = self._gerar_relatorio_km_rodado(data_inicio, data_fim, filtros)
             elif tipo == 'manutencoes':
                 dados = self._gerar_relatorio_manutencoes(data_inicio, data_fim, filtros)
+            elif tipo == 'motoristas':
+                dados = self._gerar_relatorio_motoristas(data_inicio, data_fim, filtros)
             else:
                  return Response({"detail": f"Tipo de relatório '{tipo}' não suportado ou não implementado."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -591,11 +594,17 @@ class RelatorioAPIView(APIView):
             traceback.print_exc()
             return Response({"detail": f"Erro interno ao gerar relatório: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    # --- Métodos Auxiliares de Geração (NÃO IMPLEMENTADOS) ---
+    # --- Métodos Auxiliares de Geração ---
     def _gerar_relatorio_faturamento(self, data_inicio, data_fim, filtros):
-        """Gera dados agregados de faturamento por mês."""
+        """Gera dados agregados de faturamento por mês.
+
+        Exclui CT-es cancelados (cancelamento homologado, cStat 135), que não
+        representam receita efetiva.
+        """
         from datetime import timedelta
         qs = CTePrestacaoServico.objects.select_related('cte__identificacao')
+        # Não conta documentos cancelados na receita
+        qs = qs.exclude(cte__cancelamento__c_stat=135)
         if data_inicio:
             qs = qs.filter(cte__identificacao__data_emissao__date__gte=data_inicio)
         if data_fim:
@@ -633,8 +642,9 @@ class RelatorioAPIView(APIView):
         qs = CTeDocumento.objects.filter(
             identificacao__isnull=False
         ).select_related(
-            'identificacao', 'emitente', 'remetente', 'destinatario', 'prestacao'
-        )
+            'identificacao', 'emitente', 'remetente', 'destinatario', 'prestacao',
+            'cancelamento', 'modal_rodoviario'
+        ).prefetch_related('modal_rodoviario__motoristas')
 
         # Filtros por data
         if data_inicio:
@@ -655,9 +665,18 @@ class RelatorioAPIView(APIView):
             qs = qs.filter(modalidade=filtros['modalidade'])
         if 'processado' in filtros:
             qs = qs.filter(processado=bool(filtros['processado']))
+        # Filtro por condutor/motorista (nome ou CPF do vínculo automático)
+        if filtros.get('condutor'):
+            qs = qs.filter(modal_rodoviario__motoristas__nome__icontains=filtros['condutor'])
+        if filtros.get('motorista_cpf'):
+            cpf_digits = ''.join(ch for ch in str(filtros['motorista_cpf']) if ch.isdigit())
+            qs = qs.filter(modal_rodoviario__motoristas__cpf=cpf_digits)
+        # Exclui cancelados por padrão, salvo se incluir_cancelados=1
+        if not filtros.get('incluir_cancelados'):
+            qs = qs.exclude(cancelamento__c_stat=135)
 
         # Limita quantidade para performance
-        qs = qs.order_by('-identificacao__data_emissao')[:1000]
+        qs = qs.distinct().order_by('-identificacao__data_emissao')[:1000]
 
         dados = []
         for cte in qs:
@@ -684,14 +703,27 @@ class RelatorioAPIView(APIView):
             except Exception:
                 valor_total = 0
 
+            # Condutor (vínculo automático do XML)
+            condutor = None
+            try:
+                if cte.modal_rodoviario:
+                    primeiro = cte.modal_rodoviario.motoristas.all()[0] if cte.modal_rodoviario.motoristas.all() else None
+                    condutor = primeiro.nome if primeiro else None
+            except Exception:
+                condutor = None
+
+            cancelado = bool(getattr(cte, 'cancelamento', None) and cte.cancelamento.c_stat == 135)
+
             dados.append({
                 'numero': numero,
                 'data_emissao': data_emissao,
                 'remetente': remetente,
                 'destinatario': destinatario,
+                'condutor': condutor or '-',
                 'valor_total': valor_total,
                 'modalidade': cte.modalidade or 'N/A',
                 'pago': 'Sim' if cte.pago else 'Não',
+                'situacao': 'Cancelado' if cancelado else 'Ativo',
             })
 
         return dados
@@ -731,6 +763,15 @@ class RelatorioAPIView(APIView):
             qs = qs.filter(encerrado=bool(filtros['encerrado']))
         if 'processado' in filtros:
             qs = qs.filter(processado=bool(filtros['processado']))
+        # Filtros por veículo e condutor
+        if filtros.get('placa'):
+            qs = qs.filter(modal_rodoviario__veiculo_tracao__placa__icontains=filtros['placa'])
+        if filtros.get('condutor'):
+            qs = qs.filter(condutores__nome__icontains=filtros['condutor'])
+        if filtros.get('motorista_cpf'):
+            cpf_digits = ''.join(ch for ch in str(filtros['motorista_cpf']) if ch.isdigit())
+            qs = qs.filter(condutores__cpf=cpf_digits)
+        qs = qs.distinct()
 
         # Limita quantidade para performance
         qs = qs.order_by('-identificacao__dh_emi')[:1000]
@@ -910,26 +951,33 @@ class RelatorioAPIView(APIView):
         if 'placa' in filtros and filtros['placa']:
             qs_ctes = qs_ctes.filter(modal_rodoviario__veiculos__placa__icontains=filtros['placa'])
             
-        # Processa CT-es para somar KM
+        # Processa CT-es para somar KM.
+        # A distância (dist_km) é da viagem do CT-e e deve ser atribuída a UM
+        # veículo — o de tração (tpVeic='0'). Atribuir a todos os veículos do
+        # modal (tração + reboque) contava o KM em dobro. Sem tração explícita,
+        # usa o primeiro veículo.
         for cte in qs_ctes:
             if hasattr(cte, 'modal_rodoviario') and cte.modal_rodoviario:
-                for veiculo in cte.modal_rodoviario.veiculos.all():
-                    placa = veiculo.placa
-                    km = cte.identificacao.dist_km if hasattr(cte, 'identificacao') and cte.identificacao.dist_km else 0
-                    
-                    if placa not in km_por_placa:
-                        km_por_placa[placa] = {
-                            'placa': placa,
-                            'km_ctes': 0,
-                            'km_manutencoes': 0,
-                            'qtd_ctes': 0,
-                            'qtd_manutencoes': 0,
-                            'ultima_manutencao': None,
-                            'km_total_estimado': 0
-                        }
-                    
-                    km_por_placa[placa]['km_ctes'] += km
-                    km_por_placa[placa]['qtd_ctes'] += 1
+                veiculos = list(cte.modal_rodoviario.veiculos.all())
+                if not veiculos:
+                    continue
+                tracao = next((v for v in veiculos if v.tipo_veiculo == '0'), veiculos[0])
+                placa = tracao.placa
+                km = cte.identificacao.dist_km if hasattr(cte, 'identificacao') and cte.identificacao.dist_km else 0
+
+                if placa not in km_por_placa:
+                    km_por_placa[placa] = {
+                        'placa': placa,
+                        'km_ctes': 0,
+                        'km_manutencoes': 0,
+                        'qtd_ctes': 0,
+                        'qtd_manutencoes': 0,
+                        'ultima_manutencao': None,
+                        'km_total_estimado': 0
+                    }
+
+                km_por_placa[placa]['km_ctes'] += km
+                km_por_placa[placa]['qtd_ctes'] += 1
         
         # KM das manutenções (quilometragem registrada)
         qs_manutencoes = ManutencaoVeiculo.objects.select_related('veiculo')
@@ -1045,6 +1093,76 @@ class RelatorioAPIView(APIView):
                 'fornecedor': m.fornecedor or m.oficina or '-',
                 'quilometragem': m.quilometragem or '-',
                 'nota_fiscal': m.nota_fiscal or '-',
+            })
+
+        return dados
+
+    def _gerar_relatorio_motoristas(self, data_inicio, data_fim, filtros):
+        """Relatório de motoristas: cadastro, compliance (validades) e atividade.
+
+        Inclui contagem de viagens (via vínculo automático em CT-e/MDF-e),
+        total repassado no período e documentos vencidos/a vencer em 30 dias.
+        """
+        from datetime import timedelta, date
+        logger.info("INFO: Gerando relatório de motoristas com filtros: %s", filtros)
+
+        qs = Motorista.objects.all()
+        if 'ativo' in filtros:
+            qs = qs.filter(ativo=bool(filtros['ativo']))
+        if filtros.get('nome'):
+            qs = qs.filter(nome__icontains=filtros['nome'])
+        if filtros.get('cpf'):
+            cpf = ''.join(ch for ch in str(filtros['cpf']) if ch.isdigit())
+            qs = qs.filter(cpf=cpf)
+        if 'cadastro_automatico' in filtros:
+            qs = qs.filter(cadastro_automatico=bool(filtros['cadastro_automatico']))
+        # Apenas com pendência de compliance (validades vencidas/a vencer)
+        somente_pendentes = bool(filtros.get('pendentes'))
+
+        hoje = date.today()
+        limite = hoje + timedelta(days=30)
+        data_fim_query = (data_fim + timedelta(days=1)) if data_fim else None
+
+        dados = []
+        for m in qs.order_by('nome'):
+            viagens_cte = m.ctes_como_condutor.count()
+            viagens_mdfe = m.mdfes_como_condutor.count()
+
+            pagamentos = PagamentoAgregado.objects.filter(condutor_cpf=m.cpf, status='pago')
+            if data_inicio:
+                pagamentos = pagamentos.filter(data_prevista__gte=data_inicio)
+            if data_fim_query:
+                pagamentos = pagamentos.filter(data_prevista__lt=data_fim_query)
+            total_repassado = float(pagamentos.aggregate(s=Sum('valor_repassado'))['s'] or 0)
+
+            # Validades vencidas ou a vencer em 30 dias
+            pendencias = []
+            for label, val in (
+                ('CNH', m.validade_cnh), ('NR20', m.nr20_validade),
+                ('NR35', m.nr35_validade), ('MOPP', m.mopp_validade),
+                ('Toxicológico', m.toxicologico_validade), ('ASO', m.aso_validade),
+            ):
+                if val and val <= limite:
+                    estado = 'vencido' if val < hoje else 'a vencer'
+                    pendencias.append(f"{label} {estado} ({val.strftime('%d/%m/%Y')})")
+
+            if somente_pendentes and not pendencias:
+                continue
+
+            dados.append({
+                'nome': m.nome,
+                'cpf': f"{m.cpf[:3]}.{m.cpf[3:6]}.{m.cpf[6:9]}-{m.cpf[9:]}" if m.cpf and len(m.cpf) == 11 else m.cpf,
+                'cnh': m.cnh or '-',
+                'categoria_cnh': m.categoria_cnh or '-',
+                'validade_cnh': m.validade_cnh.strftime('%d/%m/%Y') if m.validade_cnh else '-',
+                'viagens_cte': viagens_cte,
+                'viagens_mdfe': viagens_mdfe,
+                'viagens_total': viagens_cte + viagens_mdfe,
+                'total_repassado': total_repassado,
+                'cadastro': 'Automático' if m.cadastro_automatico else 'Manual',
+                'cadastro_completo': 'Sim' if m.cadastro_completo else 'Não',
+                'pendencias': '; '.join(pendencias) if pendencias else '-',
+                'ativo': 'Sim' if m.ativo else 'Não',
             })
 
         return dados
