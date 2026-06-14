@@ -155,7 +155,7 @@ const handleHttpError = async (response, defaultMsg) => {
     throw new Error(defaultMsg);
   } catch (e) {
     if (e.message && !e.message.includes('Unexpected')) throw e;
-    throw new Error(defaultMsg);
+    throw new Error(defaultMsg, { cause: e });
   }
 };
 

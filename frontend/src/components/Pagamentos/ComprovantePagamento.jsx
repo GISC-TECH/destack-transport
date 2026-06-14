@@ -16,11 +16,6 @@ function ComprovantePagamento({ pagamento, tipo, onClose }) {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('pt-BR');
-  };
-
   const handlePrint = () => {
     const printContent = comprovanteRef.current;
     const windowPrint = window.open('', '', 'width=400,height=600');

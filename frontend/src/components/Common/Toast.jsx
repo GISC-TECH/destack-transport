@@ -33,7 +33,7 @@ const TOAST_TYPES = {
         <line x1="12" y1="17" x2="12.01" y2="17"></line>
       </svg>
     ),
-    title: 'Atencao'
+    title: 'Atenção'
   },
   info: {
     icon: (
@@ -43,7 +43,7 @@ const TOAST_TYPES = {
         <line x1="12" y1="8" x2="12.01" y2="8"></line>
       </svg>
     ),
-    title: 'Informacao'
+    title: 'Informação'
   }
 };
 

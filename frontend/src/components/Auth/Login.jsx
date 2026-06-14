@@ -102,7 +102,7 @@ function Login() {
               required
               disabled={loading}
               autoComplete="username"
-              aria-label="Nome de usuario"
+              aria-label="Nome de usuário"
               aria-required="true"
             />
           </div>
