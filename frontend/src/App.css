@@ -155,8 +155,10 @@ h1, h2, h3, h4,
 }
 
 .page-header h1 {
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
   margin: 0;
 }
@@ -172,16 +174,17 @@ h1, h2, h3, h4,
 
 .card {
   background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  border-radius: 14px;
+  box-shadow: none;
   padding: 24px;
   margin-bottom: 20px;
   border: 1px solid var(--border-light);
-  transition: box-shadow var(--transition-normal);
+  transition: box-shadow var(--transition-normal), border-color var(--transition-normal);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-lg);
+  border-color: var(--border-color);
+  box-shadow: 0 10px 24px -16px rgba(16, 51, 31, 0.20);
 }
 
 .card-header {
@@ -221,12 +224,12 @@ h1, h2, h3, h4,
 .input-filter,
 .select-filter {
   width: 100%;
-  padding: 12px 15px;
+  padding: 11px 14px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
-  transition: all 0.2s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
   background-color: var(--card-bg);
 }
 
@@ -235,7 +238,7 @@ h1, h2, h3, h4,
 .select-filter:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(39, 164, 106, 0.15);
+  box-shadow: 0 0 0 3px rgba(64, 145, 108, 0.14);
 }
 
 .form-control::placeholder,
@@ -264,10 +267,11 @@ select.select-filter {
   gap: 7px;
   padding: 10px 18px;
   border: none;
-  border-radius: 11px;
+  border-radius: 10px;
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 600;
   font-family: var(--font-body);
+  letter-spacing: 0.01em;
   cursor: pointer;
   transition: all 0.15s ease;
   text-decoration: none;
@@ -284,14 +288,15 @@ select.select-filter {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--green-600), var(--green-700));
+  background: var(--green-600);
   color: #fff;
-  box-shadow: 0 6px 16px rgba(45, 106, 79, 0.3);
+  box-shadow: 0 2px 6px -1px rgba(45, 106, 79, 0.25);
 }
 
 .btn-primary:hover {
+  background: var(--green-700);
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px -6px rgba(45, 106, 79, 0.45);
+  box-shadow: 0 6px 14px -4px rgba(45, 106, 79, 0.35);
 }
 
 /* Variantes do protótipo */
@@ -436,9 +441,9 @@ select.select-filter {
 .table-container {
   overflow-x: auto;
   background-color: var(--card-bg);
-  border-radius: 16px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: none;
+  border: 1px solid var(--border-light);
 }
 
 table {
@@ -449,24 +454,24 @@ table {
 
 th, td {
   text-align: left;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-light);
 }
 
 th {
-  background: var(--card-bg);
-  padding: 12px 16px;
-  font-weight: 800;
+  background: var(--content-bg);
+  padding: 13px 18px;
+  font-weight: 600;
   color: var(--text-secondary);
   font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   white-space: nowrap;
   position: sticky;
   top: 0;
 }
 
 td {
-  padding: 13px 16px;
+  padding: 15px 18px;
   color: var(--text-primary);
 }
 
@@ -493,10 +498,10 @@ tbody tr:last-child td {
   align-items: flex-end;
   gap: 14px;
   margin-bottom: 24px;
-  padding: 20px;
+  padding: 18px 20px;
   background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-radius: 14px;
+  box-shadow: none;
   border: 1px solid var(--border-light);
 }
 
