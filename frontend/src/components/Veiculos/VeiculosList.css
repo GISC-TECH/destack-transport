@@ -129,7 +129,7 @@
 
 .alerta-card h3 {
   margin-top: 0;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 18px;
 }
 
@@ -173,7 +173,7 @@
 
 .doc-nome {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .doc-validade {

@@ -82,7 +82,7 @@
 
 .summary-label {
   font-size: 14px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -90,7 +90,7 @@
 .summary-value {
   font-size: 28px;
   font-weight: 700;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 /* Tabs */
@@ -113,11 +113,11 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
-  color: #7f8c8d;
+  color: var(--text-secondary);
 }
 
 .tab-button:hover {
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .tab-button.active {
@@ -424,13 +424,13 @@
 
 .pagamento-form-page .header-title h1 {
   font-size: 24px;
-  color: #2c3e50;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
 }
 
 .pagamento-form-page .header-title p {
   font-size: 14px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   margin: 0;
 }
 

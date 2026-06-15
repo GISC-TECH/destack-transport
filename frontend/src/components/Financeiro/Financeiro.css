@@ -16,12 +16,12 @@
 .page-header h1 {
   margin: 0;
   font-size: 28px;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .page-subtitle {
   margin: 5px 0 0 0;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   font-size: 15px;
 }
 
@@ -43,11 +43,11 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
-  color: #7f8c8d;
+  color: var(--text-secondary);
 }
 
 .periodo-btn:hover {
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .periodo-btn.active {
@@ -212,7 +212,7 @@
 
 .fin-chart-card h3 {
   margin: 0 0 20px 0;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 18px;
   font-weight: 600;
 }
@@ -228,7 +228,7 @@
 
 .custom-tooltip .tooltip-label {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
   font-size: 14px;
 }
@@ -297,7 +297,7 @@
 .cliente-nome {
   display: block;
   font-size: 13px;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -322,7 +322,7 @@
 .cliente-valor {
   font-size: 13px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   white-space: nowrap;
 }
 
@@ -343,7 +343,7 @@
 .resumo-label {
   display: block;
   font-size: 11px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 5px;
@@ -353,7 +353,7 @@
   display: block;
   font-size: 16px;
   font-weight: 700;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .resumo-growth {

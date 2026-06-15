@@ -46,7 +46,7 @@
 
 .dropzone-text {
   font-size: 18px;
-  color: #2c3e50;
+  color: var(--text-primary);
   margin: 0;
   font-weight: 500;
 }
@@ -67,7 +67,7 @@
 
 .files-list h3 {
   margin: 0 0 16px 0;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 17px;
 }
 
@@ -107,7 +107,7 @@
 
 .file-name {
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
@@ -151,7 +151,7 @@
 
 .btn-secondary {
   background: #f1f5f9;
-  color: #475569;
+  color: var(--text-secondary);
   border: 1px solid #e2e8f0;
   padding: 12px 20px;
   border-radius: 8px;
@@ -163,11 +163,11 @@
 
 .btn-secondary:hover:not(:disabled) {
   background: #e2e8f0;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  background: var(--green-600);
   color: white;
   border: none;
   padding: 12px 20px;
@@ -200,7 +200,7 @@
 
 .results-section h3 {
   margin: 0 0 16px 0;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 17px;
 }
 
@@ -261,7 +261,7 @@
 
 .result-file {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 14px;
 }
 
@@ -272,7 +272,7 @@
 
 .result-tipo {
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
 }
 
 .results-actions {

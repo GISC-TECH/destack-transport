@@ -12,12 +12,12 @@
 .faixas-km-page .header-title h1 {
   margin: 0;
   font-size: 24px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .faixas-km-page .header-title p {
   margin: 5px 0 0;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .faixas-km-page .demo-badge {
@@ -117,7 +117,7 @@
 .data-table th {
   background: #f8fafc;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
   font-size: 12px;
   text-transform: uppercase;
 }
@@ -197,7 +197,7 @@
 .faixas-visual h3 {
   margin: 0 0 20px;
   font-size: 16px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .faixas-bars {
@@ -219,12 +219,12 @@
 }
 
 .faixa-range {
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .faixa-valor {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .faixa-bar-fill {
@@ -281,7 +281,7 @@
 .modal-header h2 {
   margin: 0;
   font-size: 18px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .modal-close {
@@ -292,7 +292,7 @@
   border-radius: 6px;
   font-size: 20px;
   cursor: pointer;
-  color: #64748b;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -300,7 +300,7 @@
 
 .modal-close:hover {
   background: #e2e8f0;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .modal-content form {
@@ -352,7 +352,7 @@
 .btn-secondary {
   padding: 10px 20px;
   background: #f1f5f9;
-  color: #475569;
+  color: var(--text-secondary);
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 14px;
@@ -362,7 +362,7 @@
 
 .btn-secondary:hover {
   background: #e2e8f0;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 /* Responsive */

@@ -15,7 +15,7 @@ textarea {
 /* Compartimentos */
 .field-help {
   margin: 0 0 15px 0;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 
@@ -36,7 +36,7 @@ textarea {
 
 .empty-compartimentos p {
   margin: 0;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -125,7 +125,7 @@ textarea {
   background: #e0f2fe;
   border-radius: 8px;
   font-size: 14px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 /* Responsivo para compartimentos */

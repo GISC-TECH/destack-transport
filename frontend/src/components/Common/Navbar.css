@@ -1,5 +1,5 @@
 .navbar {
-  background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, #1a252f 100%);
   color: white;
   padding: 0 30px;
   display: flex;
@@ -120,7 +120,7 @@
 .dropdown-menu li a {
   display: block;
   padding: 10px 20px;
-  color: #2c3e50;
+  color: var(--text-primary);
   text-decoration: none;
   font-size: 14px;
   transition: background 0.2s;

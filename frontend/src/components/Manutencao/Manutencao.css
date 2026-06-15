@@ -56,13 +56,13 @@
 .summary-number {
   font-size: 28px;
   font-weight: 700;
-  color: #2c3e50;
+  color: var(--text-primary);
   line-height: 1;
 }
 
 .summary-label {
   font-size: 13px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
 }
 
 /* Descrição truncate */
@@ -141,7 +141,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -185,7 +185,7 @@
   margin: 0 0 15px 0;
   font-size: 15px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .grafico-card.wide {
@@ -251,12 +251,12 @@
 .manutencao-form-page .header-title h1 {
   margin: 0;
   font-size: 24px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .manutencao-form-page .header-title p {
   margin: 5px 0 0;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .manutencao-form-page .alert {
@@ -303,7 +303,7 @@
   margin: 0 0 20px;
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .form-row {
@@ -381,7 +381,7 @@
 .manutencao-form-page .btn-secondary {
   padding: 10px 24px;
   background: white;
-  color: #475569;
+  color: var(--text-secondary);
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 14px;
@@ -392,7 +392,7 @@
 
 .manutencao-form-page .btn-secondary:hover {
   background: #f1f5f9;
-  border-color: #94a3b8;
+  border-color: var(--text-muted);
 }
 
 /* Responsivo */

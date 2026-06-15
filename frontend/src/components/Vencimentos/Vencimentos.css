@@ -16,13 +16,13 @@
 }
 
 .vencimentos-page .header-title h1 {
-  color: #1e293b;
+  color: var(--text-primary);
   font-size: 24px;
   margin: 0 0 5px 0;
 }
 
 .vencimentos-page .header-title p {
-  color: #64748b;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -142,12 +142,12 @@
 .vencimentos-summary .summary-number {
   font-size: 22px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .vencimentos-summary .summary-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -167,7 +167,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.3s;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -175,7 +175,7 @@
 
 .vencimentos-page .tab-button:hover {
   background: #f8f9fa;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .vencimentos-page .tab-button.active {
@@ -237,7 +237,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -276,13 +276,13 @@
 
 .vencimento-content h3 {
   margin: 0 0 5px 0;
-  color: #1e293b;
+  color: var(--text-primary);
   font-size: 16px;
 }
 
 .vencimento-content .detalhe {
   margin: 0 0 12px 0;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 
@@ -297,13 +297,13 @@
 
 .doc-nome {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 14px;
 }
 
 .doc-validade {
   font-size: 13px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
 }
 
 .vencimento-actions {
@@ -332,13 +332,13 @@
 
 .vencimentos-page .empty-state h3 {
   margin: 0 0 10px 0;
-  color: #1e293b;
+  color: var(--text-primary);
   font-size: 18px;
 }
 
 .vencimentos-page .empty-state p {
   margin: 0;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 /* Responsivo */

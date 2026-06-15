@@ -129,7 +129,7 @@
 .cte-chart-card h3, .mdfe-chart-card h3 {
   margin: 0 0 15px 0;
   font-size: 16px;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -147,13 +147,13 @@
 }
 
 .page-header h1 {
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 28px;
   margin: 0 0 5px 0;
 }
 
 .page-header p {
-  color: #7f8c8d;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -219,7 +219,7 @@
   padding: 15px;
   text-align: left;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   border-bottom: 2px solid #e0e0e0;
   font-size: 13px;
   text-transform: uppercase;
@@ -373,7 +373,7 @@
 }
 
 .pagination-ellipsis {
-  color: #7f8c8d;
+  color: var(--text-secondary);
   padding: 0 6px;
   font-size: 14px;
 }
@@ -400,7 +400,7 @@
 .chave-cte {
   font-family: monospace;
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   word-break: break-all;
 }
 
@@ -425,7 +425,7 @@
 }
 
 .status-success {
-  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  background: var(--green-600);
   color: white;
 }
 
@@ -440,7 +440,7 @@
 }
 
 .status-secondary {
-  background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
+  background: linear-gradient(135deg, var(--text-secondary) 0%, #95a5a6 100%);
   color: white;
 }
 
@@ -472,7 +472,7 @@
 }
 
 .detail-card h3 {
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 18px;
   margin: 0 0 20px 0;
   padding-bottom: 15px;
@@ -493,13 +493,13 @@
 }
 
 .detail-row .label {
-  color: #7f8c8d;
+  color: var(--text-secondary);
   font-size: 14px;
   flex-shrink: 0;
 }
 
 .detail-row .value {
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 500;
   text-align: right;
 }
@@ -524,7 +524,7 @@
 }
 
 .results-info p {
-  color: #7f8c8d;
+  color: var(--text-secondary);
   font-size: 14px;
   margin: 0;
 }
@@ -564,7 +564,7 @@
 }
 
 .btn-download {
-  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  background: var(--green-600);
   color: white;
 }
 
@@ -584,7 +584,7 @@
 }
 
 .btn-export {
-  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  background: var(--green-600);
   color: white;
 }
 
@@ -780,7 +780,7 @@
 .section-header h3 {
   margin: 0;
   font-size: 18px;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -790,7 +790,7 @@
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   font-size: 14px;
   background: #f8f9fa;
   border-radius: 8px;
@@ -815,7 +815,7 @@
 
 .eficiencia-label {
   font-size: 14px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   margin-top: 10px;
 }
 
@@ -924,7 +924,7 @@
 
 .modal-info-label {
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 600;
@@ -932,7 +932,7 @@
 
 .modal-info-value {
   font-size: 15px;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -965,7 +965,7 @@
 }
 
 .btn-secondary:hover {
-  background: #7f8c8d;
+  background: var(--text-secondary);
 }
 
 @media (max-width: 600px) {
@@ -1128,12 +1128,12 @@
 .mobile-card-number {
   font-size: 16px;
   font-weight: 700;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .mobile-card-date {
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
 }
 
 .mobile-card-status {
@@ -1160,7 +1160,7 @@
 
 .mobile-card-label {
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.3px;
   flex-shrink: 0;
@@ -1168,7 +1168,7 @@
 
 .mobile-card-value {
   font-size: 14px;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 500;
   text-align: right;
   max-width: 65%;
@@ -1219,7 +1219,7 @@
 .mobile-empty {
   text-align: center;
   padding: 40px 20px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);

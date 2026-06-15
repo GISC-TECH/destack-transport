@@ -22,7 +22,7 @@
   border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.3s;
 }
@@ -134,7 +134,7 @@
 .form-divider span {
   font-size: 12px;
   font-weight: 600;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -171,13 +171,13 @@
 
 .parametro-nome {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 14px;
 }
 
 .parametro-desc {
   font-size: 13px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
 }
 
 .parametro-valor input {
@@ -196,7 +196,7 @@
 
 .parametro-valor input:disabled {
   background: #f1f5f9;
-  color: #94a3b8;
+  color: var(--text-muted);
   cursor: not-allowed;
   border-color: #e2e8f0;
 }

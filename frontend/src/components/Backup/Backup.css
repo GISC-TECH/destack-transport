@@ -9,12 +9,12 @@
 .backup-page .header-title h1 {
   margin: 0;
   font-size: 24px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .backup-page .header-title p {
   margin: 5px 0 0;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .backup-page .demo-badge {
@@ -113,12 +113,12 @@
 .action-card h3 {
   margin: 0 0 10px;
   font-size: 17px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .action-card p {
   margin: 0 0 18px;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -186,7 +186,7 @@
 .backups-section h2 {
   margin: 0 0 18px;
   font-size: 17px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .table-container {
@@ -213,7 +213,7 @@
 .data-table th {
   background: #f8fafc;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
   font-size: 12px;
   text-transform: uppercase;
 }
@@ -254,12 +254,12 @@
 
 .btn-download {
   background: #f1f5f9;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .btn-download:hover {
   background: #e2e8f0;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 /* Info Section */
@@ -273,7 +273,7 @@
 .backup-info h3 {
   margin: 0 0 14px;
   font-size: 15px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .backup-info ul {
@@ -283,7 +283,7 @@
 
 .backup-info li {
   margin-bottom: 8px;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
