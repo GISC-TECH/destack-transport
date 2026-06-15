@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import logo from '../../assets/images/logo.svg';
 import './Auth.css';
 
 function Login() {
@@ -45,11 +46,7 @@ function Login() {
 
         <div className="auth-brand-top">
           <div className="auth-logo">
-            <span className="auth-logo-tile" aria-hidden="true">D</span>
-            <span className="auth-logo-text">
-              <strong>Destack</strong>
-              <small>Transport ERP</small>
-            </span>
+            <img src={logo} alt="Destack Transporte" className="auth-logo-img" />
           </div>
 
           <h2 className="auth-headline">Gestão completa de transporte e logística</h2>

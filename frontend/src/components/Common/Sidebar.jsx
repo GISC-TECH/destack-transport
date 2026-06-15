@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import logo from '../../assets/images/logo.svg';
 import './Sidebar.css';
 
 function Sidebar() {
@@ -191,13 +192,7 @@ function Sidebar() {
           </svg>
         </button>
         <div className="mobile-brand">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="1" y="3" width="15" height="13"></rect>
-            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-            <circle cx="18.5" cy="18.5" r="2.5"></circle>
-          </svg>
-          <span>Destack Transport</span>
+          <img src={logo} alt="Destack Transporte" className="mobile-logo" />
         </div>
         <div className="mobile-user">
           <button className="mobile-logout" onClick={handleLogout} aria-label="Sair do sistema">
@@ -224,14 +219,8 @@ function Sidebar() {
       >
         {/* Brand */}
         <div className="sidebar-brand">
-          <Link to="/dashboard">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="1" y="3" width="15" height="13"></rect>
-              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-              <circle cx="5.5" cy="18.5" r="2.5"></circle>
-              <circle cx="18.5" cy="18.5" r="2.5"></circle>
-            </svg>
-            <span className="brand-text">Destack Transport</span>
+          <Link to="/dashboard" aria-label="Destack Transporte">
+            <img src={logo} alt="Destack Transporte" className="sidebar-logo" />
           </Link>
           <button
             className="collapse-btn"

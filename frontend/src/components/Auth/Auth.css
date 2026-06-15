@@ -68,6 +68,13 @@
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
 }
 
+/* Logo oficial — renderizada em branco sobre o painel verde escuro */
+.auth-logo-img {
+  height: 56px;
+  width: auto;
+  filter: brightness(0) invert(1);
+}
+
 .auth-logo-text {
   display: flex;
   flex-direction: column;

@@ -72,6 +72,12 @@
   stroke: var(--sidebar-active);
 }
 
+.mobile-logo {
+  height: 28px;
+  width: auto;
+  filter: brightness(0) invert(1);
+}
+
 .mobile-user {
   display: flex;
   align-items: center;
@@ -174,6 +180,24 @@
   height: 32px;
   min-width: 32px;
   stroke: var(--sidebar-active);
+}
+
+/* Logo oficial na sidebar — branca sobre o fundo verde escuro */
+.sidebar-logo {
+  height: 36px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
+  filter: brightness(0) invert(1);
+  transition: width var(--transition-speed);
+}
+
+/* Colapsada: recorta a logo para mostrar só o símbolo à esquerda */
+.sidebar.collapsed .sidebar-logo {
+  width: 26px;
+  min-width: 26px;
+  object-fit: cover;
 }
 
 .brand-text {
