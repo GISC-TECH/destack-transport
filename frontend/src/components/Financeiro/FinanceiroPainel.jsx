@@ -10,16 +10,16 @@ import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
 import './Financeiro.css';
 
-// Cores para graficos
+// Cores para graficos — paleta da marca (verde + dourado)
 const COLORS = {
-  cif: '#0d9488',
-  fob: '#f39c12',
-  faturamento: '#27ae60',
-  custos: '#e74c3c',
-  lucro: '#C8A951'
+  cif: '#40916C',
+  fob: '#C8A951',
+  faturamento: '#2D6A4F',
+  custos: '#E5484D',
+  lucro: '#B8941F'
 };
 
-const PIE_COLORS = ['#0d9488', '#f39c12', '#27ae60', '#e74c3c', '#C8A951'];
+const PIE_COLORS = ['#40916C', '#C8A951', '#2D6A4F', '#95D5B2', '#B8941F'];
 
 function FinanceiroPainel() {
   const [dados, setDados] = useState(null);

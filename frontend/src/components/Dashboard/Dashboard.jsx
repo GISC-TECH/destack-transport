@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import './Dashboard.css';
 
-const COLORS = ['#0d9488', '#e74c3c', '#2ecc71', '#f39c12', '#C8A951', '#1abc9c'];
+const COLORS = ['#40916C', '#C8A951', '#2D6A4F', '#95D5B2', '#B8941F', '#74C69D'];
 
 function Dashboard() {
   // useMemo ensures defaultDates is stable across renders

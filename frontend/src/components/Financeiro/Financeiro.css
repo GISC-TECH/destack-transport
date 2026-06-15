@@ -65,23 +65,26 @@
 }
 
 .fin-kpi-card {
-  background: white;
-  border-radius: 16px;
-  padding: 25px;
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 22px 24px;
   display: flex;
   align-items: flex-start;
-  gap: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: transform 0.3s, box-shadow 0.3s;
+  gap: 16px;
+  border: 1px solid var(--border-light);
+  box-shadow: none;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
 }
 
 .fin-kpi-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+  border-color: var(--border-color);
+  box-shadow: 0 10px 24px -14px rgba(16, 51, 31, 0.22);
 }
 
 .fin-kpi-card.principal {
-  background: linear-gradient(135deg, #1f9e5f 0%, #136b42 100%);
+  background: linear-gradient(150deg, var(--green-700), var(--green-900));
+  border-color: transparent;
   color: white;
 }
 
@@ -99,30 +102,35 @@
 }
 
 .fin-kpi-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: #f0f4f8;
+  background: rgba(64, 145, 108, 0.10);
   color: var(--primary-color);
 }
 
+.fin-kpi-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
 .fin-kpi-icon.cif {
-  background: #d6efe6;
-  color: var(--info-color);
+  background: rgba(64, 145, 108, 0.10);
+  color: var(--primary-color);
 }
 
 .fin-kpi-icon.fob {
-  background: #fff3e0;
-  color: #f57c00;
+  background: rgba(200, 169, 81, 0.16);
+  color: var(--gold-600);
 }
 
 .fin-kpi-icon.ticket {
-  background: #e8f5e9;
-  color: #388e3c;
+  background: rgba(45, 106, 79, 0.10);
+  color: var(--green-700);
 }
 
 .fin-kpi-content {
@@ -132,16 +140,19 @@
 }
 
 .fin-kpi-label {
-  font-size: 13px;
-  color: #7f8c8d;
+  font-size: 11.5px;
+  color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
 }
 
 .fin-kpi-value {
-  font-size: 26px;
+  font-family: var(--font-display);
+  font-size: 28px;
   font-weight: 700;
-  color: #2c3e50;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
   line-height: 1.2;
 }
 

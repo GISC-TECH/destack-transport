@@ -67,23 +67,23 @@
 }
 
 .geo-kpi-icon.blue {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  color: white;
+  background: rgba(64, 145, 108, 0.10);
+  color: var(--primary-color);
 }
 
 .geo-kpi-icon.green {
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-  color: white;
+  background: rgba(21, 166, 107, 0.12);
+  color: var(--success-color);
 }
 
 .geo-kpi-icon.orange {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-  color: white;
+  background: rgba(200, 169, 81, 0.16);
+  color: var(--gold-600);
 }
 
 .geo-kpi-icon.purple {
-  background: linear-gradient(135deg, var(--info-color) 0%, #0a6f64 100%);
-  color: white;
+  background: rgba(45, 106, 79, 0.10);
+  color: var(--green-700);
 }
 
 .geo-kpi-content {

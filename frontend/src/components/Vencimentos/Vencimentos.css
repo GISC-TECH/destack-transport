@@ -114,23 +114,23 @@
 }
 
 .vencimentos-summary .summary-icon.vencidos {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  color: white;
+  background: rgba(229, 72, 77, 0.10);
+  color: var(--danger-color);
 }
 
 .vencimentos-summary .summary-icon.urgentes {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-  color: white;
+  background: rgba(200, 169, 81, 0.16);
+  color: var(--gold-600);
 }
 
 .vencimentos-summary .summary-icon.motoristas {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  color: white;
+  background: rgba(64, 145, 108, 0.10);
+  color: var(--primary-color);
 }
 
 .vencimentos-summary .summary-icon.veiculos {
-  background: linear-gradient(135deg, var(--info-color) 0%, #0a6f64 100%);
-  color: white;
+  background: rgba(45, 106, 79, 0.10);
+  color: var(--green-700);
 }
 
 .vencimentos-summary .summary-info {
