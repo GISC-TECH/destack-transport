@@ -76,6 +76,39 @@ def safe_get(data_dict, key, default=None):
         
     return val if val is not None else default
 
+
+def infer_event_type_from_root(root_tag_no_ns, content):
+    """Classifica eventos mesmo quando a extração via xmltodict falha por namespace/layout."""
+    if not root_tag_no_ns:
+        return None, False
+
+    root_lower = root_tag_no_ns.lower()
+    if root_lower not in (
+        'proceventocte',
+        'proceventomdfe',
+        'reteventocte',
+        'reteventomdfe',
+        'eventocte',
+        'eventomdfe',
+    ):
+        return None, False
+
+    if root_lower.startswith('procevento'):
+        prefix = 'PROC_EVENTO'
+        is_retorno_confirmado = True
+    elif root_lower.startswith('retevento'):
+        prefix = 'RET_EVENTO'
+        is_retorno_confirmado = True
+    else:
+        prefix = 'EVENTO'
+        is_retorno_confirmado = False
+
+    doc_tipo = 'CT' if 'cte' in root_lower else 'MDFE'
+    match_tp_evento = re.search(r'<tpEvento>\s*([^<\s]+)\s*</tpEvento>', content, re.IGNORECASE)
+    tp_evento = match_tp_evento.group(1) if match_tp_evento else 'GENERICO'
+    return f'{prefix}_{doc_tipo}_{tp_evento}', is_retorno_confirmado
+
+
 def to_decimal(value, default=Decimal('0.00')):
     if value is None: return default
     try: return Decimal(str(value).strip().replace(',', '.'))
@@ -313,6 +346,18 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
             if not chave_doc: chave_doc = _get_chave_from_filename(filename)
             if chave_doc and ("ret" in filename.lower() or "procevento" in filename.lower()) and tipo_xml == "DESCONHECIDO":
                 is_retorno_confirmado = True; tipo_xml = "RET_EVENTO_NOME"
+
+        if tipo_xml == "DESCONHECIDO":
+            inferred_tipo, inferred_is_ret = infer_event_type_from_root(root_tag_no_ns, content)
+            if inferred_tipo:
+                tipo_xml = inferred_tipo
+                is_retorno_confirmado = inferred_is_ret
+                logger.info(
+                    "INFO (Identificar-FallbackEvento): Arq %s (root: %s) classificado como %s.",
+                    filename,
+                    root_tag_no_ns,
+                    tipo_xml,
+                )
         
         if tipo_xml == "DESCONHECIDO" and chave_doc:
             logger.warning(

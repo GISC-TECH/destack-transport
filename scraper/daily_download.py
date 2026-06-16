@@ -136,6 +136,43 @@ def extract_chave_from_filename(filename: str):
     return match.group(1) if match else None
 
 
+def is_event_xml_file(file_path: str) -> bool:
+    """Identifica XML de evento, como cancelamento, CC-e ou retorno SEFAZ."""
+    filename = os.path.basename(file_path).lower()
+    if any(marker in filename for marker in ('_canc', 'procevento', 'retevento', 'evento')):
+        return True
+
+    try:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as xml_file:
+            sample = xml_file.read(4096).lower()
+    except OSError:
+        return False
+
+    return any(
+        marker in sample
+        for marker in (
+            '<proceventocte',
+            '<proceventomdfe',
+            '<reteventocte',
+            '<reteventomdfe',
+            '<eventocte',
+            '<eventomdfe',
+        )
+    )
+
+
+def sort_xml_upload_order(file_paths: list) -> list:
+    """Garante que XMLs principais sejam enviados antes dos eventos da mesma chave."""
+    def upload_order(file_path):
+        filename = os.path.basename(file_path).lower()
+        is_event = is_event_xml_file(file_path)
+        is_return = 'retevento' in filename
+        chave = extract_chave_from_filename(filename) or ''
+        return (chave, 2 if is_return else 1 if is_event else 0, filename)
+
+    return sorted(file_paths, key=upload_order)
+
+
 def upload_xmls_to_api(folder_path: str) -> dict:
     """
     Envia XMLs novos de uma pasta para a API do Destack.
@@ -181,19 +218,26 @@ def upload_xmls_to_api(folder_path: str) -> dict:
     existing_chaves = check_result['existing']
     missing_chaves = check_result['missing']
 
-    # Fase 3: Filtrar - separar novos dos existentes
+    # Fase 3: Filtrar - separar novos dos existentes.
+    # Eventos devem ser enviados mesmo quando a chave principal ja existe: cancelamentos
+    # podem chegar depois da CT-e/MDF-e original.
     files_to_upload = []
     for chave in missing_chaves:
         files_to_upload.extend(files_with_chaves[chave])
 
     skipped_count = 0
     for chave in existing_chaves:
-        skipped_count += len(files_with_chaves[chave])
+        for xml_path in files_with_chaves[chave]:
+            if is_event_xml_file(xml_path):
+                files_to_upload.append(xml_path)
+            else:
+                skipped_count += 1
 
     result['skipped'] = skipped_count
 
     # Arquivos sem chave sempre são enviados (a API decidirá)
     files_to_upload.extend(files_without_chaves)
+    files_to_upload = sort_xml_upload_order(files_to_upload)
 
     logger.info(
         f"Pré-verificação: {skipped_count} XMLs ignorados (já existem), "
