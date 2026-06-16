@@ -781,9 +781,12 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         # Usa os mesmos filtros do queryset base, mas filtra apenas não pagos
         queryset = self.get_queryset().filter(pago=False)
 
-        # Exclui cancelados
+        # Exclui CT-es cancelados (modelo de cancelamento consolidado ou evento confirmado sem consolidação dedicada)
         queryset = queryset.filter(
             Q(cancelamento__isnull=True) | ~Q(cancelamento__c_stat=135)
+        ).exclude(
+            eventos__tipo_evento='110111',
+            eventos__confirmado=True,
         )
 
         # Guarda queryset base para obter listas de filtros
