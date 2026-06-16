@@ -97,11 +97,15 @@ class DestackClient:
                     timeout=60
                 )
 
-            if response.status_code in [200, 201]:
+            if response.status_code in [200, 201, 202]:
                 result = response.json()
-                logger.info(f"XML processado com sucesso: {filename}")
+                if response.status_code == 202:
+                    logger.warning(f"XML recebido mas nao efetivado: {filename} - {result}")
+                else:
+                    logger.info(f"XML processado com sucesso: {filename}")
                 return {
                     'success': True,
+                    'accepted_without_effect': response.status_code == 202,
                     'data': result,
                     'filename': filename
                 }
