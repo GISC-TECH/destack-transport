@@ -8,33 +8,55 @@
   --sidebar-collapsed-width: 70px;
   --mobile-header-height: 60px;
 
-  /* Colors */
-  --content-bg: #f5f7fa;
-  --card-bg: #ffffff;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  --border-color: #e5e7eb;
-  --border-light: #f3f4f6;
+  /* Escala verde (Emerald) — do protótipo Destack v2 */
+  --green-900: #10331F;
+  --green-800: #1B4332;
+  --green-700: #2D6A4F;
+  --green-600: #40916C;
+  --green-500: #52B788;
+  --green-400: #74C69D;
+  --green-300: #95D5B2;
+  --green-200: #D8F3DC;
+  --green-100: #F0FFF4;
 
-  /* Brand Colors */
-  --primary-color: #3498db;
-  --primary-dark: #2980b9;
-  --primary-light: rgba(52, 152, 219, 0.1);
-  --success-color: #27ae60;
-  --warning-color: #f39c12;
-  --danger-color: #e74c3c;
-  --info-color: #3498db;
+  /* Acento dourado — assinatura do protótipo */
+  --gold-600: #B8941F;
+  --gold-500: #C8A951;
+  --gold-400: #D4BC6A;
+  --gold-200: #EFE3B8;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  /* Colors — neutros do protótipo */
+  --content-bg: #F1F5F3;
+  --card-bg: #FFFFFF;
+  --text-primary: #15211B;
+  --text-secondary: #6B7B73;
+  --text-muted: #9aa8a0;
+  --border-color: #E4EAE6;
+  --border-light: #EEF3F0;
+
+  /* Brand Colors — verde Destack */
+  --primary-color: #40916C;
+  --primary-dark: #2D6A4F;
+  --primary-light: rgba(64, 145, 108, 0.1);
+  --success-color: #15A66B;
+  --warning-color: #F59E0B;
+  --danger-color: #E5484D;
+  --info-color: #3B82F6;
+
+  /* Tipografia (do protótipo) */
+  --font-display: 'Bricolage Grotesque', 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Manrope', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Shadows — verde-tingidas, suaves (protótipo) */
+  --shadow-sm: 0 1px 2px rgba(16, 51, 31, 0.06), 0 1px 3px rgba(16, 51, 31, 0.05);
+  --shadow-md: 0 4px 14px rgba(16, 51, 31, 0.08), 0 2px 6px rgba(16, 51, 31, 0.05);
+  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.18), 0 10px 30px rgba(16, 51, 31, 0.12);
 
   /* Border Radius */
   --radius-sm: 6px;
   --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-lg: 16px;
   --radius-xl: 20px;
 
   /* Transitions */
@@ -54,12 +76,32 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-body);
   background-color: var(--content-bg);
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Títulos com a fonte de display da marca (Bricolage Grotesque) */
+h1, h2, h3, h4,
+.page-header h1,
+.card-header h2,
+.card-header h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+/* Números grandes (KPIs/valores) — display + tabular, como no protótipo */
+.kpi-value,
+.kpi-value-small,
+.fin-kpi-value,
+.stat-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ========================================
@@ -193,7 +235,7 @@ body {
 .select-filter:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+  box-shadow: 0 0 0 3px rgba(39, 164, 106, 0.15);
 }
 
 .form-control::placeholder,
@@ -219,17 +261,21 @@ select.select-filter {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: 7px;
+  padding: 10px 18px;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: inherit;
+  border-radius: 11px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: var(--font-body);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   text-decoration: none;
   white-space: nowrap;
+}
+
+.btn:active {
+  transform: scale(0.98);
 }
 
 .btn svg {
@@ -238,14 +284,34 @@ select.select-filter {
 }
 
 .btn-primary {
-  background: var(--primary-color);
-  color: white;
+  background: linear-gradient(135deg, var(--green-600), var(--green-700));
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(45, 106, 79, 0.3);
 }
 
 .btn-primary:hover {
-  background: #2980b9;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 10px 22px -6px rgba(45, 106, 79, 0.45);
+}
+
+/* Variantes do protótipo */
+.btn-ghost {
+  background: var(--green-200);
+  color: var(--green-800);
+}
+
+.btn-ghost:hover {
+  background: var(--green-300);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+  color: #3a2e08;
+}
+
+.btn-gold:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px -6px rgba(184, 148, 31, 0.4);
 }
 
 .btn-secondary {
@@ -318,42 +384,89 @@ select.select-filter {
 }
 
 /* ========================================
+   PILLS / STATUS (padrão do protótipo)
+   ======================================== */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.pill.ok,
+.pill.success,
+.pill.autorizado,
+.pill.pago,
+.pill.ativo {
+  background: var(--green-200);
+  color: #15663F;
+}
+
+.pill.pend,
+.pill.pendente,
+.pill.warning {
+  background: #FFF4E0;
+  color: #A86B0E;
+}
+
+.pill.canc,
+.pill.cancelado,
+.pill.danger,
+.pill.erro {
+  background: #FBE6E7;
+  color: #A8282C;
+}
+
+.pill.rota,
+.pill.info,
+.pill.transito {
+  background: #E0EDFB;
+  color: #1E5BA8;
+}
+
+/* ========================================
    TABLES
    ======================================== */
 
 .table-container {
   overflow-x: auto;
   background-color: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 th, td {
-  padding: 14px 18px;
   text-align: left;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-color);
 }
 
 th {
-  background: #f9fafb;
-  font-weight: 600;
+  background: var(--card-bg);
+  padding: 12px 16px;
+  font-weight: 800;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
   white-space: nowrap;
   position: sticky;
   top: 0;
 }
 
 td {
+  padding: 13px 16px;
   color: var(--text-primary);
 }
 
@@ -362,7 +475,7 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: #f9fafb;
+  background: #F7FAF8;
 }
 
 tbody tr:last-child td {
@@ -442,12 +555,12 @@ tbody tr:last-child td {
 
 .badge-info,
 .badge-cif {
-  background: rgba(52, 152, 219, 0.12);
-  color: #2471a3;
+  background: rgba(39, 164, 106, 0.12);
+  color: var(--primary-dark);
 }
 
 .badge-fob {
-  background: rgba(155, 89, 182, 0.12);
+  background: rgba(13, 148, 136, 0.12);
   color: #7d3c98;
 }
 
@@ -591,9 +704,9 @@ tbody tr:last-child td {
 }
 
 .alert-info {
-  background: rgba(52, 152, 219, 0.1);
-  border: 1px solid rgba(52, 152, 219, 0.3);
-  color: #3498db;
+  background: rgba(39, 164, 106, 0.1);
+  border: 1px solid rgba(39, 164, 106, 0.3);
+  color: var(--primary-color);
 }
 
 /* ========================================
@@ -981,23 +1094,23 @@ tbody tr:last-child td {
 
 /* Visualizar - Roxo */
 .btn-action.btn-view {
-  background: rgba(155, 89, 182, 0.12);
-  color: #8e44ad;
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--info-color);
 }
 
 .btn-action.btn-view:hover {
-  background: #8e44ad;
+  background: var(--info-color);
   color: white;
 }
 
 /* Editar - Azul */
 .btn-action.btn-edit {
-  background: rgba(52, 152, 219, 0.12);
-  color: #2980b9;
+  background: rgba(39, 164, 106, 0.12);
+  color: var(--primary-dark);
 }
 
 .btn-action.btn-edit:hover {
-  background: #2980b9;
+  background: var(--primary-dark);
   color: white;
 }
 
@@ -1069,23 +1182,23 @@ tbody tr:last-child td {
 
 /* Comprovante/Cupom - Roxo */
 .btn-action.btn-receipt {
-  background: rgba(142, 68, 173, 0.12);
-  color: #9b59b6;
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--info-color);
 }
 
 .btn-action.btn-receipt:hover {
-  background: #9b59b6;
+  background: var(--info-color);
   color: white;
 }
 
 /* Info - Azul claro */
 .btn-action.btn-info {
-  background: rgba(52, 152, 219, 0.12);
-  color: #3498db;
+  background: rgba(39, 164, 106, 0.12);
+  color: var(--primary-color);
 }
 
 .btn-action.btn-info:hover {
-  background: #3498db;
+  background: var(--primary-color);
   color: white;
 }
 

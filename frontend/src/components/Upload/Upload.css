@@ -22,13 +22,13 @@
 }
 
 .upload-dropzone:hover {
-  border-color: #3498db;
+  border-color: var(--primary-color);
   background: #f8fbfe;
 }
 
 .upload-dropzone.drag-over {
-  border-color: #3498db;
-  background: #ebf5fb;
+  border-color: var(--primary-color);
+  background: #e9f7ef;
   transform: scale(1.02);
 }
 
@@ -40,7 +40,7 @@
 }
 
 .dropzone-icon {
-  color: #3498db;
+  color: var(--primary-color);
   opacity: 0.7;
 }
 

@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import './Manutencao.css';
 
-const COLORS = ['#3498db', '#f39c12', '#27ae60', '#9b59b6', '#e74c3c'];
+const COLORS = ['#0d9488', '#f39c12', '#27ae60', '#C8A951', '#e74c3c'];
 
 function ManutencaoList() {
   const toast = useToast();
@@ -250,7 +250,7 @@ function ManutencaoList() {
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip />
                   <Legend />
-                  <Area type="monotone" dataKey="preventiva" stackId="1" stroke="#3498db" fill="#3498db" fillOpacity={0.6} name="Preventiva" />
+                  <Area type="monotone" dataKey="preventiva" stackId="1" stroke="#0d9488" fill="#0d9488" fillOpacity={0.6} name="Preventiva" />
                   <Area type="monotone" dataKey="corretiva" stackId="1" stroke="#f39c12" fill="#f39c12" fillOpacity={0.6} name="Corretiva" />
                   <Area type="monotone" dataKey="preditiva" stackId="1" stroke="#27ae60" fill="#27ae60" fillOpacity={0.6} name="Preditiva" />
                 </AreaChart>
@@ -268,7 +268,7 @@ function ManutencaoList() {
                   <XAxis dataKey="tipo" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
                   <Tooltip formatter={(value) => formatCurrency(value)} />
-                  <Bar dataKey="custo" fill="#9b59b6" radius={[4, 4, 0, 0]} name="Custo Total" />
+                  <Bar dataKey="custo" fill="#C8A951" radius={[4, 4, 0, 0]} name="Custo Total" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -283,7 +283,7 @@ function ManutencaoList() {
                   <YAxis dataKey="placa" type="category" tick={{ fontSize: 11 }} width={70} />
                   <Tooltip formatter={(value, name) => name === 'custo' ? formatCurrency(value) : value} />
                   <Legend />
-                  <Bar dataKey="manutencoes" fill="#3498db" radius={[0, 4, 4, 0]} name="Manutenções" />
+                  <Bar dataKey="manutencoes" fill="#0d9488" radius={[0, 4, 4, 0]} name="Manutenções" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -184,15 +184,15 @@
 
 /* Toast Types - Info */
 .toast-info {
-  border-left: 4px solid #3498db;
+  border-left: 4px solid var(--primary-color);
 }
 
 .toast-info .toast-icon {
-  color: #3498db;
+  color: var(--primary-color);
 }
 
 .toast-info .toast-progress-bar {
-  background: #3498db;
+  background: var(--primary-color);
 }
 
 /* Responsive */

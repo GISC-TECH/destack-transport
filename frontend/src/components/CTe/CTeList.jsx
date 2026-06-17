@@ -12,7 +12,7 @@ import {
 import './CTe.css';
 
 // Cores para os graficos
-const COLORS = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6'];
+const COLORS = ['#0d9488', '#2ecc71', '#e74c3c', '#f39c12', '#C8A951'];
 
 function CTeList() {
   const toast = useToast();
@@ -190,7 +190,7 @@ function CTeList() {
       name: item.label || 'N/A',
       value: item.qtd || 0,
       valor: item.valor || 0,
-      color: index === 0 ? '#3498db' : '#e67e22'
+      color: index === 0 ? '#0d9488' : '#e67e22'
     }));
   };
 
@@ -328,7 +328,7 @@ function CTeList() {
                 <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
                 <YAxis type="category" dataKey="nome" tick={{ fontSize: 11 }} width={100} />
                 <Tooltip formatter={(value) => formatCurrency(value)} />
-                <Bar dataKey="valor" fill="#3498db" radius={[0, 4, 4, 0]} name="Valor" />
+                <Bar dataKey="valor" fill="#0d9488" radius={[0, 4, 4, 0]} name="Valor" />
               </BarChart>
             </ResponsiveContainer>
           ) : (

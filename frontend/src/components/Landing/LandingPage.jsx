@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import logoSvg from '../../assets/images/logo.svg';
 import logoLarge from '../../assets/images/logo-large.png';
@@ -8,6 +8,7 @@ import './LandingPage.css';
 function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const revealRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,6 +16,24 @@ function LandingPage() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll reveal — adiciona .in-view aos elementos [data-reveal] quando entram na viewport
+  useEffect(() => {
+    const elements = document.querySelectorAll('[data-reveal]');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
+    );
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   const scrollToSection = (e, sectionId) => {
@@ -31,43 +50,58 @@ function LandingPage() {
     }
   };
 
+  const heroStats = [
+    { value: '15+', label: 'Anos de estrada' },
+    { value: '24/7', label: 'Monitoramento' },
+    { value: '100%', label: 'Carga segura' },
+    { value: 'Nacional', label: 'Cobertura' }
+  ];
+
   const services = [
     {
       icon: 'radiation',
       color: 'green',
       title: 'Transporte de Produtos Perigosos',
-      items: ['Classe 3 - Liquidos Inflamaveis', 'Classe 8 - Corrosivos', 'Equipamentos com protecao ATEX', 'Certificacao INMETRO']
+      items: ['Classe 3 — Líquidos Inflamáveis', 'Classe 8 — Corrosivos', 'Equipamentos com proteção ATEX', 'Certificação INMETRO']
     },
     {
       icon: 'satellite',
       color: 'blue',
       title: 'Monitoramento 24/7',
-      items: ['Rastreamento via GPS', 'Sensores de temperatura', 'Relatorios de viagem online', 'Notificacoes em tempo real']
+      items: ['Rastreamento via GPS', 'Sensores de temperatura', 'Relatórios de viagem online', 'Notificações em tempo real']
     },
     {
       icon: 'shield',
       color: 'orange',
-      title: 'Seguranca Integrada',
-      items: ['Escolta armada', 'Seguro de carga total', 'Treinamento NR-20', 'Kit emergencia quimica']
+      title: 'Segurança Integrada',
+      items: ['Escolta armada', 'Seguro de carga total', 'Treinamento NR-20', 'Kit de emergência química']
     },
     {
       icon: 'warehouse',
       color: 'purple',
       title: 'Armazenagem Controlada',
-      items: ['Armazens climatizados', 'Areas classificadas', 'Estoque inteligente', 'Certificacao ISO 9001']
+      items: ['Armazéns climatizados', 'Áreas classificadas', 'Estoque inteligente', 'Certificação ISO 9001']
     },
     {
       icon: 'globe',
       color: 'teal',
       title: 'Transporte Internacional',
-      items: ['Licenca OEA', 'Despacho aduaneiro', 'Documentacao integrada', 'Cobertura continental']
+      items: ['Licença OEA', 'Despacho aduaneiro', 'Documentação integrada', 'Cobertura continental']
     },
     {
       icon: 'headset',
       color: 'red',
-      title: 'Suporte Tecnico',
-      items: ['Engenheiros quimicos', 'Consultoria legal', 'Plantao 24h', 'Auditoria de processos']
+      title: 'Suporte Técnico',
+      items: ['Engenheiros químicos', 'Consultoria legal', 'Plantão 24h', 'Auditoria de processos']
     }
+  ];
+
+  const diferenciais = [
+    'Certificação completa para transporte de produtos perigosos',
+    'Frota modernizada com tecnologia Euro 6',
+    'Monitoramento 24/7 via satélite',
+    'Equipe treinada e certificada',
+    'Cobertura nacional e internacional'
   ];
 
   const getIconSvg = (icon) => {
@@ -124,7 +158,7 @@ function LandingPage() {
   };
 
   return (
-    <div className="landing-page">
+    <div className="landing-page" ref={revealRef}>
       {/* Navbar */}
       <nav className={`landing-navbar ${scrolled ? 'scrolled' : ''}`}>
         <div className="navbar-container">
@@ -136,16 +170,16 @@ function LandingPage() {
           {/* Desktop Menu */}
           <div className="navbar-menu desktop-menu">
             <a href="#sobre" onClick={(e) => scrollToSection(e, 'sobre')}>Sobre</a>
-            <a href="#servicos" onClick={(e) => scrollToSection(e, 'servicos')}>Servicos</a>
+            <a href="#servicos" onClick={(e) => scrollToSection(e, 'servicos')}>Serviços</a>
             <a href="#contato" onClick={(e) => scrollToSection(e, 'contato')}>Contato</a>
-            <Link to="/login" className="btn-admin">Area Adm</Link>
+            <Link to="/login" className="btn-admin">Área Adm</Link>
           </div>
 
           {/* Mobile Menu Button */}
           <button
             className="mobile-menu-btn"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
+            aria-label="Abrir menu"
           >
             {mobileMenuOpen ? (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
@@ -165,28 +199,61 @@ function LandingPage() {
         {/* Mobile Menu */}
         <div className={`mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>
           <a href="#sobre" onClick={(e) => scrollToSection(e, 'sobre')}>Sobre</a>
-          <a href="#servicos" onClick={(e) => scrollToSection(e, 'servicos')}>Servicos</a>
+          <a href="#servicos" onClick={(e) => scrollToSection(e, 'servicos')}>Serviços</a>
           <a href="#contato" onClick={(e) => scrollToSection(e, 'contato')}>Contato</a>
-          <Link to="/login" className="btn-admin">Area Adm</Link>
+          <Link to="/login" className="btn-admin">Área Adm</Link>
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-background">
-          <img src={truckImg} alt="Caminhao Euro 6" className="hero-image" />
+          <img src={truckImg} alt="Caminhão Euro 6 da Destack Transportes" className="hero-image" />
           <div className="hero-overlay"></div>
+          <div className="hero-grid"></div>
+          <span className="hazard-diamond diamond-1" aria-hidden="true"></span>
+          <span className="hazard-diamond diamond-2" aria-hidden="true"></span>
+          <span className="hazard-diamond diamond-3" aria-hidden="true"></span>
         </div>
 
         <div className="hero-content">
-          <h1>Transporte Especializado<br/>em Produtos Perigosos</h1>
+          <span className="hero-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Certificação ADR · NR-20 · INMETRO
+          </span>
+          <h1>
+            Transporte especializado em<br/>
+            <span className="hero-highlight">produtos perigosos</span>
+          </h1>
           <p>
-            Tecnologia avancada e seguranca maxima para cargas sensiveis.
-            Sua carga entregue com a excelencia que voce precisa.
+            Tecnologia avançada e segurança máxima para cargas sensíveis.
+            Sua carga entregue com a excelência que a sua operação exige.
           </p>
-          <a href="#contato" onClick={(e) => scrollToSection(e, 'contato')} className="btn-cta">
-            Solicitar Orcamento
-          </a>
+          <div className="hero-actions">
+            <a href="#contato" onClick={(e) => scrollToSection(e, 'contato')} className="btn-cta">
+              Solicitar Orçamento
+            </a>
+            <a href="#servicos" onClick={(e) => scrollToSection(e, 'servicos')} className="btn-ghost">
+              Conheça os serviços
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+          </div>
+
+          <div className="hero-stats">
+            {heroStats.map((stat, idx) => (
+              <div className="hero-stat" key={idx}>
+                <strong>{stat.value}</strong>
+                <span>{stat.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -194,66 +261,41 @@ function LandingPage() {
       <section id="sobre" className="sobre-section">
         <div className="section-container">
           <div className="sobre-grid">
-            <div className="sobre-text">
+            <div className="sobre-text" data-reveal>
+              <span className="section-eyebrow">Quem somos</span>
               <h2>Destack Transportes</h2>
               <p className="lead">
-                Especialistas em transporte de produtos perigosos com mais de 15 anos de experiencia no mercado brasileiro.
+                Especialistas em transporte de produtos perigosos com mais de 15 anos de experiência no mercado brasileiro.
               </p>
               <p>
-                Nossa empresa combina tecnologia de ponta, equipe altamente qualificada e os mais rigidos padroes de seguranca para garantir o transporte seguro e eficiente de cargas especializadas.
+                Nossa empresa combina tecnologia de ponta, equipe altamente qualificada e os mais rígidos padrões de segurança para garantir o transporte seguro e eficiente de cargas especializadas.
               </p>
 
               <div className="stats-grid">
                 <div className="stat-card">
                   <h3>15+</h3>
-                  <p>Anos de Experiencia</p>
+                  <p>Anos de Experiência</p>
                 </div>
                 <div className="stat-card">
                   <h3>100%</h3>
-                  <p>Seguranca Garantida</p>
+                  <p>Segurança Garantida</p>
                 </div>
               </div>
             </div>
 
-            <div className="sobre-card">
+            <div className="sobre-card" data-reveal>
               <div className="card-glow"></div>
               <h4>Por que escolher a Destack?</h4>
               <ul>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                    <polyline points="22 4 12 14.01 9 11.01"/>
-                  </svg>
-                  Certificacao completa para transporte de produtos perigosos
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                    <polyline points="22 4 12 14.01 9 11.01"/>
-                  </svg>
-                  Frota modernizada com tecnologia Euro 6
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                    <polyline points="22 4 12 14.01 9 11.01"/>
-                  </svg>
-                  Monitoramento 24/7 via satelite
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                    <polyline points="22 4 12 14.01 9 11.01"/>
-                  </svg>
-                  Equipe treinada e certificada
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                    <polyline points="22 4 12 14.01 9 11.01"/>
-                  </svg>
-                  Cobertura nacional e internacional
-                </li>
+                {diferenciais.map((item, idx) => (
+                  <li key={idx}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                      <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    {item}
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -263,13 +305,25 @@ function LandingPage() {
       {/* Servicos Section */}
       <section id="servicos" className="servicos-section">
         <div className="section-container">
-          <h2>Nossos Servicos</h2>
+          <div className="section-head" data-reveal>
+            <span className="section-eyebrow">O que fazemos</span>
+            <h2>Nossos Serviços</h2>
+            <p>Soluções completas para cada etapa do transporte de cargas críticas.</p>
+          </div>
 
           <div className="servicos-grid">
             {services.map((service, index) => (
-              <div key={index} className={`service-card service-${service.color}`}>
-                <div className={`service-icon icon-${service.color}`}>
-                  {getIconSvg(service.icon)}
+              <div
+                key={index}
+                className={`service-card service-${service.color}`}
+                data-reveal
+                style={{ transitionDelay: `${(index % 3) * 80}ms` }}
+              >
+                <div className="service-card-top">
+                  <div className={`service-icon icon-${service.color}`}>
+                    {getIconSvg(service.icon)}
+                  </div>
+                  <span className="service-index">{String(index + 1).padStart(2, '0')}</span>
                 </div>
                 <h3>{service.title}</h3>
                 <ul>
@@ -291,8 +345,14 @@ function LandingPage() {
       {/* Contato Section */}
       <section id="contato" className="contato-section">
         <div className="section-container">
+          <div className="section-head" data-reveal>
+            <span className="section-eyebrow">Fale conosco</span>
+            <h2>Vamos transportar a sua carga?</h2>
+            <p>Solicite um orçamento ou visite a nossa base em São Sebastião do Passé.</p>
+          </div>
+
           <div className="contato-grid">
-            <div className="map-container">
+            <div className="map-container" data-reveal>
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.032730292895!2d-38.46678768465429!3d-12.972851563346624!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x7161a0d9e3c99df%3A0x4d4a8e2b5c915c0!2sAv.%20Ernani%20de%20Oliveira%20Rocha%2C%202450%20-%20S%C3%A3o%20Sebasti%C3%A3o%20do%20Pass%C3%A9%20-%20BA%2C%2043850-000!5e0!3m2!1spt-BR!2sbr!4v1678905677974!5m2!1spt-BR!2sbr"
                 width="100%"
@@ -301,11 +361,11 @@ function LandingPage() {
                 allowFullScreen=""
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Localizacao Destack Transportes"
+                title="Localização Destack Transportes"
               ></iframe>
             </div>
 
-            <div className="contato-card">
+            <div className="contato-card" data-reveal>
               <h2>Entre em Contato</h2>
 
               <div className="contato-info">
@@ -317,9 +377,9 @@ function LandingPage() {
                     </svg>
                   </div>
                   <div>
-                    <h5>Endereco</h5>
+                    <h5>Endereço</h5>
                     <p>Avenida Ernani de Oliveira Rocha, 2450</p>
-                    <p>Sao Sebastiao do Passe - BA</p>
+                    <p>São Sebastião do Passé - BA</p>
                   </div>
                 </div>
 
@@ -340,7 +400,7 @@ function LandingPage() {
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                     <polyline points="22,6 12,13 2,6"/>
                   </svg>
-                  Enviar Email
+                  Enviar E-mail
                 </a>
               </div>
             </div>
@@ -354,7 +414,7 @@ function LandingPage() {
           <div className="footer-grid">
             <div className="footer-brand">
               <img src={logoLarge} alt="Logo Destack" className="footer-logo" />
-              <p>Transporte especializado em produtos perigosos, garantindo seguranca e eficiencia.</p>
+              <p>Transporte especializado em produtos perigosos, garantindo segurança e eficiência.</p>
             </div>
 
             <div className="footer-contact">
@@ -378,29 +438,29 @@ function LandingPage() {
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                     <circle cx="12" cy="10" r="3"/>
                   </svg>
-                  Sao Sebastiao do Passe - BA
+                  São Sebastião do Passé - BA
                 </li>
               </ul>
             </div>
 
             <div className="footer-certs">
-              <h5>Certificacoes</h5>
+              <h5>Certificações</h5>
               <ul>
                 <li>CNPJ: 24.633.774/0001-18</li>
-                <li>Licenca ANTT: 1234.5678.910</li>
+                <li>Licença ANTT: 1234.5678.910</li>
                 <li>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
                     <circle cx="12" cy="8" r="7"/>
                     <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
                   </svg>
-                  Certificacao ISO 9001
+                  Certificação ISO 9001
                 </li>
               </ul>
             </div>
           </div>
 
           <div className="footer-bottom">
-            <p>&copy; 2024 Destack Transportes. Todos os direitos reservados.</p>
+            <p>&copy; 2026 Destack Transportes. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

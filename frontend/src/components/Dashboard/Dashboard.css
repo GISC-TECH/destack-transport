@@ -32,7 +32,7 @@
 
 .periodo-btn.active {
   background: white;
-  color: #3498db;
+  color: var(--primary-color);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
@@ -83,19 +83,45 @@
 .kpi-card {
   background: white;
   border-radius: 16px;
-  padding: 25px;
+  padding: 24px;
   display: flex;
   align-items: flex-start;
-  gap: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: transform 0.3s, box-shadow 0.3s;
+  gap: 18px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   text-decoration: none;
   color: inherit;
 }
 
 .kpi-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+  transform: translateY(-3px);
+  border-color: transparent;
+  box-shadow: 0 12px 28px -10px rgba(16, 24, 40, 0.18);
+}
+
+/* Card de destaque (faturamento) — verde gradiente, como o "principal" do protótipo */
+.kpi-card.highlight {
+  background: linear-gradient(135deg, var(--green-600), var(--green-800));
+  border-color: transparent;
+  box-shadow: 0 14px 30px -12px rgba(16, 51, 31, 0.5);
+}
+
+.kpi-card.highlight .kpi-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.kpi-card.highlight .kpi-value {
+  color: #fff;
+}
+
+.kpi-card.highlight .kpi-change {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.kpi-card.highlight .kpi-icon {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
 }
 
 .kpi-icon {
@@ -108,34 +134,23 @@
   flex-shrink: 0;
 }
 
-.kpi-icon.blue {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  color: white;
-}
-
-.kpi-icon.green {
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-  color: white;
+/* Ícones tonais — fundo suave + ícone na cor (visual profissional, na marca) */
+.kpi-icon.blue,
+.kpi-icon.green,
+.kpi-icon.cif {
+  background: rgba(39, 164, 106, 0.12);
+  color: var(--primary-color);
 }
 
 .kpi-icon.purple {
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-  color: white;
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--info-color);
 }
 
-.kpi-icon.orange {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-  color: white;
-}
-
-.kpi-icon.cif {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  color: white;
-}
-
+.kpi-icon.orange,
 .kpi-icon.fob {
-  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-  color: white;
+  background: rgba(230, 126, 34, 0.14);
+  color: #d97417;
 }
 
 /* KPI Cards Small */
@@ -154,29 +169,25 @@
   flex-shrink: 0;
 }
 
-.kpi-icon-small.blue {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  color: white;
-}
-
+.kpi-icon-small.blue,
 .kpi-icon-small.green {
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-  color: white;
+  background: rgba(39, 164, 106, 0.12);
+  color: var(--primary-color);
 }
 
 .kpi-icon-small.purple {
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-  color: white;
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--info-color);
 }
 
 .kpi-icon-small.orange {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-  color: white;
+  background: rgba(230, 126, 34, 0.14);
+  color: #d97417;
 }
 
 .kpi-icon-small.red {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  color: white;
+  background: rgba(231, 76, 60, 0.12);
+  color: var(--danger-color);
 }
 
 .kpi-content-small {
@@ -315,7 +326,7 @@
 
 .alert-item.info {
   background: #d1ecf1;
-  border-left: 4px solid #3498db;
+  border-left: 4px solid var(--primary-color);
 }
 
 .alert-icon {
@@ -341,7 +352,7 @@
 }
 
 .alert-item.info .alert-icon {
-  background: #3498db;
+  background: var(--primary-color);
   color: white;
 }
 
@@ -386,7 +397,7 @@
 }
 
 .quick-action-btn:hover {
-  background: #3498db;
+  background: var(--primary-color);
   color: white;
 }
 
@@ -486,7 +497,7 @@
   margin-top: 15px;
   padding-top: 15px;
   border-top: 1px solid #f0f0f0;
-  color: #3498db;
+  color: var(--primary-color);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -786,7 +797,7 @@
 }
 
 .alert-summary-icon.info {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
 }
 
@@ -900,7 +911,7 @@
 /* Doc placa e data (MDF-e) */
 .doc-placa {
   font-weight: 600;
-  color: #9b59b6;
+  color: var(--info-color);
   font-size: 13px;
 }
 

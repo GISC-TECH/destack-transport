@@ -14,7 +14,7 @@ import '../CTe/CTe.css';
 // Cores para os graficos
 const STATUS_COLORS = {
   autorizado: '#27ae60',
-  encerrado: '#3498db',
+  encerrado: '#0d9488',
   cancelado: '#e74c3c',
   pendente: '#95a5a6'
 };
@@ -324,7 +324,7 @@ function MDFeList() {
                 <XAxis type="number" tick={{ fontSize: 12 }} />
                 <YAxis type="category" dataKey="placa" tick={{ fontSize: 11 }} width={80} />
                 <Tooltip formatter={(value) => `${value} MDF-es`} />
-                <Bar dataKey="total" fill="#9b59b6" radius={[0, 4, 4, 0]} name="MDF-es" />
+                <Bar dataKey="total" fill="#C8A951" radius={[0, 4, 4, 0]} name="MDF-es" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -342,7 +342,7 @@ function MDFeList() {
                 <XAxis dataKey="categoria" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(value) => `${value} MDF-es`} />
-                <Bar dataKey="contagem" fill="#3498db" radius={[4, 4, 0, 0]} name="MDF-es" />
+                <Bar dataKey="contagem" fill="#0d9488" radius={[4, 4, 0, 0]} name="MDF-es" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -640,7 +640,7 @@ function MDFeList() {
       {modalMdfe && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content mdfe-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)' }}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #40916C 0%, #2D6A4F 100%)' }}>
               <h2>MDF-e #{modalMdfe.numero_mdfe}</h2>
               <button className="modal-close" onClick={handleCloseModal}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

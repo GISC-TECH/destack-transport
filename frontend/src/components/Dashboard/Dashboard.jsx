@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import './Dashboard.css';
 
-const COLORS = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+const COLORS = ['#0d9488', '#e74c3c', '#2ecc71', '#f39c12', '#C8A951', '#1abc9c'];
 
 function Dashboard() {
   // useMemo ensures defaultDates is stable across renders
@@ -220,8 +220,8 @@ function Dashboard() {
         </Link>
 
         {/* Linha 2: Financeiro */}
-        <Link to="/financeiro" className="kpi-card">
-          <div className="kpi-icon purple">
+        <Link to="/financeiro" className="kpi-card highlight">
+          <div className="kpi-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
@@ -367,7 +367,7 @@ function Dashboard() {
                   contentStyle={{ backgroundColor: '#fff', border: '1px solid #e0e0e0', borderRadius: '8px' }}
                 />
                 <Legend />
-                <Bar yAxisId="left" dataKey="cif" name="CIF" fill="#3498db" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="left" dataKey="cif" name="CIF" fill="#0d9488" radius={[4, 4, 0, 0]} />
                 <Bar yAxisId="left" dataKey="fob" name="FOB" fill="#f39c12" radius={[4, 4, 0, 0]} />
                 <Line yAxisId="right" type="monotone" dataKey="faturamento" name="Total" stroke="#27ae60" strokeWidth={2} dot={{ fill: '#27ae60' }} />
               </ComposedChart>
@@ -385,8 +385,8 @@ function Dashboard() {
               <AreaChart data={performanceChartData}>
                 <defs>
                   <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#9b59b6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#9b59b6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#C8A951" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#C8A951" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -401,7 +401,7 @@ function Dashboard() {
                   type="monotone"
                   dataKey="valor"
                   name="Valor"
-                  stroke="#9b59b6"
+                  stroke="#C8A951"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorValor)"

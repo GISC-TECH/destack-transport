@@ -12,14 +12,14 @@ import './Financeiro.css';
 
 // Cores para graficos
 const COLORS = {
-  cif: '#3498db',
+  cif: '#0d9488',
   fob: '#f39c12',
   faturamento: '#27ae60',
   custos: '#e74c3c',
-  lucro: '#9b59b6'
+  lucro: '#C8A951'
 };
 
-const PIE_COLORS = ['#3498db', '#f39c12', '#27ae60', '#e74c3c', '#9b59b6'];
+const PIE_COLORS = ['#0d9488', '#f39c12', '#27ae60', '#e74c3c', '#C8A951'];
 
 function FinanceiroPainel() {
   const [dados, setDados] = useState(null);
@@ -248,7 +248,7 @@ function FinanceiroPainel() {
               <Legend />
               <Bar yAxisId="left" dataKey="cif" name="CIF" fill={COLORS.cif} radius={[4, 4, 0, 0]} />
               <Bar yAxisId="left" dataKey="fob" name="FOB" fill={COLORS.fob} radius={[4, 4, 0, 0]} />
-              <Line yAxisId="right" type="monotone" dataKey="entregas" name="Entregas" stroke="#9b59b6" strokeWidth={2} dot={{ fill: '#9b59b6' }} />
+              <Line yAxisId="right" type="monotone" dataKey="entregas" name="Entregas" stroke="#C8A951" strokeWidth={2} dot={{ fill: '#C8A951' }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

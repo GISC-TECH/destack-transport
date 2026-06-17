@@ -31,32 +31,57 @@ function Login() {
     }
   };
 
-  return (
-    <div className="login-container" role="main">
-      {/* Decorative elements */}
-      <div className="login-bg-shapes" aria-hidden="true">
-        <div className="shape shape-1"></div>
-        <div className="shape shape-2"></div>
-        <div className="shape shape-3"></div>
-      </div>
+  const features = [
+    'Emissão de CT-e e MDF-e integrada à SEFAZ',
+    'Repasses a motoristas e DRE em tempo real',
+    'Frota, compliance e analytics em um só lugar'
+  ];
 
-      <div className="login-box">
-        <div className="login-header">
-          <div className="login-logo" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="1" y="3" width="15" height="13"></rect>
-              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-              <circle cx="5.5" cy="18.5" r="2.5"></circle>
-              <circle cx="18.5" cy="18.5" r="2.5"></circle>
-            </svg>
+  return (
+    <div className="auth-split" role="main">
+      {/* Painel da marca */}
+      <aside className="auth-brand">
+        <div className="auth-brand-glow" aria-hidden="true"></div>
+
+        <div className="auth-brand-top">
+          <div className="auth-logo">
+            <span className="auth-logo-tile" aria-hidden="true">D</span>
+            <span className="auth-logo-text">
+              <strong>Destack</strong>
+              <small>Transport ERP</small>
+            </span>
           </div>
-          <h1>Destack Transport</h1>
-          <p>Sistema de Gestao de Transporte</p>
+
+          <h2 className="auth-headline">Gestão completa de transporte e logística</h2>
+          <p className="auth-sub">
+            Emissão fiscal, financeiro, frota e inteligência operacional em uma única plataforma.
+          </p>
+
+          <ul className="auth-features">
+            {features.map((f, i) => (
+              <li key={i}>
+                <span className="auth-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" width="13" height="13">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                {f}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <form onSubmit={handleSubmit} className="login-form" aria-label="Formulario de login">
+        <p className="auth-copy">&copy; 2026 Destack Transportes Ltda &middot; Belo Horizonte/MG</p>
+      </aside>
+
+      {/* Painel do formulario */}
+      <div className="auth-form-side">
+        <form onSubmit={handleSubmit} className="auth-card" aria-label="Formulario de login">
+          <span className="auth-eyebrow">Bem-vindo de volta</span>
+          <h1 className="auth-title">Acessar o sistema</h1>
+
           {error && (
-            <div className="login-error" role="alert" aria-live="assertive">
+            <div className="auth-error" role="alert" aria-live="assertive">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -66,39 +91,25 @@ function Login() {
             </div>
           )}
 
-          <div className="form-group">
-            <label htmlFor="username">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              Usuario
-            </label>
-            <div className="input-wrapper">
-              <input
-                type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Digite seu usuario"
-                required
-                disabled={loading}
-                autoComplete="username"
-                aria-label="Nome de usuario"
-                aria-required="true"
-              />
-            </div>
+          <div className="auth-field">
+            <label htmlFor="username">Usuário</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Digite seu usuário"
+              required
+              disabled={loading}
+              autoComplete="username"
+              aria-label="Nome de usuario"
+              aria-required="true"
+            />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              Senha
-            </label>
-            <div className="input-wrapper password-wrapper">
+          <div className="auth-field">
+            <label htmlFor="password">Senha</label>
+            <div className="auth-pass">
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
@@ -113,7 +124,7 @@ function Login() {
               />
               <button
                 type="button"
-                className="toggle-password"
+                className="auth-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
                 aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
@@ -134,33 +145,33 @@ function Login() {
             </div>
           </div>
 
+          <div className="auth-row">
+            <label className="auth-check-label">
+              <input type="checkbox" defaultChecked disabled={loading} />
+              Manter conectado
+            </label>
+            <button type="button" className="auth-link">Esqueci minha senha</button>
+          </div>
+
           <button
             type="submit"
-            className="btn-login"
+            className="auth-submit"
             disabled={loading}
             aria-busy={loading}
             aria-label={loading ? 'Processando login' : 'Entrar no sistema'}
           >
             {loading ? (
               <>
-                <span className="btn-spinner" aria-hidden="true"></span>
+                <span className="auth-spinner" aria-hidden="true"></span>
                 Entrando...
               </>
             ) : (
-              <>
-                Entrar
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                  <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
-              </>
+              'Entrar'
             )}
           </button>
-        </form>
 
-        <div className="login-footer">
-          <p>2025 Destack Transport - Todos os direitos reservados</p>
-        </div>
+          <p className="auth-secure">Ambiente seguro &middot; Certificado digital A1 ativo</p>
+        </form>
       </div>
     </div>
   );

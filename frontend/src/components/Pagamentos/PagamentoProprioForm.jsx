@@ -568,7 +568,7 @@ function PagamentoProprioForm() {
                         </div>
                       )}
                       {motorista.categoria_cnh && (
-                        <div style={{ fontSize: '12px', color: '#3498db', marginTop: '2px' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--primary-color)', marginTop: '2px' }}>
                           CNH: {motorista.categoria_cnh}
                         </div>
                       )}
@@ -587,7 +587,7 @@ function PagamentoProprioForm() {
             /* Condutor selecionado - exibe card com detalhes */
             <div className="condutor-selecionado" style={{
               background: '#f8f9fa',
-              border: '1px solid #3498db',
+              border: '1px solid var(--primary-color)',
               borderRadius: '8px',
               padding: '15px',
               position: 'relative',
@@ -603,7 +603,7 @@ function PagamentoProprioForm() {
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <span style={{
-                  background: '#3498db',
+                  background: 'var(--primary-color)',
                   color: '#fff',
                   padding: '4px 8px',
                   borderRadius: '4px',
@@ -622,7 +622,7 @@ function PagamentoProprioForm() {
                 </div>
               )}
               {condutorSelecionado.categoria_cnh && (
-                <div style={{ color: '#3498db', marginTop: '4px', fontSize: '14px' }}>
+                <div style={{ color: 'var(--primary-color)', marginTop: '4px', fontSize: '14px' }}>
                   CNH: {condutorSelecionado.categoria_cnh}
                 </div>
               )}
@@ -772,7 +772,7 @@ function PagamentoProprioForm() {
                 placeholder="Digite a KM para calcular o valor"
               />
               {calculandoFaixa && (
-                <small className="form-hint" style={{ color: '#3498db' }}>Buscando faixa...</small>
+                <small className="form-hint" style={{ color: 'var(--primary-color)' }}>Buscando faixa...</small>
               )}
               {faixaKmInfo && (
                 <small className="form-hint" style={{ color: '#27ae60' }}>

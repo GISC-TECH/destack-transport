@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import './CTe.css';
 
-const COLORS = ['#3498db', '#f39c12', '#27ae60', '#e74c3c', '#9b59b6'];
+const COLORS = ['#0d9488', '#f39c12', '#27ae60', '#e74c3c', '#C8A951'];
 
 function PagamentosPendentes() {
   const toast = useToast();

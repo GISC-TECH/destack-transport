@@ -40,7 +40,7 @@
 }
 
 .summary-icon.total {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
 }
 
@@ -106,7 +106,7 @@
 
 .search-box input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -131,7 +131,7 @@
 
 .filter-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -187,7 +187,7 @@
 }
 
 .usuario-avatar.staff {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
 }
 
 .usuario-avatar.operador {
@@ -238,8 +238,8 @@
 }
 
 .badge.staff {
-  background: rgba(52, 152, 219, 0.15);
-  color: #2980b9;
+  background: rgba(39, 164, 106, 0.15);
+  color: var(--primary-dark);
 }
 
 .badge.ativo {
@@ -259,13 +259,13 @@
 }
 
 .badge-purple {
-  background: rgba(155, 89, 182, 0.15);
-  color: #9b59b6;
+  background: rgba(13, 148, 136, 0.15);
+  color: var(--info-color);
 }
 
 .badge-info {
-  background: rgba(52, 152, 219, 0.15);
-  color: #2980b9;
+  background: rgba(39, 164, 106, 0.15);
+  color: var(--primary-dark);
 }
 
 .badge-secondary {
@@ -494,7 +494,7 @@
 .form-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -558,7 +558,7 @@ legend {
 }
 
 legend svg {
-  color: #667eea;
+  color: var(--primary-color);
 }
 
 .form-row {
@@ -602,7 +602,7 @@ legend svg {
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -691,8 +691,8 @@ legend svg {
 }
 
 .checkbox-container input:checked ~ .checkmark {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  border-color: var(--primary-color);
 }
 
 .checkbox-container input:checked ~ .checkmark::after {
@@ -759,7 +759,7 @@ legend svg {
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
 }
 
@@ -830,7 +830,7 @@ legend svg {
 
 .search-box input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -847,7 +847,7 @@ legend svg {
 
 .select-filter:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -1011,7 +1011,7 @@ legend svg {
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
   border: none;
   border-radius: 10px;

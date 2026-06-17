@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
@@ -52,6 +52,7 @@ function Sidebar() {
   const menuItems = [
     {
       id: 'dashboard',
+      section: 'Principal',
       label: 'Dashboard',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -63,6 +64,7 @@ function Sidebar() {
     },
     {
       id: 'documentos',
+      section: 'Operação',
       label: 'Documentos',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -78,6 +80,7 @@ function Sidebar() {
     },
     {
       id: 'cadastros',
+      section: 'Cadastros',
       label: 'Cadastros',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -95,6 +98,7 @@ function Sidebar() {
     },
     {
       id: 'financeiro',
+      section: 'Financeiro',
       label: 'Financeiro',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -111,6 +115,7 @@ function Sidebar() {
     },
     {
       id: 'manutencao',
+      section: 'Frota',
       label: 'Manutenção',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -121,6 +126,7 @@ function Sidebar() {
     },
     {
       id: 'relatorios',
+      section: 'Inteligência',
       label: 'Relatórios',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -136,6 +142,7 @@ function Sidebar() {
     },
     {
       id: 'sistema',
+      section: 'Sistema',
       label: 'Sistema',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -240,9 +247,14 @@ function Sidebar() {
         {/* Menu */}
         <nav className="sidebar-nav" id="sidebar-nav" role="navigation" aria-label="Navegacao principal">
           <ul className="sidebar-menu" role="menubar">
-            {menuItems.map((item) => (
+            {menuItems.map((item, idx) => (
+              <Fragment key={item.id}>
+                {item.section && item.section !== menuItems[idx - 1]?.section && (
+                  <li className="menu-section" role="presentation" aria-hidden="true">
+                    {item.section}
+                  </li>
+                )}
               <li
-                key={item.id}
                 className={`menu-item ${item.submenu ? 'has-submenu' : ''} ${openMenus[item.id] || isSubmenuActive(item.submenu) ? 'open' : ''}`}
                 role="none"
               >
@@ -291,6 +303,7 @@ function Sidebar() {
                   </>
                 )}
               </li>
+              </Fragment>
             ))}
           </ul>
         </nav>

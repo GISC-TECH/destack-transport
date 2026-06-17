@@ -24,7 +24,7 @@
 }
 
 .navbar-brand svg {
-  stroke: #3498db;
+  stroke: var(--primary-color);
 }
 
 /* Menu Principal */
@@ -71,8 +71,8 @@
 
 .navbar-menu > li > a.active,
 .navbar-menu > li > .dropdown-toggle.active {
-  background: rgba(52, 152, 219, 0.3);
-  color: #3498db;
+  background: rgba(39, 164, 106, 0.3);
+  color: var(--primary-color);
 }
 
 .navbar-menu > li > a svg,
@@ -128,7 +128,7 @@
 
 .dropdown-menu li a:hover {
   background: #f5f6fa;
-  color: #3498db;
+  color: var(--primary-color);
 }
 
 .dropdown-menu li.divider {
@@ -159,8 +159,8 @@
 }
 
 .config-btn.active {
-  background: rgba(52, 152, 219, 0.3);
-  color: #3498db;
+  background: rgba(39, 164, 106, 0.3);
+  color: var(--primary-color);
 }
 
 /* User Menu */

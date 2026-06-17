@@ -52,7 +52,7 @@
 }
 
 .backup-page .alert-info {
-  background: #dbeafe;
+  background: var(--green-200);
   color: #1e40af;
   border: 1px solid #bfdbfe;
 }
@@ -101,8 +101,8 @@
 }
 
 .action-icon.gerar {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--green-200);
+  color: var(--primary-color);
 }
 
 .action-icon.restaurar {
@@ -137,7 +137,7 @@
 }
 
 .action-card .btn-primary {
-  background: #2563eb;
+  background: var(--primary-color);
   color: white;
 }
 
@@ -236,7 +236,7 @@
 }
 
 .badge-info {
-  background: #dbeafe;
+  background: var(--green-200);
   color: #1e40af;
 }
 
