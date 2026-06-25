@@ -9,11 +9,11 @@ set -euo pipefail
 
 PROD_SSH="${PROD_SSH:-}"
 VERSION="${VERSION:-}"
-REMOTE_DIR="${REMOTE_DIR:-/opt/destack-transport}"
+REMOTE_DIR="${REMOTE_DIR:-/root/apps/destack}"
 POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-destack_postgres}"
 POSTGRES_DB="${POSTGRES_DB:-destack_db}"
 POSTGRES_USER="${POSTGRES_USER:-destack_user}"
-COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.server.yml}"
 
 if [ -z "$PROD_SSH" ]; then
     echo "ERRO: defina PROD_SSH, exemplo:"
@@ -54,29 +54,38 @@ ssh -o StrictHostKeyChecking=no "$PROD_SSH" \
 echo ""
 echo "[3/6] Buildando e subindo containers..."
 ssh -o StrictHostKeyChecking=no "$PROD_SSH" \
-    "cd $REMOTE_DIR && docker-compose -f $COMPOSE_FILE pull && docker-compose -f $COMPOSE_FILE up -d --build" \
+    "cd $REMOTE_DIR && docker compose -f $COMPOSE_FILE up -d --build" \
     || { echo "ERRO: falha ao subir containers"; exit 1; }
 
 # 4. Aplicar migrations
 echo ""
 echo "[4/6] Aplicando migrations..."
 ssh -o StrictHostKeyChecking=no "$PROD_SSH" \
-    "cd $REMOTE_DIR && docker-compose -f $COMPOSE_FILE exec -T web python manage.py migrate --noinput" \
+    "cd $REMOTE_DIR && docker compose -f $COMPOSE_FILE exec -T web python manage.py migrate --noinput" \
     || { echo "ERRO: falha ao aplicar migrations"; exit 1; }
 
 # 5. Coletar arquivos estáticos
 echo ""
 echo "[5/6] Coletando arquivos estáticos..."
 ssh -o StrictHostKeyChecking=no "$PROD_SSH" \
-    "cd $REMOTE_DIR && docker-compose -f $COMPOSE_FILE exec -T web python manage.py collectstatic --noinput" \
+    "cd $REMOTE_DIR && docker compose -f $COMPOSE_FILE exec -T web python manage.py collectstatic --noinput" \
     || { echo "ERRO: falha ao coletar static files"; exit 1; }
 
-# 6. Health check
+# 6. Reiniciar nginx multi-dominio se existir
+if ssh -o StrictHostKeyChecking=no "$PROD_SSH" "docker ps -q -f name=nginx_multi_django" >/dev/null 2>&1; then
+    echo ""
+    echo "[6/6] Reiniciando nginx multi-dominio..."
+    ssh -o StrictHostKeyChecking=no "$PROD_SSH" \
+        "docker restart nginx_multi_django" \
+        || { echo "AVISO: falha ao reiniciar nginx_multi_django"; }
+fi
+
+# 7. Health check externo
 echo ""
-echo "[6/6] Verificando saúde da aplicação..."
+echo "[7/7] Verificando saúde da aplicação..."
 sleep 10
 ssh -o StrictHostKeyChecking=no "$PROD_SSH" \
-    "docker-compose -f $REMOTE_DIR/$COMPOSE_FILE ps && curl -sf http://localhost:8000/api/health/ || echo 'Health check falhou'" \
+    "curl -sf https://destacktransporte.site/api/health/ >/dev/null && echo 'Health OK' || echo 'Health check falhou'" \
     || { echo "AVISO: health check não retornou 200"; }
 
 echo ""
