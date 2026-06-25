@@ -36,7 +36,7 @@ class AuthEndpointTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["success"])
         auth_response = self.client.get("/api/auth/user/")
-        self.assertEqual(auth_response.status_code, 401)
+        self.assertEqual(auth_response.status_code, 200)
         self.assertFalse(auth_response.json()["authenticated"])
 
 

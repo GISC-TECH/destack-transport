@@ -49,7 +49,7 @@ class CheckAuthAPIView(APIView):
                 }
             })
         else:
-            return Response({'authenticated': False}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'authenticated': False})
 
 
 # ===============================================================
