@@ -10,6 +10,8 @@ from django.db import transaction
 from django.db.models import Q, Sum, Count
 from django.db.models.functions import Coalesce, TruncDate, TruncWeek, TruncMonth
 from django.http import HttpResponse
+from django.utils import timezone
+from django.utils.timezone import make_aware
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -612,15 +614,21 @@ class DREAPIView(APIView):
                 continue
             mes = item['mes']
             receita_mes = item['receita']
-            inicio_mes = mes
+            inicio_mes = date(mes.year, mes.month, 1)
             fim_mes = (
                 date(mes.year, mes.month + 1, 1) - timedelta(days=1)
                 if mes.month != 12
                 else date(mes.year, 12, 31)
             )
+            inicio_mes_dt = make_aware(timezone.datetime(mes.year, mes.month, 1))
+            fim_mes_dt = (
+                make_aware(timezone.datetime(mes.year, mes.month + 1, 1) - timedelta(days=1))
+                if mes.month != 12
+                else make_aware(timezone.datetime(mes.year, 12, 31, 23, 59, 59))
+            )
             ctes_mes = ctes_query.filter(
-                identificacao__data_emissao__gte=inicio_mes,
-                identificacao__data_emissao__lt=date(mes.year, mes.month + 1, 1) if mes.month != 12 else date(mes.year + 1, 1, 1),
+                identificacao__data_emissao__gte=inicio_mes_dt,
+                identificacao__data_emissao__lte=fim_mes_dt,
             )
             custo_mes = (
                 PagamentoAgregado.objects.filter(
