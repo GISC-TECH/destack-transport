@@ -405,7 +405,7 @@
 }
 
 .mobile-only {
-  display: none;
+  display: none !important;
 }
 
 /* Pagination */
@@ -438,7 +438,7 @@
 
 /* Mobile cards */
 .mobile-cards {
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 12px;
 }
@@ -535,5 +535,9 @@
 
   .mobile-only {
     display: block !important;
+  }
+
+  .mobile-only .mobile-cards {
+    display: flex !important;
   }
 }
