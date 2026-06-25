@@ -34,6 +34,8 @@ function VeiculoForm() {
     afericao_validade: '',
     crlv_validade: '',
     cronotacografo_validade: '',
+    gps_identificador: '',
+    gps_provedor: '',
     observacoes: '',
     ativo: true,
     compartimentos: []
@@ -58,6 +60,8 @@ function VeiculoForm() {
         afericao_validade: data.afericao_validade || '',
         crlv_validade: data.crlv_validade || '',
         cronotacografo_validade: data.cronotacografo_validade || '',
+        gps_identificador: data.gps_identificador || '',
+        gps_provedor: data.gps_provedor || '',
         observacoes: data.observacoes || '',
         compartimentos: data.compartimentos || []
       });
@@ -118,6 +122,13 @@ function VeiculoForm() {
         tara: formData.tara ? parseFloat(formData.tara) : null,
         capacidade_kg: formData.capacidade_kg ? parseFloat(formData.capacidade_kg) : null,
         capacidade_m3: formData.capacidade_m3 ? parseFloat(formData.capacidade_m3) : null,
+        civ_validade: formData.civ_validade || null,
+        cipp_validade: formData.cipp_validade || null,
+        afericao_validade: formData.afericao_validade || null,
+        crlv_validade: formData.crlv_validade || null,
+        cronotacografo_validade: formData.cronotacografo_validade || null,
+        seguro_validade: formData.seguro_validade || null,
+        laudo_vistoria_validade: formData.laudo_vistoria_validade || null,
         compartimentos: formData.compartimentos.map(c => ({
           numero_boca: c.numero_boca,
           capacidade_m3: c.capacidade_m3 ? parseFloat(c.capacidade_m3) : 0
@@ -385,6 +396,54 @@ function VeiculoForm() {
                 name="cronotacografo_validade"
                 value={formData.cronotacografo_validade}
                 onChange={handleChange}
+              />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Rastreamento GPS</legend>
+          <p className="field-help">Configure o identificador do veículo no sistema de rastreamento GPS externo</p>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="gps_identificador">ID no GPS</label>
+              <input
+                type="text"
+                id="gps_identificador"
+                name="gps_identificador"
+                value={formData.gps_identificador}
+                onChange={handleChange}
+                placeholder="Ex: 123456 ou placa"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="gps_provedor">Provedor GPS</label>
+              <select
+                id="gps_provedor"
+                name="gps_provedor"
+                value={formData.gps_provedor}
+                onChange={handleChange}
+              >
+                <option value="">Selecione</option>
+                <option value="onixsat">Onixsat</option>
+                <option value="sitrack">Sitrack</option>
+                <option value="autotrac">Autotrac</option>
+                <option value="sascar">Sascar</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Última Sincronização</label>
+              <input
+                type="text"
+                value={formData.gps_ultima_sincronizacao
+                  ? new Date(formData.gps_ultima_sincronizacao).toLocaleString('pt-BR')
+                  : 'Nunca'}
+                readOnly
+                disabled
               />
             </div>
           </div>

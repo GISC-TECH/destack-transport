@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -7,11 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    initializeAuth();
-  }, []);
-
-  const initializeAuth = async () => {
+  const initializeAuth = useCallback(async () => {
     try {
       // Primeiro, buscar o CSRF token para todas as requisições futuras
       await authAPI.fetchCSRFToken();
@@ -28,7 +24,13 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Inicializacao de autenticacao ao montar o provider.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    initializeAuth();
+  }, [initializeAuth]);
 
   const checkAuth = async () => {
     try {

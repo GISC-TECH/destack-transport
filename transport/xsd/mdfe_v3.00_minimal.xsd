@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://www.portalfiscal.inf.br/mdfe"
+           targetNamespace="http://www.portalfiscal.inf.br/mdfe"
+           elementFormDefault="qualified">
+
+  <!-- XSD mínimo para MDF-e (tag raiz MDFe, namespace minúsculo): valida namespace e campos mínimos do ide. -->
+
+  <xs:complexType name="IdeType">
+    <xs:sequence>
+      <xs:element name="cUF" type="xs:string" minOccurs="1"/>
+      <xs:element name="tpAmb" type="xs:string" minOccurs="1"/>
+      <xs:element name="tpEmit" type="xs:string" minOccurs="1"/>
+      <xs:element name="mod" type="xs:string" minOccurs="1"/>
+      <xs:element name="serie" type="xs:string" minOccurs="1"/>
+      <xs:element name="nMDF" type="xs:string" minOccurs="1"/>
+      <xs:element name="dhEmi" type="xs:string" minOccurs="1"/>
+      <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="InfMDFeType">
+    <xs:sequence>
+      <xs:element name="ide" type="IdeType" minOccurs="1" maxOccurs="1"/>
+      <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="Id" type="xs:string" use="required"/>
+    <xs:attribute name="versao" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="MDFeType">
+    <xs:sequence>
+      <xs:element name="infMDFe" type="InfMDFeType" minOccurs="1" maxOccurs="1"/>
+      <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="versao" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:element name="MDFe" type="MDFeType"/>
+
+</xs:schema>

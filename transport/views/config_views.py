@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import hashlib
 import shutil
+import shlex
 import traceback
 from io import StringIO, BytesIO
 import openpyxl
@@ -39,6 +40,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser # IsAdminUse
 from rest_framework import serializers # Para ValidationError
 
 # Imports Locais
+from ..permissions import TransportModelPermission, ReadOnlyPermission
 from ..serializers.config_serializers import ( # Use .. para voltar um nível
     ParametroSistemaSerializer,
     ConfiguracaoEmpresaSerializer,
@@ -70,19 +72,12 @@ from ..models import (
 class ParametroSistemaViewSet(viewsets.ModelViewSet):
     """
     API para gerenciar parâmetros do sistema.
-    Apenas usuários autenticados podem ver, admins podem modificar.
+    Usuários do grupo Administrativo podem modificar; demais usuários autenticados
+    podem apenas consultar.
     """
     queryset = ParametroSistema.objects.all().order_by('grupo', 'nome')
     serializer_class = ParametroSistemaSerializer
-    permission_classes = [IsAuthenticated] # Permite leitura para todos autenticados
-
-    def get_permissions(self):
-        """ Permissões mais restritas para escrita. """
-        if self.action in ['create', 'update', 'partial_update', 'destroy', 'atualizar_multiplos']:
-            # Apenas admins podem modificar
-            return [IsAuthenticated(), IsAdminUser()]
-        # Permite leitura (list, retrieve, valores) para qualquer autenticado
-        return [IsAuthenticated()]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def get_queryset(self):
         """Permite filtrar parâmetros por grupo e editabilidade."""
@@ -121,7 +116,7 @@ class ParametroSistemaViewSet(viewsets.ModelViewSet):
 
         return Response(parametros)
 
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, IsAdminUser])
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, TransportModelPermission])
     @transaction.atomic # Garante atomicidade na atualização múltipla
     def atualizar_multiplos(self, request):
         """
@@ -192,17 +187,12 @@ class ParametroSistemaViewSet(viewsets.ModelViewSet):
 class ConfiguracaoEmpresaViewSet(viewsets.ModelViewSet):
     """
     API para gerenciar configurações da empresa (dados da empresa usuária).
-    Assume que haverá apenas UMA instância deste modelo.
+    Usuários do grupo Administrativo podem modificar; demais usuários autenticados
+    podem apenas consultar.
     """
     queryset = ConfiguracaoEmpresa.objects.all()
     serializer_class = ConfiguracaoEmpresaSerializer
-    permission_classes = [IsAuthenticated] # Leitura para autenticados
-
-    def get_permissions(self):
-        """ Permissões mais restritas para escrita (apenas Admin). """
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAuthenticated(), IsAdminUser()]
-        return [IsAuthenticated()]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def list(self, request, *args, **kwargs):
         """
@@ -253,9 +243,9 @@ class BackupAPIView(viewsets.ViewSet):
     """
     API para gerenciar backups do banco de dados do sistema.
     Ações disponíveis: list, gerar, download, restaurar (simulado).
-    Permissões: Apenas Administradores.
+    Permissões: Apenas usuários do grupo Administrativo.
     """
-    permission_classes = [IsAuthenticated, IsAdminUser] # Apenas Admins
+    permission_classes = [IsAuthenticated, TransportModelPermission] # Apenas Administrativo
 
     def list(self, request):
         """Listar backups registrados no banco de dados."""
@@ -287,48 +277,61 @@ class BackupAPIView(viewsets.ViewSet):
             filename = f"backup_{db_name}_{timestamp}.sql" # Nome mais descritivo
             filepath = os.path.join(backup_dir, filename)
 
-            command = None
             env = os.environ.copy() # Copia variáveis de ambiente
+            pgpass_file = None
 
-            # Comando para SQLite
-            if 'sqlite3' in db_engine:
-                command = f"sqlite3 \"{db_name}\" .dump > \"{filepath}\""
-            # Comando para PostgreSQL (exemplo)
-            elif 'postgresql' in db_engine:
-                db_user = db_settings.get('USER')
-                db_host = db_settings.get('HOST', 'localhost')
-                db_port = db_settings.get('PORT', '5432')
-                db_password = db_settings.get('PASSWORD')
-
-                # Usar arquivo .pgpass temporário em vez de variável de ambiente
-                # Isso evita expor a senha em `ps aux`
-                pgpass_file = None
-                if db_password:
-                    import stat
-                    pgpass_file = os.path.join(tempfile.gettempdir(), f'.pgpass_{timestamp}')
-                    with open(pgpass_file, 'w') as f:
-                        # Formato: hostname:port:database:username:password
-                        f.write(f"{db_host}:{db_port}:{db_name}:{db_user}:{db_password}\n")
-                    os.chmod(pgpass_file, stat.S_IRUSR | stat.S_IWUSR)  # 600 - somente owner
-                    env['PGPASSFILE'] = pgpass_file
-
-                command = f"pg_dump -U {db_user} -h {db_host} -p {db_port} -d {db_name} -f \"{filepath}\""
-            # Adicionar comandos para outros bancos (MySQL, etc.) se necessário
-            else:
-                raise NotImplementedError(f"Backup não implementado para o banco de dados: {db_engine}")
-
-            # Executa o comando
-            logger.info("Executando comando de backup: %s", command)
             try:
-                result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True, encoding='utf-8', errors='ignore', env=env)
-                logger.info(
-                    "Comando de backup concluído. Saída: %s, Erro: %s",
-                    result.stdout,
-                    result.stderr,
-                )
+                # Comando para SQLite (sem shell, evitando command injection)
+                if 'sqlite3' in db_engine:
+                    logger.info("Executando comando de backup SQLite: sqlite3 %s .dump", db_name)
+                    with open(filepath, 'w') as out_f:
+                        result = subprocess.run(
+                            ['sqlite3', str(db_name), '.dump'],
+                            shell=False, check=True, stdout=out_f,
+                            text=True, encoding='utf-8', errors='ignore', env=env
+                        )
+                # Comando para PostgreSQL (sem shell, evitando command injection)
+                elif 'postgresql' in db_engine:
+                    db_user = db_settings.get('USER')
+                    db_host = db_settings.get('HOST', 'localhost')
+                    db_port = db_settings.get('PORT', '5432')
+                    db_password = db_settings.get('PASSWORD')
+
+                    # Usar arquivo .pgpass temporário em vez de variável de ambiente
+                    # Isso evita expor a senha em `ps aux`
+                    if db_password:
+                        import stat
+                        pgpass_file = os.path.join(tempfile.gettempdir(), f'.pgpass_{timestamp}')
+                        with open(pgpass_file, 'w') as f:
+                            # Formato: hostname:port:database:username:password
+                            f.write(f"{db_host}:{db_port}:{db_name}:{db_user}:{db_password}\n")
+                        os.chmod(pgpass_file, stat.S_IRUSR | stat.S_IWUSR)  # 600 - somente owner
+                        env['PGPASSFILE'] = pgpass_file
+
+                    command = [
+                        'pg_dump',
+                        '-U', str(db_user),
+                        '-h', str(db_host),
+                        '-p', str(db_port),
+                        '-d', str(db_name),
+                        '-f', str(filepath),
+                    ]
+                    logger.info("Executando comando de backup: %s", ' '.join(shlex.quote(str(arg)) for arg in command))
+                    result = subprocess.run(
+                        command, shell=False, check=True, capture_output=True,
+                        text=True, encoding='utf-8', errors='ignore', env=env
+                    )
+                    logger.info(
+                        "Comando de backup concluído. Saída: %s, Erro: %s",
+                        result.stdout,
+                        result.stderr,
+                    )
+                # Adicionar comandos para outros bancos (MySQL, etc.) se necessário
+                else:
+                    raise NotImplementedError(f"Backup não implementado para o banco de dados: {db_engine}")
             finally:
                 # Limpa arquivo .pgpass temporário (se existir)
-                if 'pgpass_file' in dir() and pgpass_file and os.path.exists(pgpass_file):
+                if pgpass_file and os.path.exists(pgpass_file):
                     try:
                         os.remove(pgpass_file)
                     except OSError:
@@ -464,34 +467,44 @@ class BackupAPIView(viewsets.ViewSet):
             # O ideal é salvar o arquivo e instruir o admin a restaurar manualmente.
 
             logger.info(
-                "INFO: Solicitação de restauração recebida com arquivo %s (%s bytes) pelo usuário %s.",
+                "AUDIT: Solicitação de restauração recebida com arquivo %s (%s bytes) pelo usuário %s (ID: %s).",
                 backup_file.name,
                 backup_file.size,
                 request.user.username,
+                request.user.id,
             )
 
-            # Exemplo Simulado: Salva o arquivo temporariamente para inspeção
+            # Salva o arquivo temporariamente para inspeção/validação e limpa em finally
             temp_dir = tempfile.mkdtemp(prefix="backup_restore_")
-            temp_path = os.path.join(temp_dir, backup_file.name)
             try:
+                temp_path = os.path.join(temp_dir, backup_file.name)
                 with open(temp_path, 'wb+') as destination:
                     for chunk in backup_file.chunks():
                         destination.write(chunk)
-                logger.info("INFO: Arquivo de backup salvo temporariamente em %s.", temp_path)
+                logger.info(
+                    "AUDIT: Arquivo de backup salvo temporariamente em %s pelo usuário %s.",
+                    temp_path, request.user.username
+                )
                 # Aqui, você poderia adicionar lógica para notificar o admin
             finally:
-                 # É importante limpar o diretório temporário depois,
-                 # a menos que o admin precise do arquivo lá.
-                # shutil.rmtree(temp_dir) # Descomentar se quiser limpar automaticamente
-                logger.info("INFO: Limpeza do diretório temporário %s pode ser necessária.", temp_dir)
-
+                # Sempre remove o diretório temporário para não expor dados sensíveis
+                try:
+                    shutil.rmtree(temp_dir)
+                    logger.info(
+                        "AUDIT: Diretório temporário %s removido após restauração pelo usuário %s.",
+                        temp_dir, request.user.username
+                    )
+                except OSError as cleanup_err:
+                    logger.warning(
+                        "Falha ao remover diretório temporário %s: %s", temp_dir, cleanup_err
+                    )
 
             # Retorna mensagem indicando que a restauração é manual
+            # NÃO expõe o caminho temporário na resposta
             return Response({
                 "message": "Arquivo de backup recebido com sucesso. A restauração do banco de dados deve ser realizada manualmente por um administrador utilizando este arquivo.",
                 "arquivo_recebido": backup_file.name,
                 "tamanho_bytes": backup_file.size,
-                "local_temporario": temp_path # Informa onde foi salvo (APENAS PARA DEBUG/ADMIN)
             }, status=status.HTTP_202_ACCEPTED) # 202 Accepted indica que a requisição foi aceita, mas a ação principal (restauração) não foi feita aqui.
             # --- Fim da Lógica (Simulada) ---
 
@@ -511,7 +524,7 @@ class RelatorioAPIView(APIView):
     Suporta diferentes tipos de relatórios e formatos de saída.
     Funcionalidade pendente de implementação.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, ReadOnlyPermission]
 
     def get(self, request, format=None):
         """

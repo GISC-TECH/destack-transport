@@ -14,6 +14,7 @@ import glob
 import zipfile
 import shutil
 from datetime import datetime
+from lxml import etree
 
 from browser import BrowserManager
 from egs_client import EGSClient
@@ -137,28 +138,33 @@ def extract_chave_from_filename(filename: str):
 
 
 def is_event_xml_file(file_path: str) -> bool:
-    """Identifica XML de evento, como cancelamento, CC-e ou retorno SEFAZ."""
+    """
+    Identifica XML de evento fiscal (cancelamento, CC-e, retorno SEFAZ).
+
+    Primeiro verifica padroes no nome do arquivo; se nao identificar,
+    le a tag raiz do XML (com suporte a namespaces).
+    """
     filename = os.path.basename(file_path).lower()
-    if any(marker in filename for marker in ('_canc', 'procevento', 'retevento', 'evento')):
+    name_markers = ('_canc', 'procevento', 'retevento', 'evento')
+    if any(marker in filename for marker in name_markers):
         return True
 
     try:
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as xml_file:
-            sample = xml_file.read(4096).lower()
-    except OSError:
+        tree = etree.parse(file_path)
+        root_tag = etree.QName(tree.getroot()).localname.lower()
+    except Exception as e:
+        logger.debug(f"Nao foi possivel parsear {file_path}: {e}")
         return False
 
-    return any(
-        marker in sample
-        for marker in (
-            '<proceventocte',
-            '<proceventomdfe',
-            '<reteventocte',
-            '<reteventomdfe',
-            '<eventocte',
-            '<eventomdfe',
-        )
-    )
+    event_roots = {
+        'proceventocte',
+        'proceventomdfe',
+        'reteventocte',
+        'reteventomdfe',
+        'eventocte',
+        'eventomdfe',
+    }
+    return root_tag in event_roots
 
 
 def sort_xml_upload_order(file_paths: list) -> list:
@@ -166,7 +172,7 @@ def sort_xml_upload_order(file_paths: list) -> list:
     def upload_order(file_path):
         filename = os.path.basename(file_path).lower()
         is_event = is_event_xml_file(file_path)
-        is_return = 'retevento' in filename
+        is_return = is_event and 'retevento' in filename
         chave = extract_chave_from_filename(filename) or ''
         return (chave, 2 if is_return else 1 if is_event else 0, filename)
 

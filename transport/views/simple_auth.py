@@ -1,13 +1,61 @@
 import json
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.http import JsonResponse
+from django.core.cache import cache
 
 
+def get_client_ip(request):
+    """Obtem o IP real do cliente, considerando proxies."""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+def login_rate_limit(max_attempts=5, window=60):
+    """
+    Decorator que limita tentativas de login por IP.
+    - max_attempts: numero maximo de tentativas no intervalo.
+    - window: duracao da janela em segundos.
+    Retorna 429 Too Many Requests quando o limite e excedido.
+    """
+    def decorator(view_func):
+        def wrapper(request, *args, **kwargs):
+            if request.method == 'POST':
+                ip = get_client_ip(request)
+                cache_key = f"login_attempt_{ip}"
+                attempts = cache.get(cache_key, 0)
+
+                if attempts >= max_attempts:
+                    return JsonResponse(
+                        {'detail': 'Muitas tentativas de login. Tente novamente em alguns minutos.'},
+                        status=429
+                    )
+
+                response = view_func(request, *args, **kwargs)
+
+                # Em caso de sucesso, reseta o contador; caso contrario, incrementa.
+                status = getattr(response, 'status_code', None)
+                if status in (200, 302):
+                    cache.delete(cache_key)
+                else:
+                    cache.set(cache_key, attempts + 1, window)
+
+                return response
+
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+@sensitive_post_parameters('password')
 @csrf_exempt  # Isenta CSRF para permitir login via API
+@login_rate_limit(max_attempts=5, window=60)
 def simple_login(request):
     """
     View de login que aceita tanto form tradicional quanto JSON.
@@ -68,15 +116,13 @@ def simple_login(request):
 
 
 @csrf_protect
+@require_POST
 def simple_logout(request):
     """
-    View de logout que aceita JSON.
-    Requer CSRF token para prevenir ataques de logout forçado.
+    View de logout para a API.
+
+    Logout altera estado de autenticação, portanto só aceita POST protegido por
+    CSRF. Isso evita que uma navegação GET force logout do usuário.
     """
     logout(request)
-
-    content_type = request.content_type or ''
-    if 'application/json' in content_type or request.method == 'POST':
-        return JsonResponse({'success': True, 'message': 'Logout realizado com sucesso'})
-
-    return redirect('/')
+    return JsonResponse({'success': True, 'message': 'Logout realizado com sucesso'})

@@ -1,8 +1,12 @@
 # transport/models.py
 import uuid
+from datetime import date
 from decimal import Decimal
 from django.db import models
 from django.db.models import JSONField
+from django.utils import timezone
+
+from .validators import normalizar_placa, validar_cpf, validar_cnpj, validar_ie
 
 # ---------------------------------------------------------------------------
 #  B A S E S   A B S T R A T A S
@@ -45,15 +49,26 @@ class EntidadeFiscal(Endereco):
 class CTeDocumento(models.Model):
     """Raiz do CT-e – mantém a chave e o XML bruto."""
     MODALIDADE_CHOICES = [('CIF','CIF'), ('FOB','FOB')] # Novas Opções CIF/FOB
+    STATUS_CHOICES = [
+        ('autorizado', 'Autorizado'),
+        ('cancelado', 'Cancelado'),
+        ('encerrado', 'Encerrado'),
+        ('denegado', 'Denegado'),
+        ('inutilizado', 'Inutilizado'),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     chave = models.CharField("Chave CT-e", max_length=44, unique=True, db_index=True)
     versao = models.CharField("Versão Schema", max_length=5)
     xml_original = models.TextField(null=True, blank=True) # Permite nulo inicialmente
     arquivo_xml = models.FileField(upload_to='xml_ctes/', null=True, blank=True, verbose_name="Arquivo XML")
+    checksum = models.CharField("Checksum SHA-256", max_length=64, blank=True, null=True, db_index=True)
+    data_arquivamento = models.DateTimeField("Data de Arquivamento", auto_now_add=True)
+    caminho_arquivo = models.CharField("Caminho do Arquivo", max_length=255, blank=True, null=True)
     data_upload = models.DateTimeField(auto_now_add=True)
     processado = models.BooleanField(default=False, help_text="Indica se o XML foi processado e os dados extraídos.")
     modalidade = models.CharField("Modalidade Frete", max_length=3, choices=MODALIDADE_CHOICES, null=True, blank=True, db_index=True)
+    status = models.CharField("Status", max_length=15, choices=STATUS_CHOICES, default='autorizado', db_index=True)
 
     # Campos de controle de pagamento (inseridos pelo admin)
     pago = models.BooleanField("Pago", default=False, db_index=True)
@@ -78,6 +93,8 @@ class CTeDocumento(models.Model):
         indexes = [
             models.Index(fields=['modalidade', 'data_upload']),
             models.Index(fields=['processado', 'data_upload']),
+            models.Index(fields=['pago', 'data_pagamento']),
+            models.Index(fields=['pago', 'data_upload']),
         ]
 
     def __str__(self):
@@ -149,6 +166,11 @@ class CTeIdentificacao(models.Model):
         db_table = "cte_identificacao"
         verbose_name = "CT-e – Identificação"
         verbose_name_plural = verbose_name
+        indexes = [
+            models.Index(fields=['numero', 'serie']),
+            models.Index(fields=['uf_ini', 'uf_fim']),
+            models.Index(fields=['data_emissao', 'numero']),
+        ]
 
 class CTeComplemento(models.Model):
     """<compl>"""
@@ -481,6 +503,11 @@ class CTeVeiculoRodoviario(models.Model):
     prop_ie = models.CharField("IE Proprietário", max_length=14, null=True, blank=True)
     prop_uf = models.CharField("UF Proprietário", max_length=2, null=True, blank=True)
 
+    @property
+    def placa_normalizada(self):
+        """Placa sem formatação, em maiúsculas (ex.: ABC1234 ou ABC1D23)."""
+        return normalizar_placa(self.placa)
+
     class Meta:
         db_table = "cte_veiculo_rodo"
         verbose_name = "CT-e – Veículo Rodoviário"
@@ -729,13 +756,25 @@ class CTeCancelamento(models.Model):
 
 class MDFeDocumento(models.Model):
    """Raiz do MDF-e – mantém a chave e o XML bruto."""
+   STATUS_CHOICES = [
+       ('autorizado', 'Autorizado'),
+       ('cancelado', 'Cancelado'),
+       ('encerrado', 'Encerrado'),
+       ('denegado', 'Denegado'),
+       ('inutilizado', 'Inutilizado'),
+   ]
+
    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
    chave = models.CharField("Chave MDF-e", max_length=44, unique=True, db_index=True)
    versao = models.CharField("Versão Schema", max_length=5)
    xml_original = models.TextField(null=True, blank=True)
    arquivo_xml = models.FileField(upload_to='xml_mdfes/', null=True, blank=True, verbose_name="Arquivo XML")
+   checksum = models.CharField("Checksum SHA-256", max_length=64, blank=True, null=True, db_index=True)
+   data_arquivamento = models.DateTimeField("Data de Arquivamento", auto_now_add=True)
+   caminho_arquivo = models.CharField("Caminho do Arquivo", max_length=255, blank=True, null=True)
    data_upload = models.DateTimeField(auto_now_add=True)
    processado = models.BooleanField(default=False, help_text="Indica se o XML foi processado e os dados extraídos.")
+   status = models.CharField("Status", max_length=15, choices=STATUS_CHOICES, default='autorizado', db_index=True)
    
    # Campos para tratamento de encerramento - NOVOS CAMPOS
    encerrado = models.BooleanField("Encerrado", default=False, db_index=True)
@@ -749,6 +788,10 @@ class MDFeDocumento(models.Model):
        verbose_name = "MDF-e (Documento)"
        verbose_name_plural = "MDF-e (Documentos)"
        ordering = ['-identificacao__dh_emi']
+       indexes = [
+           models.Index(fields=['processado', 'data_upload']),
+           models.Index(fields=['encerrado', 'data_encerramento']),
+       ]
 
    def __str__(self):
        return self.chave
@@ -780,6 +823,11 @@ class MDFeIdentificacao(models.Model):
        db_table = "mdfe_identificacao"
        verbose_name = "MDF-e – Identificação"
        verbose_name_plural = verbose_name
+       indexes = [
+           models.Index(fields=['n_mdf', 'serie']),
+           models.Index(fields=['uf_ini', 'uf_fim']),
+           models.Index(fields=['dh_emi', 'n_mdf']),
+       ]
 
 class MDFeMunicipioCarregamento(models.Model):
    """<infMunCarrega>"""
@@ -1348,13 +1396,49 @@ class Veiculo(models.Model):
        null=True,
        help_text="Validade da aferição do cronotacógrafo"
    )
+   seguro_validade = models.DateField(
+       "Seguro - Validade",
+       blank=True,
+       null=True
+   )
+   laudo_vistoria_validade = models.DateField(
+       "Laudo de Vistoria - Validade",
+       blank=True,
+       null=True
+   )
 
    # Status
    ativo = models.BooleanField(default=True)
    observacoes = models.TextField("Observações", blank=True, null=True)
 
+   # Integração com GPS
+   gps_identificador = models.CharField(
+       "ID no GPS",
+       max_length=60,
+       blank=True,
+       null=True,
+       help_text="Identificador do veículo no sistema de rastreamento GPS"
+   )
+   gps_provedor = models.CharField(
+       "Provedor GPS",
+       max_length=30,
+       blank=True,
+       null=True,
+       help_text="Ex: onixsat, sitrack, autotrac, sascar"
+   )
+   gps_ultima_sincronizacao = models.DateTimeField(
+       "Última sincronização GPS",
+       null=True,
+       blank=True
+   )
+
    criado_em = models.DateTimeField(auto_now_add=True)
    atualizado_em = models.DateTimeField(auto_now=True)
+
+   @property
+   def placa_normalizada(self):
+       """Placa sem formatação, em maiúsculas (ex.: ABC1234 ou ABC1D23)."""
+       return normalizar_placa(self.placa)
 
    def __str__(self):
        return self.placa
@@ -1381,6 +1465,8 @@ class Veiculo(models.Model):
            ('Aferição', self.afericao_validade),
            ('CRLV', self.crlv_validade),
            ('Cronotacógrafo', self.cronotacografo_validade),
+           ('Seguro', self.seguro_validade),
+           ('Laudo de Vistoria', self.laudo_vistoria_validade),
        ]
 
        for nome_doc, validade in documentos_verificar:
@@ -1545,7 +1631,8 @@ class ManutencaoVeiculo(models.Model):
    def __str__(self):
        data = self.data_agendada or self.data_servico
        desc = self.descricao or self.servico_realizado or "Manutenção"
-       return f"{self.veiculo.placa} – {desc[:50]} ({data:%d/%m/%Y})"
+       data_str = data.strftime('%d/%m/%Y') if data else 'sem data'
+       return f"{self.veiculo.placa} – {desc[:50]} ({data_str})"
 
    class Meta:
        verbose_name = "Manutenção de Veículo"
@@ -1607,7 +1694,16 @@ class PagamentoAgregado(models.Model):
        verbose_name_plural = "Pagamentos Agregados (CT-e)"
        ordering = ['-data_prevista', 'status']
 
+   def clean(self):
+       from django.core.exceptions import ValidationError
+       if self.cte_id and PagamentoProprio.objects.filter(cte_id=self.cte_id).exists():
+           raise ValidationError(
+               "Este CT-e já possui um pagamento próprio associado. "
+               "Não é permitido ter pagamento agregado e próprio simultaneamente."
+           )
+
    def save(self, *args, **kwargs):
+       self.clean()
        # Calcula o valor do repasse automaticamente: (frete * percentual / 100) - desconto
        if self.valor_frete_total and self.percentual_repasse:
            valor_bruto = (self.valor_frete_total * self.percentual_repasse) / Decimal('100.0')
@@ -1629,10 +1725,11 @@ class PagamentoProprio(models.Model):
    # Ex: '2025-04-1Q' (1ª Quinzena), '2025-04-2Q' (2ª Quinzena) ou '2025-04' (Mensal)
    periodo = models.CharField("Período (AAAA-MM ou AAAA-MM-XQ)", max_length=10, db_index=True)
 
-   # CT-e vinculado (obrigatório, relação 1:1)
+   # CT-e vinculado (opcional, relação 1:1)
    cte = models.OneToOneField(
        'CTeDocumento', on_delete=models.CASCADE,
-       related_name='pagamento_proprio', verbose_name="CT-e Vinculado"
+       related_name='pagamento_proprio', verbose_name="CT-e Vinculado",
+       null=True, blank=True
    )
    cte_numero = models.CharField("Número do CT-e", max_length=20, blank=True, null=True)
    motorista_nome = models.CharField("Nome do Condutor", max_length=255, blank=True, null=True)
@@ -1662,7 +1759,16 @@ class PagamentoProprio(models.Model):
        ordering = ['-periodo', 'veiculo__placa']
        # Removido unique_together para permitir múltiplos registros por veículo/período
 
+   def clean(self):
+       from django.core.exceptions import ValidationError
+       if self.cte_id and PagamentoAgregado.objects.filter(cte_id=self.cte_id).exists():
+           raise ValidationError(
+               "Este CT-e já possui um pagamento agregado associado. "
+               "Não é permitido ter pagamento agregado e próprio simultaneamente."
+           )
+
    def save(self, *args, **kwargs):
+       self.clean()
        # Calcula o valor total a pagar
        self.valor_total_pagar = (self.valor_base_faixa or Decimal('0.00')) + (self.ajustes or Decimal('0.00'))
        super().save(*args, **kwargs)
@@ -1816,14 +1922,132 @@ class AlertaSistema(models.Model):
     modulo = models.CharField(max_length=60, blank=True)
     usuario = models.CharField(max_length=60, blank=True)
     referencia = models.CharField(max_length=60, blank=True)
+    lido = models.BooleanField("Lido", default=False)
+    resolvido = models.BooleanField("Resolvido", default=False)
+    data_resolucao = models.DateTimeField("Data Resolução", null=True, blank=True)
 
     class Meta:
         verbose_name = "Alerta do Sistema"
         verbose_name_plural = "Alertas do Sistema"
         ordering = ['-data_hora']
 
+
     def __str__(self):
         return f"[{self.prioridade.upper()}] {self.tipo or 'Alerta'}"
+
+
+# --------------------------------------------------
+#  C I O T - Código de Identificação da Operação de Transporte
+# --------------------------------------------------
+class CIOT(models.Model):
+    """
+    Gerenciamento de Códigos de Identificação da Operação de Transporte (CIOT).
+    O CIOT é obrigatório para operações de transporte remunerado rodoviário
+    de cargas e deve ser informado no CT-e/MDF-e.
+    """
+
+    STATUS_CHOICES = [
+        ('ativo', 'Ativo'),
+        ('usado', 'Usado'),
+        ('vencido', 'Vencido'),
+        ('cancelado', 'Cancelado'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    codigo = models.CharField(
+        "Código CIOT",
+        max_length=12,
+        unique=True,
+        db_index=True,
+        help_text="Código de 12 dígitos numéricos gerado no sistema CIOT/NTT"
+    )
+    descricao = models.CharField("Descrição", max_length=255, blank=True, null=True)
+
+    # Responsáveis pela operação
+    responsavel_cnpj = models.CharField("CNPJ Responsável", max_length=14, blank=True, null=True)
+    responsavel_cpf = models.CharField("CPF Responsável", max_length=11, blank=True, null=True)
+
+    # Contratante / Contratado
+    cliente = models.ForeignKey(
+        'Cliente',
+        on_delete=models.PROTECT,
+        related_name='ciots',
+        verbose_name="Contratante",
+        null=True,
+        blank=True
+    )
+    motorista = models.ForeignKey(
+        'Motorista',
+        on_delete=models.PROTECT,
+        related_name='ciots',
+        verbose_name="Contratado / Motorista",
+        null=True,
+        blank=True
+    )
+
+    # Origem / Destino
+    origem_cidade = models.CharField("Cidade Origem", max_length=120, blank=True, null=True)
+    origem_uf = models.CharField("UF Origem", max_length=2, blank=True, null=True)
+    destino_cidade = models.CharField("Cidade Destino", max_length=120, blank=True, null=True)
+    destino_uf = models.CharField("UF Destino", max_length=2, blank=True, null=True)
+
+    # Dados financeiros/operacionais
+    valor = models.DecimalField("Valor da Operação", max_digits=15, decimal_places=2, null=True, blank=True)
+    data_emissao = models.DateField("Data de Emissão", null=True, blank=True)
+    data_validade = models.DateField("Data de Validade", null=True, blank=True)
+
+    # Vínculos (opcional)
+    cte = models.ForeignKey(
+        'CTeDocumento',
+        on_delete=models.SET_NULL,
+        related_name='ciots',
+        verbose_name="CT-e Vinculado",
+        null=True,
+        blank=True
+    )
+    mdfe = models.ForeignKey(
+        'MDFeDocumento',
+        on_delete=models.SET_NULL,
+        related_name='ciots',
+        verbose_name="MDF-e Vinculado",
+        null=True,
+        blank=True
+    )
+    ordem = models.ForeignKey(
+        'OrdemViagem',
+        on_delete=models.SET_NULL,
+        related_name='ciots',
+        verbose_name="Ordem de Viagem",
+        null=True,
+        blank=True
+    )
+
+    status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES, default='ativo', db_index=True)
+    observacao = models.TextField("Observação", blank=True, null=True)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "ciot"
+        verbose_name = "CIOT"
+        verbose_name_plural = "CIOTs"
+        ordering = ['-criado_em']
+        indexes = [
+            models.Index(fields=['status', 'data_validade']),
+            models.Index(fields=['cliente', 'status']),
+            models.Index(fields=['motorista', 'status']),
+        ]
+
+    def __str__(self):
+        return f"CIOT {self.codigo}"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.codigo and not self.codigo.isdigit():
+            raise ValidationError("O código CIOT deve conter apenas números.")
+        if self.codigo and len(self.codigo) != 12:
+            raise ValidationError("O código CIOT deve conter exatamente 12 dígitos.")
 
 
 # --------------------------------------------------
@@ -1894,11 +2118,19 @@ class Cliente(models.Model):
         """Validações customizadas."""
         from django.core.exceptions import ValidationError
 
-        # Validação básica de CNPJ (apenas formato)
+        # Validação de CNPJ (dígitos verificadores)
         if self.cnpj:
-            cnpj_limpo = ''.join(filter(str.isdigit, self.cnpj))
-            if len(cnpj_limpo) != 14:
-                raise ValidationError({'cnpj': 'CNPJ deve ter 14 dígitos.'})
+            try:
+                validar_cnpj(self.cnpj)
+            except ValidationError as exc:
+                raise ValidationError({'cnpj': exc.message})
+
+        # Validação básica de Inscrição Estadual
+        if self.ie:
+            try:
+                validar_ie(self.ie, uf=self.estado)
+            except ValidationError as exc:
+                raise ValidationError({'ie': exc.message})
 
         # Validação de UF
         if self.estado:
@@ -2015,11 +2247,12 @@ class Motorista(models.Model):
         """Validações customizadas."""
         from django.core.exceptions import ValidationError
 
-        # Validação básica de CPF (apenas formato)
+        # Validação de CPF (dígitos verificadores)
         if self.cpf:
-            cpf_limpo = ''.join(filter(str.isdigit, self.cpf))
-            if len(cpf_limpo) != 11:
-                raise ValidationError({'cpf': 'CPF deve ter 11 dígitos.'})
+            try:
+                validar_cpf(self.cpf)
+            except ValidationError as exc:
+                raise ValidationError({'cpf': exc.message})
 
     def get_documentos_vencendo(self, dias=30):
         """
@@ -2112,6 +2345,187 @@ class Motorista(models.Model):
                 })
 
         return documentos_vencendo
+
+
+# --------------------------------------------------
+#  C O N T A S   A   R E C E B E R  –  F A T U R A S
+# --------------------------------------------------
+class Fatura(models.Model):
+    """Fatura de contas a receber vinculada a itens de CT-e."""
+
+    STATUS_CHOICES = [
+        ('rascunho', 'Rascunho'),
+        ('enviada', 'Enviada'),
+        ('paga', 'Paga'),
+        ('atrasada', 'Atrasada'),
+        ('cancelada', 'Cancelada'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cliente = models.ForeignKey(
+        Cliente,
+        on_delete=models.PROTECT,
+        related_name='faturas',
+        verbose_name="Cliente"
+    )
+    numero = models.CharField("Número", max_length=30, unique=True, db_index=True)
+    data_emissao = models.DateField("Data de Emissão", default=date.today)
+    data_vencimento = models.DateField("Data de Vencimento")
+    status = models.CharField(
+        "Status",
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='rascunho',
+        db_index=True
+    )
+    valor_total = models.DecimalField(
+        "Valor Total", max_digits=15, decimal_places=2, default=Decimal('0.00')
+    )
+    observacao = models.TextField("Observação", blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "fatura"
+        verbose_name = "Fatura"
+        verbose_name_plural = "Faturas"
+        ordering = ['-data_emissao', '-criado_em']
+
+    def __str__(self):
+        return f"Fatura {self.numero}"
+
+
+class FaturaItem(models.Model):
+    """Item de uma fatura de contas a receber."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    fatura = models.ForeignKey(
+        Fatura,
+        on_delete=models.CASCADE,
+        related_name='itens',
+        verbose_name="Fatura"
+    )
+    cte = models.ForeignKey(
+        CTeDocumento,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='faturas_itens',
+        verbose_name="CT-e"
+    )
+    descricao = models.CharField("Descrição", max_length=255)
+    valor = models.DecimalField("Valor", max_digits=15, decimal_places=2)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "fatura_item"
+        verbose_name = "Item de Fatura"
+        verbose_name_plural = "Itens de Fatura"
+        ordering = ['criado_em']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['cte'],
+                name='unique_fatura_item_cte',
+                condition=models.Q(cte__isnull=False),
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.fatura.numero} - {self.descricao}"
+
+
+class ContaPagar(models.Model):
+    """Contas a pagar da empresa: combustível, pedágio, seguro, oficina, outras."""
+
+    CATEGORIA_OPCOES = [
+        ('combustivel', 'Combustível'),
+        ('pedagio', 'Pedágio'),
+        ('seguro', 'Seguro'),
+        ('oficina', 'Oficina'),
+        ('outras', 'Outras'),
+    ]
+
+    STATUS_OPCOES = [
+        ('pendente', 'Pendente'),
+        ('paga', 'Paga'),
+        ('atrasada', 'Atrasada'),
+        ('cancelada', 'Cancelada'),
+    ]
+
+    descricao = models.CharField("Descrição", max_length=255)
+    categoria = models.CharField("Categoria", max_length=20, choices=CATEGORIA_OPCOES, default='outras')
+    fornecedor = models.CharField("Fornecedor", max_length=120, blank=True, null=True)
+    valor = models.DecimalField("Valor (R$)", max_digits=12, decimal_places=2)
+    data_vencimento = models.DateField("Data de Vencimento")
+    data_pagamento = models.DateField("Data de Pagamento", null=True, blank=True)
+    status = models.CharField("Status", max_length=10, choices=STATUS_OPCOES, default='pendente', db_index=True)
+    comprovante = models.FileField(
+        "Comprovante",
+        upload_to='comprovantes/contas_pagar/%Y/%m/',
+        null=True,
+        blank=True,
+        help_text="Comprovante de pagamento (PDF, imagem)"
+    )
+    veiculo = models.ForeignKey(
+        Veiculo,
+        on_delete=models.PROTECT,
+        related_name='contas_a_pagar',
+        verbose_name="Veículo",
+        null=True,
+        blank=True
+    )
+    # viagem = models.ForeignKey('Viagem', on_delete=models.SET_NULL, related_name='contas_a_pagar', null=True, blank=True)
+    observacao = models.TextField("Observação", blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "conta_pagar"
+        verbose_name = "Conta a Pagar"
+        verbose_name_plural = "Contas a Pagar"
+        ordering = ['-data_vencimento', 'status']
+
+    def __str__(self):
+        return f"{self.descricao} - R$ {self.valor} ({self.get_status_display()})"
+
+
+class TransacaoBancaria(models.Model):
+    """Transação bancária extraída de arquivos OFX/CSV."""
+    TIPO_CHOICES = [('credito', 'Crédito'), ('debito', 'Débito')]
+
+    data = models.DateField("Data")
+    descricao = models.CharField("Descrição", max_length=255)
+    valor = models.DecimalField("Valor", max_digits=15, decimal_places=2)
+    tipo = models.CharField("Tipo", max_length=10, choices=TIPO_CHOICES)
+    arquivo_origem = models.CharField("Arquivo de Origem", max_length=255)
+    conciliado = models.BooleanField("Conciliado", default=False)
+    fatura = models.ForeignKey(
+        Fatura,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transacoes',
+        verbose_name="Fatura"
+    )
+    conta_pagar = models.ForeignKey(
+        ContaPagar,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transacoes',
+        verbose_name="Conta a Pagar"
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "transacao_bancaria"
+        verbose_name = "Transação Bancária"
+        verbose_name_plural = "Transações Bancárias"
+        ordering = ['-data', '-criado_em']
+
+    def __str__(self):
+        return f"{self.descricao} - R$ {self.valor} ({self.get_tipo_display()})"
 
 
 # --------------------------------------------------
@@ -2267,6 +2681,8 @@ class DocumentoAnexo(models.Model):
             return f"Motorista: {self.motorista.nome}"
         elif self.veiculo:
             return f"Veículo: {self.veiculo.placa}"
+        elif self.cte:
+            return f"CT-e: {self.cte.chave}"
         return "Sem vínculo"
 
     def get_entidade_tipo(self):
@@ -2277,6 +2693,8 @@ class DocumentoAnexo(models.Model):
             return 'motorista'
         elif self.veiculo:
             return 'veiculo'
+        elif self.cte:
+            return 'cte'
         return None
 
     def save(self, *args, **kwargs):
@@ -2296,12 +2714,12 @@ class DocumentoAnexo(models.Model):
         from django.core.exceptions import ValidationError
 
         # Verifica se exatamente uma entidade está vinculada
-        vinculos = [self.cliente, self.motorista, self.veiculo]
+        vinculos = [self.cliente, self.motorista, self.veiculo, self.cte]
         vinculos_preenchidos = sum(1 for v in vinculos if v is not None)
 
         if vinculos_preenchidos == 0:
             raise ValidationError(
-                "O documento deve estar vinculado a um Cliente, Motorista ou Veículo."
+                "O documento deve estar vinculado a um Cliente, Motorista, Veículo ou CT-e."
             )
         if vinculos_preenchidos > 1:
             raise ValidationError(
@@ -2321,6 +2739,46 @@ class DocumentoAnexo(models.Model):
                 raise ValidationError({
                     'arquivo': f'Extensão não permitida. Use: {", ".join(extensoes_permitidas)}'
                 })
+
+
+# --------------------------------------------------
+#  C O N T R O L E   D E   N U M E R A Ç Ã O
+# --------------------------------------------------
+
+class ControleNumeracao(models.Model):
+    """
+    Controla a numeração/série de CT-e e MDF-e por emitente.
+    Garante que não haja duplicidade de número para a mesma combinação
+    de CNPJ emitente, modelo e série.
+    """
+    MODELO_CTE = 'CTe'
+    MODELO_MDFE = 'MDFe'
+    MODELO_CHOICES = [
+        (MODELO_CTE, 'CT-e'),
+        (MODELO_MDFE, 'MDF-e'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cnpj_emitente = models.CharField("CNPJ Emitente", max_length=14, db_index=True)
+    modelo = models.CharField("Modelo", max_length=4, choices=MODELO_CHOICES, db_index=True)
+    serie = models.CharField("Série", max_length=5, db_index=True)
+    ultimo_numero = models.PositiveIntegerField("Último Número", default=0)
+    atualizado_em = models.DateTimeField("Atualizado em", auto_now=True)
+    criado_em = models.DateTimeField("Criado em", auto_now_add=True)
+
+    class Meta:
+        db_table = "controle_numeracao"
+        verbose_name = "Controle de Numeração"
+        verbose_name_plural = "Controles de Numeração"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['cnpj_emitente', 'modelo', 'serie'],
+                name='unique_controle_numeracao'
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.modelo} - Série {self.serie} - CNPJ {self.cnpj_emitente} (último: {self.ultimo_numero})"
 
 
 # --------------------------------------------------
@@ -2393,6 +2851,682 @@ class DocumentoEvento(models.Model):
 
 
 # --------------------------------------------------
+#  O R D E N S   D E   V I A G E M   (O S)
+# --------------------------------------------------
+
+class OrdemViagem(models.Model):
+    """Ordem de Serviço / Ordem de Viagem que agrupa CT-es, veículo e motorista."""
+
+    STATUS_OPCOES = [
+        ('rascunho', 'Rascunho'),
+        ('agendada', 'Agendada'),
+        ('em_andamento', 'Em Andamento'),
+        ('concluida', 'Concluída'),
+        ('cancelada', 'Cancelada'),
+    ]
+
+    TIPO_OPCOES = [
+        ('carga', 'Carga'),
+        ('descarga', 'Descarga'),
+        ('transferencia', 'Transferência'),
+        ('outros', 'Outros'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    numero = models.CharField("Número OS", max_length=20, unique=True, db_index=True)
+    tipo = models.CharField("Tipo", max_length=15, choices=TIPO_OPCOES, default='carga')
+    status = models.CharField("Status", max_length=15, choices=STATUS_OPCOES, default='rascunho', db_index=True)
+
+    cliente = models.ForeignKey(
+        Cliente,
+        on_delete=models.PROTECT,
+        related_name='ordens_viagem',
+        verbose_name="Cliente",
+        null=True,
+        blank=True
+    )
+    veiculo = models.ForeignKey(
+        Veiculo,
+        on_delete=models.PROTECT,
+        related_name='ordens_viagem',
+        verbose_name="Veículo"
+    )
+    motorista = models.ForeignKey(
+        Motorista,
+        on_delete=models.PROTECT,
+        related_name='ordens_viagem',
+        verbose_name="Motorista",
+        null=True,
+        blank=True
+    )
+
+    data_saida = models.DateTimeField("Data/Hora Saída", null=True, blank=True)
+    data_retorno = models.DateTimeField("Data/Hora Retorno", null=True, blank=True)
+    data_previsao_chegada = models.DateTimeField("Previsão Chegada", null=True, blank=True)
+
+    km_inicial = models.PositiveIntegerField("KM Inicial", null=True, blank=True)
+    km_final = models.PositiveIntegerField("KM Final", null=True, blank=True)
+
+    origem_uf = models.CharField("UF Origem", max_length=2, blank=True, null=True)
+    origem_cidade = models.CharField("Cidade Origem", max_length=120, blank=True, null=True)
+    origem_latitude = models.DecimalField("Latitude Origem", max_digits=10, decimal_places=8, null=True, blank=True)
+    origem_longitude = models.DecimalField("Longitude Origem", max_digits=11, decimal_places=8, null=True, blank=True)
+    destino_uf = models.CharField("UF Destino", max_length=2, blank=True, null=True)
+    destino_cidade = models.CharField("Cidade Destino", max_length=120, blank=True, null=True)
+    destino_latitude = models.DecimalField("Latitude Destino", max_digits=10, decimal_places=8, null=True, blank=True)
+    destino_longitude = models.DecimalField("Longitude Destino", max_digits=11, decimal_places=8, null=True, blank=True)
+
+    ciot = models.ForeignKey(
+        CIOT,
+        on_delete=models.SET_NULL,
+        related_name='ordens_viagem',
+        verbose_name="CIOT",
+        null=True,
+        blank=True
+    )
+
+    observacoes = models.TextField("Observações", blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "ordem_viagem"
+        verbose_name = "Ordem de Viagem"
+        verbose_name_plural = "Ordens de Viagem"
+        ordering = ['-data_saida', '-criado_em']
+        indexes = [
+            models.Index(fields=['status', 'data_saida']),
+            models.Index(fields=['veiculo', 'status']),
+            models.Index(fields=['motorista', 'status']),
+        ]
+
+    def __str__(self):
+        return f"OS {self.numero}"
+
+    @property
+    def distancia_km(self):
+        if self.km_inicial and self.km_final:
+            return self.km_final - self.km_inicial
+        return None
+
+    @property
+    def ctes_count(self):
+        return self.ctes.count()
+
+
+class OrdemViagemCTe(models.Model):
+    """Vínculo entre Ordem de Viagem e CT-e."""
+    ordem = models.ForeignKey(OrdemViagem, on_delete=models.CASCADE, related_name='ctes')
+    cte = models.ForeignKey(CTeDocumento, on_delete=models.CASCADE, related_name='ordens_viagem')
+    ordem_entrega = models.PositiveSmallIntegerField("Ordem de Entrega", default=1)
+
+    class Meta:
+        db_table = "ordem_viagem_cte"
+        verbose_name = "CT-e da Ordem"
+        verbose_name_plural = "CT-es da Ordem"
+        unique_together = [('ordem', 'cte')]
+        ordering = ['ordem_entrega', 'cte__identificacao__numero']
+
+
+class OrdemViagemParada(models.Model):
+    """Paradas de uma ordem de viagem (origem, destino, entregas)."""
+    TIPO_PARADA = [
+        ('coleta', 'Coleta'),
+        ('entrega', 'Entrega'),
+        ('parada', 'Parada'),
+        ('outros', 'Outros'),
+    ]
+
+    ordem = models.ForeignKey(OrdemViagem, on_delete=models.CASCADE, related_name='paradas')
+    tipo = models.CharField("Tipo", max_length=10, choices=TIPO_PARADA, default='parada')
+    sequencia = models.PositiveSmallIntegerField("Sequência", default=1)
+    cidade = models.CharField("Cidade", max_length=120, blank=True, null=True)
+    uf = models.CharField("UF", max_length=2, blank=True, null=True)
+    latitude = models.DecimalField("Latitude", max_digits=10, decimal_places=8, null=True, blank=True)
+    longitude = models.DecimalField("Longitude", max_digits=11, decimal_places=8, null=True, blank=True)
+    data_previsao = models.DateTimeField("Previsão", null=True, blank=True)
+    data_realizada = models.DateTimeField("Realizada", null=True, blank=True)
+    observacao = models.TextField("Observação", blank=True, null=True)
+
+    class Meta:
+        db_table = "ordem_viagem_parada"
+        verbose_name = "Parada da Ordem"
+        verbose_name_plural = "Paradas da Ordem"
+        ordering = ['sequencia']
+
+
+class DespesaViagem(models.Model):
+    """Despesas avulsas vinculadas a uma ordem de viagem."""
+    CATEGORIA_OPCOES = [
+        ('pedagio', 'Pedágio'),
+        ('alimentacao', 'Alimentação'),
+        ('hospedagem', 'Hospedagem'),
+        ('manutencao', 'Manutenção'),
+        ('outros', 'Outros'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ordem = models.ForeignKey(OrdemViagem, on_delete=models.CASCADE, related_name='despesas')
+    categoria = models.CharField("Categoria", max_length=15, choices=CATEGORIA_OPCOES, default='outros')
+    descricao = models.CharField("Descrição", max_length=255)
+    valor = models.DecimalField("Valor (R$)", max_digits=12, decimal_places=2)
+    data = models.DateField("Data", default=date.today)
+    comprovante = models.FileField(
+        "Comprovante",
+        upload_to='comprovantes/despesas_viagem/%Y/%m/',
+        null=True,
+        blank=True
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "despesa_viagem"
+        verbose_name = "Despesa de Viagem"
+        verbose_name_plural = "Despesas de Viagem"
+        ordering = ['-data', '-criado_em']
+
+    def __str__(self):
+        return f"{self.descricao} - R$ {self.valor}"
+
+
+class Abastecimento(models.Model):
+    """Registro de abastecimento de combustível da frota."""
+
+    COMBUSTIVEL_CHOICES = [
+        ('diesel', 'Diesel'),
+        ('diesel_s10', 'Diesel S10'),
+        ('arla', 'Arla 32'),
+        ('gasolina', 'Gasolina'),
+        ('etanol', 'Etanol'),
+        ('gnv', 'GNV'),
+        ('outros', 'Outros'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    veiculo = models.ForeignKey(
+        Veiculo,
+        on_delete=models.PROTECT,
+        related_name='abastecimentos',
+        verbose_name="Veículo"
+    )
+    motorista = models.ForeignKey(
+        Motorista,
+        on_delete=models.PROTECT,
+        related_name='abastecimentos',
+        verbose_name="Motorista",
+        null=True,
+        blank=True
+    )
+    ordem_viagem = models.ForeignKey(
+        OrdemViagem,
+        on_delete=models.SET_NULL,
+        related_name='abastecimentos',
+        verbose_name="Ordem de Viagem",
+        null=True,
+        blank=True
+    )
+    data = models.DateField("Data", default=date.today, db_index=True)
+    hodometro = models.PositiveIntegerField("Hodômetro (KM)")
+    litros = models.DecimalField("Litros", max_digits=10, decimal_places=2)
+    valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2)
+    tipo_combustivel = models.CharField(
+        "Tipo de Combustível",
+        max_length=15,
+        choices=COMBUSTIVEL_CHOICES,
+        default='diesel'
+    )
+    posto = models.CharField("Posto/Fornecedor", max_length=120, blank=True, null=True)
+    cnpj_posto = models.CharField("CNPJ Posto", max_length=18, blank=True, null=True)
+    comprovante = models.FileField(
+        "Comprovante",
+        upload_to='comprovantes/abastecimentos/%Y/%m/',
+        null=True,
+        blank=True
+    )
+    observacao = models.TextField("Observação", blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "abastecimento"
+        verbose_name = "Abastecimento"
+        verbose_name_plural = "Abastecimentos"
+        ordering = ['-data', '-criado_em']
+        indexes = [
+            models.Index(fields=['veiculo', 'data']),
+            models.Index(fields=['tipo_combustivel', 'data']),
+        ]
+
+    def __str__(self):
+        return f"{self.veiculo.placa} - {self.data} - {self.litros}L"
+
+    @property
+    def preco_litro(self):
+        if self.litros and self.valor_total and self.litros > 0:
+            return self.valor_total / self.litros
+        return None
+
+    @property
+    def consumo_medio(self):
+        """Calcula consumo médio (km/l) com base no abastecimento anterior."""
+        anterior = Abastecimento.objects.filter(
+            veiculo=self.veiculo,
+            data__lt=self.data
+        ).order_by('-data', '-criado_em').first()
+        if anterior and self.hodometro > anterior.hodometro:
+            km_rodados = self.hodometro - anterior.hodometro
+            if self.litros and self.litros > 0:
+                return round(km_rodados / float(self.litros), 2)
+        return None
+
+
+class PlanoManutencao(models.Model):
+    """Plano de manutenção preventiva/preditiva por veículo."""
+
+    TIPO_CHOICES = [
+        ('preventiva', 'Preventiva'),
+        ('corretiva', 'Corretiva'),
+        ('preditiva', 'Preditiva'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    veiculo = models.ForeignKey(
+        Veiculo,
+        on_delete=models.CASCADE,
+        related_name='planos_manutencao',
+        verbose_name="Veículo"
+    )
+    tipo = models.CharField("Tipo", max_length=15, choices=TIPO_CHOICES, default='preventiva')
+    descricao = models.CharField("Descrição do Serviço", max_length=255)
+    intervalo_km = models.PositiveIntegerField("Intervalo (KM)", null=True, blank=True)
+    intervalo_dias = models.PositiveIntegerField("Intervalo (Dias)", null=True, blank=True)
+    ultima_km = models.PositiveIntegerField("Última KM Realizada", null=True, blank=True)
+    ultima_data = models.DateField("Última Data Realizada", null=True, blank=True)
+    proxima_km = models.PositiveIntegerField("Próxima KM", null=True, blank=True)
+    proxima_data = models.DateField("Próxima Data", null=True, blank=True)
+    ativo = models.BooleanField("Ativo", default=True)
+    observacao = models.TextField("Observação", blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "plano_manutencao"
+        verbose_name = "Plano de Manutenção"
+        verbose_name_plural = "Planos de Manutenção"
+        ordering = ['veiculo__placa', 'tipo', 'descricao']
+
+    def __str__(self):
+        return f"{self.veiculo.placa} - {self.descricao}"
+
+    def calcular_proximas(self, km_atual=None):
+        """Calcula próxima KM e data com base na última manutenção."""
+        from datetime import timedelta
+        if self.ultima_km and self.intervalo_km:
+            self.proxima_km = self.ultima_km + self.intervalo_km
+        if self.ultima_data and self.intervalo_dias:
+            self.proxima_data = self.ultima_data + timedelta(days=self.intervalo_dias)
+
+    def esta_vencendo(self, km_atual=None, dias_alerta=30):
+        """Retorna True se o plano está próximo do vencimento."""
+        from datetime import date, timedelta
+        hoje = date.today()
+        if self.proxima_data and self.proxima_data <= hoje + timedelta(days=dias_alerta):
+            return True
+        if km_atual and self.proxima_km and km_atual >= self.proxima_km:
+            return True
+        return False
+
+
+class Multa(models.Model):
+    """Registro de multas de trânsito dos veículos."""
+
+    STATUS_CHOICES = [
+        ('pendente', 'Pendente'),
+        ('paga', 'Paga'),
+        ('impugnada', 'Impugnada'),
+        ('cancelada', 'Cancelada'),
+    ]
+
+    GRAVIDADE_CHOICES = [
+        ('leve', 'Leve'),
+        ('media', 'Média'),
+        ('grave', 'Grave'),
+        ('gravissima', 'Gravíssima'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    veiculo = models.ForeignKey(
+        Veiculo,
+        on_delete=models.PROTECT,
+        related_name='multas',
+        verbose_name="Veículo"
+    )
+    motorista = models.ForeignKey(
+        Motorista,
+        on_delete=models.PROTECT,
+        related_name='multas',
+        verbose_name="Motorista",
+        null=True,
+        blank=True
+    )
+    data_infracao = models.DateField("Data da Infração", default=date.today)
+    local = models.CharField("Local", max_length=255, blank=True, null=True)
+    descricao = models.CharField("Descrição/Infração", max_length=255, blank=True, null=True)
+    auto_infracao = models.CharField("Auto de Infração", max_length=30, blank=True, null=True)
+    gravidade = models.CharField("Gravidade", max_length=15, choices=GRAVIDADE_CHOICES, default='media')
+    pontos = models.PositiveSmallIntegerField("Pontos", null=True, blank=True)
+    valor = models.DecimalField("Valor (R$)", max_digits=12, decimal_places=2)
+    data_vencimento = models.DateField("Data de Vencimento", null=True, blank=True)
+    data_pagamento = models.DateField("Data de Pagamento", null=True, blank=True)
+    status = models.CharField("Status", max_length=15, choices=STATUS_CHOICES, default='pendente', db_index=True)
+    comprovante = models.FileField(
+        "Comprovante",
+        upload_to='comprovantes/multas/%Y/%m/',
+        null=True,
+        blank=True
+    )
+    observacao = models.TextField("Observação", blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "multa"
+        verbose_name = "Multa"
+        verbose_name_plural = "Multas"
+        ordering = ['-data_infracao', '-criado_em']
+
+    def __str__(self):
+        return f"{self.veiculo.placa} - {self.auto_infracao or 'Multa'}"
+
+
+class Sinistro(models.Model):
+    """Registro de sinistros envolvendo veículos da frota."""
+
+    TIPO_CHOICES = [
+        ('colisao', 'Colisão'),
+        ('incendio', 'Incêndio'),
+        ('furto_roubo', 'Furto/Roubo'),
+        ('avaria_carga', 'Avaria de Carga'),
+        ('outros', 'Outros'),
+    ]
+
+    STATUS_CHOICES = [
+        ('aberto', 'Aberto'),
+        ('em_andamento', 'Em Andamento'),
+        ('resolvido', 'Resolvido'),
+        ('cancelado', 'Cancelado'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    veiculo = models.ForeignKey(
+        Veiculo,
+        on_delete=models.PROTECT,
+        related_name='sinistros',
+        verbose_name="Veículo"
+    )
+    motorista = models.ForeignKey(
+        Motorista,
+        on_delete=models.PROTECT,
+        related_name='sinistros',
+        verbose_name="Motorista",
+        null=True,
+        blank=True
+    )
+    data = models.DateField("Data", default=date.today)
+    local = models.CharField("Local", max_length=255, blank=True, null=True)
+    tipo = models.CharField("Tipo", max_length=20, choices=TIPO_CHOICES, default='colisao')
+    descricao = models.TextField("Descrição", blank=True, null=True)
+    envolvidos_terceiros = models.TextField("Envolvidos / Terceiros", blank=True, null=True)
+    custo_total = models.DecimalField("Custo Total (R$)", max_digits=12, decimal_places=2, null=True, blank=True)
+    status = models.CharField("Status", max_length=15, choices=STATUS_CHOICES, default='aberto', db_index=True)
+    numero_sinistro = models.CharField("Número do Sinistro", max_length=30, blank=True, null=True)
+    seguradora = models.CharField("Seguradora", max_length=120, blank=True, null=True)
+    comprovante = models.FileField(
+        "Comprovante/Boletim",
+        upload_to='comprovantes/sinistros/%Y/%m/',
+        null=True,
+        blank=True
+    )
+    observacao = models.TextField("Observação", blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "sinistro"
+        verbose_name = "Sinistro"
+        verbose_name_plural = "Sinistros"
+        ordering = ['-data', '-criado_em']
+
+    def __str__(self):
+        return f"{self.veiculo.placa} - {self.get_tipo_display()}"
+
+
+class Pedagio(models.Model):
+    """Registro de pedágios pagos em viagens."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ordem = models.ForeignKey(
+        OrdemViagem,
+        on_delete=models.CASCADE,
+        related_name='pedagios',
+        verbose_name="Ordem de Viagem",
+        null=True,
+        blank=True
+    )
+    veiculo = models.ForeignKey(
+        Veiculo,
+        on_delete=models.PROTECT,
+        related_name='pedagios',
+        verbose_name="Veículo"
+    )
+    data = models.DateField("Data", default=date.today)
+    praca = models.CharField("Praça/Pedágio", max_length=120)
+    rodovia = models.CharField("Rodovia/BR", max_length=20, blank=True, null=True)
+    km = models.PositiveIntegerField("KM", null=True, blank=True)
+    categoria = models.CharField("Categoria", max_length=10, blank=True, null=True)
+    tag = models.CharField("Tag/Passagem", max_length=30, blank=True, null=True)
+    valor = models.DecimalField("Valor (R$)", max_digits=10, decimal_places=2)
+    comprovante = models.FileField(
+        "Comprovante",
+        upload_to='comprovantes/pedagios/%Y/%m/',
+        null=True,
+        blank=True
+    )
+    observacao = models.TextField("Observação", blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "pedagio"
+        verbose_name = "Pedágio"
+        verbose_name_plural = "Pedágios"
+        ordering = ['-data', '-criado_em']
+
+    def __str__(self):
+        return f"{self.veiculo.placa} - {self.praca} - R$ {self.valor}"
+
+
+class TabelaFrete(models.Model):
+    """Tabela de frete por rota e tipo de veículo."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    origem_uf = models.CharField("UF Origem", max_length=2)
+    origem_cidade = models.CharField("Cidade Origem", max_length=120)
+    destino_uf = models.CharField("UF Destino", max_length=2)
+    destino_cidade = models.CharField("Cidade Destino", max_length=120)
+    tipo_veiculo = models.CharField("Tipo de Veículo", max_length=50, blank=True, null=True)
+    valor_por_km = models.DecimalField("Valor por KM (R$)", max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    valor_minimo = models.DecimalField("Valor Mínimo (R$)", max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    valor_tonelada = models.DecimalField("Valor por Tonelada (R$)", max_digits=12, decimal_places=2, null=True, blank=True)
+    valor_m3 = models.DecimalField("Valor por M³ (R$)", max_digits=12, decimal_places=2, null=True, blank=True)
+    vigencia_inicio = models.DateField("Início Vigência", default=date.today)
+    vigencia_fim = models.DateField("Fim Vigência", null=True, blank=True)
+    ativo = models.BooleanField("Ativo", default=True)
+    observacao = models.TextField("Observação", blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "tabela_frete"
+        verbose_name = "Tabela de Frete"
+        verbose_name_plural = "Tabelas de Frete"
+        ordering = ['origem_uf', 'origem_cidade', 'destino_uf', 'destino_cidade']
+        indexes = [
+            models.Index(fields=['origem_uf', 'destino_uf']),
+            models.Index(fields=['ativo', 'vigencia_inicio', 'vigencia_fim']),
+        ]
+
+    def __str__(self):
+        return f"{self.origem_cidade}/{self.origem_uf} → {self.destino_cidade}/{self.destino_uf}"
+
+    def calcular_frete(self, distancia_km=0, peso_kg=0, volume_m3=0):
+        """Calcula o valor do frete com base na tabela."""
+        from decimal import Decimal
+        valor = Decimal('0.00')
+        if self.valor_por_km and distancia_km:
+            valor += self.valor_por_km * Decimal(distancia_km)
+        if self.valor_tonelada and peso_kg:
+            valor += self.valor_tonelada * Decimal(peso_kg) / Decimal('1000')
+        if self.valor_m3 and volume_m3:
+            valor += self.valor_m3 * Decimal(volume_m3)
+        if self.valor_minimo and valor < self.valor_minimo:
+            valor = self.valor_minimo
+        return valor
+
+
+class PosicaoVeiculo(models.Model):
+    """Posição geográfica de um veículo vinculado a uma ordem de viagem."""
+
+    FONTE_CHOICES = [
+        ('manual', 'Manual'),
+        ('gps', 'GPS'),
+        ('app', 'App Motorista'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ordem = models.ForeignKey(
+        OrdemViagem,
+        on_delete=models.CASCADE,
+        related_name='posicoes',
+        verbose_name="Ordem de Viagem"
+    )
+    veiculo = models.ForeignKey(
+        Veiculo,
+        on_delete=models.PROTECT,
+        related_name='posicoes',
+        verbose_name="Veículo"
+    )
+    latitude = models.DecimalField("Latitude", max_digits=10, decimal_places=8)
+    longitude = models.DecimalField("Longitude", max_digits=11, decimal_places=8)
+    velocidade = models.DecimalField("Velocidade (km/h)", max_digits=5, decimal_places=2, null=True, blank=True)
+    data_hora = models.DateTimeField("Data/Hora", default=timezone.now)
+    fonte = models.CharField("Fonte", max_length=10, choices=FONTE_CHOICES, default='manual')
+
+    class Meta:
+        db_table = "posicao_veiculo"
+        verbose_name = "Posição do Veículo"
+        verbose_name_plural = "Posições dos Veículos"
+        ordering = ['-data_hora']
+
+    def __str__(self):
+        return f"{self.veiculo.placa} - {self.latitude}, {self.longitude}"
+
+
+class RotaOtimizada(models.Model):
+    """Rota calculada e otimizada para uma ordem de viagem (via OSRM/OpenStreetMap)."""
+
+    STATUS_CHOICES = [
+        ('calculada', 'Calculada'),
+        ('em_uso', 'Em Uso'),
+        ('concluida', 'Concluída'),
+        ('cancelada', 'Cancelada'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ordem = models.ForeignKey(
+        OrdemViagem,
+        on_delete=models.CASCADE,
+        related_name='rotas',
+        verbose_name="Ordem de Viagem"
+    )
+    distancia_km = models.DecimalField("Distância (km)", max_digits=10, decimal_places=2)
+    duracao_min = models.IntegerField("Duração (min)")
+    geometria = models.JSONField("Geometria (GeoJSON)", null=True, blank=True)
+    waypoints = models.JSONField("Waypoints ordenados", null=True, blank=True)
+    provedor = models.CharField("Provedor", max_length=50, default='osrm')
+    status = models.CharField("Status", max_length=15, choices=STATUS_CHOICES, default='calculada')
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "rota_otimizada"
+        verbose_name = "Rota Otimizada"
+        verbose_name_plural = "Rotas Otimizadas"
+        ordering = ['-criado_em']
+
+    def __str__(self):
+        return f"Rota {self.ordem.numero} - {self.distancia_km} km"
+
+
+class MensagemComunicacao(models.Model):
+    """Registro de comunicações enviadas (e-mail/WhatsApp) para clientes/motoristas."""
+
+    CANAL_CHOICES = [
+        ('email', 'E-mail'),
+        ('whatsapp', 'WhatsApp'),
+        ('sms', 'SMS'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pendente', 'Pendente'),
+        ('enviado', 'Enviado'),
+        ('falha', 'Falha'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    canal = models.CharField("Canal", max_length=10, choices=CANAL_CHOICES)
+    destinatario = models.CharField("Destinatário", max_length=255)
+    assunto = models.CharField("Assunto", max_length=255, blank=True, null=True)
+    conteudo = models.TextField("Conteúdo")
+    status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES, default='pendente')
+    erro = models.TextField("Erro", blank=True, null=True)
+    cliente = models.ForeignKey(
+        Cliente,
+        on_delete=models.SET_NULL,
+        related_name='comunicacoes',
+        verbose_name="Cliente",
+        null=True,
+        blank=True
+    )
+    motorista = models.ForeignKey(
+        Motorista,
+        on_delete=models.SET_NULL,
+        related_name='comunicacoes',
+        verbose_name="Motorista",
+        null=True,
+        blank=True
+    )
+    ordem = models.ForeignKey(
+        OrdemViagem,
+        on_delete=models.SET_NULL,
+        related_name='comunicacoes',
+        verbose_name="Ordem de Viagem",
+        null=True,
+        blank=True
+    )
+    enviado_em = models.DateTimeField("Enviado em", null=True, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "mensagem_comunicacao"
+        verbose_name = "Mensagem de Comunicação"
+        verbose_name_plural = "Mensagens de Comunicação"
+        ordering = ['-criado_em']
+
+    def __str__(self):
+        return f"{self.canal.upper()} - {self.destinatario}"
+
+
+# --------------------------------------------------
 #  R E L A C I O N A M E N T O S   F I N A I S
 # --------------------------------------------------
 
@@ -2402,3 +3536,30 @@ CTeDocumento.add_to_class(
    'mdfe_vinculado',
    models.ManyToManyField(MDFeDocumento, through=MDFeDocumentosVinculados, related_name='ctes_transportados')
 )
+
+
+# --------------------------------------------------
+#  A U D I T L O G   -   R E G I S T R O   D E   M O D E L O S
+# --------------------------------------------------
+from auditlog.registry import auditlog  # noqa: E402
+
+auditlog.register(CTeDocumento)
+auditlog.register(MDFeDocumento)
+auditlog.register(PagamentoAgregado)
+auditlog.register(PagamentoProprio)
+auditlog.register(Fatura)
+auditlog.register(ContaPagar)
+auditlog.register(TransacaoBancaria)
+auditlog.register(Cliente)
+auditlog.register(Motorista)
+auditlog.register(Veiculo)
+auditlog.register(OrdemViagem)
+auditlog.register(Abastecimento)
+auditlog.register(PlanoManutencao)
+auditlog.register(Multa)
+auditlog.register(Sinistro)
+auditlog.register(Pedagio)
+auditlog.register(TabelaFrete)
+auditlog.register(PosicaoVeiculo)
+auditlog.register(RotaOtimizada)
+auditlog.register(CIOT)

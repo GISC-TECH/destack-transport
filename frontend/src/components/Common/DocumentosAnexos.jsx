@@ -13,16 +13,6 @@ const TIPOS_DOCUMENTO = {
     { value: 'procuracao', label: 'Procuração' },
     { value: 'outro', label: 'Outro' },
   ],
-  manutencao: [
-    { value: 'nota_fiscal', label: 'Nota Fiscal' },
-    { value: 'orcamento', label: 'Orçamento' },
-    { value: 'ordem_servico', label: 'Ordem de Serviço' },
-    { value: 'laudo_tecnico', label: 'Laudo Técnico' },
-    { value: 'garantia', label: 'Termo de Garantia' },
-    { value: 'foto_antes', label: 'Foto Antes' },
-    { value: 'foto_depois', label: 'Foto Depois' },
-    { value: 'outro', label: 'Outro' },
-  ],
   cte: [
     { value: 'xml_cte', label: 'XML CT-e' },
     { value: 'dacte', label: 'DACTE (PDF)' },
@@ -31,23 +21,6 @@ const TIPOS_DOCUMENTO = {
     { value: 'nota_fiscal_mercadoria', label: 'NF-e Mercadoria' },
     { value: 'romaneio', label: 'Romaneio de Carga' },
     { value: 'seguro_carga', label: 'Apolice Seguro Carga' },
-    { value: 'outro', label: 'Outro' },
-  ],
-  mdfe: [
-    { value: 'xml_mdfe', label: 'XML MDF-e' },
-    { value: 'damdfe', label: 'DAMDFE (PDF)' },
-    { value: 'encerramento', label: 'Comprovante Encerramento' },
-    { value: 'termo_carga', label: 'Termo de Carga' },
-    { value: 'checklist', label: 'Checklist Viagem' },
-    { value: 'outro', label: 'Outro' },
-  ],
-  pagamento: [
-    { value: 'comprovante_pix', label: 'Comprovante PIX' },
-    { value: 'comprovante_ted', label: 'Comprovante TED/DOC' },
-    { value: 'comprovante_deposito', label: 'Comprovante Depósito' },
-    { value: 'recibo', label: 'Recibo Assinado' },
-    { value: 'boleto', label: 'Boleto Pago' },
-    { value: 'nota_fiscal_servico', label: 'NFS-e' },
     { value: 'outro', label: 'Outro' },
   ],
   motorista: [
@@ -132,6 +105,9 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
   });
   const [saving, setSaving] = useState(false);
 
+  // Tipos de entidade suportados pelo backend
+  const TIPOS_ENTIDADE_VALIDOS = ['cliente', 'motorista', 'veiculo', 'cte'];
+
   // API baseada no tipo de entidade
   const getAPI = useCallback(() => {
     switch (entidadeTipo) {
@@ -141,22 +117,18 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
         return documentosAPI.motoristas;
       case 'veiculo':
         return documentosAPI.veiculos;
-      case 'manutencao':
-        return documentosAPI.manutencoes;
       case 'cte':
         return documentosAPI.ctes;
-      case 'mdfe':
-        return documentosAPI.mdfes;
-      case 'pagamento':
-        return documentosAPI.pagamentos;
       default:
         throw new Error('Tipo de entidade invalido');
     }
   }, [entidadeTipo]);
 
+  const tipoValido = TIPOS_ENTIDADE_VALIDOS.includes(entidadeTipo);
+
   // Carrega documentos
   const loadDocumentos = useCallback(async () => {
-    if (!entidadeId) return;
+    if (!entidadeId || !tipoValido) return;
 
     try {
       setLoading(true);
@@ -171,7 +143,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
     } finally {
       setLoading(false);
     }
-  }, [entidadeId, getAPI]);
+  }, [entidadeId, getAPI, tipoValido]);
 
   useEffect(() => {
     loadDocumentos();
@@ -314,7 +286,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
     return validadeDate > new Date() && validadeDate <= thirtyDaysFromNow;
   };
 
-  const tiposDisponiveis = TIPOS_DOCUMENTO[entidadeTipo] || TIPOS_DOCUMENTO.cliente;
+  const tiposDisponiveis = TIPOS_DOCUMENTO[entidadeTipo] || [];
 
   return (
     <div className="documentos-anexos">
@@ -326,7 +298,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
           </svg>
           Documentos Anexos
         </h3>
-        {!readOnly && (
+        {tipoValido && !readOnly && (
           <button
             className="btn btn-primary btn-sm"
             onClick={() => setShowUploadForm(!showUploadForm)}
@@ -336,7 +308,17 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
         )}
       </div>
 
-      {error && (
+      {!tipoValido && (
+        <div className="no-docs" style={{ padding: '20px', textAlign: 'center' }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <p>Documentos anexos não estão disponíveis para este tipo de registro.</p>
+        </div>
+      )}
+
+      {tipoValido && error && (
         <div className="error-message">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"></circle>
@@ -349,7 +331,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
       )}
 
       {/* Formulario de Upload */}
-      {showUploadForm && !readOnly && (
+      {tipoValido && showUploadForm && !readOnly && (
         <div className="upload-form">
           <div className="form-row">
             <div className="form-group">
@@ -433,7 +415,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
       )}
 
       {/* Modal de Edicao */}
-      {editingDoc && (
+      {tipoValido && editingDoc && (
         <div className="edit-modal-overlay" onClick={handleCancelEdit}>
           <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
             <div className="edit-modal-header">
@@ -500,6 +482,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
       )}
 
       {/* Lista de Documentos */}
+      {tipoValido && (
       <div className="documentos-list">
         {loading ? (
           <div className="loading-docs">Carregando documentos...</div>
@@ -594,6 +577,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
           </table>
         )}
       </div>
+      )}
     </div>
   );
 }

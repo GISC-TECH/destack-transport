@@ -853,7 +853,7 @@ tbody tr:last-child td {
   }
 
   .main-content {
-    padding-top: calc(var(--mobile-header-height) + 15px);
+    padding-top: 15px;
     padding-left: 15px;
     padding-right: 15px;
   }
@@ -884,7 +884,7 @@ tbody tr:last-child td {
   }
 
   .main-content {
-    padding: calc(var(--mobile-header-height) + 15px) 15px 15px 15px;
+    padding: 15px 15px 80px 15px;
   }
 
   .page-header h1 {
@@ -956,7 +956,7 @@ tbody tr:last-child td {
 
 @media (max-width: 480px) {
   .main-content {
-    padding: calc(var(--mobile-header-height) + 10px) 10px 10px 10px;
+    padding: 10px 10px 80px 10px;
   }
 
   .card {
@@ -1317,12 +1317,43 @@ tbody tr:last-child td {
 }
 
 /* ========================================
+   PAGE LOADER (code-splitting fallback)
+   ======================================== */
+
+.page-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: var(--text-secondary);
+  gap: 16px;
+}
+
+.page-loader .spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.page-loader p {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ========================================
    PRINT STYLES
    ======================================== */
 
 @media print {
   .sidebar,
   .mobile-header,
+  .bottom-nav,
+  .bottom-sheet,
+  .bottom-sheet-overlay,
   .btn,
   .pagination,
   .filters-container {

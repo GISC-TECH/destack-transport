@@ -327,7 +327,7 @@ docker-compose -f docker-compose.local.yml up -d --build
 ```env
 # Django
 DEBUG=True
-SECRET_KEY=sua-chave-secreta
+DJANGO_SECRET_KEY=sua-chave-secreta
 ALLOWED_HOSTS=localhost,127.0.0.1
 
 # Banco de dados
@@ -413,4 +413,3 @@ MIT License - Veja o arquivo LICENSE para detalhes.
 - ✅ Corrigido problema de acesso ao perfil EGS
 - ✅ Robô voltou a baixar CT-es normalmente
 - ✅ 895 registros processados
-

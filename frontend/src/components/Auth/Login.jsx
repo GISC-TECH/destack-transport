@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/images/logo.svg';
 import './Auth.css';
@@ -12,6 +12,8 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || '/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +23,7 @@ function Login() {
     try {
       const result = await login(username, password);
       if (result.success) {
-        navigate('/dashboard');
+        navigate(from, { replace: true });
       } else {
         setError(result.error || 'Erro ao fazer login');
       }

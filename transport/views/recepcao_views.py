@@ -6,6 +6,7 @@ parse mas não pertencem ao fluxo principal de CT-e/MDF-e.
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 
+from ..permissions import TransportModelPermission
 from ..models import DocumentoFiscalGenerico, DocumentoEvento
 from rest_framework import serializers
 
@@ -32,7 +33,7 @@ class DocumentoFiscalGenericoViewSet(viewsets.ReadOnlyModelViewSet):
     """Lista/consulta documentos fiscais genéricos recebidos (ex.: GTV-e mod 64)."""
     queryset = DocumentoFiscalGenerico.objects.all().order_by('-criado_em')
     serializer_class = DocumentoFiscalGenericoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['chave', 'numero', 'emitente_cnpj', 'emitente_nome']
     ordering_fields = ['criado_em', 'data_emissao', 'valor_total']
@@ -49,7 +50,7 @@ class DocumentoEventoViewSet(viewsets.ReadOnlyModelViewSet):
     """Lista/consulta os eventos recebidos (cancelamento, CC-e, encerramento, etc.)."""
     queryset = DocumentoEvento.objects.all().order_by('-data_evento')
     serializer_class = DocumentoEventoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['chave_documento', 'tipo_evento', 'protocolo']
     ordering_fields = ['data_evento', 'criado_em']

@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pagamentosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
-import Loading from '../Common/Loading';
+import { SkeletonTable, SkeletonMobileCards } from '../Common/Skeleton';
+import EmptyState from '../Common/EmptyState';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
 import ComprovantePagamento from './ComprovantePagamento';
@@ -12,6 +13,7 @@ function PagamentosList() {
   const navigate = useNavigate();
   const toast = useToast();
   const isMountedRef = useRef(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [activeTab, setActiveTab] = useState('agregados');
   const [pagamentos, setPagamentos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -126,6 +128,13 @@ function PagamentosList() {
     return () => {
       isMountedRef.current = false;
     };
+  }, []);
+
+  // Detecta viewport mobile para alternar entre tabela e cards
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Carrega quando muda a tab - reseta a página
@@ -461,6 +470,136 @@ function PagamentosList() {
     setModalComprovante({ show: true, pagamento });
   };
 
+  // Botoes de acao desktop (todos visiveis)
+  const renderActionButtons = (pagamento) => (
+    <div className="action-buttons">
+      <button
+        className="btn-action btn-view"
+        onClick={() => handleAbrirComprovante(pagamento)}
+        title="Gerar Comprovante"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <line x1="9" y1="15" x2="15" y2="15"></line>
+        </svg>
+      </button>
+      {pagamento.status !== 'pago' && (
+        <button
+          className="btn-action btn-download"
+          onClick={() => handleAbrirBaixa(pagamento)}
+          title="Baixar Pagamento"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </button>
+      )}
+      <button
+        className="btn-action btn-edit"
+        onClick={() => handleEditarPagamento(pagamento.id)}
+        title="Editar"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+      </button>
+      <button
+        className="btn-action"
+        onClick={() => handleAbrirConverter(pagamento)}
+        title={activeTab === 'agregados' ? 'Converter para Próprio' : 'Converter para Agregado'}
+        style={{ color: '#6366f1' }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="17 1 21 5 17 9"></polyline>
+          <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+          <polyline points="7 23 3 19 7 15"></polyline>
+          <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+        </svg>
+      </button>
+      <button
+        className="btn-action btn-delete"
+        onClick={() => handleAbrirExcluir(pagamento)}
+        title="Excluir"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+    </div>
+  );
+
+  // Botoes de acao mobile compactos (icones com label reduzido)
+  const renderMobileActions = (pagamento) => (
+    <div className="mobile-card-actions">
+      <button
+        className="mobile-action-btn view"
+        onClick={() => handleAbrirComprovante(pagamento)}
+        title="Gerar Comprovante"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <line x1="9" y1="15" x2="15" y2="15"></line>
+        </svg>
+        <span>Comp.</span>
+      </button>
+      {pagamento.status !== 'pago' && (
+        <button
+          className="mobile-action-btn download"
+          onClick={() => handleAbrirBaixa(pagamento)}
+          title="Baixar Pagamento"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span>Baixar</span>
+        </button>
+      )}
+      <button
+        className="mobile-action-btn edit"
+        onClick={() => handleEditarPagamento(pagamento.id)}
+        title="Editar"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        <span>Editar</span>
+      </button>
+      <button
+        className="mobile-action-btn convert"
+        onClick={() => handleAbrirConverter(pagamento)}
+        title={activeTab === 'agregados' ? 'Converter' : 'Converter'}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="17 1 21 5 17 9"></polyline>
+          <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+          <polyline points="7 23 3 19 7 15"></polyline>
+          <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+        </svg>
+        <span>Conv.</span>
+      </button>
+      <button
+        className="mobile-action-btn delete"
+        onClick={() => handleAbrirExcluir(pagamento)}
+        title="Excluir"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        <span>Excl.</span>
+      </button>
+    </div>
+  );
+
   const headerActions = (
     <>
       <button
@@ -499,8 +638,6 @@ function PagamentosList() {
     </>
   );
 
-  if (loading && pagamentos.length === 0) return <Loading message="Carregando pagamentos..." />;
-
   return (
     <div className="pagamentos-page">
       <PageHeader
@@ -514,7 +651,7 @@ function PagamentosList() {
       {/* Modal de Geração em Lote */}
       {showGerarLote && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content modal-lote">
             <div className="modal-header">
               <h3>Gerar Pagamentos em Lote</h3>
               <button className="modal-close" onClick={() => setShowGerarLote(false)}>
@@ -604,7 +741,7 @@ function PagamentosList() {
       {/* Modal de Baixa Rápida */}
       {modalBaixa.show && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '400px' }}>
+          <div className="modal-content modal-baixa">
             <div className="modal-header">
               <h3>Baixar Pagamento</h3>
               <button className="modal-close" onClick={() => setModalBaixa({ show: false, id: null, info: '' })}>
@@ -672,7 +809,7 @@ function PagamentosList() {
       {/* Modal de Conversão */}
       {modalConverter.show && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
+          <div className="modal-content modal-converter">
             <div className="modal-header">
               <h3>
                 {modalConverter.tipo === 'agregado_para_proprio'
@@ -798,7 +935,7 @@ function PagamentosList() {
       {/* Modal de Exclusao */}
       {modalExcluir.show && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '450px' }}>
+          <div className="modal-content modal-excluir">
             <div className="modal-header">
               <h3>Excluir Pagamento</h3>
               <button className="modal-close" onClick={() => setModalExcluir({ show: false, id: null, info: '' })}>
@@ -932,47 +1069,60 @@ function PagamentosList() {
         </p>
       </div>
 
-      {/* Tabela */}
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              {activeTab === 'agregados' ? (
-                <>
-                  <th>CT-e</th>
-                  <th>Condutor</th>
-                  <th>Placa</th>
-                  <th>Data Prevista</th>
-                  <th>Desconto</th>
-                  <th>Valor Repasse</th>
-                  <th>Comprovante</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </>
-              ) : (
-                <>
-                  <th>CT-e</th>
-                  <th>Condutor</th>
-                  <th>Placa</th>
-                  <th>Data Prevista</th>
-                  <th>KM</th>
-                  <th>Valor Repasse</th>
-                  <th>Comprovante</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {pagamentos.length === 0 ? (
+      {/* Loading skeletons */}
+      {loading && pagamentos.length === 0 && (
+        <div className="pagamentos-skeleton">
+          {isMobile ? (
+            <SkeletonMobileCards count={4} />
+          ) : (
+            <SkeletonTable rows={5} columns={9} />
+          )}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && pagamentos.length === 0 && (
+        <EmptyState
+          title="Nenhum pagamento encontrado"
+          description="Tente ajustar os filtros de data ou o termo de busca."
+        />
+      )}
+
+      {/* Tabela desktop */}
+      {!loading && pagamentos.length > 0 && !isMobile && (
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
               <tr>
-                <td colSpan={activeTab === 'agregados' ? 9 : 9} className="text-center">
-                  Nenhum pagamento encontrado
-                </td>
+                {activeTab === 'agregados' ? (
+                  <>
+                    <th>CT-e</th>
+                    <th>Condutor</th>
+                    <th>Placa</th>
+                    <th>Data Prevista</th>
+                    <th>Desconto</th>
+                    <th>Valor Repasse</th>
+                    <th>Comprovante</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </>
+                ) : (
+                  <>
+                    <th>CT-e</th>
+                    <th>Condutor</th>
+                    <th>Placa</th>
+                    <th>Data Prevista</th>
+                    <th>KM</th>
+                    <th>Valor Repasse</th>
+                    <th>Comprovante</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </>
+                )}
               </tr>
-            ) : (
-              pagamentos.map((pagamento) => (
+            </thead>
+            <tbody>
+              {pagamentos.map((pagamento) => (
                 <tr key={pagamento.id}>
                   {activeTab === 'agregados' ? (
                     <>
@@ -1010,67 +1160,7 @@ function PagamentosList() {
                         )}
                       </td>
                       <td>{getStatusBadge(pagamento.status)}</td>
-                      <td>
-                        <div className="action-buttons">
-                          <button
-                            className="btn-action btn-view"
-                            onClick={() => handleAbrirComprovante(pagamento)}
-                            title="Gerar Comprovante"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                              <polyline points="14 2 14 8 20 8"></polyline>
-                              <line x1="12" y1="18" x2="12" y2="12"></line>
-                              <line x1="9" y1="15" x2="15" y2="15"></line>
-                            </svg>
-                          </button>
-                          {pagamento.status !== 'pago' && (
-                            <button
-                              className="btn-action btn-download"
-                              onClick={() => handleAbrirBaixa(pagamento)}
-                              title="Baixar Pagamento"
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                              </svg>
-                            </button>
-                          )}
-                          <button
-                            className="btn-action btn-edit"
-                            onClick={() => handleEditarPagamento(pagamento.id)}
-                            title="Editar"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                          </button>
-                          <button
-                            className="btn-action"
-                            onClick={() => handleAbrirConverter(pagamento)}
-                            title="Converter para Próprio"
-                            style={{ color: '#6366f1' }}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="17 1 21 5 17 9"></polyline>
-                              <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-                              <polyline points="7 23 3 19 7 15"></polyline>
-                              <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-                            </svg>
-                          </button>
-                          <button
-                            className="btn-action btn-delete"
-                            onClick={() => handleAbrirExcluir(pagamento)}
-                            title="Excluir"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6"></polyline>
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
+                      <td>{renderActionButtons(pagamento)}</td>
                     </>
                   ) : (
                     <>
@@ -1106,75 +1196,90 @@ function PagamentosList() {
                         )}
                       </td>
                       <td>{getStatusBadge(pagamento.status)}</td>
-                      <td>
-                        <div className="action-buttons">
-                          <button
-                            className="btn-action btn-view"
-                            onClick={() => handleAbrirComprovante(pagamento)}
-                            title="Gerar Comprovante"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                              <polyline points="14 2 14 8 20 8"></polyline>
-                              <line x1="12" y1="18" x2="12" y2="12"></line>
-                              <line x1="9" y1="15" x2="15" y2="15"></line>
-                            </svg>
-                          </button>
-                          {pagamento.status !== 'pago' && (
-                            <button
-                              className="btn-action btn-download"
-                              onClick={() => handleAbrirBaixa(pagamento)}
-                              title="Baixar Pagamento"
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                              </svg>
-                            </button>
-                          )}
-                          <button
-                            className="btn-action btn-edit"
-                            onClick={() => handleEditarPagamento(pagamento.id)}
-                            title="Editar"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                          </button>
-                          <button
-                            className="btn-action"
-                            onClick={() => handleAbrirConverter(pagamento)}
-                            title="Converter para Agregado"
-                            style={{ color: '#6366f1' }}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="17 1 21 5 17 9"></polyline>
-                              <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-                              <polyline points="7 23 3 19 7 15"></polyline>
-                              <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-                            </svg>
-                          </button>
-                          <button
-                            className="btn-action btn-delete"
-                            onClick={() => handleAbrirExcluir(pagamento)}
-                            title="Excluir"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6"></polyline>
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
+                      <td>{renderActionButtons(pagamento)}</td>
                     </>
                   )}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Cards mobile */}
+      {!loading && pagamentos.length > 0 && isMobile && (
+        <div className="mobile-cards">
+          {pagamentos.map((pagamento) => (
+            <div key={pagamento.id} className="mobile-card">
+              <div className="mobile-card-header">
+                <div className="mobile-card-title">
+                  <strong>#{pagamento.cte_numero || '-'}</strong>
+                  <span>{getStatusBadge(pagamento.status)}</span>
+                </div>
+                <div className="mobile-card-subtitle">
+                  {pagamento.condutor_nome || pagamento.motorista_nome || '-'} · {pagamento.placa || pagamento.veiculo_placa || '-'}
+                </div>
+              </div>
+              <div className="mobile-card-body">
+                <div className="mobile-card-row">
+                  <span className="mobile-card-label">Data Prevista</span>
+                  <span className="mobile-card-value">{formatDate(pagamento.data_prevista)}</span>
+                </div>
+                {activeTab === 'agregados' ? (
+                  <>
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">Desconto</span>
+                      <span className="mobile-card-value" style={{ color: pagamento.desconto > 0 ? '#e74c3c' : '#999' }}>
+                        {pagamento.desconto > 0 ? `-${formatCurrency(pagamento.desconto)}` : '-'}
+                      </span>
+                    </div>
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">Valor Repasse</span>
+                      <span className="mobile-card-value mobile-card-highlight">{formatCurrency(pagamento.valor_repassado)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">KM</span>
+                      <span className="mobile-card-value">{pagamento.km_total_periodo || '-'}</span>
+                    </div>
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">Valor Repasse</span>
+                      <span className="mobile-card-value mobile-card-highlight">{formatCurrency(pagamento.valor_repassado || pagamento.valor_base_faixa)}</span>
+                    </div>
+                  </>
+                )}
+                <div className="mobile-card-row">
+                  <span className="mobile-card-label">Comprovante</span>
+                  {pagamento.comprovante ? (
+                    <a
+                      href={pagamento.comprovante}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-action"
+                      title="Ver Comprovante"
+                      style={{ color: '#27ae60', display: 'inline-flex' }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                      </svg>
+                    </a>
+                  ) : (
+                    <span style={{ color: '#999', fontSize: '12px' }}>-</span>
+                  )}
+                </div>
+              </div>
+              <div className="mobile-card-footer">
+                {renderMobileActions(pagamento)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Modal de Comprovante */}
       {modalComprovante.show && modalComprovante.pagamento && (

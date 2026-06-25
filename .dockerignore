@@ -29,7 +29,9 @@ db.sqlite3
 db.sqlite3-journal
 
 # Environment
-.env
+.env*
+!.env.example
+!scraper/.env.example
 .venv
 env/
 venv/
@@ -61,6 +63,7 @@ docs/
 .coverage
 htmlcov/
 .tox/
+.playwright-mcp/
 
 # Docker
 Dockerfile
@@ -71,6 +74,23 @@ docker-compose*.yml
 staticfiles/
 static/
 media/
+
+# Local dumps, backups, screenshots and generated artifacts
+backups/
+!backups/README.md
+!backups/.gitkeep
+*.dump
+*.sql
+*.sqlite
+*.sqlite3
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.zip
+*.tar
+*.tar.gz
+*.tgz
 
 # Node modules (if any)
 node_modules/

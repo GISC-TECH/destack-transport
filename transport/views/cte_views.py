@@ -21,6 +21,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Imports Locais
+from ..permissions import TransportModelPermission
 from ..serializers.cte_serializers import (
     CTeDocumentoListSerializer, 
     CTeDocumentoDetailSerializer
@@ -37,10 +38,12 @@ from ..models import (
     CTeProtocoloAutorizacao,
     CTeCancelamento,
     CTePrestacaoServico,
-    CTeComponenteValor
+    CTeComponenteValor,
+    FaturaItem,
 )
 from ..services.parser_cte import parse_cte_completo
 from ..services.dacte_generator import gerar_dacte_pdf
+from ..services.pagamento_service import atualizar_status_pagamento_cte
 
 
 def generate_csv_from_queryset(queryset, serializer_class):
@@ -167,7 +170,7 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
     - pago: true/false (status de pagamento)
     - q: Texto para busca geral
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def get_serializer_class(self):
         """Define o serializer com base na ação."""
@@ -337,6 +340,15 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 Q(emitente__razao_social__icontains=texto) |
                 Q(modal_rodoviario__motoristas__nome__icontains=texto)
             ).distinct()
+
+        # Filtro por CT-es ainda não faturados
+        nao_faturado = params.get('nao_faturado')
+        if nao_faturado is not None:
+            is_nao_faturado = nao_faturado.lower() in ('true', '1', 'sim')
+            if is_nao_faturado:
+                queryset = queryset.filter(faturas_itens__isnull=True)
+            else:
+                queryset = queryset.filter(faturas_itens__isnull=False).distinct()
 
         # Ordenação customizada
         ordering = params.get('ordering')
@@ -678,42 +690,33 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         if isinstance(pago, str):
             pago = pago.lower() in ['true', '1', 'sim']
 
-        # Atualiza os campos
-        cte.pago = pago
-
-        # Lista de campos a atualizar
-        update_fields = ['pago', 'data_pagamento', 'observacao_pagamento']
-
         # Define a data de pagamento
+        from datetime import datetime
+        data_pagamento = None
         if pago:
-            # Usa data informada ou data atual
             data_pagamento_str = request.data.get('data_pagamento')
             if data_pagamento_str:
-                from datetime import datetime
                 try:
-                    cte.data_pagamento = datetime.strptime(data_pagamento_str, '%Y-%m-%d').replace(
-                        tzinfo=timezone.get_current_timezone()
-                    )
+                    data_pagamento = datetime.strptime(data_pagamento_str, '%Y-%m-%d').date()
                 except ValueError:
-                    cte.data_pagamento = timezone.now()
+                    data_pagamento = timezone.now().date()
             else:
-                cte.data_pagamento = timezone.now()
-        else:
-            cte.data_pagamento = None
+                data_pagamento = timezone.now().date()
 
         # Atualiza observação se fornecida
         observacao = request.data.get('observacao_pagamento')
-        if observacao is not None:
-            cte.observacao_pagamento = observacao
 
         # Atualiza comprovante se fornecido
         comprovante = request.FILES.get('comprovante')
-        if comprovante:
-            cte.comprovante_pagamento = comprovante
-            update_fields.append('comprovante_pagamento')
 
-        # Salva as alterações
-        cte.save(update_fields=update_fields)
+        # Usa o servico centralizado para sincronizar CT-e e pagamentos vinculados
+        atualizar_status_pagamento_cte(
+            cte,
+            pago=pago,
+            data_pagamento=data_pagamento,
+            comprovante=comprovante,
+            observacao=observacao,
+        )
 
         # Log da operação
         logger.info(f"CT-e {cte.chave} marcado como {'pago' if pago else 'não pago'} por {request.user}")
@@ -784,6 +787,10 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         - modalidades: Lista de modalidades separadas por vírgula (ex: CIF,FOB)
         - remetentes: Lista de razões sociais separadas por vírgula
         - destinatarios: Lista de razões sociais separadas por vírgula
+        - tipo_pendencia: 'cliente' (padrao), 'motorista' ou 'todos'
+          * cliente: CT-es com CTeDocumento.pago=False
+          * motorista: CT-es com pagamento agregado/proprio pendente
+          * todos: uniao dos dois
 
         Retorna:
         - Totais gerais (quantidade e valor)
@@ -792,16 +799,33 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         - Lista dos CT-es pendentes mais recentes
         - Listas de remetentes e destinatários para filtros
         """
-        # Usa os mesmos filtros do queryset base, mas filtra apenas não pagos
-        queryset = self.get_queryset().filter(pago=False)
+        params = request.query_params
+        tipo_pendencia = params.get('tipo_pendencia', 'cliente').lower()
 
-        # Exclui CT-es cancelados (modelo de cancelamento consolidado ou evento confirmado sem consolidação dedicada)
-        queryset = queryset.filter(
+        # Base: CT-es nao cancelados
+        base_queryset = self.get_queryset().filter(
             Q(cancelamento__isnull=True) | ~Q(cancelamento__c_stat=135)
         ).exclude(
             eventos__tipo_evento='110111',
             eventos__confirmado=True,
         )
+
+        # Filtra por tipo de pendencia
+        if tipo_pendencia == 'cliente':
+            queryset = base_queryset.filter(pago=False)
+        elif tipo_pendencia == 'motorista':
+            queryset = base_queryset.filter(
+                Q(pagamento_agregado__status='pendente') |
+                Q(pagamento_proprio__status='pendente')
+            ).distinct()
+        elif tipo_pendencia == 'todos':
+            queryset = base_queryset.filter(
+                Q(pago=False) |
+                Q(pagamento_agregado__status='pendente') |
+                Q(pagamento_proprio__status='pendente')
+            ).distinct()
+        else:
+            queryset = base_queryset.filter(pago=False)
 
         # Guarda queryset base para obter listas de filtros
         queryset_base = queryset
@@ -895,13 +919,28 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             .order_by('modalidade')
         )
 
+        # Taxa de pagamento por quantidade e por valor
+        total_ctes = (pagos_stats['total_pagos'] or 0) + (stats['total_pendentes'] or 0)
+        valor_pago = float(pagos_stats['valor_total_pago'] or 0)
+        valor_pendente = float(stats['valor_total_pendente'] or 0)
+        taxa_paga_quantidade = (
+            (pagos_stats['total_pagos'] or 0) / total_ctes * 100
+            if total_ctes > 0 else 0
+        )
+        taxa_paga_valor = (
+            valor_pago / (valor_pago + valor_pendente) * 100
+            if (valor_pago + valor_pendente) > 0 else 0
+        )
+
         return Response({
             "resumo": {
                 "total_pendentes": stats['total_pendentes'] or 0,
-                "valor_total_pendente": float(stats['valor_total_pendente'] or 0),
+                "valor_total_pendente": valor_pendente,
                 "valor_receber_pendente": float(stats['valor_receber_pendente'] or 0),
                 "total_pagos": pagos_stats['total_pagos'] or 0,
-                "valor_total_pago": float(pagos_stats['valor_total_pago'] or 0)
+                "valor_total_pago": valor_pago,
+                "taxa_paga_quantidade": round(taxa_paga_quantidade, 1),
+                "taxa_paga_valor": round(taxa_paga_valor, 1)
             },
             "por_modalidade": [
                 {
@@ -924,4 +963,55 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 "destinatarios": destinatarios_distintos,
                 "modalidades": modalidades_distintas
             }
+        })
+
+    @action(detail=True, methods=['post'], url_path='cancelar')
+    def cancelar(self, request, pk=None):
+        """
+        Registra cancelamento lógico do CT-e.
+        Em produção, deve integrar com SEFAZ antes de alterar o status.
+        """
+        cte = self.get_object()
+        motivo = request.data.get('motivo') or request.data.get('justificativa', 'Cancelamento solicitado pelo usuário')
+
+        if cte.status == 'cancelado':
+            return Response(
+                {'erro': 'CT-e já está cancelado.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Cria registro de cancelamento (modelo existente)
+        from ..models import CTeCancelamento
+        c_orgao = cte.identificacao.codigo_uf if hasattr(cte, 'identificacao') and cte.identificacao else '35'
+        n_prot = cte.protocolo.numero_protocolo if hasattr(cte, 'protocolo') and cte.protocolo else '0'
+        cnpj_emit = ''
+        if hasattr(cte, 'emitente') and cte.emitente:
+            cnpj_emit = cte.emitente.cnpj or ''
+
+        CTeCancelamento.objects.update_or_create(
+            cte=cte,
+            defaults={
+                'id_evento': f'ID110111{cte.chave}01',
+                'c_orgao': c_orgao,
+                'tp_amb': 2,
+                'cnpj': cnpj_emit,
+                'dh_evento': datetime.now(),
+                'tp_evento': '110111',
+                'n_prot_original': n_prot,
+                'x_just': motivo,
+                'c_stat': 135,
+                'x_motivo': 'Cancelamento registrado no sistema',
+                'dh_reg_evento': datetime.now(),
+            }
+        )
+
+        cte.status = 'cancelado'
+        cte.save(update_fields=['status'])
+
+        return Response({
+            'status': 'cancelado',
+            'id': str(cte.id),
+            'chave': cte.chave,
+            'motivo': motivo,
+            'observacao': 'Status alterado para cancelado. Integração SEFAZ não realizada neste ambiente.'
         })

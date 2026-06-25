@@ -3,11 +3,39 @@
 from rest_framework import serializers
 
 # Importar modelos relevantes
-from ..models import FaixaKM, PagamentoAgregado, PagamentoProprio, CTeDocumento # CTeDocumento para o link
+from ..models import FaixaKM, PagamentoAgregado, PagamentoProprio, ContaPagar, CTeDocumento # CTeDocumento para o link
 
 # ===================================================
 # === Serializers Pagamentos e Parametrização ===
 # ===================================================
+
+class ContaPagarSerializer(serializers.ModelSerializer):
+    """Serializer para o modelo ContaPagar."""
+    veiculo_placa = serializers.CharField(source='veiculo.placa', read_only=True, allow_null=True)
+
+    def validate(self, data):
+        """Valida regras de integridade para contas a pagar."""
+        status_final = data.get('status', getattr(self.instance, 'status', None))
+        data_pagamento_final = data.get('data_pagamento', getattr(self.instance, 'data_pagamento', None))
+        if status_final == 'paga' and not data_pagamento_final:
+            raise serializers.ValidationError({
+                'data_pagamento': 'Data de pagamento é obrigatória quando o status é paga.'
+            })
+        return data
+
+    class Meta:
+        model = ContaPagar
+        fields = [
+            'id', 'descricao', 'categoria', 'fornecedor', 'valor',
+            'data_vencimento', 'data_pagamento', 'status', 'comprovante',
+            'veiculo', 'veiculo_placa', 'observacao',
+            'criado_em', 'atualizado_em'
+        ]
+        read_only_fields = ('veiculo_placa', 'criado_em', 'atualizado_em')
+        extra_kwargs = {
+            'veiculo': {'required': False, 'allow_null': True},
+        }
+
 
 class FaixaKMSerializer(serializers.ModelSerializer):
     """ Serializer para o modelo FaixaKM. """
@@ -32,16 +60,22 @@ class FaixaKMSerializer(serializers.ModelSerializer):
 class PagamentoAgregadoSerializer(serializers.ModelSerializer):
     """ Serializer para o modelo PagamentoAgregado. """
     # Campos somente leitura para exibir informações do CT-e relacionado
-    cte_id = serializers.IntegerField(source='cte.id', read_only=True, allow_null=True)
+    cte_id = serializers.UUIDField(source='cte.id', read_only=True, allow_null=True)
     cte_chave = serializers.CharField(source='cte.chave', read_only=True)
     cte_numero = serializers.IntegerField(source='cte.identificacao.numero', read_only=True, allow_null=True)
     cte_data_emissao = serializers.DateTimeField(source='cte.identificacao.data_emissao', read_only=True, allow_null=True, format='%d/%m/%Y')
 
     def validate(self, data):
-        """Validação customizada: cte é obrigatório apenas na criação."""
+        """Valida regras de integridade para pagamentos agregados."""
         # Se é uma criação (não tem instance), cte é obrigatório
         if self.instance is None and 'cte' not in data:
             raise serializers.ValidationError({'cte': 'CT-e é obrigatório para criar um pagamento agregado.'})
+        status_final = data.get('status', getattr(self.instance, 'status', None))
+        data_pagamento_final = data.get('data_pagamento', getattr(self.instance, 'data_pagamento', None))
+        if status_final == 'pago' and not data_pagamento_final:
+            raise serializers.ValidationError({
+                'data_pagamento': 'Data de pagamento é obrigatória quando o status é pago.'
+            })
         return data
 
     class Meta:
@@ -65,13 +99,19 @@ class PagamentoProprioSerializer(serializers.ModelSerializer):
     """ Serializer para o modelo PagamentoProprio. """
 
     def validate(self, data):
-        """Validação customizada: veiculo e periodo são obrigatórios apenas na criação."""
+        """Valida regras de integridade para pagamentos próprios."""
         if self.instance is None:
             # Criação - campos obrigatórios
             if 'veiculo' not in data:
                 raise serializers.ValidationError({'veiculo': 'Veículo é obrigatório para criar um pagamento próprio.'})
             if 'periodo' not in data:
                 raise serializers.ValidationError({'periodo': 'Período é obrigatório para criar um pagamento próprio.'})
+        status_final = data.get('status', getattr(self.instance, 'status', None))
+        data_pagamento_final = data.get('data_pagamento', getattr(self.instance, 'data_pagamento', None))
+        if status_final == 'pago' and not data_pagamento_final:
+            raise serializers.ValidationError({
+                'data_pagamento': 'Data de pagamento é obrigatória quando o status é pago.'
+            })
         return data
 
     # Campos somente leitura

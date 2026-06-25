@@ -18,6 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
+from ..permissions import CanUploadXMLPermission
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import logging
@@ -27,14 +28,23 @@ logger = logging.getLogger(__name__)
 import xmltodict
 from dateutil import parser as date_parser
 
+from ..services.xml_utils import safe_xmltodict_parse
+from ..services.xml_validator import validar_xml
+
 from ..serializers.upload_serializers import UploadXMLSerializer, BatchUploadXMLSerializer
 from ..models import (
     CTeDocumento, CTeCancelamento,
+    DocumentoEvento,
     MDFeDocumento, MDFeCancelamento, MDFeCancelamentoEncerramento, MDFeCondutor
 )
 from ..services.parser_cte import parse_cte_completo
 from ..services.parser_mdfe import parse_mdfe_completo
 from ..services.parser_eventos import parse_evento
+from ..services.numeracao_service import (
+    extrair_dados_numeracao_da_chave,
+    verificar_duplicidade,
+    registrar_numero,
+)
 
 # --- Helper Functions ---
 def safe_get(data_dict, key, default=None):
@@ -139,7 +149,7 @@ def _get_tag_sem_namespace(tag_com_ns):
 @method_decorator(csrf_exempt, name='dispatch')
 class UnifiedUploadViewSet(viewsets.GenericViewSet):
     parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanUploadXMLPermission]
     # BasicAuthentication primeiro para scripts/APIs (não requer CSRF)
     # SessionAuthentication para browser (requer CSRF mas já está desabilitado acima)
     authentication_classes = [BasicAuthentication, SessionAuthentication]
@@ -240,7 +250,7 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                 tipo_xml = "CONTEUDO_VAZIO"
                 return tipo_xml, None, False, None, None
 
-            xml_dict = xmltodict.parse(content, process_namespaces=True, namespaces={'': None})
+            xml_dict = safe_xmltodict_parse(content, process_namespaces=True, namespaces={'': None})
             root_tag_com_ns = next(iter(xml_dict), "")
             root_tag_no_ns = _get_tag_sem_namespace(root_tag_com_ns)
 
@@ -393,6 +403,20 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
         if error_msg_p:
             return Response({"detail": error_msg_p, "filename": arquivo_principal_obj.name}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Validacao XSD do XML principal
+        validacao = validar_xml(xml_content_principal)
+        if not validacao['valido']:
+            logger.warning(
+                "Upload Individual: XML invalido contra XSD (%s): %s",
+                arquivo_principal_obj.name,
+                validacao['erros'],
+            )
+            return Response({
+                "detail": "XML fora do leiaute oficial.",
+                "filename": arquivo_principal_obj.name,
+                "erros": validacao['erros'],
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         xml_content_retorno = None
         if arquivo_retorno_obj:
             xml_content_retorno, error_msg_r = self._read_xml_file_content(arquivo_retorno_obj)
@@ -404,6 +428,7 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                 )
 
         try:
+
             tipo_detectado, _chave_detectada, _is_ret, xml_dict_principal, root_tag_principal = self._identificar_xml_e_chave(arquivo_principal_obj.name, xml_content_principal)
 
             if not xml_dict_principal or not root_tag_principal:
@@ -444,18 +469,62 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
             traceback.print_exc()
             return Response({"detail": f"Erro inesperado no processamento do XML: {str(e)}", "filename": arquivo_principal_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def _verificar_numeracao(self, chave, tipo_doc, filename):
+        """
+        Verifica se o número/série do documento já foi utilizado por outro
+        CT-e/MDF-e. Retorna Response 400 em caso de duplicidade ou None.
+        """
+        dados = extrair_dados_numeracao_da_chave(chave)
+        if not dados:
+            return None
+
+        resultado = verificar_duplicidade(
+            cnpj=dados['cnpj_emitente'],
+            modelo=dados['modelo'],
+            serie=dados['serie'],
+            numero=dados['numero'],
+            chave_atual=chave,
+        )
+        if resultado['duplicado']:
+            return Response({
+                "detail": (
+                    f"{resultado['modelo_doc']} duplicado: já existe o documento "
+                    f"{resultado['chave_existente']} para o mesmo emitente, série e número."
+                ),
+                "chave_existente": resultado['chave_existente'],
+                "filename": filename,
+            }, status=status.HTTP_400_BAD_REQUEST)
+        return None
+
+    def _registrar_numeracao_sucesso(self, chave):
+        """Atualiza o controle de numeração após processamento com sucesso."""
+        dados = extrair_dados_numeracao_da_chave(chave)
+        if dados:
+            registrar_numero(
+                cnpj=dados['cnpj_emitente'],
+                modelo=dados['modelo'],
+                serie=dados['serie'],
+                numero=dados['numero'],
+            )
+
     def _process_cte(self, xml_content, arquivo_obj, xml_dict_principal):
         # ... (Mantido, usar self._get_chave_from_dict e self._get_chave_from_regex)
         chave = self._get_chave_from_dict(xml_dict_principal, 'CTe') or self._get_chave_from_regex(xml_content, 'CTe')
         if not chave: return Response({"detail": "Chave CT-e não identificada.", "filename": arquivo_obj.name}, status=status.HTTP_400_BAD_REQUEST)
+
+        dup_response = self._verificar_numeracao(chave, 'CTe', arquivo_obj.name)
+        if dup_response:
+            return dup_response
+
         versao = safe_get(xml_dict_principal, 'CTe.infCte.@versao') or '4.00'
         try:
             cte, created = CTeDocumento.objects.update_or_create(chave=chave, defaults={'xml_original': xml_content, 'processado': False, 'versao': versao})
-            if arquivo_obj and (created or not cte.arquivo_xml): cte.arquivo_xml.save(arquivo_obj.name, arquivo_obj, save=False) 
+            if arquivo_obj and (created or not cte.arquivo_xml): cte.arquivo_xml.save(arquivo_obj.name, arquivo_obj, save=False)
             cte.save()
         except Exception as db_err: return Response({"detail": f"DB Error (CTe {chave}): {str(db_err)}", "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
             if parse_cte_completo(cte):
+                self._registrar_numeracao_sucesso(chave)
                 return Response({"message": f"CT-e {'reprocessado' if not created else 'processado'}.", "id": str(cte.id), "chave": cte.chave, "reprocessamento": not created, "filename": arquivo_obj.name}, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
             return Response({"detail": "Falha parser CT-e.", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as parse_err:
@@ -466,6 +535,11 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
         # ... (Mantido, usar self._get_chave_from_dict e self._get_chave_from_regex)
         chave = self._get_chave_from_dict(xml_dict_principal, 'MDFe') or self._get_chave_from_regex(xml_content, 'MDFe')
         if not chave: return Response({"detail": "Chave MDF-e não identificada.", "filename": arquivo_obj.name}, status=status.HTTP_400_BAD_REQUEST)
+
+        dup_response = self._verificar_numeracao(chave, 'MDFe', arquivo_obj.name)
+        if dup_response:
+            return dup_response
+
         versao = safe_get(xml_dict_principal, 'MDFe.infMDFe.@versao') or '3.00'
         try:
             mdfe, created = MDFeDocumento.objects.update_or_create(chave=chave, defaults={'xml_original': xml_content, 'processado': False, 'versao': versao})
@@ -474,6 +548,7 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
         except Exception as db_err: return Response({"detail": f"DB Error (MDF-e {chave}): {str(db_err)}", "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
             if parse_mdfe_completo(mdfe):
+                self._registrar_numeracao_sucesso(chave)
                 return Response({"message": f"MDF-e {'reprocessado' if not created else 'processado'}.", "id": str(mdfe.id), "chave": mdfe.chave, "reprocessamento": not created, "filename": arquivo_obj.name}, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
             return Response({"detail": "Falha parser MDF-e.", "chave": chave, "filename": arquivo_obj.name}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as parse_err:
@@ -584,8 +659,24 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
             if error_msg:
                 resultados_finais.append({'arquivo_principal_nome': arq_obj.name, 'status': 'ignorado', 'erro': error_msg})
                 ignorado_count += 1; continue
-            
-            # CORREÇÃO: Chamada correta
+
+            # Validacao XSD
+            validacao = validar_xml(content)
+            if not validacao['valido']:
+                logger.warning(
+                    "Upload Lote: XML invalido contra XSD (%s): %s",
+                    arq_obj.name,
+                    validacao['erros'],
+                )
+                resultados_finais.append({
+                    'arquivo_principal_nome': arq_obj.name,
+                    'status': 'erro',
+                    'erro': 'XML fora do leiaute oficial: ' + '; '.join(validacao['erros']),
+                })
+                erro_count += 1
+                continue
+
+            # CORRECAO: Chamada correta
             tipo, chave, is_ret, xml_dict, root_tag = self._identificar_xml_e_chave(arq_obj.name, content)
             
             arquivos_classificados.append({
@@ -794,8 +885,11 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
     def check_exists(self, request):
         """
         Verifica quais chaves (44 dígitos) já existem no banco.
-        Recebe: {"chaves": ["44digits", ...]}
+        Recebe: {"chaves": ["44digits", ...], "incluir_eventos": false}
         Retorna: {"existing": [...], "total_checked": N, "total_existing": N}
+
+        Quando incluir_eventos=true, também retorna chaves que já possuem
+        eventos processados (cancelamento/CC-e) registrados em DocumentoEvento.
         """
         chaves = request.data.get('chaves', [])
         if not isinstance(chaves, list):
@@ -804,6 +898,7 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        incluir_eventos = request.data.get('incluir_eventos', False)
         existing = set()
         chunk_size = 500
 
@@ -818,6 +913,13 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                 .values_list('chave', flat=True)
             )
             existing.update(cte_chaves | mdfe_chaves)
+
+            if incluir_eventos:
+                evento_chaves = set(
+                    DocumentoEvento.objects.filter(chave_documento__in=chunk)
+                    .values_list('chave_documento', flat=True)
+                )
+                existing.update(evento_chaves)
 
         return Response({
             "existing": list(existing),

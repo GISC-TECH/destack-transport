@@ -9,6 +9,8 @@ from dateutil import parser as date_parser # pip install python-dateutil
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
+from .xml_utils import safe_xmltodict_parse
+
 logger = logging.getLogger(__name__)
 
 # Reutilizar helpers do parser_cte (ou copiar/colar aqui)
@@ -350,18 +352,15 @@ def parse_mdfe_modal_rodoviario(mdfe_doc, infmdfe):
         )
 
         # --- Condutores <condutor> associados ao veículo de tração ---
-        # Salva no MDFeCondutor principal, ligado ao MDFeDocumento
-        # Limpa todos os condutores ANTES de processar para evitar duplicação se vierem em eventos também
-        MDFeCondutor.objects.filter(mdfe=mdfe_doc).delete()
+        # Faz merge com condutores existentes (preserva condutores incluídos por eventos)
         for condutor in condutor_list_tracao:
             if isinstance(condutor, dict):
                 cpf_condutor = safe_get(condutor, 'CPF')
                 nome_condutor = safe_get(condutor, 'xNome')
                 if cpf_condutor and nome_condutor:
-                    # Auto-cadastra/vincula o motorista mestre (antes era manual)
                     from transport.services.cadastro import sincronizar_motorista
                     cadastro = sincronizar_motorista(nome_condutor, cpf_condutor)
-                    MDFeCondutor.objects.update_or_create( # Evita duplicar se CPF já existe
+                    MDFeCondutor.objects.update_or_create(
                         mdfe=mdfe_doc,
                         cpf=cpf_condutor,
                         defaults={'nome': nome_condutor, 'motorista': cadastro}
@@ -922,7 +921,7 @@ def parse_mdfe_completo(mdfe_doc):
         return False
 
     try:
-        xml_dict = xmltodict.parse(mdfe_doc.xml_original)
+        xml_dict = safe_xmltodict_parse(mdfe_doc.xml_original)
         infmdfe, versao_proc = get_mdfe_infmdfe(xml_dict) # Pode levantar ValueError
         prot_mdfe = get_mdfe_protocolo(xml_dict) # Pode ser None
         inf_supl = get_mdfe_suplementar(xml_dict) # Pode ser None

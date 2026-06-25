@@ -5,6 +5,8 @@ import { useToast } from '../Common/Toast';
 import PageHeader from '../Common/PageHeader';
 import './Upload.css';
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 function UploadXML() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -14,23 +16,72 @@ function UploadXML() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const handleFileSelect = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    addFiles(selectedFiles);
+  const isXMLContentType = (type) => {
+    if (!type) return false;
+    const t = type.toLowerCase();
+    return t === 'text/xml' || t === 'application/xml' || t === 'application/xhtml+xml';
   };
 
-  const addFiles = (newFiles) => {
+  const startsWithXMLDeclaration = async (file) => {
+    const slice = file.slice(0, 100);
+    const text = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.readAsText(slice);
+    });
+    const trimmed = text.trimStart().toLowerCase();
+    return trimmed.startsWith('<?xml');
+  };
+
+  const validateXMLFile = async (file) => {
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error(`Arquivo "${file.name}" excede o tamanho máximo de 10MB`);
+    }
+    if (isXMLContentType(file.type)) {
+      return true;
+    }
+    const hasXmlDecl = await startsWithXMLDeclaration(file);
+    if (!hasXmlDecl) {
+      throw new Error(`Arquivo "${file.name}" não é um XML válido`);
+    }
+    return true;
+  };
+
+  const handleFileSelect = async (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    await addFiles(selectedFiles);
+  };
+
+  const addFiles = async (newFiles) => {
     const xmlFiles = newFiles.filter(file =>
       file.name.toLowerCase().endsWith('.xml')
     );
-    setFiles(prev => [...prev, ...xmlFiles]);
+
+    if (xmlFiles.length !== newFiles.length) {
+      toast.warning('Apenas arquivos .xml são permitidos');
+    }
+
+    const validFiles = [];
+    for (const file of xmlFiles) {
+      try {
+        await validateXMLFile(file);
+        validFiles.push(file);
+      } catch (error) {
+        toast.error(error.message);
+      }
+    }
+
+    if (validFiles.length > 0) {
+      setFiles(prev => [...prev, ...validFiles]);
+    }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     setDragOver(false);
     const droppedFiles = Array.from(e.dataTransfer.files);
-    addFiles(droppedFiles);
+    await addFiles(droppedFiles);
   };
 
   const handleDragOver = (e) => {

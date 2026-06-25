@@ -18,6 +18,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 # Imports Locais
+from ..permissions import TransportModelPermission, ReadOnlyPermission
 from ..serializers.vehicle_serializers import ( # Use .. para voltar um nível
     VeiculoSerializer,
     ManutencaoVeiculoSerializer,
@@ -43,7 +44,7 @@ class VeiculoViewSet(viewsets.ModelViewSet):
     """API para CRUD de Veículos."""
     queryset = Veiculo.objects.all().order_by('placa')
     serializer_class = VeiculoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def get_queryset(self):
         """Permite filtrar veículos por diversos parâmetros."""
@@ -215,7 +216,11 @@ class ManutencaoVeiculoViewSet(viewsets.ModelViewSet):
     """API para CRUD de Manutenções de Veículos."""
     queryset = ManutencaoVeiculo.objects.all().order_by('-data_agendada', '-criado_em')
     serializer_class = ManutencaoVeiculoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
+
+    def perform_create(self, serializer):
+        veiculo_pk = self.kwargs.get('veiculo_pk')
+        serializer.save(veiculo_id=veiculo_pk)
 
     def get_queryset(self):
         """Permite filtrar manutenções por diversos parâmetros."""
@@ -284,7 +289,7 @@ class ManutencaoVeiculoViewSet(viewsets.ModelViewSet):
 
 class ManutencaoPainelViewSet(viewsets.ViewSet):
     """ViewSet para o painel de indicadores de manutenção."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, ReadOnlyPermission]
 
     def list(self, request):
         """Retorna indicadores gerais (rota padrão GET /api/manutencao/painel/)."""
@@ -504,7 +509,7 @@ class CompartimentacaoVeiculoViewSet(viewsets.ModelViewSet):
 
     queryset = CompartimentacaoVeiculo.objects.all()
     serializer_class = CompartimentacaoVeiculoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def get_queryset(self):
         """Filtra por veículo da URL."""

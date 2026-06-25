@@ -25,6 +25,8 @@ services:
       - destack_local
 
   # Redis Cache
+  # Ambiente local: Redis sem senha para simplificar o desenvolvimento.
+  # Em produção utilize REDIS_PASSWORD conforme docker-compose.yml.
   redis:
     image: redis:7-alpine
     container_name: destack_redis_local
@@ -68,7 +70,7 @@ services:
     volumes:
       - .:/app # Código local montado (hot reload)
       - static_volume_local:/app/staticfiles_collected
-      - media_volume_local:/app/mediafiles
+      - media_volume_local:/app/media
     ports:
       - "8001:8000" # Acessível em http://localhost:8001
     depends_on:
@@ -86,7 +88,8 @@ services:
     container_name: destack_frontend_local
     restart: unless-stopped
     environment:
-      - VITE_API_URL=http://web:8000
+      # Sinaliza que o Vite está rodando dentro do Docker; o proxy aponta para o nginx.
+      - DOCKER_ENV=1
     volumes:
       - ./frontend:/app
       - /app/node_modules # Evita sobrescrever node_modules
@@ -97,60 +100,62 @@ services:
     networks:
       - destack_local
 
-  # Celery Worker (opcional - descomente se necessário)
-  # celery_worker:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.local
-  #   container_name: destack_celery_local
-  #   restart: unless-stopped
-  #   command: celery -A core worker -l info
-  #   env_file:
-  #     - .env.local
-  #   volumes:
-  #     - .:/app
-  #   depends_on:
-  #     - redis
-  #     - postgres
-  #   networks:
-  #     - destack_local
+  # Celery Worker
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: destack_celery_local
+    restart: unless-stopped
+    command: celery -A core worker -l info
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app
+      - ./backups:/app/backups
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - destack_local
 
-  # Celery Beat (opcional - descomente se necessário)
-  # celery_beat:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.local
-  #   container_name: destack_beat_local
-  #   restart: unless-stopped
-  #   command: celery -A core beat -l info
-  #   env_file:
-  #     - .env.local
-  #   volumes:
-  #     - .:/app
-  #   depends_on:
-  #     - redis
-  #     - postgres
-  #   networks:
-  #     - destack_local
+  # Celery Beat
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: destack_beat_local
+    restart: unless-stopped
+    command: celery -A core beat -l info
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app
+      - ./backups:/app/backups
+    depends_on:
+      - redis
+      - postgres
+      - celery_worker
+    networks:
+      - destack_local
 
   # EGS XML Collector - Robot para coleta automatica de XMLs
   scraper:
+    # Google Chrome so tem build amd64; em hosts arm64 (Apple Silicon) roda via emulacao.
+    platform: linux/amd64
     build:
       context: ./scraper
       dockerfile: Dockerfile
     container_name: destack_scraper_local
     restart: unless-stopped
+    env_file:
+      - .env.local
     environment:
-      # EGS Sistemas
+      # EGS Sistemas (credenciais via .env.local)
       - EGS_BASE_URL=https://app.egssistemas.com.br
       - EGS_LOGIN_URL=https://app.egssistemas.com.br/login
-      - EGS_USERNAME=DESTACK
-      - EGS_PASSWORD=1234567
-      - EGS_ACCESS_KEY=57226
-      # Destack API
+      # Destack API (credenciais via .env.local)
       - DESTACK_API_URL=http://web:8000/api
-      - DESTACK_USERNAME=admin
-      - DESTACK_PASSWORD=admin123
       # Collector
       - COLLECT_INTERVAL_MINUTES=60
       - DAYS_LOOKBACK=7
@@ -161,6 +166,22 @@ services:
       - scraper_logs_local:/app/logs
     depends_on:
       - web
+    networks:
+      - destack_local
+
+  # Nginx - gerenciador de midias e gateway unificado para desenvolvimento
+  nginx:
+    image: nginx:alpine
+    container_name: destack_nginx_local
+    restart: unless-stopped
+    ports:
+      - "8003:80" # Acessivel em http://localhost:8003
+    volumes:
+      - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
+      - media_volume_local:/app/mediafiles:ro
+    depends_on:
+      - web
+      - frontend
     networks:
       - destack_local
 

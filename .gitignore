@@ -57,6 +57,15 @@ app.env
 *~
 .DS_Store
 
+# Agent / MCP local configs
+.claude/
+.playwright-mcp/
+
+# Frontend test artifacts
+frontend/test-results/
+frontend/dist/
+frontend/e2e/screenshots/
+
 # Testing
 .tox/
 .coverage
@@ -79,7 +88,9 @@ celerybeat.pid
 *.bak
 *.backup
 backups/*.sql
+backups/**/*.sql
 backups/*.dump
+backups/**/*.dump
 !backups/.gitkeep  # Manter pasta backups no repo
 
 # Logs
@@ -115,3 +126,6 @@ nul
 # Pastas de backup/antigas (não rastrear)
 antigo/
 OLD/
+scraper_local_bak_*/
+docker-compose.yml.backup.*
+pagamentos.png

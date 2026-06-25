@@ -13,6 +13,7 @@ import './CTe.css';
 
 // Cores para os graficos
 const COLORS = ['#0d9488', '#2ecc71', '#e74c3c', '#f39c12', '#C8A951'];
+const PAGE_SIZE = 20;
 
 function CTeList() {
   const toast = useToast();
@@ -68,7 +69,7 @@ function CTeList() {
     const pageAtivo = customPage !== null ? customPage : pagination.page;
     try {
       setLoading(true);
-      const params = { ...filtrosAtivos, page: pageAtivo, page_size: 5 };
+      const params = { ...filtrosAtivos, page: pageAtivo, page_size: PAGE_SIZE };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       const result = await cteAPI.list(params);
       setCtes(result.results || result || []);
@@ -625,10 +626,10 @@ function CTeList() {
             Anterior
           </button>
           <div className="pagination-numbers">
-            {Array.from({ length: Math.ceil(pagination.total / 5) }, (_, i) => i + 1)
+            {Array.from({ length: Math.ceil(pagination.total / PAGE_SIZE) }, (_, i) => i + 1)
               .filter(page => {
                 const currentPage = pagination.page;
-                return page === 1 || page === Math.ceil(pagination.total / 5) ||
+                return page === 1 || page === Math.ceil(pagination.total / PAGE_SIZE) ||
                        (page >= currentPage - 2 && page <= currentPage + 2);
               })
               .map((page, index, arr) => (
@@ -653,7 +654,7 @@ function CTeList() {
               setPagination(p => ({...p, page: newPage}));
               loadCTes(null, newPage);
             }}
-            disabled={pagination.page >= Math.ceil(pagination.total / 5)}
+            disabled={pagination.page >= Math.ceil(pagination.total / PAGE_SIZE)}
             className="btn-page"
           >
             Proxima

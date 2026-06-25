@@ -45,6 +45,20 @@ class DocumentoEventoAdmin(admin.ModelAdmin):
     readonly_fields = ('criado_em',)
     ordering = ('-data_evento',)
 
+
+# === Controle de Numeração ===
+from ..models import ControleNumeracao
+
+
+@admin.register(ControleNumeracao)
+class ControleNumeracaoAdmin(admin.ModelAdmin):
+    list_display = ('cnpj_emitente', 'modelo', 'serie', 'ultimo_numero', 'atualizado_em')
+    list_filter = ('modelo',)
+    search_fields = ('cnpj_emitente', 'serie')
+    readonly_fields = ('criado_em', 'atualizado_em')
+    ordering = ('-atualizado_em',)
+
+
 # Opcional: Criar e registrar o Admin site personalizado
 # transport_admin = TransporteDashboardAdmin(name='transport_admin')
 # transport_admin.register(CTeDocumento, CTeDocumentoAdmin)

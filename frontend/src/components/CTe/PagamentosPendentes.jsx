@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { cteAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
-import Loading from '../Common/Loading';
+import { SkeletonTable, SkeletonMobileCards } from '../Common/Skeleton';
+import EmptyState from '../Common/EmptyState';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
 import {
@@ -13,8 +14,23 @@ import './CTe.css';
 
 const COLORS = ['#0d9488', '#f39c12', '#27ae60', '#e74c3c', '#C8A951'];
 
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= breakpoint);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
 function PagamentosPendentes() {
   const toast = useToast();
+  const isMobile = useIsMobile();
 
   // useMemo ensures defaultDates is stable across renders
   const defaultDates = useMemo(() => {
@@ -37,7 +53,7 @@ function PagamentosPendentes() {
   const [comprovanteFile, setComprovanteFile] = useState(null);
   // Paginacao da tabela
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const itensPorPagina = 10;
+  const itensPorPagina = 20;
 
   // Filtros avançados (multi-select)
   const [filtrosAvancados, setFiltrosAvancados] = useState({
@@ -240,7 +256,14 @@ function PagamentosPendentes() {
       />
 
       {loading ? (
-        <Loading message="Carregando pagamentos pendentes..." />
+        <>
+          <div className="skeleton-desktop">
+            <SkeletonTable rows={6} columns={7} />
+          </div>
+          <div className="skeleton-mobile">
+            <SkeletonMobileCards count={4} />
+          </div>
+        </>
       ) : (
       <>
       {/* Filtros Avançados */}
@@ -264,7 +287,7 @@ function PagamentosPendentes() {
             borderRadius: '12px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+            <div className="filtros-avancados-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
 
               {/* Filtro Modalidade */}
               <div className="filtro-grupo">
@@ -446,17 +469,20 @@ function PagamentosPendentes() {
         <div className="cte-chart-card">
           <h3>Top Clientes com Pendências</h3>
           {barData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={barData} layout="vertical">
+            <ResponsiveContainer width="100%" height={isMobile ? 200 : 250}>
+              <BarChart data={barData} layout="vertical" margin={{ top: 5, right: isMobile ? 20 : 30, bottom: 5, left: isMobile ? 60 : 100 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={formatCurrencyShort} />
-                <YAxis type="category" dataKey="nome" tick={{ fontSize: 11 }} width={100} />
+                <XAxis type="number" tick={{ fontSize: isMobile ? 10 : 12 }} tickFormatter={formatCurrencyShort} />
+                <YAxis type="category" dataKey="nome" tick={{ fontSize: isMobile ? 10 : 11 }} width={isMobile ? 60 : 100} />
                 <Tooltip formatter={(value) => formatCurrency(value)} />
                 <Bar dataKey="valor" fill="#e74c3c" radius={[0, 4, 4, 0]} name="Valor Pendente" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="empty-chart">Nenhuma pendencia no periodo</div>
+            <EmptyState
+              title="Nenhuma pendência no período"
+              description="Não há clientes com pendências para o período selecionado."
+            />
           )}
         </div>
 
@@ -464,27 +490,43 @@ function PagamentosPendentes() {
         <div className="cte-chart-card cte-chart-small">
           <h3>Pendências por Modalidade</h3>
           {pieData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={2}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
+            <>
+              <ResponsiveContainer width="100%" height={isMobile ? 180 : 200}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={isMobile ? 35 : 50}
+                    outerRadius={isMobile ? 60 : 80}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={isMobile ? false : ({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={!isMobile}
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                </PieChart>
+              </ResponsiveContainer>
+              {isMobile && (
+                <div className="chart-legend-mobile">
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                    <div key={index} className="chart-legend-item">
+                      <span className="chart-legend-dot" style={{ background: entry.fill }} />
+                      <span className="chart-legend-text">{entry.name} ({(entry.value / pieData.reduce((a, b) => a + b.value, 0) * 100).toFixed(0)}%)</span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip formatter={(value) => formatCurrency(value)} />
-              </PieChart>
-            </ResponsiveContainer>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="empty-chart">Sem dados para o periodo</div>
+            <EmptyState
+              title="Sem dados para o período"
+              description="Não há pendências por modalidade no período selecionado."
+            />
           )}
         </div>
       </div>
@@ -518,7 +560,12 @@ function PagamentosPendentes() {
           <tbody>
             {ctesPaginados.length === 0 ? (
               <tr>
-                <td colSpan="7" className="text-center">Nenhum CT-e pendente no periodo</td>
+                <td colSpan="7" className="text-center">
+                  <EmptyState
+                    title="Nenhum CT-e pendente no período"
+                    description="Tente ajustar os filtros de data ou limpar os filtros avançados."
+                  />
+                </td>
               </tr>
             ) : (
               ctesPaginados.map((cte) => (
@@ -573,6 +620,85 @@ function PagamentosPendentes() {
             )}
           </tbody>
         </table>
+
+        {/* Mobile Cards View */}
+        <div className="mobile-cards">
+          {ctesPaginados.length === 0 ? (
+            <EmptyState
+              title="Nenhum CT-e pendente no período"
+              description="Tente ajustar os filtros de data ou limpar os filtros avançados."
+            />
+          ) : (
+            ctesPaginados.map((cte) => (
+              <div key={cte.id} className="mobile-card">
+                <div className="mobile-card-header">
+                  <div className="mobile-card-title">
+                    <span className="mobile-card-number">{cte.numero || '-'}</span>
+                    <span className="mobile-card-date">{cte.data_emissao || '-'}</span>
+                  </div>
+                  <div className="mobile-card-status">
+                    <span className={`badge badge-${cte.modalidade === 'CIF' ? 'info' : 'warning'}`}>
+                      {cte.modalidade || '-'}
+                    </span>
+                  </div>
+                </div>
+                <div className="mobile-card-body">
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Remetente</span>
+                    <span className="mobile-card-value">{cte.remetente || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Destinatário</span>
+                    <span className="mobile-card-value">{cte.destinatario || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Valor</span>
+                    <span className="mobile-card-value valor">{formatCurrency(cte.valor)}</span>
+                  </div>
+                  {cte.chave && (
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">Chave</span>
+                      <span className="mobile-card-value">{cte.chave.slice(-10)}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="mobile-card-footer">
+                  <div className="mobile-card-actions">
+                    <button
+                      className="btn-action btn-download"
+                      onClick={() => handleAbrirModalBaixa(cte.id, cte.numero)}
+                      disabled={atualizandoPagamento === cte.id}
+                      title="Baixar Pagamento"
+                    >
+                      {atualizandoPagamento === cte.id ? (
+                        <span className="loading-spinner-small"></span>
+                      ) : (
+                        <>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                          </svg>
+                          Baixar
+                        </>
+                      )}
+                    </button>
+                    <Link
+                      to={`/ctes/${cte.id}`}
+                      className="btn-action btn-view"
+                      title="Ver Detalhes"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      Ver
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Paginacao */}

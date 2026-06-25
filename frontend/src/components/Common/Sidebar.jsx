@@ -8,17 +8,23 @@ function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState({});
+  const [openBottomSheet, setOpenBottomSheet] = useState(null);
+  const [openMoreMenu, setOpenMoreMenu] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const prevPathnameRef = useRef(location.pathname);
 
-  // Fechar menu mobile ao mudar de rota
+  // Fechar menus ao mudar de rota
   useEffect(() => {
     if (prevPathnameRef.current !== location.pathname) {
       prevPathnameRef.current = location.pathname;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsMobileOpen(false);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOpenBottomSheet(null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOpenMoreMenu(false);
     }
   }, [location.pathname]);
 
@@ -109,9 +115,38 @@ function Sidebar() {
       ),
       submenu: [
         { label: 'Painel Financeiro', path: '/financeiro' },
+        { label: 'Faturas', path: '/faturas' },
+        { label: 'Contas a Pagar', path: '/financeiro/contas-a-pagar' },
+        { label: 'Conciliação Bancária', path: '/financeiro/conciliacao' },
+        { label: 'Inadimplência', path: '/financeiro/inadimplencia' },
+        { label: 'Fluxo de Caixa', path: '/financeiro/fluxo-caixa' },
+        { label: 'DRE', path: '/financeiro/dre' },
         { label: 'Pagamentos', path: '/pagamentos' },
         { label: 'CT-es Pendentes', path: '/ctes/pendentes' },
         { label: 'Faixas de KM', path: '/faixas-km' }
+      ]
+    },
+    {
+      id: 'operacao',
+      section: 'Operação',
+      label: 'Operação',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        </svg>
+      ),
+      submenu: [
+        { label: 'Ordens de Viagem', path: '/ordens-viagem' },
+        { label: 'Rastreamento GPS', path: '/rastreamento' },
+        { label: 'Comunicação', path: '/comunicacao' },
+        { label: 'CIOT', path: '/ciot' },
+        { label: 'Abastecimento', path: '/abastecimentos' },
+        { label: 'Planos de Manutenção', path: '/planos-manutencao' },
+        { label: 'Pedágios', path: '/pedagios' },
+        { label: 'Multas/Sinistros', path: '/frota/multas-sinistros' },
+        { label: 'Tabela de Frete', path: '/tabelas-frete' },
+        { label: 'Manutenção', path: '/manutencoes' }
       ]
     },
     {
@@ -321,6 +356,142 @@ function Sidebar() {
           </button>
         </div>
       </aside>
+
+      {/* Bottom Navigation - mobile app-style (4 principais + Mais) */}
+      {(() => {
+        const mainItems = menuItems.slice(0, 4);
+        const moreItems = menuItems.slice(4);
+        const moreActive = moreItems.some(i => i.submenu ? isSubmenuActive(i.submenu) : isActive(i.path));
+
+        return (
+          <>
+            <nav className="bottom-nav" aria-label="Navegacao inferior">
+              {mainItems.map((item) => (
+                <button
+                  key={item.id}
+                  className={`bottom-nav-item ${item.submenu ? (isSubmenuActive(item.submenu) || openBottomSheet === item.id ? 'active' : '') : (isActive(item.path) ? 'active' : '')}`}
+                  onClick={() => {
+                    setOpenMoreMenu(false);
+                    if (item.submenu) {
+                      setOpenBottomSheet(openBottomSheet === item.id ? null : item.id);
+                    } else {
+                      navigate(item.path);
+                    }
+                  }}
+                  aria-label={item.label}
+                >
+                  <span className="bottom-nav-icon" aria-hidden="true">{item.icon}</span>
+                  <span className="bottom-nav-label">{item.label}</span>
+                </button>
+              ))}
+              <button
+                className={`bottom-nav-item more-item ${moreActive || openMoreMenu ? 'active' : ''}`}
+                onClick={() => {
+                  setOpenBottomSheet(null);
+                  setOpenMoreMenu(!openMoreMenu);
+                }}
+                aria-label="Mais opcoes"
+                aria-expanded={openMoreMenu}
+              >
+                <span className="bottom-nav-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                  </svg>
+                </span>
+                <span className="bottom-nav-label">Mais</span>
+              </button>
+            </nav>
+
+            {/* Bottom Sheet para submenus dos 4 principais */}
+            {openBottomSheet && (
+              <>
+                <div
+                  className="bottom-sheet-overlay active"
+                  onClick={() => setOpenBottomSheet(null)}
+                  aria-hidden="true"
+                />
+                <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label={`Menu ${menuItems.find(i => i.id === openBottomSheet)?.label}`}>
+                  <div className="bottom-sheet-header">
+                    <span className="bottom-sheet-title">
+                      {menuItems.find(i => i.id === openBottomSheet)?.label}
+                    </span>
+                    <button
+                      className="bottom-sheet-close"
+                      onClick={() => setOpenBottomSheet(null)}
+                      aria-label="Fechar menu"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                  <ul className="bottom-sheet-menu">
+                    {menuItems.find(i => i.id === openBottomSheet)?.submenu?.map((subItem) => (
+                      <li key={subItem.path}>
+                        <Link
+                          to={subItem.path}
+                          className={isActive(subItem.path) ? 'active' : ''}
+                          onClick={() => setOpenBottomSheet(null)}
+                        >
+                          {subItem.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            )}
+
+            {/* Card suspenso "Mais" com itens extras */}
+            {openMoreMenu && (
+              <>
+                <div
+                  className="bottom-sheet-overlay active"
+                  onClick={() => setOpenMoreMenu(false)}
+                  aria-hidden="true"
+                />
+                <div className="bottom-sheet more-sheet" role="dialog" aria-modal="true" aria-label="Mais opcoes">
+                  <div className="bottom-sheet-header">
+                    <span className="bottom-sheet-title">Mais</span>
+                    <button
+                      className="bottom-sheet-close"
+                      onClick={() => setOpenMoreMenu(false)}
+                      aria-label="Fechar menu"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="bottom-sheet-grid">
+                    {moreItems.map((item) => (
+                      <button
+                        key={item.id}
+                        className={`bottom-sheet-grid-item ${item.submenu ? (isSubmenuActive(item.submenu) ? 'active' : '') : (isActive(item.path) ? 'active' : '')}`}
+                        onClick={() => {
+                          if (item.submenu) {
+                            setOpenMoreMenu(false);
+                            setOpenBottomSheet(item.id);
+                          } else {
+                            navigate(item.path);
+                          }
+                        }}
+                      >
+                        <span className="bottom-sheet-grid-icon" aria-hidden="true">{item.icon}</span>
+                        <span className="bottom-sheet-grid-label">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </>
+        );
+      })()}
     </>
   );
 }

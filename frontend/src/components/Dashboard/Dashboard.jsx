@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { dashboardAPI, manutencaoAPI } from '../../services/api';
+import useApi from '../../hooks/useApi';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
@@ -13,8 +13,15 @@ import './Dashboard.css';
 
 const COLORS = ['#40916C', '#C8A951', '#2D6A4F', '#95D5B2', '#B8941F', '#74C69D'];
 
+function buildQueryString(filters) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params.append(key, value);
+  });
+  return params.toString();
+}
+
 function Dashboard() {
-  // useMemo ensures defaultDates is stable across renders
   const defaultDates = useMemo(() => {
     const hoje = new Date();
     const dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
@@ -25,50 +32,18 @@ function Dashboard() {
       data_fim: dataFim.toISOString().split('T')[0]
     };
   }, []);
-  const [data, setData] = useState(null);
-  const [frotaData, setFrotaData] = useState(null);
-  const [performanceData, setPerformanceData] = useState(null);
-  const [alertasData, setAlertasData] = useState(null);
-  const [manutencaoData, setManutencaoData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
   const [filtros, setFiltros] = useState(defaultDates);
+  const queryString = useMemo(() => buildQueryString(filtros), [filtros]);
 
-  const loadAllData = async (filters) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Carregar todos os endpoints em paralelo
-      const [geralResult, frotaResult, performanceResult, alertasResult, manutencaoResult] = await Promise.all([
-        dashboardAPI.geral(filters),
-        dashboardAPI.frota(filters),
-        dashboardAPI.performance(filters),
-        dashboardAPI.alertasPagamentos(30).catch(() => null), // Nao falhar se alertas der erro
-        manutencaoAPI.painel.indicadores(filters).catch(() => null) // Nao falhar se manutencao der erro
-      ]);
-
-      setData(geralResult);
-      setFrotaData(frotaResult);
-      setPerformanceData(performanceResult);
-      setAlertasData(alertasResult);
-      setManutencaoData(manutencaoResult);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Carrega dados na montagem inicial
-  useEffect(() => {
-    loadAllData(defaultDates);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data, error, isLoading, mutate } = useApi(`/dashboard/?${queryString}`);
+  const { data: frotaData } = useApi(`/painel/frota/?${queryString}`);
+  const { data: performanceData } = useApi(`/painel/performance/?${queryString}`);
+  const { data: alertasData } = useApi(`/alertas/pagamentos/?dias=30`, { revalidateOnFocus: false });
+  const { data: manutencaoData } = useApi(`/manutencao/painel/?${queryString}`, { shouldRetryOnError: false });
 
   const handleFilterChange = useCallback((newFilters) => {
     setFiltros(newFilters);
-    loadAllData(newFilters);
   }, []);
 
   const formatCurrency = (value) => {
@@ -82,8 +57,7 @@ function Dashboard() {
     return new Intl.NumberFormat('pt-BR').format(value || 0);
   };
 
-  // Dados para graficos da API
-  const getChartData = () => {
+  const chartData = useMemo(() => {
     if (data?.grafico_cif_fob && data.grafico_cif_fob.length > 0) {
       return data.grafico_cif_fob.map(item => {
         let label = item.data;
@@ -106,9 +80,9 @@ function Dashboard() {
       });
     }
     return [];
-  };
+  }, [data]);
 
-  const getPieData = () => {
+  const pieData = useMemo(() => {
     const cif = data?.cards?.valor_cif || 0;
     const fob = data?.cards?.valor_fob || 0;
     const total = cif + fob;
@@ -124,18 +98,21 @@ function Dashboard() {
       { name: 'CIF', value: Math.round((cif / total) * 100) },
       { name: 'FOB', value: Math.round((fob / total) * 100) },
     ];
-  };
+  }, [data]);
 
-  const getPerformanceChartData = () => {
-    if (performanceData?.evolucao_diaria && performanceData.evolucao_diaria.length > 0) {
-      return performanceData.evolucao_diaria;
-    }
-    return [];
-  };
+  const performanceChartData = useMemo(() => {
+    return performanceData?.evolucao_diaria && performanceData.evolucao_diaria.length > 0
+      ? performanceData.evolucao_diaria
+      : [];
+  }, [performanceData]);
 
-  const chartData = getChartData();
-  const pieData = getPieData();
-  const performanceChartData = getPerformanceChartData();
+  const totalAlertas = (frotaData?.cards?.docs_vencendo || 0) +
+                       (frotaData?.cards?.cnh_vencendo || 0) +
+                       (frotaData?.cards?.certificacoes_vencendo || 0) +
+                       (alertasData?.agregados_pendentes?.length || 0);
+
+  if (isLoading && !data) return <Loading message="Carregando dashboard..." />;
+  if (error && !data) return <ErrorMessage message={error.message || 'Erro ao carregar dashboard'} onRetry={() => mutate()} />;
 
   const dashboardIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -143,15 +120,6 @@ function Dashboard() {
       <polyline points="9 22 9 12 15 12 15 22"></polyline>
     </svg>
   );
-
-  if (loading && !data) return <Loading message="Carregando dashboard..." />;
-  if (error && !data) return <ErrorMessage message={error} onRetry={() => loadAllData(filtros)} />;
-
-  // Calcular total de alertas
-  const totalAlertas = (frotaData?.cards?.docs_vencendo || 0) +
-                       (frotaData?.cards?.cnh_vencendo || 0) +
-                       (frotaData?.cards?.certificacoes_vencendo || 0) +
-                       (alertasData?.agregados_pendentes?.length || 0);
 
   return (
     <div className="dashboard">
@@ -161,12 +129,9 @@ function Dashboard() {
         icon={dashboardIcon}
       />
 
-      {/* Filtro de Data */}
       <DateFilter onFilterChange={handleFilterChange} defaultPeriodo="mes" />
 
-      {/* KPI Cards - Layout 3x2 */}
       <div className="kpi-grid">
-        {/* Linha 1: Documentos */}
         <Link to="/ctes" className="kpi-card">
           <div className="kpi-icon blue">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -219,7 +184,6 @@ function Dashboard() {
           </div>
         </Link>
 
-        {/* Linha 2: Financeiro */}
         <Link to="/financeiro" className="kpi-card highlight">
           <div className="kpi-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -231,7 +195,7 @@ function Dashboard() {
             <span className="kpi-label">Faturamento Total</span>
             <span className="kpi-value">{formatCurrency(data?.cards?.valor_total_fretes || 0)}</span>
             <span className="kpi-change positive">
-              Ticket Medio: {formatCurrency(performanceData?.cards?.ticket_medio || 0)}
+              Ticket Médio: {formatCurrency(performanceData?.cards?.ticket_medio || 0)}
             </span>
           </div>
         </Link>
@@ -270,7 +234,6 @@ function Dashboard() {
         </Link>
       </div>
 
-      {/* KPI Cards - Linha 2: Performance */}
       <div className="kpi-grid kpi-grid-secondary">
         <div className="kpi-card kpi-card-small">
           <div className="kpi-icon-small blue">
@@ -350,9 +313,7 @@ function Dashboard() {
         </Link>
       </div>
 
-      {/* Graficos */}
       <div className="charts-grid">
-        {/* Grafico de Barras - CIF vs FOB */}
         <div className="chart-card">
           <h3>Faturamento CIF vs FOB</h3>
           {chartData.length > 0 ? (
@@ -373,11 +334,10 @@ function Dashboard() {
               </ComposedChart>
             </ResponsiveContainer>
           ) : (
-            <div className="empty-chart">Sem dados para o periodo</div>
+            <div className="empty-chart">Sem dados para o período</div>
           )}
         </div>
 
-        {/* Grafico de Performance */}
         <div className="chart-card">
           <h3>Evolução Diária</h3>
           {performanceChartData.length > 0 ? (
@@ -409,11 +369,10 @@ function Dashboard() {
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="empty-chart">Sem dados para o periodo</div>
+            <div className="empty-chart">Sem dados para o período</div>
           )}
         </div>
 
-        {/* Grafico de Pizza - Distribuição CIF/FOB */}
         <div className="chart-card chart-card-small">
           <h3>Distribuição CIF/FOB</h3>
           <ResponsiveContainer width="100%" height={250}>
@@ -437,7 +396,6 @@ function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Card de Alertas */}
         <div className="chart-card chart-card-small alerts-summary-card">
           <h3>Alertas e Vencimentos</h3>
           <div className="alerts-summary">
@@ -459,7 +417,7 @@ function Dashboard() {
               <span className="alert-summary-icon info">!</span>
               <div className="alert-summary-content">
                 <span className="alert-summary-value">{frotaData?.cards?.certificacoes_vencendo || 0}</span>
-                <span className="alert-summary-label">Certificacoes Vencendo</span>
+                <span className="alert-summary-label">Certificações Vencendo</span>
               </div>
             </div>
             <div className="alert-summary-item">
@@ -473,9 +431,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Secao de Ações Rápidas e Últimos Documentos */}
       <div className="bottom-section">
-        {/* Ações Rápidas */}
         <div className="quick-actions-card">
           <h3>Ações Rápidas</h3>
           <div className="quick-actions-grid">
@@ -524,12 +480,11 @@ function Dashboard() {
                 <circle cx="12" cy="10" r="3"></circle>
                 <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"></path>
               </svg>
-              Geografico
+              Geográfico
             </Link>
           </div>
         </div>
 
-        {/* Últimos CT-es */}
         <div className="recent-docs-card">
           <h3>Últimos CT-es</h3>
           <div className="recent-docs-list">
@@ -542,18 +497,17 @@ function Dashboard() {
                   </div>
                   <div className="doc-meta">
                     <span className="doc-valor">{formatCurrency(cte.valor)}</span>
-                    <span className={`doc-status status-autorizado`}>{cte.modalidade}</span>
+                    <span className="doc-status status-autorizado">{cte.modalidade}</span>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="empty-list">Nenhum CT-e no periodo selecionado</div>
+              <div className="empty-list">Nenhum CT-e no período selecionado</div>
             )}
           </div>
           <Link to="/ctes" className="view-all-link">Ver todos os CT-es</Link>
         </div>
 
-        {/* Últimos MDF-es */}
         <div className="recent-docs-card">
           <h3>Últimos MDF-es</h3>
           <div className="recent-docs-list">
@@ -571,13 +525,12 @@ function Dashboard() {
                 </div>
               ))
             ) : (
-              <div className="empty-list">Nenhum MDF-e no periodo selecionado</div>
+              <div className="empty-list">Nenhum MDF-e no período selecionado</div>
             )}
           </div>
           <Link to="/mdfes" className="view-all-link">Ver todos os MDF-es</Link>
         </div>
 
-        {/* Top Veículos */}
         <div className="recent-docs-card">
           <h3>Top Veículos</h3>
           <div className="recent-docs-list">
@@ -594,10 +547,10 @@ function Dashboard() {
                 </div>
               ))
             ) : (
-              <div className="empty-list">Nenhum veiculo no periodo</div>
+              <div className="empty-list">Nenhum veículo no período</div>
             )}
           </div>
-          <Link to="/veiculos" className="view-all-link">Ver todos os veiculos</Link>
+          <Link to="/veiculos" className="view-all-link">Ver todos os veículos</Link>
         </div>
       </div>
     </div>

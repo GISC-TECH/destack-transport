@@ -255,11 +255,11 @@ function CTeDetail() {
             </div>
             <div className="detail-row">
               <span className="label">Base Cálculo ICMS:</span>
-              <span className="value">{formatCurrency(cte.imposto?.icms_base_calculo)}</span>
+              <span className="value">{formatCurrency(cte.tributos?.icms_vbc)}</span>
             </div>
             <div className="detail-row">
               <span className="label">Valor ICMS:</span>
-              <span className="value">{formatCurrency(cte.imposto?.icms_valor)}</span>
+              <span className="value">{formatCurrency(cte.tributos?.icms_vicms)}</span>
             </div>
           </div>
         </div>
@@ -283,7 +283,7 @@ function CTeDetail() {
               </div>
               <div className="detail-row">
                 <span className="label">Descrição:</span>
-                <span className="value">{cte.protocolo.motivo}</span>
+                <span className="value">{cte.protocolo.motivo_status}</span>
               </div>
             </div>
           </div>

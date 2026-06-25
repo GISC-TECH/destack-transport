@@ -2,9 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
-import Loading from '../Common/Loading';
+import { SkeletonTable, SkeletonMobileCards } from '../Common/Skeleton';
+import EmptyState from '../Common/EmptyState';
 import PageHeader from '../Common/PageHeader';
 import './VeiculosList.css';
+
+const veiculosIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="1" y="3" width="15" height="13"></rect>
+    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+  </svg>
+);
 
 function VeiculosList() {
   const navigate = useNavigate();
@@ -28,6 +38,48 @@ function VeiculosList() {
   useEffect(() => {
     loadVeiculos();
   }, [filtros]);
+
+  const fetchPage = async (url) => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Erro ao carregar veículos');
+      const data = await response.json();
+
+      if (data.results) {
+        setVeiculos(data.results);
+        setPagination({
+          count: data.count,
+          next: data.next,
+          previous: data.previous
+        });
+      } else if (Array.isArray(data)) {
+        setVeiculos(data);
+        setPagination({ count: data.length, next: null, previous: null });
+      } else {
+        setVeiculos([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar veículos:', err);
+      setVeiculos([]);
+      setPagination({ count: 0, next: null, previous: null });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (pagination.previous) {
+      fetchPage(pagination.previous);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pagination.next) {
+      fetchPage(pagination.next);
+    }
+  };
 
   const loadVeiculos = async () => {
     try {
@@ -103,7 +155,24 @@ function VeiculosList() {
     return tipos[tipo] || tipo;
   };
 
-  if (loading) return <Loading message="Carregando veículos..." />;
+  if (loading) {
+    return (
+      <div className="veiculos-list">
+        <PageHeader
+          title="Veículos"
+          subtitle="Carregando..."
+          icon={veiculosIcon}
+          breadcrumbs={[{ label: 'Cadastros' }, { label: 'Veículos' }]}
+        />
+        <div className="table-container desktop-only">
+          <SkeletonTable rows={5} columns={9} />
+        </div>
+        <div className="mobile-only">
+          <SkeletonMobileCards count={4} />
+        </div>
+      </div>
+    );
+  }
 
   // Se mostrando alertas
   if (showAlerts) {
@@ -150,15 +219,6 @@ function VeiculosList() {
       </div>
     );
   }
-
-  const veiculosIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="1" y="3" width="15" height="13"></rect>
-      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-      <circle cx="5.5" cy="18.5" r="2.5"></circle>
-      <circle cx="18.5" cy="18.5" r="2.5"></circle>
-    </svg>
-  );
 
   const headerActions = (
     <div className="header-buttons">
@@ -230,70 +290,164 @@ function VeiculosList() {
         </select>
       </div>
 
-      {/* Tabela */}
+      {/* Tabela Desktop */}
       {veiculos.length > 0 ? (
-        <div className="table-container">
-          <table className="veiculos-table">
-            <thead>
-              <tr>
-                <th>Placa</th>
-                <th>RENAVAM</th>
-                <th>Tipo</th>
-                <th>Proprietário</th>
-                <th>Capacidade (kg)</th>
-                <th>Capacidade (m3)</th>
-                <th>Compartimentos</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {veiculos.map((veiculo) => (
-                <tr key={veiculo.id}>
-                  <td><strong>{veiculo.placa}</strong></td>
-                  <td>{veiculo.renavam || '-'}</td>
-                  <td>
+        <>
+          <div className="table-container desktop-only">
+            <table className="veiculos-table">
+              <thead>
+                <tr>
+                  <th>Placa</th>
+                  <th>RENAVAM</th>
+                  <th>Tipo</th>
+                  <th>Proprietário</th>
+                  <th>Capacidade (kg)</th>
+                  <th>Capacidade (m3)</th>
+                  <th>Compartimentos</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {veiculos.map((veiculo) => (
+                  <tr key={veiculo.id}>
+                    <td><strong>{veiculo.placa}</strong></td>
+                    <td>{veiculo.renavam || '-'}</td>
+                    <td>
+                      <span className={`badge badge-tipo-${veiculo.tipo_proprietario}`}>
+                        {getTipoProprietario(veiculo.tipo_proprietario)}
+                      </span>
+                    </td>
+                    <td>{veiculo.proprietario_nome || '-'}</td>
+                    <td>{veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}</td>
+                    <td>{veiculo.capacidade_m3 ? `${veiculo.capacidade_m3} m3` : '-'}</td>
+                    <td>
+                      {veiculo.compartimentos && veiculo.compartimentos.length > 0 ? (
+                        <span className="badge badge-compartimentos">
+                          {veiculo.compartimentos.length} boca{veiculo.compartimentos.length !== 1 ? 's' : ''}
+                        </span>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                    <td>
+                      <span className={`status ${veiculo.ativo ? 'ativo' : 'inativo'}`}>
+                        {veiculo.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                    <td className="actions-cell">
+                      <button
+                        className="btn-action btn-edit"
+                        onClick={() => navigate(`/veiculos/editar/${veiculo.id}`)}
+                        title="Editar"
+                        aria-label={`Editar veículo ${veiculo.placa}`}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Cards Mobile */}
+          <div className="mobile-cards mobile-only">
+            {veiculos.map((veiculo) => (
+              <div key={veiculo.id} className="mobile-card" onClick={() => navigate(`/veiculos/editar/${veiculo.id}`)}>
+                <div className="mobile-card-header">
+                  <h4>{veiculo.placa}</h4>
+                  <span className={`status ${veiculo.ativo ? 'ativo' : 'inativo'}`}>
+                    {veiculo.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
+                <div className="mobile-card-body">
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Tipo</span>
                     <span className={`badge badge-tipo-${veiculo.tipo_proprietario}`}>
                       {getTipoProprietario(veiculo.tipo_proprietario)}
                     </span>
-                  </td>
-                  <td>{veiculo.proprietario_nome || '-'}</td>
-                  <td>{veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}</td>
-                  <td>{veiculo.capacidade_m3 ? `${veiculo.capacidade_m3} m3` : '-'}</td>
-                  <td>
-                    {veiculo.compartimentos && veiculo.compartimentos.length > 0 ? (
-                      <span className="badge badge-compartimentos">
-                        {veiculo.compartimentos.length} boca{veiculo.compartimentos.length !== 1 ? 's' : ''}
-                      </span>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
-                  <td>
-                    <span className={`status ${veiculo.ativo ? 'ativo' : 'inativo'}`}>
-                      {veiculo.ativo ? 'Ativo' : 'Inativo'}
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">RENAVAM</span>
+                    <span className="mobile-card-value">{veiculo.renavam || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Proprietário</span>
+                    <span className="mobile-card-value">{veiculo.proprietario_nome || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Capacidade</span>
+                    <span className="mobile-card-value">
+                      {veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}
+                      {' / '}
+                      {veiculo.capacidade_m3 ? `${veiculo.capacidade_m3} m³` : '-'}
                     </span>
-                  </td>
-                  <td className="actions-cell">
-                    <button
-                      className="btn-action btn-edit"
-                      onClick={() => navigate(`/veiculos/editar/${veiculo.id}`)}
-                      title="Editar"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Compartimentos</span>
+                    <span className="mobile-card-value">
+                      {veiculo.compartimentos && veiculo.compartimentos.length > 0 ? (
+                        <span className="badge badge-compartimentos">
+                          {veiculo.compartimentos.length} boca{veiculo.compartimentos.length !== 1 ? 's' : ''}
+                        </span>
+                      ) : (
+                        '-'
+                      )}
+                    </span>
+                  </div>
+                </div>
+                <div className="mobile-card-footer">
+                  <button
+                    className="btn-action btn-edit"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/veiculos/editar/${veiculo.id}`);
+                    }}
+                    aria-label={`Editar veículo ${veiculo.placa}`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="empty-state">
-          <p>Nenhum veículo encontrado com os filtros selecionados.</p>
+        <EmptyState
+          title="Nenhum veículo encontrado"
+          description="Não há veículos com os filtros selecionados."
+          action={
+            <button className="btn btn-primary" onClick={() => navigate('/veiculos/novo')}>
+              Novo Veículo
+            </button>
+          }
+        />
+      )}
+
+      {/* Botões de paginação */}
+      {(pagination.previous || pagination.next) && (
+        <div className="pagination-buttons">
+          <button
+            className="btn-page"
+            disabled={!pagination.previous}
+            onClick={handlePreviousPage}
+          >
+            Anterior
+          </button>
+          <button
+            className="btn-page"
+            disabled={!pagination.next}
+            onClick={handleNextPage}
+          >
+            Próxima
+          </button>
         </div>
       )}
     </div>

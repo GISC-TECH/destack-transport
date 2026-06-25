@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-destack_db}
       POSTGRES_USER: ${POSTGRES_USER:-destack_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-destack_prod_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -25,11 +25,13 @@ services:
     image: redis:7-alpine
     container_name: destack_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,11 +49,16 @@ services:
     restart: unless-stopped
     environment:
       - DEBUG=False
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,destack.gisc.tech}
-      - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:-destack_prod_password}@postgres:5432/${POSTGRES_DB:-destack_db}
-      - REDIS_URL=redis://redis:6379/0
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://destack.gisc.tech}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:?defina DJANGO_SECRET_KEY no .env}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:?defina ALLOWED_HOSTS no .env}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:?defina CSRF_TRUSTED_ORIGINS no .env}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?defina CORS_ALLOWED_ORIGINS no .env}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@postgres:5432/${POSTGRES_DB:-destack_db}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/0
+      - REDIS_CACHE_URL=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/15
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/0
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
@@ -103,7 +110,10 @@ services:
       # Destack API (produção: destack_app na rede apps_backend)
       - DESTACK_API_URL=${DESTACK_API_URL:-http://destack:8000/api}
       - DESTACK_USERNAME=${DESTACK_USERNAME:-admin}
-      - DESTACK_PASSWORD=${DESTACK_PASSWORD:-admin123}
+      - DESTACK_PASSWORD=${DESTACK_PASSWORD:?defina DESTACK_PASSWORD no .env}
+      # Redis (utilizado pelo scraper para cache/fila, se aplicável)
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/0
       # Collector
       - COLLECT_INTERVAL_MINUTES=60
       - DAYS_LOOKBACK=7
@@ -128,9 +138,13 @@ services:
     command: celery -A core worker -l info
     environment:
       - DEBUG=False
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
-      - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:-destack_prod_password}@postgres:5432/${POSTGRES_DB:-destack_db}
-      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:?defina DJANGO_SECRET_KEY no .env}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@postgres:5432/${POSTGRES_DB:-destack_db}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/0
+      - REDIS_CACHE_URL=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/15
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/0
     volumes:
       - ./logs:/app/logs
     depends_on:
@@ -149,9 +163,13 @@ services:
     command: celery -A core beat -l info
     environment:
       - DEBUG=False
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
-      - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:-destack_prod_password}@postgres:5432/${POSTGRES_DB:-destack_db}
-      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:?defina DJANGO_SECRET_KEY no .env}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@postgres:5432/${POSTGRES_DB:-destack_db}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/0
+      - REDIS_CACHE_URL=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/15
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:?defina REDIS_PASSWORD no .env}@redis:6379/0
     volumes:
       - ./logs:/app/logs
     depends_on:

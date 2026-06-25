@@ -1,0 +1,209 @@
+.abastecimento-page {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.abastecimento-list-card {
+  background: var(--card-bg);
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+
+.abastecimento-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.abastecimento-table th,
+.abastecimento-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.abastecimento-table th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.abastecimento-table tr:hover td {
+  background: var(--bg-secondary);
+}
+
+.abastecimento-mobile-card {
+  display: none;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.abastecimento-mobile-card:last-child {
+  border-bottom: none;
+}
+
+.abastecimento-mobile-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.abastecimento-mobile-row:last-child {
+  margin-bottom: 0;
+}
+
+.abastecimento-mobile-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Filtros */
+.abastecimento-page .filtros-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.abastecimento-page .filtros-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.abastecimento-page .filtros-row select,
+.abastecimento-page .filtros-row input,
+.abastecimento-page .filtros-row button {
+  min-height: 40px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+.abastecimento-page .filtros-row select {
+  min-width: 180px;
+}
+
+.abastecimento-page .filtros-row input {
+  min-width: 220px;
+  flex: 1;
+}
+
+.abastecimento-page .filtros-row input:focus,
+.abastecimento-page .filtros-row select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(16, 51, 31, 0.1);
+}
+
+@media (max-width: 768px) {
+  .abastecimento-page .filtros-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .abastecimento-page .filtros-row select,
+  .abastecimento-page .filtros-row input {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+/* Form */
+.abastecimento-form-container {
+  background: var(--card-bg);
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  padding: 24px;
+}
+
+.abastecimento-form-section {
+  margin-bottom: 28px;
+}
+
+.abastecimento-form-section h3 {
+  margin: 0 0 18px 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 10px;
+}
+
+.abastecimento-form-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.abastecimento-form-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.abastecimento-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.abastecimento-form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.abastecimento-form-group input,
+.abastecimento-form-group select,
+.abastecimento-form-group textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+.abastecimento-form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.abastecimento-form-group input:focus,
+.abastecimento-form-group select:focus,
+.abastecimento-form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(16, 51, 31, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .abastecimento-form-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .abastecimento-table {
+    display: none;
+  }
+
+  .abastecimento-mobile-card {
+    display: block;
+  }
+
+  .abastecimento-form-row,
+  .abastecimento-form-row-2 {
+    grid-template-columns: 1fr;
+  }
+}

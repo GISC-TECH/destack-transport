@@ -14,6 +14,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 
 # Imports locais (serializers)
+from ..permissions import TransportModelPermission
 from ..serializers.user_serializers import UserSerializer, UserUpdateSerializer
 
 
@@ -89,7 +90,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """API para administracao de usuarios (somente admin)."""
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def get_serializer_class(self):
         """Define qual serializer usar dependendo da acao."""

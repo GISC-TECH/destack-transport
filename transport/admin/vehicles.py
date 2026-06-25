@@ -109,7 +109,7 @@ class ManutencaoVeiculoAdmin(admin.ModelAdmin):
     autocomplete_fields = ['veiculo']
     date_hierarchy = 'data_servico'
     list_select_related = ('veiculo',)
-    actions = ['marcar_como_pago', 'marcar_como_pendente', 'marcar_como_agendado']
+    actions = ['marcar_como_concluida', 'marcar_como_agendada', 'marcar_como_em_andamento']
 
     @admin.display(description='Veículo', ordering='veiculo__placa')
     def veiculo_link(self, obj):
@@ -123,19 +123,19 @@ class ManutencaoVeiculoAdmin(admin.ModelAdmin):
         ('Datas', {'fields': ('criado_em', 'atualizado_em'), 'classes': ('collapse',)}),
     )
 
-    @admin.action(description="Marcar selecionados como pagos")
-    def marcar_como_pago(self, request, queryset):
-        updated = queryset.update(status='PAGO')
-        self.message_user(request, f"{updated} manutenções foram marcadas como pagas.")
-
-    @admin.action(description="Marcar selecionados como pendentes")
-    def marcar_como_pendente(self, request, queryset):
-        updated = queryset.update(status='PENDENTE')
-        self.message_user(request, f"{updated} manutenções foram marcadas como pendentes.")
+    @admin.action(description="Marcar selecionados como concluídos")
+    def marcar_como_concluida(self, request, queryset):
+        updated = queryset.update(status='concluida')
+        self.message_user(request, f"{updated} manutenções foram marcadas como concluídas.")
 
     @admin.action(description="Marcar selecionados como agendados")
-    def marcar_como_agendado(self, request, queryset):
-        updated = queryset.update(status='AGENDADO')
+    def marcar_como_agendada(self, request, queryset):
+        updated = queryset.update(status='agendada')
         self.message_user(request, f"{updated} manutenções foram marcadas como agendadas.")
+
+    @admin.action(description="Marcar selecionados como em andamento")
+    def marcar_como_em_andamento(self, request, queryset):
+        updated = queryset.update(status='em_andamento')
+        self.message_user(request, f"{updated} manutenções foram marcadas como em andamento.")
 
 # =============================

@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { manutencaoAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import DocumentosAnexos from '../Common/DocumentosAnexos';
 import './Manutencao.css';
 
 function ManutencaoForm() {
@@ -351,15 +350,6 @@ function ManutencaoForm() {
         </div>
       </form>
 
-      {/* Documentos Anexos - apenas na edicao */}
-      {isEditing && id && (
-        <div style={{ marginTop: '24px' }}>
-          <DocumentosAnexos
-            entidadeTipo="manutencao"
-            entidadeId={id}
-          />
-        </div>
-      )}
     </div>
   );
 }

@@ -6,6 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.http import FileResponse, Http404
+
+from ..permissions import TransportModelPermission, ReadOnlyPermission
 from django.shortcuts import get_object_or_404
 import mimetypes
 
@@ -17,21 +19,22 @@ from ..serializers.documento_serializers import (
 )
 
 
-# Mapeamento de tipos de documentos anexos para campos de validade
+# Mapeamento de tipos de documentos anexos para campos de validade do Veiculo.
+# As chaves devem corresponder a TIPO_DOCUMENTO_CHOICES do modelo DocumentoAnexo.
 VEICULO_TIPO_TO_CAMPO = {
     'crlv': 'crlv_validade',
-    'laudo_cronotacografo': 'cronotacografo_validade',
-    'laudo_inspecao': 'civ_validade',
-    'certificado_ibama': 'cipp_validade',
-    'afericao': 'afericao_validade',
+    'certificado_tacografo': 'cronotacografo_validade',
+    'civ': 'civ_validade',
+    'cipp': 'cipp_validade',
+    'seguro': 'seguro_validade',  # campo nao existente ainda; ignorado silenciosamente
+    'laudo_vistoria': 'laudo_vistoria_validade',  # campo nao existente ainda
 }
 
 MOTORISTA_TIPO_TO_CAMPO = {
     'cnh': 'validade_cnh',
     'certificado_nr20': 'nr20_validade',
-    'curso_mopp': 'mopp_validade',
+    'certificado_mopp': 'mopp_validade',
     'certificado_nr35': 'nr35_validade',
-    'exame_toxicologico': 'toxicologico_validade',
     'aso': 'aso_validade',
 }
 
@@ -70,7 +73,7 @@ class DocumentoAnexoViewSet(viewsets.ModelViewSet):
     """
 
     queryset = DocumentoAnexo.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
     parser_classes = [MultiPartParser, FormParser]
 
     def get_serializer_class(self):
@@ -138,7 +141,8 @@ class ClienteDocumentoViewSet(viewsets.ViewSet):
     - DELETE /api/clientes/{cliente_pk}/documentos/{id}/ - Remover documento do cliente
     """
 
-    permission_classes = [IsAuthenticated]
+    queryset = DocumentoAnexo.objects.all()
+    permission_classes = [IsAuthenticated, TransportModelPermission]
     parser_classes = [MultiPartParser, FormParser]
 
     def list(self, request, cliente_pk=None):
@@ -214,7 +218,8 @@ class MotoristaDocumentoViewSet(viewsets.ViewSet):
     - DELETE /api/motoristas/{motorista_pk}/documentos/{id}/ - Remover documento do motorista
     """
 
-    permission_classes = [IsAuthenticated]
+    queryset = DocumentoAnexo.objects.all()
+    permission_classes = [IsAuthenticated, TransportModelPermission]
     parser_classes = [MultiPartParser, FormParser]
 
     def list(self, request, motorista_pk=None):
@@ -299,7 +304,8 @@ class VeiculoDocumentoViewSet(viewsets.ViewSet):
     - DELETE /api/veiculos/{veiculo_pk}/documentos/{id}/ - Remover documento do veiculo
     """
 
-    permission_classes = [IsAuthenticated]
+    queryset = DocumentoAnexo.objects.all()
+    permission_classes = [IsAuthenticated, TransportModelPermission]
     parser_classes = [MultiPartParser, FormParser]
 
     def list(self, request, veiculo_pk=None):
@@ -384,7 +390,8 @@ class CTeDocumentoAnexoViewSet(viewsets.ViewSet):
     - DELETE /api/ctes/{cte_pk}/documentos/{id}/ - Remover documento do CT-e
     """
 
-    permission_classes = [IsAuthenticated]
+    queryset = DocumentoAnexo.objects.all()
+    permission_classes = [IsAuthenticated, TransportModelPermission]
     parser_classes = [MultiPartParser, FormParser]
 
     def list(self, request, cte_pk=None):

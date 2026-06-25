@@ -10,6 +10,7 @@ django-redis==6.0.0
 drf-nested-routers==0.95.0
 drf-yasg==1.21.11
 dj-database-url==3.0.1
+django-auditlog==3.0.0
 
 # Database
 psycopg2-binary==2.9.11
@@ -21,6 +22,9 @@ redis==7.1.0
 # Web Server
 gunicorn==23.0.0
 
+# HTTP Requests (OSRM, webhooks, APIs externas)
+requests==2.32.3
+
 # Image Processing
 Pillow==12.0.0
 
@@ -31,9 +35,14 @@ python-barcode==0.16.1
 
 # XML Processing
 xmltodict==1.0.2
+defusedxml==0.7.1
+lxml==5.4.0
 
 # Excel Processing
 openpyxl==3.1.5
+
+# Bank Statement Parsing (OFX)
+ofxparse==0.21
 
 # Utilities
 asgiref==3.11.0

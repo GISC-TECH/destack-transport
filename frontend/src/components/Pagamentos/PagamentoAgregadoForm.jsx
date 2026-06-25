@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { pagamentosAPI, cteAPI, motoristasAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import DocumentosAnexos from '../Common/DocumentosAnexos';
 import './Pagamentos.css';
 
 function PagamentoAgregadoForm() {
@@ -70,7 +69,7 @@ function PagamentoAgregadoForm() {
 
       try {
         setLoadingBusca(true);
-        const result = await cteAPI.list({ q: buscaCte, page_size: 10 });
+        const result = await cteAPI.list({ q: buscaCte, page_size: 20 });
         const ctes = result.results || result || [];
         setResultadosBusca(ctes);
         setMostrarResultados(true);
@@ -120,7 +119,7 @@ function PagamentoAgregadoForm() {
 
       try {
         setLoadingCondutor(true);
-        const result = await motoristasAPI.list({ q: buscaCondutor, page_size: 10 });
+        const result = await motoristasAPI.list({ q: buscaCondutor, page_size: 20 });
         const motoristas = result.results || result || [];
         setResultadosCondutor(motoristas);
         setMostrarResultadosCondutor(true);
@@ -147,7 +146,7 @@ function PagamentoAgregadoForm() {
 
       try {
         setLoadingVeiculo(true);
-        const result = await veiculosAPI.list({ q: buscaVeiculo, page_size: 10 });
+        const result = await veiculosAPI.list({ q: buscaVeiculo, page_size: 20 });
         const veiculos = result.results || result || [];
         setResultadosVeiculo(veiculos);
         setMostrarResultadosVeiculo(true);
@@ -865,7 +864,7 @@ function PagamentoAgregadoForm() {
             />
           </div>
 
-          {/* Campo de comprovante apenas na criacao - na edicao usar DocumentosAnexos */}
+          {/* Campo de comprovante apenas na criacao */}
           {!isEditing && (
             <div className="form-group">
               <label>Comprovante de Pagamento (opcional)</label>
@@ -902,15 +901,6 @@ function PagamentoAgregadoForm() {
         </div>
       </form>
 
-      {/* Documentos Anexos - apenas na edicao */}
-      {isEditing && id && (
-        <div style={{ marginTop: '24px' }}>
-          <DocumentosAnexos
-            entidadeTipo="pagamento"
-            entidadeId={id}
-          />
-        </div>
-      )}
     </div>
   );
 }

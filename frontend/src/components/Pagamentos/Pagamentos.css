@@ -862,11 +862,294 @@
   .pagination-container {
     gap: 3px;
     padding: 10px;
+    flex-wrap: wrap;
   }
 
   .pagination-btn {
     min-width: 32px;
     height: 32px;
     font-size: 13px;
+  }
+
+  .pagination-btn:first-child,
+  .pagination-btn:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .pagination-container {
+    gap: 2px;
+    padding: 8px;
+  }
+
+  .pagination-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 12px;
+    padding: 0 6px;
+  }
+}
+
+/* =========================
+   LOADING SKELETONS
+   ========================= */
+
+.pagamentos-skeleton {
+  margin-bottom: 20px;
+}
+
+/* =========================
+   MOBILE CARDS
+   ========================= */
+
+.mobile-cards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.mobile-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-card-header {
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 12px;
+}
+
+.mobile-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.mobile-card-title strong {
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.mobile-card-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.mobile-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.mobile-card-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.mobile-card-value {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.mobile-card-highlight {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.mobile-card-footer {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 12px;
+}
+
+.mobile-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mobile-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+  background: #6b7280;
+}
+
+.mobile-action-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.mobile-action-btn.view {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.mobile-action-btn.view:hover {
+  background: #1d4ed8;
+  color: white;
+}
+
+.mobile-action-btn.download {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.mobile-action-btn.download:hover {
+  background: #047857;
+  color: white;
+}
+
+.mobile-action-btn.edit {
+  background: var(--green-200);
+  color: var(--primary-color);
+}
+
+.mobile-action-btn.edit:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.mobile-action-btn.convert {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.mobile-action-btn.convert:hover {
+  background: #4338ca;
+  color: white;
+}
+
+.mobile-action-btn.delete {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.mobile-action-btn.delete:hover {
+  background: #dc2626;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .mobile-cards {
+    display: flex;
+  }
+
+  .table-container {
+    display: none;
+  }
+
+  .mobile-card-actions {
+    justify-content: space-between;
+  }
+
+  .mobile-action-btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 52px;
+  }
+
+  .mobile-action-btn span {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-card {
+    padding: 12px;
+  }
+
+  .mobile-card-title strong {
+    font-size: 15px;
+  }
+
+  .mobile-card-row {
+    font-size: 13px;
+  }
+
+  .mobile-card-highlight {
+    font-size: 15px;
+  }
+}
+
+/* =========================
+   MODAIS MOBILE
+   ========================= */
+
+.modal-lote {
+  max-width: 500px;
+}
+
+.modal-baixa {
+  max-width: 400px;
+}
+
+.modal-converter {
+  max-width: 500px;
+}
+
+.modal-excluir {
+  max-width: 450px;
+}
+
+@media (max-width: 768px) {
+  .modal-lote,
+  .modal-baixa,
+  .modal-converter,
+  .modal-excluir {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+    margin-top: auto;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-body {
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    padding: 14px 16px;
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .modal-footer .btn-cancel,
+  .modal-footer .btn-primary {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
   }
 }

@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **EGS XML Collector** is a Selenium-based web scraper that downloads CT-e (Conhecimento de Transporte Eletrônico) and MDF-e (Manifesto de Documentos Fiscais Eletrônicos) XML files from the EGS Sistemas web application (https://app.egssistemas.com.br). It runs as a scheduled background service inside Docker, executing every 6 hours.
 
-**Last Updated:** 2026-02-25  
-**EGS Password:** definida via variável de ambiente `EGS_PASSWORD` (`.env`, fora do versionamento). Solicite ao responsável pelo ambiente.
+**Last Updated:** 2026-02-25
+**EGS credentials:** configured via environment variables; do not commit real passwords.
 
 ## Development Commands
 
@@ -122,7 +122,7 @@ This is handled automatically by `egs_client._handle_session_conflict()`
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `EGS_USERNAME` | DESTACK | EGS login username |
-| `EGS_PASSWORD` | _(via .env)_ | EGS login password — nunca versionar; definir em `.env` |
+| `EGS_PASSWORD` | set via environment | EGS login password |
 | `EGS_ACCESS_KEY` | 57226 | EGS access key |
 | `SELENIUM_HEADLESS` | false | Run Chrome headless |
 | `RUN_ON_START` | true | Execute download immediately on scheduler start |
@@ -140,10 +140,10 @@ downloads/
 
 ## Recent Updates (2026-02-25)
 
-- ✅ Senha do EGS rotacionada (valor agora apenas em `.env`, fora do versionamento)
-- ✅ Container rebuilt and restarted successfully
-- ✅ Healthcheck implemented for auto-restart
-- ✅ All dependencies updated (Chrome 145, ChromeDriver)
+- Updated EGS password in the production environment without committing the secret
+- Container rebuilt and restarted successfully
+- Healthcheck implemented for auto-restart
+- All dependencies updated (Chrome 145, ChromeDriver)
 
 ## Common Issues
 
@@ -158,4 +158,4 @@ downloads/
 
 4. **Download timeout**: Increase timeout in `wait_for_download_and_extract()`. Default is 180 seconds.
 
-5. **Password expired/invalid**: Check with EGS admin or client. Update in `docker-compose.yml` and restart container.
+5. **Password expired/invalid**: Check with EGS admin or client. Update `EGS_PASSWORD` in the server `.env` file and restart the container.

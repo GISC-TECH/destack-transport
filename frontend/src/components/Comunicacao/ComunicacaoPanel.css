@@ -1,0 +1,124 @@
+.comunicacao-page {
+  padding: 24px;
+}
+
+.comunicacao-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.comunicacao-card {
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
+}
+
+.comunicacao-card h3 {
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: var(--text-primary, #212529);
+}
+
+.historico-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.historico-item {
+  border: 1px solid var(--border-light, #e9ecef);
+  border-radius: 10px;
+  padding: 14px;
+  border-left: 4px solid var(--text-secondary, #6c757d);
+}
+
+.historico-item.status-enviado {
+  border-left-color: #27ae60;
+}
+
+.historico-item.status-falha {
+  border-left-color: #e74c3c;
+}
+
+.historico-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.historico-canal {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-color, #40916C);
+  letter-spacing: 0.5px;
+}
+
+.historico-status {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-secondary, #6c757d);
+}
+
+.historico-destinatario {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.historico-assunto {
+  font-size: 13px;
+  color: var(--text-secondary, #6c757d);
+  margin-bottom: 8px;
+}
+
+.historico-conteudo {
+  font-size: 13px;
+  color: var(--text-primary, #212529);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.historico-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary, #6c757d);
+}
+
+.historico-erro {
+  margin-top: 10px;
+  padding: 8px;
+  background: #fdeaea;
+  color: #c0392b;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.empty-text {
+  color: var(--text-secondary, #6c757d);
+  text-align: center;
+  padding: 30px;
+}
+
+@media (max-width: 1024px) {
+  .comunicacao-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .comunicacao-page {
+    padding: 16px;
+  }
+
+  .comunicacao-card {
+    padding: 16px;
+  }
+}

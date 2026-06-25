@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motoristasAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
-import Loading from '../Common/Loading';
+import { SkeletonTable, SkeletonMobileCards } from '../Common/Skeleton';
+import EmptyState from '../Common/EmptyState';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import './MotoristasList.css';
@@ -27,12 +28,51 @@ function MotoristasList() {
   const [showAlerts, setShowAlerts] = useState(false);
   const [vencimentos, setVencimentos] = useState([]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadMotoristas();
-  }, [filtros]);
+  const fetchPage = async (url) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const loadMotoristas = async () => {
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Erro ao carregar motoristas');
+      const data = await response.json();
+
+      if (data.results) {
+        setMotoristas(data.results);
+        setPagination({
+          count: data.count,
+          next: data.next,
+          previous: data.previous
+        });
+      } else if (Array.isArray(data)) {
+        setMotoristas(data);
+        setPagination({ count: data.length, next: null, previous: null });
+      } else {
+        setMotoristas([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar motoristas:', err);
+      setError('Erro ao carregar motoristas. Tente novamente.');
+      setMotoristas([]);
+      setPagination({ count: 0, next: null, previous: null });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (pagination.previous) {
+      fetchPage(pagination.previous);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pagination.next) {
+      fetchPage(pagination.next);
+    }
+  };
+
+  const loadMotoristas = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -69,7 +109,11 @@ function MotoristasList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros]);
+
+  useEffect(() => {
+    loadMotoristas();
+  }, [loadMotoristas]);
 
   const loadVencimentos = async () => {
     try {
@@ -104,7 +148,31 @@ function MotoristasList() {
     }));
   };
 
-  if (loading) return <Loading message="Carregando motoristas..." />;
+  const motoristasIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+  );
+
+  if (loading) {
+    return (
+      <div className="motoristas-list">
+        <PageHeader
+          title="Motoristas"
+          subtitle="Carregando..."
+          icon={motoristasIcon}
+          breadcrumbs={[{ label: 'Cadastros' }, { label: 'Motoristas' }]}
+        />
+        <div className="table-container desktop-only">
+          <SkeletonTable rows={5} columns={7} />
+        </div>
+        <div className="mobile-only">
+          <SkeletonMobileCards count={4} />
+        </div>
+      </div>
+    );
+  }
   if (error) return <ErrorMessage message={error} onRetry={loadMotoristas} />;
 
   // Se mostrando alertas
@@ -152,13 +220,6 @@ function MotoristasList() {
       </div>
     );
   }
-
-  const motoristasIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  );
 
   const headerActions = (
     <div className="header-buttons">
@@ -243,67 +304,146 @@ function MotoristasList() {
         </button>
       </div>
 
-      {/* Tabela */}
+      {/* Tabela Desktop + Cards Mobile */}
       {motoristas.length > 0 ? (
-        <div className="table-container">
-          <table className="motoristas-table">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>CPF</th>
-                <th>CNH</th>
-                <th>Categoria</th>
-                <th>Validade CNH</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {motoristas.map((motorista) => (
-                <tr key={motorista.id}>
-                  <td>
-                    {motorista.nome}
-                    {motorista.cadastro_completo === false && (
-                      <span
-                        className="badge badge-warning"
-                        title="Cadastro incompleto — falta CNH e/ou validade"
-                        style={{ marginLeft: 8 }}
-                      >
-                        {motorista.cadastro_automatico ? 'Auto · incompleto' : 'Incompleto'}
-                      </span>
-                    )}
-                  </td>
-                  <td>{motorista.cpf_formatado || motorista.cpf}</td>
-                  <td>{motorista.cnh || '-'}</td>
-                  <td>
-                    <span className="badge badge-categoria">{motorista.categoria_cnh}</span>
-                  </td>
-                  <td>{motorista.validade_cnh_formatada || motorista.validade_cnh || '-'}</td>
-                  <td>
-                    <span className={`status ${motorista.ativo ? 'ativo' : 'inativo'}`}>
-                      {motorista.ativo ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </td>
-                  <td className="actions-cell">
-                    <button
-                      className="btn-action btn-edit"
-                      onClick={() => navigate(`/motoristas/editar/${motorista.id}`)}
-                      title="Editar"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                      </svg>
-                    </button>
-                  </td>
+        <>
+          <div className="table-container desktop-only">
+            <table className="motoristas-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>CPF</th>
+                  <th>CNH</th>
+                  <th>Categoria</th>
+                  <th>Validade CNH</th>
+                  <th>Status</th>
+                  <th>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {motoristas.map((motorista) => (
+                  <tr key={motorista.id}>
+                    <td>
+                      {motorista.nome}
+                      {motorista.cadastro_completo === false && (
+                        <span
+                          className="badge badge-warning"
+                          title="Cadastro incompleto — falta CNH e/ou validade"
+                          style={{ marginLeft: 8 }}
+                        >
+                          {motorista.cadastro_automatico ? 'Auto · incompleto' : 'Incompleto'}
+                        </span>
+                      )}
+                    </td>
+                    <td>{motorista.cpf_formatado || motorista.cpf}</td>
+                    <td>{motorista.cnh || '-'}</td>
+                    <td>
+                      <span className="badge badge-categoria">{motorista.categoria_cnh}</span>
+                    </td>
+                    <td>{motorista.validade_cnh_formatada || motorista.validade_cnh || '-'}</td>
+                    <td>
+                      <span className={`status ${motorista.ativo ? 'ativo' : 'inativo'}`}>
+                        {motorista.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                    <td className="actions-cell">
+                      <button
+                        className="btn-action btn-edit"
+                        onClick={() => navigate(`/motoristas/editar/${motorista.id}`)}
+                        title="Editar"
+                        aria-label={`Editar ${motorista.nome}`}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mobile-cards mobile-only">
+            {motoristas.map((motorista) => (
+              <div
+                key={motorista.id}
+                className="mobile-card"
+                onClick={() => navigate(`/motoristas/editar/${motorista.id}`)}
+              >
+                <div className="mobile-card-header">
+                  <h4>{motorista.nome}</h4>
+                  <span className={`status ${motorista.ativo ? 'ativo' : 'inativo'}`}>
+                    {motorista.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
+                <div className="mobile-card-body">
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">CPF</span>
+                    <span className="mobile-card-value">{motorista.cpf_formatado || motorista.cpf}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">CNH</span>
+                    <span className="mobile-card-value">{motorista.cnh || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Categoria</span>
+                    <span className="badge badge-categoria">{motorista.categoria_cnh}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Validade CNH</span>
+                    <span className="mobile-card-value">{motorista.validade_cnh_formatada || motorista.validade_cnh || '-'}</span>
+                  </div>
+                </div>
+                <div className="mobile-card-footer">
+                  <button
+                    className="btn-action btn-edit"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/motoristas/editar/${motorista.id}`);
+                    }}
+                    aria-label={`Editar ${motorista.nome}`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="empty-state">
-          <p>Nenhum motorista encontrado com os filtros selecionados.</p>
+        <EmptyState
+          title="Nenhum motorista encontrado"
+          description="Nao ha motoristas com os filtros selecionados."
+          action={
+            <button className="btn btn-primary" onClick={() => navigate('/motoristas/novo')}>
+              Novo Motorista
+            </button>
+          }
+        />
+      )}
+
+      {/* Botões de paginação */}
+      {(pagination.previous || pagination.next) && (
+        <div className="pagination-buttons">
+          <button
+            className="btn-page"
+            disabled={!pagination.previous}
+            onClick={handlePreviousPage}
+          >
+            Anterior
+          </button>
+          <button
+            className="btn-page"
+            disabled={!pagination.next}
+            onClick={handleNextPage}
+          >
+            Próxima
+          </button>
         </div>
       )}
     </div>

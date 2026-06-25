@@ -2,6 +2,7 @@
 
 from rest_framework import serializers
 from ..models import Cliente
+from ..validators import validar_cnpj
 
 
 class ClienteSerializer(serializers.ModelSerializer):
@@ -22,10 +23,12 @@ class ClienteSerializer(serializers.ModelSerializer):
         return obj.cnpj
 
     def validate_cnpj(self, value):
-        """Valida formato de CNPJ."""
+        """Valida CNPJ (formato e dígitos verificadores)."""
         cnpj_limpo = ''.join(filter(str.isdigit, value))
-        if len(cnpj_limpo) != 14:
-            raise serializers.ValidationError("CNPJ deve ter 14 dígitos.")
+        try:
+            validar_cnpj(cnpj_limpo)
+        except Exception as exc:
+            raise serializers.ValidationError(str(exc))
         return cnpj_limpo
 
     def validate_estado(self, value):

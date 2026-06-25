@@ -13,6 +13,8 @@ from django.utils import timezone
 from dateutil import parser as date_parser
 from django.conf import settings
 
+from .xml_utils import safe_xmltodict_parse
+
 logger = logging.getLogger(__name__)
 
 # Importar todos os modelos CT-e e o Endereco base
@@ -1166,7 +1168,7 @@ def parse_cte_completo(cte_doc):
         return False
 
     try:
-        xml_dict = xmltodict.parse(cte_doc.xml_original)
+        xml_dict = safe_xmltodict_parse(cte_doc.xml_original)
         infcte, versao_proc = get_cte_infcte(xml_dict) # Pode levantar ValueError
         prot_cte = get_cte_protocolo(xml_dict) # Pode ser None
         inf_supl = get_cte_suplementar(xml_dict) # Pode ser None

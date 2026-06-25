@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 from rest_framework.permissions import IsAuthenticated
 
 # Imports Locais
+from ..permissions import TransportModelPermission
 from ..serializers.payment_serializers import ( # Use .. para voltar um nível
     FaixaKMSerializer,
     PagamentoAgregadoSerializer,
@@ -49,6 +50,25 @@ from ..models import (  # Modelos usados pelos ViewSets
 # Ex: from ..utils import format_currency
 from ..utils import csv_response
 from ..constants import DEFAULT_PAYMENT_PERCENTAGE
+from ..validators import normalizar_placa
+from ..services.pagamento_service import (
+    ExclusividadePagamentoError,
+    _verificar_exclusividade_mutua,
+)
+
+
+def _validar_exclusividade_pagamento_cte(cte):
+    """Retorna Response de erro 400 se o CT-e já possuir ambos os tipos de pagamento."""
+    if not cte:
+        return None
+    try:
+        _verificar_exclusividade_mutua(cte)
+    except ExclusividadePagamentoError as exc:
+        return Response(
+            {"detail": str(exc)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return None
 
 
 # ===============================================================
@@ -59,7 +79,7 @@ class FaixaKMViewSet(viewsets.ModelViewSet):
     """API para CRUD de Faixas de KM para pagamento."""
     queryset = FaixaKM.objects.all().order_by('min_km')
     serializer_class = FaixaKMSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def perform_create(self, serializer):
         """Validação adicional antes de salvar uma nova faixa."""
@@ -152,7 +172,13 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
     """API para gerenciar pagamentos a motoristas agregados."""
     queryset = PagamentoAgregado.objects.all().order_by('-data_prevista')
     serializer_class = PagamentoAgregadoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
+
+    def perform_update(self, serializer):
+        """Sincroniza CTeDocumento.pago ao alterar status do pagamento agregado."""
+        from ..services.pagamento_service import sincronizar_status_pagamento_agregado
+        instance = serializer.save()
+        sincronizar_status_pagamento_agregado(instance)
 
     def get_queryset(self):
         """Permite filtrar pagamentos por diversos parâmetros."""
@@ -299,7 +325,9 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                     continue
 
                 # Buscar veículo no cadastro do sistema para obter tipo_proprietario correto
-                veiculo_cadastro = Veiculo.objects.filter(placa=veiculo.placa).first()
+                veiculo_cadastro = Veiculo.objects.filter(
+                    placa__iexact=normalizar_placa(veiculo.placa)
+                ).first()
 
                 # Filtrar por tipo de proprietário usando cadastro do sistema (se disponível)
                 # ou fallback para prop_tp do MDF-e
@@ -326,6 +354,15 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                 condutor = mdfe.condutores.first()
                 condutor_nome = condutor.nome if condutor else (veiculo.prop_razao_social or "Condutor não identificado")
                 condutor_cpf = condutor.cpf if condutor else veiculo.prop_cpf
+
+                # Verifica exclusividade mútua com pagamento próprio existente
+                erro_exclusividade = _validar_exclusividade_pagamento_cte(cte)
+                if erro_exclusividade:
+                    contador['erros'] += 1
+                    erros_detalhados.append(
+                        f"CT-e {cte.chave[-8:]}: {erro_exclusividade.data['detail']}"
+                    )
+                    continue
 
                 # Criar pagamento usando get_or_create para evitar race condition
                 # Se outro request já criou o pagamento para este CT-e, ignora
@@ -390,7 +427,9 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         pagamento_agregado = self.get_object()
 
         # Busca o veículo pela placa
-        veiculo = Veiculo.objects.filter(placa=pagamento_agregado.placa).first()
+        veiculo = Veiculo.objects.filter(
+            placa__iexact=normalizar_placa(pagamento_agregado.placa)
+        ).first()
         if not veiculo:
             return Response(
                 {"detail": f"Veículo com placa {pagamento_agregado.placa} não encontrado no cadastro. Cadastre o veículo primeiro."},
@@ -420,27 +459,43 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         if pagamento_agregado.cte and hasattr(pagamento_agregado.cte, 'identificacao'):
             cte_numero = str(pagamento_agregado.cte.identificacao.numero)
 
+        # Verifica exclusividade mútua antes de criar o pagamento próprio
+        # (garante que não existe um pagamento próprio independente para o mesmo CT-e)
+        erro_exclusividade = _validar_exclusividade_pagamento_cte(pagamento_agregado.cte)
+        if erro_exclusividade:
+            return erro_exclusividade
+
+        # Armazena dados necessários antes de remover o agregado
+        agregado_cte = pagamento_agregado.cte
+        agregado_condutor_nome = pagamento_agregado.condutor_nome
+        agregado_condutor_cpf = pagamento_agregado.condutor_cpf
+        agregado_data_prevista = pagamento_agregado.data_prevista
+        agregado_valor_repassado = pagamento_agregado.valor_repassado
+        agregado_status = pagamento_agregado.status
+        agregado_data_pagamento = pagamento_agregado.data_pagamento
+        agregado_obs = pagamento_agregado.obs
+
+        # Remove o pagamento agregado ANTES de criar o próprio para respeitar a exclusividade mútua
+        pagamento_agregado.delete()
+
         # Sempre cria um novo registro individual (sem agregar)
         pagamento_proprio = PagamentoProprio.objects.create(
             veiculo=veiculo,
             periodo=periodo,
             # Novos campos de detalhamento
-            cte=pagamento_agregado.cte,
+            cte=agregado_cte,
             cte_numero=cte_numero,
-            motorista_nome=pagamento_agregado.condutor_nome,
-            motorista_cpf=pagamento_agregado.condutor_cpf,
-            data_prevista=pagamento_agregado.data_prevista,
+            motorista_nome=agregado_condutor_nome,
+            motorista_cpf=agregado_condutor_cpf,
+            data_prevista=agregado_data_prevista,
             # Valores
             km_total_periodo=0,  # Não tem KM associado
-            valor_base_faixa=pagamento_agregado.valor_repassado,
+            valor_base_faixa=agregado_valor_repassado,
             ajustes=ajustes,
-            status=pagamento_agregado.status,
-            data_pagamento=pagamento_agregado.data_pagamento,
-            obs=f"Convertido de Agregado. {pagamento_agregado.obs or ''}"
+            status=agregado_status,
+            data_pagamento=agregado_data_pagamento,
+            obs=f"Convertido de Agregado. {agregado_obs or ''}"
         )
-
-        # Remove o pagamento agregado
-        pagamento_agregado.delete()
 
         return Response({
             "message": "Pagamento convertido de Agregado para Próprio com sucesso.",
@@ -456,7 +511,13 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
     """API para gerenciar pagamentos a motoristas próprios."""
     queryset = PagamentoProprio.objects.all().order_by('-periodo')
     serializer_class = PagamentoProprioSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
+
+    def perform_update(self, serializer):
+        """Sincroniza CTeDocumento.pago ao alterar status do pagamento proprio."""
+        from ..services.pagamento_service import sincronizar_status_pagamento_proprio
+        instance = serializer.save()
+        sincronizar_status_pagamento_proprio(instance)
 
     def get_queryset(self):
         """Permite filtrar pagamentos por diversos parâmetros."""
@@ -548,7 +609,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             # Usar Coalesce(Sum(...), 0) para tratar caso de não haver CTes
             from django.db.models.functions import Coalesce
             km_total = CTeDocumento.objects.filter(
-                modal_rodoviario__veiculos__placa=veiculo.placa,
+                modal_rodoviario__veiculos__placa__iexact=normalizar_placa(veiculo.placa),
                 identificacao__data_emissao__date__gte=data_inicio,
                 identificacao__data_emissao__date__lte=data_fim,
                 processado=True,
@@ -763,13 +824,21 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                          raise ValueError(f"Nenhuma faixa de KM encontrada para {km_total} KM.")
 
                     # Cria o registro de pagamento
+                    # data_prevista = último dia do mês do período
+                    from datetime import date
+                    if isinstance(periodo_atual, datetime):
+                        data_prevista = date(periodo_atual.year, periodo_atual.month + 1, 1) - timedelta(days=1) if periodo_atual.month < 12 else date(periodo_atual.year, 12, 31)
+                    else:
+                        data_prevista = date(periodo_atual.year, periodo_atual.month + 1, 1) - timedelta(days=1) if periodo_atual.month < 12 else date(periodo_atual.year, 12, 31)
+
                     PagamentoProprio.objects.create(
                         veiculo=veiculo,
                         periodo=periodo_atual,
                         km_total_periodo=km_total,
                         valor_base_faixa=faixa.valor_pago,
                         ajustes=Decimal('0.00'), # Ajustes podem ser feitos depois
-                        status='pendente'
+                        status='pendente',
+                        data_prevista=data_prevista,
                         # valor_total_pagar é calculado no save()
                     )
                     resultados['criados'] += 1
@@ -820,11 +889,15 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         Converte um pagamento próprio para agregado.
         Remove o registro de próprio e cria um registro em agregado.
 
+        O valor_total_pagar do pagamento próprio representa o valor líquido a
+        pagar ao condutor. Para preservar esse valor financeiro na conversão,
+        o percentual de repasse é fixado em 100% e o valor do frete base é
+        igual ao valor_total_pagar original.
+
         Parâmetros no body:
-        - cte_id: ID do CT-e para associar (obrigatório se não houver CT-e vinculado)
+        - cte_id: ID do CT-e para associar (obrigatório)
         - condutor_nome: Nome do condutor (obrigatório)
         - condutor_cpf: CPF do condutor (opcional)
-        - percentual_repasse: Percentual de repasse (default: 25%)
         - data_prevista: Data prevista para pagamento (default: hoje)
         """
         pagamento_proprio = self.get_object()
@@ -834,10 +907,8 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         condutor_nome = request.data.get('condutor_nome')
         condutor_cpf = request.data.get('condutor_cpf', '')
 
-        try:
-            percentual_repasse = Decimal(str(request.data.get('percentual_repasse', '25')))
-        except (InvalidOperation, TypeError):
-            percentual_repasse = Decimal('25.00')
+        # Preserva o valor líquido a pagar usando repasse de 100%
+        percentual_repasse = Decimal('100.00')
 
         data_prevista_str = request.data.get('data_prevista')
         if data_prevista_str:
@@ -881,11 +952,27 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                 "hint": "O modelo de pagamento agregado requer um CT-e associado."
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Verifica exclusividade mútua antes de criar o pagamento agregado
+        # (garante que não existe um pagamento agregado independente para o mesmo CT-e)
+        erro_exclusividade = _validar_exclusividade_pagamento_cte(cte)
+        if erro_exclusividade:
+            return erro_exclusividade
+
         # Obtém a placa do veículo
         placa = pagamento_proprio.veiculo.placa
 
-        # Calcula valor do frete baseado no valor total do pagamento próprio
+        # O valor_total_pagar do próprio é o líquido a pagar; usa-o como
+        # frete base e repasse de 100% para manter o valor_repassado igual.
         valor_frete = pagamento_proprio.valor_total_pagar
+
+        # Armazena dados necessários antes de remover o próprio
+        proprio_data_pagamento = pagamento_proprio.data_pagamento
+        proprio_status = pagamento_proprio.status
+        proprio_periodo = pagamento_proprio.periodo
+        proprio_obs = pagamento_proprio.obs
+
+        # Remove o pagamento próprio ANTES de criar o agregado para respeitar a exclusividade mútua
+        pagamento_proprio.delete()
 
         # Cria pagamento agregado
         pagamento_agregado = PagamentoAgregado.objects.create(
@@ -896,13 +983,10 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             valor_frete_total=valor_frete,
             percentual_repasse=percentual_repasse,
             data_prevista=data_prevista,
-            data_pagamento=pagamento_proprio.data_pagamento,
-            status=pagamento_proprio.status,
-            obs=f"Convertido de Próprio período {pagamento_proprio.periodo}. {pagamento_proprio.obs or ''}"
+            data_pagamento=proprio_data_pagamento,
+            status=proprio_status,
+            obs=f"Convertido de Próprio período {proprio_periodo}. {proprio_obs or ''}"
         )
-
-        # Remove o pagamento próprio
-        pagamento_proprio.delete()
 
         return Response({
             "message": "Pagamento convertido de Próprio para Agregado com sucesso.",

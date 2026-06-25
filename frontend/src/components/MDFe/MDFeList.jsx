@@ -18,6 +18,7 @@ const STATUS_COLORS = {
   cancelado: '#e74c3c',
   pendente: '#95a5a6'
 };
+const PAGE_SIZE = 20;
 
 // Funcao para obter datas do mes atual
 const getDefaultMDFeDates = () => {
@@ -72,7 +73,7 @@ function MDFeList() {
     const pageAtivo = customPage !== null ? customPage : pagination.page;
     try {
       setLoading(true);
-      const params = { ...filtrosAtivos, page: pageAtivo, page_size: 5 };
+      const params = { ...filtrosAtivos, page: pageAtivo, page_size: PAGE_SIZE };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       const result = await mdfeAPI.list(params);
       setMdfes(result.results || result || []);
@@ -600,10 +601,10 @@ function MDFeList() {
             Anterior
           </button>
           <div className="pagination-numbers">
-            {Array.from({ length: Math.ceil(pagination.total / 5) }, (_, i) => i + 1)
+            {Array.from({ length: Math.ceil(pagination.total / PAGE_SIZE) }, (_, i) => i + 1)
               .filter(page => {
                 const currentPage = pagination.page;
-                return page === 1 || page === Math.ceil(pagination.total / 5) ||
+                return page === 1 || page === Math.ceil(pagination.total / PAGE_SIZE) ||
                        (page >= currentPage - 2 && page <= currentPage + 2);
               })
               .map((page, index, arr) => (
@@ -628,7 +629,7 @@ function MDFeList() {
               setPagination(p => ({...p, page: newPage}));
               loadMDFes(null, newPage);
             }}
-            disabled={pagination.page >= Math.ceil(pagination.total / 5)}
+            disabled={pagination.page >= Math.ceil(pagination.total / PAGE_SIZE)}
             className="btn-page"
           >
             Proxima

@@ -10,3 +10,5 @@ from .dashboard import *  # noqa
 from .cliente import *  # noqa
 from .motorista import *  # noqa
 from .registry import *  # noqa
+from .auditlog import *  # noqa
+from .operacional import *  # noqa

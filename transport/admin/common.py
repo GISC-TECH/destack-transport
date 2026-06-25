@@ -79,7 +79,7 @@ class ManutencoesVeiculoFilter(SimpleListFilter):
         elif self.value() == 'sem_manutencao':
             return queryset.filter(manutencoes__isnull=True)
         elif self.value() == 'manutencao_pendente':
-            return queryset.filter(manutencoes__status='PENDENTE').distinct()
+            return queryset.filter(manutencoes__status__in=['agendada', 'em_andamento']).distinct()
         return queryset
 
 class StatusEncerramentoMDFeFilter(SimpleListFilter):

@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { pagamentosAPI, cteAPI, veiculosAPI, motoristasAPI, faixasKmAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import DocumentosAnexos from '../Common/DocumentosAnexos';
 import './Pagamentos.css';
 
 function PagamentoProprioForm() {
@@ -75,7 +74,7 @@ function PagamentoProprioForm() {
       try {
         setLoadingVeiculo(true);
         // Busca veiculos proprios (tipo_proprietario = '00')
-        const result = await veiculosAPI.list({ q: buscaVeiculo, tipo_proprietario: '00', ativo: true, page_size: 10 });
+        const result = await veiculosAPI.list({ q: buscaVeiculo, tipo_proprietario: '00', ativo: true, page_size: 20 });
         const veiculos = result.results || result || [];
         setResultadosVeiculo(veiculos);
         setMostrarResultadosVeiculo(true);
@@ -121,7 +120,7 @@ function PagamentoProprioForm() {
 
       try {
         setLoadingBusca(true);
-        const result = await cteAPI.list({ q: buscaCte, page_size: 10 });
+        const result = await cteAPI.list({ q: buscaCte, page_size: 20 });
         const ctes = result.results || result || [];
         setResultadosBusca(ctes);
         setMostrarResultados(true);
@@ -190,7 +189,7 @@ function PagamentoProprioForm() {
 
       try {
         setLoadingCondutor(true);
-        const result = await motoristasAPI.list({ q: buscaCondutor, page_size: 10 });
+        const result = await motoristasAPI.list({ q: buscaCondutor, page_size: 20 });
         const motoristas = (result.results || result || []).map(m => ({
           ...m,
           displayName: m.nome,
@@ -886,7 +885,7 @@ function PagamentoProprioForm() {
             />
           </div>
 
-          {/* Campo de comprovante apenas na criacao - na edicao usar DocumentosAnexos */}
+          {/* Campo de comprovante apenas na criacao */}
           {!isEditing && (
             <div className="form-group">
               <label>Comprovante de Pagamento (opcional)</label>
@@ -923,15 +922,6 @@ function PagamentoProprioForm() {
         </div>
       </form>
 
-      {/* Documentos Anexos - apenas na edicao */}
-      {isEditing && id && (
-        <div style={{ marginTop: '24px' }}>
-          <DocumentosAnexos
-            entidadeTipo="pagamento"
-            entidadeId={id}
-          />
-        </div>
-      )}
     </div>
   );
 }

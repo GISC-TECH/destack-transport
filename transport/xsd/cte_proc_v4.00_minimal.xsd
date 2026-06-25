@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://www.portalfiscal.inf.br/cte"
+           targetNamespace="http://www.portalfiscal.inf.br/cte"
+           elementFormDefault="qualified">
+
+  <!-- XSD mínimo para CT-e processado (tag raiz cteProc): aceita qualquer conteúdo. -->
+
+  <xs:complexType name="AnyContentType">
+    <xs:sequence>
+      <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+    </xs:sequence>
+    <xs:anyAttribute processContents="skip"/>
+  </xs:complexType>
+
+  <xs:element name="cteProc" type="AnyContentType"/>
+
+</xs:schema>

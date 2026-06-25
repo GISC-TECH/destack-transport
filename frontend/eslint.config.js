@@ -34,4 +34,13 @@ export default defineConfig([
       'react-hooks/static-components': 'warn',
     },
   },
+  {
+    files: ['playwright.config.js', 'e2e/**/*.spec.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+  },
 ])

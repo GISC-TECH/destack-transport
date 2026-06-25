@@ -1,0 +1,218 @@
+.planos-manutencao-page {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.planos-list-card {
+  background: var(--card-bg);
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+
+.planos-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.planos-table th,
+.planos-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.planos-table th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.planos-table tr:hover td {
+  background: var(--bg-secondary);
+}
+
+.planos-mobile-card {
+  display: none;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.planos-mobile-card:last-child {
+  border-bottom: none;
+}
+
+.planos-mobile-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.planos-mobile-row:last-child {
+  margin-bottom: 0;
+}
+
+.planos-mobile-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Filtros */
+.planos-manutencao-page .filtros-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.planos-manutencao-page .filtros-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.planos-manutencao-page .filtros-row select,
+.planos-manutencao-page .filtros-row input,
+.planos-manutencao-page .filtros-row button {
+  min-height: 40px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+.planos-manutencao-page .filtros-row select {
+  min-width: 180px;
+}
+
+.planos-manutencao-page .filtros-row input {
+  min-width: 220px;
+  flex: 1;
+}
+
+.planos-manutencao-page .filtros-row input:focus,
+.planos-manutencao-page .filtros-row select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(16, 51, 31, 0.1);
+}
+
+@media (max-width: 768px) {
+  .planos-manutencao-page .filtros-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .planos-manutencao-page .filtros-row select,
+  .planos-manutencao-page .filtros-row input {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+/* Form */
+.planos-form-container {
+  background: var(--card-bg);
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  padding: 24px;
+}
+
+.planos-form-section {
+  margin-bottom: 28px;
+}
+
+.planos-form-section h3 {
+  margin: 0 0 18px 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 10px;
+}
+
+.planos-form-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.planos-form-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.planos-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.planos-form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.planos-form-group input,
+.planos-form-group select,
+.planos-form-group textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+.planos-form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.planos-form-group input:focus,
+.planos-form-group select:focus,
+.planos-form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(16, 51, 31, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .planos-form-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .planos-table {
+    display: none;
+  }
+
+  .planos-mobile-card {
+    display: block;
+  }
+
+  .planos-form-row,
+  .planos-form-row-2 {
+    grid-template-columns: 1fr;
+  }
+}

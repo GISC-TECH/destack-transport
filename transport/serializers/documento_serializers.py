@@ -16,7 +16,7 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentoAnexo
         fields = [
-            'id', 'cliente', 'motorista', 'veiculo',
+            'id', 'cliente', 'motorista', 'veiculo', 'cte',
             'tipo', 'tipo_display', 'nome', 'arquivo', 'arquivo_url',
             'tamanho', 'tamanho_formatado', 'tipo_mime',
             'validade', 'observacoes',
@@ -53,6 +53,8 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
             return 'motorista'
         elif obj.veiculo:
             return 'veiculo'
+        elif obj.cte:
+            return 'cte'
         return None
 
     def get_entidade_nome(self, obj):
@@ -63,6 +65,8 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
             return obj.motorista.nome
         elif obj.veiculo:
             return obj.veiculo.placa
+        elif obj.cte:
+            return obj.cte.chave
         return None
 
     def validate(self, data):
@@ -70,16 +74,17 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
         cliente = data.get('cliente')
         motorista = data.get('motorista')
         veiculo = data.get('veiculo')
+        cte = data.get('cte')
 
-        entidades = [e for e in [cliente, motorista, veiculo] if e is not None]
+        entidades = [e for e in [cliente, motorista, veiculo, cte] if e is not None]
 
         if len(entidades) == 0:
             raise serializers.ValidationError(
-                "Pelo menos uma entidade (cliente, motorista ou veiculo) deve ser informada."
+                "Pelo menos uma entidade (cliente, motorista, veiculo ou CT-e) deve ser informada."
             )
         if len(entidades) > 1:
             raise serializers.ValidationError(
-                "Apenas uma entidade (cliente, motorista ou veiculo) deve ser informada por vez."
+                "Apenas uma entidade (cliente, motorista, veiculo ou CT-e) deve ser informada por vez."
             )
 
         return data

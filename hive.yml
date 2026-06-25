@@ -1,0 +1,21 @@
+name: destack-transport
+
+bees:
+  Docker:
+    command: "docker compose up"
+    auto_start: true
+
+  Server:
+    command: "python manage.py runserver"
+    auto_start: true
+
+  Claude:
+    command: "claude"
+    type: agent
+    auto_rename: true
+
+  Codex:
+    command: "codex --dangerously-bypass-approvals-and-sandbox -s danger-full-access"
+    type: agent
+    auto_rename: true
+

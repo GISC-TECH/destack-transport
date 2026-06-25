@@ -58,10 +58,33 @@ const mutationOptions = (method, data) => {
   };
 };
 
+// Timeout padrão para requisições fetch (30 segundos)
+const DEFAULT_TIMEOUT = 30000;
+
+// Wrapper para fetch com AbortController/timeout
+async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_TIMEOUT) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await window.fetch(url, {
+      ...options,
+      signal: options.signal || controller.signal,
+    });
+    return response;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error(`A requisição excedeu o tempo limite de ${timeout / 1000}s`, { cause: error });
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 // Helper para refresh do CSRF token
 async function refreshCSRFToken() {
   try {
-    const response = await fetch(`${API_BASE}/auth/csrf/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/auth/csrf/`, defaultOptions);
     if (response.ok) {
       // O cookie foi setado pela resposta
       return true;
@@ -74,7 +97,7 @@ async function refreshCSRFToken() {
 
 // Wrapper para requisições com retry automático em caso de CSRF failure (403)
 async function fetchWithCSRFRetry(url, options, retried = false) {
-  const response = await fetch(url, options);
+  const response = await fetchWithTimeout(url, options);
 
   // Se for 403 e ainda não tentamos retry, atualizar CSRF e tentar novamente
   if (response.status === 403 && !retried) {
@@ -171,7 +194,7 @@ export const authAPI = {
       await authAPI.fetchCSRFToken();
     }
 
-    const response = await fetch(`${API_BASE}/auth/login/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/auth/login/`, {
       ...defaultOptions,
       method: 'POST',
       headers: {
@@ -188,7 +211,7 @@ export const authAPI = {
   },
 
   logout: async () => {
-    const response = await fetch(`${API_BASE}/auth/logout/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/auth/logout/`, {
       ...defaultOptions,
       method: 'POST',
       headers: {
@@ -201,18 +224,18 @@ export const authAPI = {
   },
 
   checkAuth: async () => {
-    const response = await fetch(`${API_BASE}/auth/user/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/auth/user/`, defaultOptions);
     if (!response.ok) {
       // 401 é esperado quando não está logado - retorna estado não autenticado
       return { authenticated: false, user: null };
     }
     const data = await response.json();
-    return { authenticated: true, user: data };
+    return { authenticated: true, user: data.user || data };
   },
 
   // Busca CSRF token - o token fica no cookie após esta chamada
   fetchCSRFToken: async () => {
-    const response = await fetch(`${API_BASE}/auth/csrf/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/auth/csrf/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao obter CSRF token');
     // O importante é que esta chamada seta o cookie CSRF
     // O token retornado no JSON é o mesmo do cookie
@@ -232,19 +255,19 @@ export const authAPI = {
 export const clientesAPI = {
   list: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/clientes/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/clientes/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar clientes');
     return response.json();
   },
 
   get: async (id) => {
-    const response = await fetch(`${API_BASE}/clientes/${id}/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/clientes/${id}/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar cliente');
     return response.json();
   },
 
   create: async (data) => {
-    const response = await fetch(`${API_BASE}/clientes/`, mutationOptions('POST', data));
+    const response = await fetchWithTimeout(`${API_BASE}/clientes/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
       throw new Error(extractErrorMessage(error));
@@ -253,13 +276,13 @@ export const clientesAPI = {
   },
 
   update: async (id, data) => {
-    const response = await fetch(`${API_BASE}/clientes/${id}/`, mutationOptions('PUT', data));
+    const response = await fetchWithTimeout(`${API_BASE}/clientes/${id}/`, mutationOptions('PUT', data));
     if (!response.ok) throw new Error('Erro ao atualizar cliente');
     return response.json();
   },
 
   delete: async (id) => {
-    const response = await fetch(`${API_BASE}/clientes/${id}/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/clientes/${id}/`, {
       ...defaultOptions,
       method: 'DELETE',
       headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -270,7 +293,7 @@ export const clientesAPI = {
 
   export: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/clientes/export/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/clientes/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar clientes');
     await triggerDownload(response, `clientes_${new Date().toISOString().split('T')[0]}.csv`);
   }
@@ -283,19 +306,19 @@ export const clientesAPI = {
 export const motoristasAPI = {
   list: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/motoristas/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/motoristas/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar motoristas');
     return response.json();
   },
 
   get: async (id) => {
-    const response = await fetch(`${API_BASE}/motoristas/${id}/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/motoristas/${id}/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar motorista');
     return response.json();
   },
 
   create: async (data) => {
-    const response = await fetch(`${API_BASE}/motoristas/`, mutationOptions('POST', data));
+    const response = await fetchWithTimeout(`${API_BASE}/motoristas/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
       throw new Error(extractErrorMessage(error));
@@ -304,7 +327,7 @@ export const motoristasAPI = {
   },
 
   update: async (id, data) => {
-    const response = await fetch(`${API_BASE}/motoristas/${id}/`, mutationOptions('PATCH', data));
+    const response = await fetchWithTimeout(`${API_BASE}/motoristas/${id}/`, mutationOptions('PATCH', data));
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error(extractErrorMessage(error, 'Erro ao atualizar motorista'));
@@ -313,7 +336,7 @@ export const motoristasAPI = {
   },
 
   delete: async (id) => {
-    const response = await fetch(`${API_BASE}/motoristas/${id}/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/motoristas/${id}/`, {
       ...defaultOptions,
       method: 'DELETE',
       headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -324,14 +347,14 @@ export const motoristasAPI = {
 
   vencimentos: async (dias = 30, mostrarTodos = false) => {
     const params = new URLSearchParams({ dias, mostrar_todos: mostrarTodos });
-    const response = await fetch(`${API_BASE}/motoristas/vencimentos/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/motoristas/vencimentos/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar vencimentos');
     return response.json();
   },
 
   export: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/motoristas/export/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/motoristas/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar motoristas');
     await triggerDownload(response, `motoristas_${new Date().toISOString().split('T')[0]}.csv`);
   }
@@ -344,19 +367,19 @@ export const motoristasAPI = {
 export const veiculosAPI = {
   list: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/veiculos/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/veiculos/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar veículos');
     return response.json();
   },
 
   get: async (id) => {
-    const response = await fetch(`${API_BASE}/veiculos/${id}/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/veiculos/${id}/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar veículo');
     return response.json();
   },
 
   create: async (data) => {
-    const response = await fetch(`${API_BASE}/veiculos/`, mutationOptions('POST', data));
+    const response = await fetchWithTimeout(`${API_BASE}/veiculos/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
       throw new Error(extractErrorMessage(error));
@@ -365,13 +388,13 @@ export const veiculosAPI = {
   },
 
   update: async (id, data) => {
-    const response = await fetch(`${API_BASE}/veiculos/${id}/`, mutationOptions('PUT', data));
+    const response = await fetchWithTimeout(`${API_BASE}/veiculos/${id}/`, mutationOptions('PUT', data));
     if (!response.ok) throw new Error('Erro ao atualizar veículo');
     return response.json();
   },
 
   delete: async (id) => {
-    const response = await fetch(`${API_BASE}/veiculos/${id}/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/veiculos/${id}/`, {
       ...defaultOptions,
       method: 'DELETE',
       headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -382,20 +405,20 @@ export const veiculosAPI = {
 
   vencimentos: async (dias = 30, mostrarTodos = false) => {
     const params = new URLSearchParams({ dias, mostrar_todos: mostrarTodos });
-    const response = await fetch(`${API_BASE}/veiculos/vencimentos/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/veiculos/vencimentos/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar vencimentos');
     return response.json();
   },
 
   estatisticas: async (id) => {
-    const response = await fetch(`${API_BASE}/veiculos/${id}/estatisticas/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/veiculos/${id}/estatisticas/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar estatísticas');
     return response.json();
   },
 
   export: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/veiculos/export/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/veiculos/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar veículos');
     await triggerDownload(response, `veiculos_${new Date().toISOString().split('T')[0]}.csv`);
   },
@@ -403,14 +426,14 @@ export const veiculosAPI = {
   compartimentos: {
     list: async (veiculoId) => {
       validateId(veiculoId, 'ID do veículo');
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/compartimentos/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/compartimentos/`, defaultOptions);
       if (!response.ok) await handleHttpError(response, 'Erro ao buscar compartimentos');
       return response.json();
     },
 
     create: async (veiculoId, data) => {
       validateId(veiculoId, 'ID do veículo');
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/compartimentos/`, mutationOptions('POST', data));
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/compartimentos/`, mutationOptions('POST', data));
       if (!response.ok) await handleHttpError(response, 'Erro ao criar compartimento');
       return response.json();
     },
@@ -418,7 +441,7 @@ export const veiculosAPI = {
     update: async (veiculoId, compartimentoId, data) => {
       validateId(veiculoId, 'ID do veículo');
       validateId(compartimentoId, 'ID do compartimento');
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/compartimentos/${compartimentoId}/`, mutationOptions('PUT', data));
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/compartimentos/${compartimentoId}/`, mutationOptions('PUT', data));
       if (!response.ok) await handleHttpError(response, 'Erro ao atualizar compartimento');
       return response.json();
     },
@@ -426,7 +449,7 @@ export const veiculosAPI = {
     delete: async (veiculoId, compartimentoId) => {
       validateId(veiculoId, 'ID do veículo');
       validateId(compartimentoId, 'ID do compartimento');
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/compartimentos/${compartimentoId}/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/compartimentos/${compartimentoId}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -441,7 +464,7 @@ export const veiculosAPI = {
     list: async (veiculoId, filters = {}) => {
       validateId(veiculoId, 'ID do veículo');
       const params = new URLSearchParams(filters);
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/manutencoes/?${params}`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/manutencoes/?${params}`, defaultOptions);
       if (!response.ok) await handleHttpError(response, 'Erro ao buscar manutenções do veículo');
       return response.json();
     },
@@ -449,14 +472,14 @@ export const veiculosAPI = {
     get: async (veiculoId, manutencaoId) => {
       validateId(veiculoId, 'ID do veículo');
       validateId(manutencaoId, 'ID da manutenção');
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/manutencoes/${manutencaoId}/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/manutencoes/${manutencaoId}/`, defaultOptions);
       if (!response.ok) await handleHttpError(response, 'Erro ao buscar manutenção');
       return response.json();
     },
 
     create: async (veiculoId, data) => {
       validateId(veiculoId, 'ID do veículo');
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/manutencoes/`, mutationOptions('POST', data));
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/manutencoes/`, mutationOptions('POST', data));
       if (!response.ok) await handleHttpError(response, 'Erro ao criar manutenção');
       return response.json();
     },
@@ -464,7 +487,7 @@ export const veiculosAPI = {
     update: async (veiculoId, manutencaoId, data) => {
       validateId(veiculoId, 'ID do veículo');
       validateId(manutencaoId, 'ID da manutenção');
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/manutencoes/${manutencaoId}/`, mutationOptions('PUT', data));
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/manutencoes/${manutencaoId}/`, mutationOptions('PUT', data));
       if (!response.ok) await handleHttpError(response, 'Erro ao atualizar manutenção');
       return response.json();
     },
@@ -472,7 +495,7 @@ export const veiculosAPI = {
     delete: async (veiculoId, manutencaoId) => {
       validateId(veiculoId, 'ID do veículo');
       validateId(manutencaoId, 'ID da manutenção');
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/manutencoes/${manutencaoId}/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/manutencoes/${manutencaoId}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -490,76 +513,53 @@ export const veiculosAPI = {
 export const cteAPI = {
   list: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/ctes/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/ctes/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar CT-es');
     return response.json();
   },
 
   get: async (id) => {
-    const response = await fetch(`${API_BASE}/ctes/${id}/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/ctes/${id}/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar CT-e');
     return response.json();
   },
 
-  create: async (data) => {
-    const response = await fetch(`${API_BASE}/ctes/`, mutationOptions('POST', data));
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(extractErrorMessage(error));
-    }
-    return response.json();
-  },
-
-  update: async (id, data) => {
-    const response = await fetch(`${API_BASE}/ctes/${id}/`, mutationOptions('PUT', data));
-    if (!response.ok) throw new Error('Erro ao atualizar CT-e');
-    return response.json();
-  },
-
-  delete: async (id) => {
-    const response = await fetch(`${API_BASE}/ctes/${id}/`, {
-      ...defaultOptions,
-      method: 'DELETE',
-      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-    });
-    if (!response.ok) throw new Error('Erro ao deletar CT-e');
-    return true;
-  },
+  // create/update/delete nao suportados: CTeDocumentoViewSet e ReadOnlyModelViewSet.
 
   cancelar: async (id, justificativa) => {
-    const response = await fetch(`${API_BASE}/ctes/${id}/cancelar/`, mutationOptions('POST', { justificativa }));
+    const response = await fetchWithTimeout(`${API_BASE}/ctes/${id}/cancelar/`, mutationOptions('POST', { justificativa }));
     if (!response.ok) throw new Error('Erro ao cancelar CT-e');
     return response.json();
   },
 
   downloadPDF: async (id) => {
-    const response = await fetch(`${API_BASE}/ctes/${id}/dacte/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/ctes/${id}/dacte/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao baixar DACTE');
     return response.blob();
   },
 
   downloadXML: async (id) => {
-    const response = await fetch(`${API_BASE}/ctes/${id}/xml/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/ctes/${id}/xml/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao baixar XML');
     return response.blob();
   },
 
   reprocessar: async (id) => {
-    const response = await fetch(`${API_BASE}/ctes/${id}/reprocessar/`, mutationOptions('POST'));
+    const response = await fetchWithTimeout(`${API_BASE}/ctes/${id}/reprocessar/`, mutationOptions('POST'));
     if (!response.ok) throw new Error('Erro ao reprocessar CT-e');
     return response.json();
   },
 
   estatisticas: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/ctes/estatisticas/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/ctes/estatisticas/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar estatísticas');
     return response.json();
   },
 
   export: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/ctes/export/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/ctes/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar CT-es');
     await triggerDownload(response, `ctes_${new Date().toISOString().split('T')[0]}.csv`);
   },
@@ -591,7 +591,7 @@ export const cteAPI = {
       requestOptions = mutationOptions('PATCH', data);
     }
 
-    const response = await fetch(`${API_BASE}/ctes/${id}/pagamento/`, requestOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/ctes/${id}/pagamento/`, requestOptions);
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Erro ao atualizar status de pagamento');
@@ -601,7 +601,7 @@ export const cteAPI = {
 
   pagamentosPendentes: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/ctes/pagamentos_pendentes/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/ctes/pagamentos_pendentes/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar pagamentos pendentes');
     return response.json();
   }
@@ -614,81 +614,58 @@ export const cteAPI = {
 export const mdfeAPI = {
   list: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/mdfes/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/mdfes/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar MDF-es');
     return response.json();
   },
 
   get: async (id) => {
-    const response = await fetch(`${API_BASE}/mdfes/${id}/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/mdfes/${id}/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar MDF-e');
     return response.json();
   },
 
-  create: async (data) => {
-    const response = await fetch(`${API_BASE}/mdfes/`, mutationOptions('POST', data));
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(extractErrorMessage(error));
-    }
-    return response.json();
-  },
-
-  update: async (id, data) => {
-    const response = await fetch(`${API_BASE}/mdfes/${id}/`, mutationOptions('PUT', data));
-    if (!response.ok) throw new Error('Erro ao atualizar MDF-e');
-    return response.json();
-  },
-
-  delete: async (id) => {
-    const response = await fetch(`${API_BASE}/mdfes/${id}/`, {
-      ...defaultOptions,
-      method: 'DELETE',
-      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-    });
-    if (!response.ok) throw new Error('Erro ao deletar MDF-e');
-    return true;
-  },
+  // create/update/delete nao suportados: MDFeDocumentoViewSet e ReadOnlyModelViewSet.
 
   encerrar: async (id, data) => {
-    const response = await fetch(`${API_BASE}/mdfes/${id}/encerrar/`, mutationOptions('POST', data));
+    const response = await fetchWithTimeout(`${API_BASE}/mdfes/${id}/encerrar/`, mutationOptions('POST', data));
     if (!response.ok) throw new Error('Erro ao encerrar MDF-e');
     return response.json();
   },
 
   cancelar: async (id, justificativa) => {
-    const response = await fetch(`${API_BASE}/mdfes/${id}/cancelar/`, mutationOptions('POST', { justificativa }));
+    const response = await fetchWithTimeout(`${API_BASE}/mdfes/${id}/cancelar/`, mutationOptions('POST', { justificativa }));
     if (!response.ok) throw new Error('Erro ao cancelar MDF-e');
     return response.json();
   },
 
   downloadPDF: async (id) => {
-    const response = await fetch(`${API_BASE}/mdfes/${id}/damdfe/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/mdfes/${id}/damdfe/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao baixar DAMDFE');
     return response.blob();
   },
 
   downloadXML: async (id) => {
-    const response = await fetch(`${API_BASE}/mdfes/${id}/xml/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/mdfes/${id}/xml/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao baixar XML');
     return response.blob();
   },
 
   reprocessar: async (id) => {
-    const response = await fetch(`${API_BASE}/mdfes/${id}/reprocessar/`, mutationOptions('POST'));
+    const response = await fetchWithTimeout(`${API_BASE}/mdfes/${id}/reprocessar/`, mutationOptions('POST'));
     if (!response.ok) throw new Error('Erro ao reprocessar MDF-e');
     return response.json();
   },
 
   documentos: async (id) => {
-    const response = await fetch(`${API_BASE}/mdfes/${id}/documentos/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/mdfes/${id}/documentos/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar documentos vinculados');
     return response.json();
   },
 
   export: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/mdfes/export/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/mdfes/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar MDF-es');
     await triggerDownload(response, `mdfes_${new Date().toISOString().split('T')[0]}.csv`);
   }
@@ -707,7 +684,7 @@ export const uploadAPI = {
       formData.append('arquivo_xml_retorno', fileRetorno);
     }
 
-    const response = await fetch(`${API_BASE}/upload/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/upload/`, {
       credentials: 'include',
       method: 'POST',
       headers: {
@@ -729,7 +706,7 @@ export const uploadAPI = {
       formData.append('arquivos_xml', file);
     });
 
-    const response = await fetch(`${API_BASE}/upload/batch_upload/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/upload/batch_upload/`, {
       credentials: 'include',
       method: 'POST',
       headers: {
@@ -744,12 +721,7 @@ export const uploadAPI = {
     return response.json();
   },
 
-  historico: async (filters = {}) => {
-    const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/upload/historico/?${params}`, defaultOptions);
-    if (!response.ok) throw new Error('Erro ao buscar histórico');
-    return response.json();
-  }
+  // Historico de uploads removido: endpoint nao existe no backend.
 };
 
 // ======================================
@@ -761,19 +733,19 @@ export const pagamentosAPI = {
   agregados: {
     list: async (filters = {}) => {
       const params = new URLSearchParams(filters);
-      const response = await fetch(`${API_BASE}/pagamentos/agregados/?${params}`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/agregados/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar pagamentos de agregados');
       return response.json();
     },
 
     get: async (id) => {
-      const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/agregados/${id}/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar pagamento');
       return response.json();
     },
 
     create: async (data) => {
-      const response = await fetch(`${API_BASE}/pagamentos/agregados/`, mutationOptions('POST', data));
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/agregados/`, mutationOptions('POST', data));
       if (!response.ok) {
         const error = await response.json();
         throw new Error(extractErrorMessage(error));
@@ -783,7 +755,7 @@ export const pagamentosAPI = {
 
     update: async (id, data) => {
       // Usa PATCH para atualização parcial (ex: dar baixa só com status e data)
-      const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/`, mutationOptions('PATCH', data));
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/agregados/${id}/`, mutationOptions('PATCH', data));
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
         throw new Error(extractErrorMessage(error, 'Erro ao atualizar pagamento'));
@@ -792,7 +764,7 @@ export const pagamentosAPI = {
     },
 
     delete: async (id) => {
-      const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/agregados/${id}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -810,14 +782,14 @@ export const pagamentosAPI = {
 
     export: async (filters = {}) => {
       const params = new URLSearchParams(filters);
-      const response = await fetch(`${API_BASE}/pagamentos/agregados/export/?${params}`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/agregados/export/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao exportar pagamentos');
       await triggerDownload(response, `pagamentos_agregados_${new Date().toISOString().split('T')[0]}.csv`);
     },
 
     // Converte pagamento agregado para próprio
     converterParaProprio: async (id, data = {}) => {
-      const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/converter-para-proprio/`, mutationOptions('POST', data));
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/agregados/${id}/converter-para-proprio/`, mutationOptions('POST', data));
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Erro ao converter pagamento');
@@ -830,19 +802,19 @@ export const pagamentosAPI = {
   proprios: {
     list: async (filters = {}) => {
       const params = new URLSearchParams(filters);
-      const response = await fetch(`${API_BASE}/pagamentos/proprios/?${params}`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar pagamentos próprios');
       return response.json();
     },
 
     get: async (id) => {
-      const response = await fetch(`${API_BASE}/pagamentos/proprios/${id}/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/${id}/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar pagamento');
       return response.json();
     },
 
     create: async (data) => {
-      const response = await fetch(`${API_BASE}/pagamentos/proprios/`, mutationOptions('POST', data));
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/`, mutationOptions('POST', data));
       if (!response.ok) {
         const error = await response.json();
         throw new Error(extractErrorMessage(error));
@@ -852,7 +824,7 @@ export const pagamentosAPI = {
 
     update: async (id, data) => {
       // Usa PATCH para atualização parcial (ex: dar baixa só com status e data)
-      const response = await fetch(`${API_BASE}/pagamentos/proprios/${id}/`, mutationOptions('PATCH', data));
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/${id}/`, mutationOptions('PATCH', data));
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
         throw new Error(extractErrorMessage(error, 'Erro ao atualizar pagamento'));
@@ -861,7 +833,7 @@ export const pagamentosAPI = {
     },
 
     delete: async (id) => {
-      const response = await fetch(`${API_BASE}/pagamentos/proprios/${id}/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/${id}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -870,10 +842,11 @@ export const pagamentosAPI = {
       return true;
     },
 
-    // Calcular valores por KM
-    calcularKm: async (veiculoId, kmInicial, kmFinal) => {
-      const params = new URLSearchParams({ veiculo_id: veiculoId, km_inicial: kmInicial, km_final: kmFinal });
-      const response = await fetch(`${API_BASE}/pagamentos/proprios/calcular_km/?${params}`, defaultOptions);
+    // Calcular valores por KM (POST: veiculo_id, periodo, km_total opcional)
+    calcularKm: async (veiculoId, periodo, kmTotal = null) => {
+      const body = { veiculo_id: veiculoId, periodo };
+      if (kmTotal !== null) body.km_total = kmTotal;
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/calcular_km/`, mutationOptions('POST', body));
       if (!response.ok) throw new Error('Erro ao calcular valores por KM');
       return response.json();
     },
@@ -887,14 +860,14 @@ export const pagamentosAPI = {
 
     export: async (filters = {}) => {
       const params = new URLSearchParams(filters);
-      const response = await fetch(`${API_BASE}/pagamentos/proprios/export/?${params}`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/export/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao exportar pagamentos');
       await triggerDownload(response, `pagamentos_proprios_${new Date().toISOString().split('T')[0]}.csv`);
     },
 
     // Converte pagamento próprio para agregado
     converterParaAgregado: async (id, data) => {
-      const response = await fetch(`${API_BASE}/pagamentos/proprios/${id}/converter-para-agregado/`, mutationOptions('POST', data));
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/${id}/converter-para-agregado/`, mutationOptions('POST', data));
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Erro ao converter pagamento');
@@ -903,57 +876,8 @@ export const pagamentosAPI = {
     }
   },
 
-  // Métodos legados para compatibilidade
-  list: async (filters = {}) => {
-    const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/pagamentos/agregados/?${params}`, defaultOptions);
-    if (!response.ok) throw new Error('Erro ao buscar pagamentos');
-    return response.json();
-  },
-
-  get: async (id) => {
-    const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/`, defaultOptions);
-    if (!response.ok) throw new Error('Erro ao buscar pagamento');
-    return response.json();
-  },
-
-  create: async (data) => {
-    const response = await fetch(`${API_BASE}/pagamentos/agregados/`, mutationOptions('POST', data));
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(extractErrorMessage(error));
-    }
-    return response.json();
-  },
-
-  update: async (id, data) => {
-    const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/`, mutationOptions('PUT', data));
-    if (!response.ok) throw new Error('Erro ao atualizar pagamento');
-    return response.json();
-  },
-
-  delete: async (id) => {
-    const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/`, {
-      ...defaultOptions,
-      method: 'DELETE',
-      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-    });
-    if (!response.ok) throw new Error('Erro ao deletar pagamento');
-    return true;
-  },
-
-  marcarPago: async (id) => {
-    const response = await fetch(`${API_BASE}/pagamentos/agregados/${id}/pagar/`, mutationOptions('POST'));
-    if (!response.ok) throw new Error('Erro ao marcar como pago');
-    return response.json();
-  },
-
-  resumo: async (filters = {}) => {
-    const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/pagamentos/resumo/?${params}`, defaultOptions);
-    if (!response.ok) throw new Error('Erro ao buscar resumo');
-    return response.json();
-  }
+  // Metodos legados/removidos: list/get/create/update/delete duplicavam pagamentosAPI.agregados.
+  // marcarPago (/pagamentos/agregados/{id}/pagar/) e resumo (/pagamentos/resumo/) nao existem no backend.
 };
 
 // ======================================
@@ -963,19 +887,19 @@ export const pagamentosAPI = {
 export const manutencaoAPI = {
   list: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/manutencoes/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/manutencoes/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar manutenções');
     return response.json();
   },
 
   get: async (id) => {
-    const response = await fetch(`${API_BASE}/manutencoes/${id}/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/manutencoes/${id}/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar manutenção');
     return response.json();
   },
 
   create: async (data) => {
-    const response = await fetch(`${API_BASE}/manutencoes/`, mutationOptions('POST', data));
+    const response = await fetchWithTimeout(`${API_BASE}/manutencoes/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
       throw new Error(extractErrorMessage(error));
@@ -984,13 +908,13 @@ export const manutencaoAPI = {
   },
 
   update: async (id, data) => {
-    const response = await fetch(`${API_BASE}/manutencoes/${id}/`, mutationOptions('PUT', data));
+    const response = await fetchWithTimeout(`${API_BASE}/manutencoes/${id}/`, mutationOptions('PUT', data));
     if (!response.ok) throw new Error('Erro ao atualizar manutenção');
     return response.json();
   },
 
   delete: async (id) => {
-    const response = await fetch(`${API_BASE}/manutencoes/${id}/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/manutencoes/${id}/`, {
       ...defaultOptions,
       method: 'DELETE',
       headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -999,15 +923,11 @@ export const manutencaoAPI = {
     return true;
   },
 
-  resumo: async () => {
-    const response = await fetch(`${API_BASE}/manutencoes/resumo/`, defaultOptions);
-    if (!response.ok) throw new Error('Erro ao buscar resumo');
-    return response.json();
-  },
+  // resumo removido: endpoint /manutencoes/resumo/ nao existe no backend.
 
   export: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/manutencoes/export/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/manutencoes/export/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao exportar manutenções');
     await triggerDownload(response, `manutencoes_${new Date().toISOString().split('T')[0]}.csv`);
   },
@@ -1016,27 +936,27 @@ export const manutencaoAPI = {
   painel: {
     indicadores: async (filters = {}) => {
       const params = new URLSearchParams(filters);
-      const response = await fetch(`${API_BASE}/manutencao/painel/?${params}`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/manutencao/painel/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar indicadores');
       return response.json();
     },
 
     graficos: async (filters = {}) => {
       const params = new URLSearchParams(filters);
-      const response = await fetch(`${API_BASE}/manutencao/painel/graficos/?${params}`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/manutencao/painel/graficos/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar gráficos');
       return response.json();
     },
 
     ultimos: async (limite = 10) => {
-      const response = await fetch(`${API_BASE}/manutencao/painel/ultimos/?limite=${limite}`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/manutencao/painel/ultimos/?limite=${limite}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar últimas manutenções');
       return response.json();
     },
 
     tendencias: async (filters = {}) => {
       const params = new URLSearchParams(filters);
-      const response = await fetch(`${API_BASE}/manutencao/painel/tendencias/?${params}`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/manutencao/painel/tendencias/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar tendências');
       return response.json();
     }
@@ -1050,36 +970,568 @@ export const manutencaoAPI = {
 export const financeiroAPI = {
   painel: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/painel/financeiro/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/painel/financeiro/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar painel financeiro');
     return response.json();
   },
 
   mensal: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/financeiro/mensal/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/financeiro/mensal/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar dados mensais');
     return response.json();
   },
 
   detalhe: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/financeiro/detalhe/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/financeiro/detalhe/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar detalhes');
     return response.json();
   },
 
-  faturamento: async (filters = {}) => {
+  inadimplencia: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/financeiro/faturamento/?${params}`, defaultOptions);
-    if (!response.ok) throw new Error('Erro ao buscar faturamento');
+    const response = await fetchWithTimeout(`${API_BASE}/financeiro/inadimplencia/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar inadimplência');
     return response.json();
   },
 
-  evolucao: async (filters = {}) => {
+  fluxoCaixa: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/financeiro/evolucao/?${params}`, defaultOptions);
-    if (!response.ok) throw new Error('Erro ao buscar evolução');
+    const response = await fetchWithTimeout(`${API_BASE}/financeiro/fluxo-caixa/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar fluxo de caixa');
+    return response.json();
+  },
+
+  dre: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/financeiro/dre/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar DRE');
+    return response.json();
+  },
+
+  // faturamento e evolucao removidos: endpoints /financeiro/faturamento/ e /financeiro/evolucao/ nao existem no backend.
+  // Use painel, mensal, detalhe, inadimplencia, fluxoCaixa ou dre conforme necessario.
+};
+
+// ======================================
+// CONCILIAÇÃO BANCÁRIA
+// ======================================
+
+export const conciliacaoAPI = {
+  // Faturas
+  faturas: {
+    list: async (filters = {}) => {
+      const params = new URLSearchParams(filters);
+      const response = await fetchWithTimeout(`${API_BASE}/faturas/?${params}`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao buscar faturas');
+      return response.json();
+    },
+    get: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/faturas/${id}/`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao buscar fatura');
+      return response.json();
+    },
+    create: async (data) => {
+      const response = await fetchWithTimeout(`${API_BASE}/faturas/`, mutationOptions('POST', data));
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error));
+      }
+      return response.json();
+    },
+    update: async (id, data) => {
+      const response = await fetchWithTimeout(`${API_BASE}/faturas/${id}/`, mutationOptions('PUT', data));
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error));
+      }
+      return response.json();
+    },
+    delete: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/faturas/${id}/`, {
+        ...defaultOptions,
+        method: 'DELETE',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+      });
+      if (!response.ok) throw new Error('Erro ao deletar fatura');
+      return true;
+    },
+
+    gerarLote: async (data) => {
+      const response = await fetchWithTimeout(`${API_BASE}/faturas/gerar_lote/`, mutationOptions('POST', data));
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(error, 'Erro ao gerar fatura em lote'));
+      }
+      return response.json();
+    }
+  },
+
+  // Contas a Pagar
+  contasPagar: {
+    list: async (filters = {}) => {
+      const params = new URLSearchParams(filters);
+      const response = await fetchWithTimeout(`${API_BASE}/contas-a-pagar/?${params}`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao buscar contas a pagar');
+      return response.json();
+    },
+    get: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/contas-a-pagar/${id}/`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao buscar conta a pagar');
+      return response.json();
+    },
+    create: async (data) => {
+      const response = await fetchWithTimeout(`${API_BASE}/contas-a-pagar/`, mutationOptions('POST', data));
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error));
+      }
+      return response.json();
+    },
+    update: async (id, data) => {
+      const response = await fetchWithTimeout(`${API_BASE}/contas-a-pagar/${id}/`, mutationOptions('PUT', data));
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(extractErrorMessage(error));
+      }
+      return response.json();
+    },
+    delete: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/contas-a-pagar/${id}/`, {
+        ...defaultOptions,
+        method: 'DELETE',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+      });
+      if (!response.ok) throw new Error('Erro ao deletar conta a pagar');
+      return true;
+    },
+    export: async (filters = {}) => {
+      const params = new URLSearchParams(filters);
+      const response = await fetchWithTimeout(`${API_BASE}/contas-a-pagar/export/?${params}`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao exportar contas a pagar');
+      await triggerDownload(response, `contas_a_pagar_${new Date().toISOString().split('T')[0]}.csv`);
+    }
+  },
+
+  // Transações Bancárias
+  transacoes: {
+    list: async (filters = {}) => {
+      const params = new URLSearchParams(filters);
+      const response = await fetchWithTimeout(`${API_BASE}/transacoes/?${params}`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao buscar transações');
+      return response.json();
+    },
+    get: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/transacoes/${id}/`, defaultOptions);
+      if (!response.ok) throw new Error('Erro ao buscar transação');
+      return response.json();
+    },
+    upload: async (file) => {
+      const formData = new FormData();
+      formData.append('arquivo', file);
+      const response = await fetchWithTimeout(`${API_BASE}/transacoes/upload/`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCSRFToken(),
+        },
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || error.error || 'Erro ao processar arquivo');
+      }
+      return response.json();
+    },
+    importar: async (file) => {
+      const formData = new FormData();
+      formData.append('arquivo', file);
+      const response = await fetchWithTimeout(`${API_BASE}/transacoes/importar/`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCSRFToken(),
+        },
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || error.error || 'Erro ao importar transações');
+      }
+      return response.json();
+    },
+    vincular: async (id, data) => {
+      const response = await fetchWithTimeout(`${API_BASE}/transacoes/${id}/vincular/`, mutationOptions('POST', data));
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || error.error || 'Erro ao vincular transação');
+      }
+      return response.json();
+    },
+    desvincular: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/transacoes/${id}/desvincular/`, mutationOptions('POST'));
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || error.error || 'Erro ao desvincular transação');
+      }
+      return response.json();
+    },
+    delete: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/transacoes/${id}/`, {
+        ...defaultOptions,
+        method: 'DELETE',
+        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+      });
+      if (!response.ok) throw new Error('Erro ao deletar transação');
+      return true;
+    }
+  }
+};
+
+// ======================================
+// ORDENS DE VIAGEM (OS)
+// ======================================
+
+export const tabelaFreteAPI = {
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/tabelas-frete/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar tabelas de frete');
+    return response.json();
+  },
+  get: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/tabelas-frete/${id}/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar tabela de frete');
+    return response.json();
+  },
+  create: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/tabelas-frete/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  update: async (id, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/tabelas-frete/${id}/`, mutationOptions('PUT', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  delete: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/tabelas-frete/${id}/`, {
+      ...defaultOptions,
+      method: 'DELETE',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+    });
+    if (!response.ok) throw new Error('Erro ao deletar tabela de frete');
+    return true;
+  },
+  simular: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/tabelas-frete/simular/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error, 'Erro na simulação'));
+    }
+    return response.json();
+  }
+};
+
+export const pedagioAPI = {
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/pedagios/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar pedágios');
+    return response.json();
+  },
+  get: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/pedagios/${id}/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar pedágio');
+    return response.json();
+  },
+  create: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/pedagios/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  update: async (id, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/pedagios/${id}/`, mutationOptions('PUT', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  delete: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/pedagios/${id}/`, {
+      ...defaultOptions,
+      method: 'DELETE',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+    });
+    if (!response.ok) throw new Error('Erro ao deletar pedágio');
+    return true;
+  }
+};
+
+export const multaAPI = {
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/multas/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar multas');
+    return response.json();
+  },
+  get: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/multas/${id}/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar multa');
+    return response.json();
+  },
+  create: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/multas/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  update: async (id, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/multas/${id}/`, mutationOptions('PUT', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  delete: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/multas/${id}/`, {
+      ...defaultOptions,
+      method: 'DELETE',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+    });
+    if (!response.ok) throw new Error('Erro ao deletar multa');
+    return true;
+  }
+};
+
+export const sinistroAPI = {
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/sinistros/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar sinistros');
+    return response.json();
+  },
+  get: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/sinistros/${id}/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar sinistro');
+    return response.json();
+  },
+  create: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/sinistros/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  update: async (id, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/sinistros/${id}/`, mutationOptions('PUT', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  delete: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/sinistros/${id}/`, {
+      ...defaultOptions,
+      method: 'DELETE',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+    });
+    if (!response.ok) throw new Error('Erro ao deletar sinistro');
+    return true;
+  }
+};
+
+export const planoManutencaoAPI = {
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/planos-manutencao/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar planos de manutenção');
+    return response.json();
+  },
+  get: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/planos-manutencao/${id}/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar plano de manutenção');
+    return response.json();
+  },
+  create: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/planos-manutencao/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  update: async (id, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/planos-manutencao/${id}/`, mutationOptions('PUT', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  delete: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/planos-manutencao/${id}/`, {
+      ...defaultOptions,
+      method: 'DELETE',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+    });
+    if (!response.ok) throw new Error('Erro ao deletar plano de manutenção');
+    return true;
+  },
+  alertas: async (dias = 30) => {
+    const response = await fetchWithTimeout(`${API_BASE}/planos-manutencao/alertas/?dias=${dias}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar alertas');
+    return response.json();
+  }
+};
+
+export const abastecimentoAPI = {
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/abastecimentos/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar abastecimentos');
+    return response.json();
+  },
+  get: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/abastecimentos/${id}/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar abastecimento');
+    return response.json();
+  },
+  create: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/abastecimentos/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  update: async (id, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/abastecimentos/${id}/`, mutationOptions('PUT', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  delete: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/abastecimentos/${id}/`, {
+      ...defaultOptions,
+      method: 'DELETE',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+    });
+    if (!response.ok) throw new Error('Erro ao deletar abastecimento');
+    return true;
+  },
+  resumo: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/abastecimentos/resumo/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar resumo');
+    return response.json();
+  }
+};
+
+export const ordemViagemAPI = {
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar ordens de viagem');
+    return response.json();
+  },
+  get: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/${id}/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar ordem de viagem');
+    return response.json();
+  },
+  create: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  update: async (id, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/${id}/`, mutationOptions('PUT', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error));
+    }
+    return response.json();
+  },
+  delete: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/${id}/`, {
+      ...defaultOptions,
+      method: 'DELETE',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+    });
+    if (!response.ok) throw new Error('Erro ao deletar ordem de viagem');
+    return true;
+  },
+  alterarStatus: async (id, status) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/${id}/alterar-status/`, mutationOptions('POST', { status }));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error, 'Erro ao alterar status'));
+    }
+    return response.json();
+  },
+  addDespesa: async (id, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/${id}/despesas/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error, 'Erro ao adicionar despesa'));
+    }
+    return response.json();
+  },
+  getETA: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/${id}/eta/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar ETA');
+    return response.json();
+  },
+  registrarPosicao: async (id, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/${id}/posicoes/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(extractErrorMessage(error, 'Erro ao registrar posição'));
+    }
+    return response.json();
+  },
+  deleteDespesa: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/despesas-viagem/${id}/`, {
+      ...defaultOptions,
+      method: 'DELETE',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+    });
+    if (!response.ok) throw new Error('Erro ao deletar despesa');
+    return true;
+  },
+  listarRotas: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/${id}/rotas/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar rotas');
+    return response.json();
+  },
+  calcularRota: async (id, data = {}) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ordens-viagem/${id}/calcular-rota/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(error, 'Erro ao calcular rota'));
+    }
     return response.json();
   }
 };
@@ -1091,13 +1543,13 @@ export const financeiroAPI = {
 export const configAPI = {
   empresa: {
     get: async () => {
-      const response = await fetch(`${API_BASE}/configuracoes/empresa/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/configuracoes/empresa/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar dados da empresa');
       return response.json();
     },
 
     save: async (data) => {
-      const response = await fetch(`${API_BASE}/configuracoes/empresa/`, mutationOptions('POST', data));
+      const response = await fetchWithTimeout(`${API_BASE}/configuracoes/empresa/`, mutationOptions('POST', data));
       if (!response.ok) {
         const error = await response.json();
         throw new Error(extractErrorMessage(error));
@@ -1108,26 +1560,26 @@ export const configAPI = {
 
   parametros: {
     list: async () => {
-      const response = await fetch(`${API_BASE}/configuracoes/parametros/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/configuracoes/parametros/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar parâmetros');
       return response.json();
     },
 
     get: async (chave) => {
-      const response = await fetch(`${API_BASE}/configuracoes/parametros/${chave}/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/configuracoes/parametros/${chave}/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar parâmetro');
       return response.json();
     },
 
     atualizar: async (chave, valor) => {
-      const response = await fetch(`${API_BASE}/configuracoes/parametros/${chave}/`, mutationOptions('PUT', { valor }));
+      const response = await fetchWithTimeout(`${API_BASE}/configuracoes/parametros/${chave}/`, mutationOptions('PUT', { valor }));
       if (!response.ok) throw new Error('Erro ao atualizar parâmetro');
       return response.json();
     },
 
     atualizarMultiplos: async (valores) => {
       // Backend espera formato: {"parametros": {chave: valor, ...}}
-      const response = await fetch(`${API_BASE}/configuracoes/parametros/atualizar-multiplos/`, mutationOptions('POST', { parametros: valores }));
+      const response = await fetchWithTimeout(`${API_BASE}/configuracoes/parametros/atualizar-multiplos/`, mutationOptions('POST', { parametros: valores }));
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Erro ao atualizar parâmetros');
@@ -1136,7 +1588,7 @@ export const configAPI = {
     },
 
     valores: async () => {
-      const response = await fetch(`${API_BASE}/configuracoes/parametros/valores/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/configuracoes/parametros/valores/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar valores');
       return response.json();
     }
@@ -1151,7 +1603,7 @@ export const relatoriosAPI = {
   gerar: async (params = {}) => {
     const queryParams = new URLSearchParams(params);
     // Backend usa GET em /relatorios/ com query params (tipo, formato, data_inicio, data_fim, etc)
-    const response = await fetch(`${API_BASE}/relatorios/?${queryParams}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/relatorios/?${queryParams}`, defaultOptions);
 
     if (!response.ok) {
       // Tenta extrair mensagem de erro do JSON
@@ -1197,7 +1649,7 @@ export const dashboardAPI = {
   geral: async (filters = {}) => {
     const params = new URLSearchParams(filters);
     const url = params.toString() ? `${API_BASE}/dashboard/?${params}` : `${API_BASE}/dashboard/`;
-    const response = await fetch(url, defaultOptions);
+    const response = await fetchWithTimeout(url, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar dashboard');
     return response.json();
   },
@@ -1205,7 +1657,7 @@ export const dashboardAPI = {
   cte: async (filters = {}) => {
     const params = new URLSearchParams(filters);
     const url = params.toString() ? `${API_BASE}/painel/cte/?${params}` : `${API_BASE}/painel/cte/`;
-    const response = await fetch(url, defaultOptions);
+    const response = await fetchWithTimeout(url, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar painel CT-e');
     return response.json();
   },
@@ -1213,27 +1665,27 @@ export const dashboardAPI = {
   mdfe: async (filters = {}) => {
     const params = new URLSearchParams(filters);
     const url = params.toString() ? `${API_BASE}/painel/mdfe/?${params}` : `${API_BASE}/painel/mdfe/`;
-    const response = await fetch(url, defaultOptions);
+    const response = await fetchWithTimeout(url, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar painel MDF-e');
     return response.json();
   },
 
   financeiro: async () => {
-    const response = await fetch(`${API_BASE}/painel/financeiro/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/painel/financeiro/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar painel financeiro');
     return response.json();
   },
 
   geografico: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/painel/geografico/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/painel/geografico/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar painel geográfico');
     return response.json();
   },
 
   manutencao: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/manutencao/painel/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/manutencao/painel/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar painel de manutenção');
     return response.json();
   },
@@ -1241,7 +1693,7 @@ export const dashboardAPI = {
   frota: async (filters = {}) => {
     const params = new URLSearchParams(filters);
     const url = params.toString() ? `${API_BASE}/painel/frota/?${params}` : `${API_BASE}/painel/frota/`;
-    const response = await fetch(url, defaultOptions);
+    const response = await fetchWithTimeout(url, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar painel de frota');
     return response.json();
   },
@@ -1249,13 +1701,13 @@ export const dashboardAPI = {
   performance: async (filters = {}) => {
     const params = new URLSearchParams(filters);
     const url = params.toString() ? `${API_BASE}/painel/performance/?${params}` : `${API_BASE}/painel/performance/`;
-    const response = await fetch(url, defaultOptions);
+    const response = await fetchWithTimeout(url, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar painel de performance');
     return response.json();
   },
 
   alertasPagamentos: async (dias = 7) => {
-    const response = await fetch(`${API_BASE}/alertas/pagamentos/?dias=${dias}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/alertas/pagamentos/?dias=${dias}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar alertas de pagamentos');
     return response.json();
   }
@@ -1267,7 +1719,7 @@ export const dashboardAPI = {
 
 export const backupAPI = {
   list: async () => {
-    const response = await fetch(`${API_BASE}/backup/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/backup/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao listar backups');
     const data = await response.json();
     // Backend retorna lista direta, frontend espera { backups: [...] } ou lista
@@ -1275,7 +1727,7 @@ export const backupAPI = {
   },
 
   gerar: async () => {
-    const response = await fetch(`${API_BASE}/backup/gerar/`, mutationOptions('POST'));
+    const response = await fetchWithTimeout(`${API_BASE}/backup/gerar/`, mutationOptions('POST'));
     // Backend retorna FileResponse (blob) em caso de sucesso
     if (!response.ok) {
       const error = await response.json();
@@ -1292,7 +1744,7 @@ export const backupAPI = {
 
   download: async (backupId) => {
     // Backend usa ID do registro: /backup/{id}/download/
-    const response = await fetch(`${API_BASE}/backup/${backupId}/download/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/backup/${backupId}/download/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao baixar backup');
     return response.blob();
   },
@@ -1302,7 +1754,7 @@ export const backupAPI = {
     // Backend espera campo 'arquivo_backup'
     formData.append('arquivo_backup', file);
 
-    const response = await fetch(`${API_BASE}/backup/restaurar/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/backup/restaurar/`, {
       credentials: 'include',
       method: 'POST',
       headers: {
@@ -1326,19 +1778,19 @@ export const alertasAPI = {
   sistema: {
     list: async (filters = {}) => {
       const params = new URLSearchParams(filters);
-      const response = await fetch(`${API_BASE}/alertas/sistema/?${params}`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/alertas/sistema/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar alertas do sistema');
       return response.json();
     },
 
     get: async (id) => {
-      const response = await fetch(`${API_BASE}/alertas/sistema/${id}/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/alertas/sistema/${id}/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar alerta');
       return response.json();
     },
 
     create: async (data) => {
-      const response = await fetch(`${API_BASE}/alertas/sistema/`, mutationOptions('POST', data));
+      const response = await fetchWithTimeout(`${API_BASE}/alertas/sistema/`, mutationOptions('POST', data));
       if (!response.ok) {
         const error = await response.json();
         throw new Error(extractErrorMessage(error));
@@ -1347,13 +1799,13 @@ export const alertasAPI = {
     },
 
     update: async (id, data) => {
-      const response = await fetch(`${API_BASE}/alertas/sistema/${id}/`, mutationOptions('PUT', data));
+      const response = await fetchWithTimeout(`${API_BASE}/alertas/sistema/${id}/`, mutationOptions('PUT', data));
       if (!response.ok) throw new Error('Erro ao atualizar alerta');
       return response.json();
     },
 
     delete: async (id) => {
-      const response = await fetch(`${API_BASE}/alertas/sistema/${id}/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/alertas/sistema/${id}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -1363,13 +1815,19 @@ export const alertasAPI = {
     },
 
     marcarLido: async (id) => {
-      const response = await fetch(`${API_BASE}/alertas/sistema/${id}/marcar_lido/`, mutationOptions('POST'));
+      const response = await fetchWithTimeout(`${API_BASE}/alertas/sistema/${id}/marcar_lido/`, mutationOptions('PATCH'));
       if (!response.ok) throw new Error('Erro ao marcar como lido');
       return response.json();
     },
 
+    marcarResolvido: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/alertas/sistema/${id}/marcar_resolvido/`, mutationOptions('PATCH'));
+      if (!response.ok) throw new Error('Erro ao marcar como resolvido');
+      return response.json();
+    },
+
     limparTodos: async () => {
-      const response = await fetch(`${API_BASE}/alertas/sistema/limpar_todos/`, mutationOptions('POST'));
+      const response = await fetchWithTimeout(`${API_BASE}/alertas/sistema/limpar_todos/`, mutationOptions('POST'));
       if (!response.ok) throw new Error('Erro ao limpar alertas');
       return response.json();
     }
@@ -1377,7 +1835,7 @@ export const alertasAPI = {
 
   pagamentos: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/alertas/pagamentos/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/alertas/pagamentos/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar alertas de pagamentos');
     return response.json();
   }
@@ -1389,19 +1847,19 @@ export const alertasAPI = {
 
 export const faixasKmAPI = {
   list: async () => {
-    const response = await fetch(`${API_BASE}/faixas-km/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/faixas-km/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar faixas de KM');
     return response.json();
   },
 
   get: async (id) => {
-    const response = await fetch(`${API_BASE}/faixas-km/${id}/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/faixas-km/${id}/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar faixa de KM');
     return response.json();
   },
 
   create: async (data) => {
-    const response = await fetch(`${API_BASE}/faixas-km/`, mutationOptions('POST', data));
+    const response = await fetchWithTimeout(`${API_BASE}/faixas-km/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
       throw new Error(extractErrorMessage(error));
@@ -1410,13 +1868,13 @@ export const faixasKmAPI = {
   },
 
   update: async (id, data) => {
-    const response = await fetch(`${API_BASE}/faixas-km/${id}/`, mutationOptions('PUT', data));
+    const response = await fetchWithTimeout(`${API_BASE}/faixas-km/${id}/`, mutationOptions('PUT', data));
     if (!response.ok) throw new Error('Erro ao atualizar faixa de KM');
     return response.json();
   },
 
   delete: async (id) => {
-    const response = await fetch(`${API_BASE}/faixas-km/${id}/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/faixas-km/${id}/`, {
       ...defaultOptions,
       method: 'DELETE',
       headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -1427,7 +1885,7 @@ export const faixasKmAPI = {
 
   // Busca a faixa correspondente a um valor de KM
   buscarPorKm: async (km) => {
-    const response = await fetch(`${API_BASE}/faixas-km/buscar_por_km/?km=${km}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/faixas-km/buscar_por_km/?km=${km}`, defaultOptions);
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error(error.detail || 'Nenhuma faixa encontrada para este KM');
@@ -1444,19 +1902,19 @@ export const documentosAPI = {
   // Lista geral de documentos (para admin/gerenciamento)
   list: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/documentos/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/documentos/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar documentos');
     return response.json();
   },
 
   get: async (id) => {
-    const response = await fetch(`${API_BASE}/documentos/${id}/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/documentos/${id}/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar documento');
     return response.json();
   },
 
   delete: async (id) => {
-    const response = await fetch(`${API_BASE}/documentos/${id}/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/documentos/${id}/`, {
       ...defaultOptions,
       method: 'DELETE',
       headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -1466,7 +1924,7 @@ export const documentosAPI = {
   },
 
   download: async (id) => {
-    const response = await fetch(`${API_BASE}/documentos/${id}/download/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/documentos/${id}/download/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao baixar documento');
     return response.blob();
   },
@@ -1474,7 +1932,7 @@ export const documentosAPI = {
   // Documentos de Clientes
   clientes: {
     list: async (clienteId) => {
-      const response = await fetch(`${API_BASE}/clientes/${clienteId}/documentos/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/clientes/${clienteId}/documentos/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar documentos do cliente');
       return response.json();
     },
@@ -1487,7 +1945,7 @@ export const documentosAPI = {
       if (dados.validade) formData.append('validade', dados.validade);
       if (dados.observacoes) formData.append('observacoes', dados.observacoes);
 
-      const response = await fetch(`${API_BASE}/clientes/${clienteId}/documentos/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/clientes/${clienteId}/documentos/`, {
         credentials: 'include',
         method: 'POST',
         headers: {
@@ -1503,7 +1961,7 @@ export const documentosAPI = {
     },
 
     delete: async (clienteId, documentoId) => {
-      const response = await fetch(`${API_BASE}/clientes/${clienteId}/documentos/${documentoId}/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/clientes/${clienteId}/documentos/${documentoId}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -1530,7 +1988,7 @@ export const documentosAPI = {
   // Documentos de Motoristas
   motoristas: {
     list: async (motoristaId) => {
-      const response = await fetch(`${API_BASE}/motoristas/${motoristaId}/documentos/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/motoristas/${motoristaId}/documentos/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar documentos do motorista');
       return response.json();
     },
@@ -1543,7 +2001,7 @@ export const documentosAPI = {
       if (dados.validade) formData.append('validade', dados.validade);
       if (dados.observacoes) formData.append('observacoes', dados.observacoes);
 
-      const response = await fetch(`${API_BASE}/motoristas/${motoristaId}/documentos/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/motoristas/${motoristaId}/documentos/`, {
         credentials: 'include',
         method: 'POST',
         headers: {
@@ -1559,7 +2017,7 @@ export const documentosAPI = {
     },
 
     delete: async (motoristaId, documentoId) => {
-      const response = await fetch(`${API_BASE}/motoristas/${motoristaId}/documentos/${documentoId}/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/motoristas/${motoristaId}/documentos/${documentoId}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -1586,7 +2044,7 @@ export const documentosAPI = {
   // Documentos de Veículos
   veiculos: {
     list: async (veiculoId) => {
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/documentos/`, defaultOptions);
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/documentos/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar documentos do veículo');
       return response.json();
     },
@@ -1599,7 +2057,7 @@ export const documentosAPI = {
       if (dados.validade) formData.append('validade', dados.validade);
       if (dados.observacoes) formData.append('observacoes', dados.observacoes);
 
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/documentos/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/documentos/`, {
         credentials: 'include',
         method: 'POST',
         headers: {
@@ -1615,7 +2073,7 @@ export const documentosAPI = {
     },
 
     delete: async (veiculoId, documentoId) => {
-      const response = await fetch(`${API_BASE}/veiculos/${veiculoId}/documentos/${documentoId}/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/veiculos/${veiculoId}/documentos/${documentoId}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -1639,67 +2097,10 @@ export const documentosAPI = {
     }
   },
 
-  // Documentos de Manutencoes
-  manutencoes: {
-    list: async (manutencaoId) => {
-      const response = await fetch(`${API_BASE}/manutencoes/${manutencaoId}/documentos/`, defaultOptions);
-      if (!response.ok) throw new Error('Erro ao buscar documentos da manutencao');
-      return response.json();
-    },
-
-    upload: async (manutencaoId, file, dados = {}) => {
-      const formData = new FormData();
-      formData.append('arquivo', file);
-      if (dados.tipo) formData.append('tipo', dados.tipo);
-      if (dados.nome) formData.append('nome', dados.nome);
-      if (dados.validade) formData.append('validade', dados.validade);
-      if (dados.observacoes) formData.append('observacoes', dados.observacoes);
-
-      const response = await fetch(`${API_BASE}/manutencoes/${manutencaoId}/documentos/`, {
-        credentials: 'include',
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCSRFToken() },
-        body: formData,
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(extractErrorMessage(error, 'Erro ao enviar documento'));
-      }
-      return response.json();
-    },
-
-    delete: async (manutencaoId, documentoId) => {
-      const response = await fetch(`${API_BASE}/manutencoes/${manutencaoId}/documentos/${documentoId}/`, {
-        ...defaultOptions,
-        method: 'DELETE',
-        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-      });
-      if (!response.ok) throw new Error('Erro ao deletar documento');
-      return true;
-    },
-
-    update: async (manutencaoId, documentoId, dados) => {
-      const response = await fetchWithCSRFRetry(`${API_BASE}/manutencoes/${manutencaoId}/documentos/${documentoId}/`, {
-        ...defaultOptions,
-        method: 'PATCH',
-        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-        body: JSON.stringify(dados),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(extractErrorMessage(error, 'Erro ao atualizar documento'));
-      }
-      return response.json();
-    }
-  },
-
   // Documentos de CT-es
   ctes: {
     list: async (cteId) => {
-      const response = await fetch(`${API_BASE}/ctes/${cteId}/documentos/`, defaultOptions);
-      // O endpoint de anexos de CT-e ainda nao existe no backend (404).
-      // Degrada para lista vazia em vez de erro, para nao quebrar o detalhe.
-      if (response.status === 404) return [];
+      const response = await fetchWithTimeout(`${API_BASE}/ctes/${cteId}/documentos/`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao buscar documentos do CT-e');
       return response.json();
     },
@@ -1712,7 +2113,7 @@ export const documentosAPI = {
       if (dados.validade) formData.append('validade', dados.validade);
       if (dados.observacoes) formData.append('observacoes', dados.observacoes);
 
-      const response = await fetch(`${API_BASE}/ctes/${cteId}/documentos/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/ctes/${cteId}/documentos/`, {
         credentials: 'include',
         method: 'POST',
         headers: { 'X-CSRFToken': getCSRFToken() },
@@ -1726,7 +2127,7 @@ export const documentosAPI = {
     },
 
     delete: async (cteId, documentoId) => {
-      const response = await fetch(`${API_BASE}/ctes/${cteId}/documentos/${documentoId}/`, {
+      const response = await fetchWithTimeout(`${API_BASE}/ctes/${cteId}/documentos/${documentoId}/`, {
         ...defaultOptions,
         method: 'DELETE',
         headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -1750,113 +2151,6 @@ export const documentosAPI = {
     }
   },
 
-  // Documentos de MDF-es
-  mdfes: {
-    list: async (mdfeId) => {
-      const response = await fetch(`${API_BASE}/mdfes/${mdfeId}/documentos/`, defaultOptions);
-      if (!response.ok) throw new Error('Erro ao buscar documentos do MDF-e');
-      return response.json();
-    },
-
-    upload: async (mdfeId, file, dados = {}) => {
-      const formData = new FormData();
-      formData.append('arquivo', file);
-      if (dados.tipo) formData.append('tipo', dados.tipo);
-      if (dados.nome) formData.append('nome', dados.nome);
-      if (dados.validade) formData.append('validade', dados.validade);
-      if (dados.observacoes) formData.append('observacoes', dados.observacoes);
-
-      const response = await fetch(`${API_BASE}/mdfes/${mdfeId}/documentos/`, {
-        credentials: 'include',
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCSRFToken() },
-        body: formData,
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(extractErrorMessage(error, 'Erro ao enviar documento'));
-      }
-      return response.json();
-    },
-
-    delete: async (mdfeId, documentoId) => {
-      const response = await fetch(`${API_BASE}/mdfes/${mdfeId}/documentos/${documentoId}/`, {
-        ...defaultOptions,
-        method: 'DELETE',
-        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-      });
-      if (!response.ok) throw new Error('Erro ao deletar documento');
-      return true;
-    },
-
-    update: async (mdfeId, documentoId, dados) => {
-      const response = await fetchWithCSRFRetry(`${API_BASE}/mdfes/${mdfeId}/documentos/${documentoId}/`, {
-        ...defaultOptions,
-        method: 'PATCH',
-        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-        body: JSON.stringify(dados),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(extractErrorMessage(error, 'Erro ao atualizar documento'));
-      }
-      return response.json();
-    }
-  },
-
-  // Documentos de Pagamentos
-  pagamentos: {
-    list: async (pagamentoId) => {
-      const response = await fetch(`${API_BASE}/pagamentos/${pagamentoId}/documentos/`, defaultOptions);
-      if (!response.ok) throw new Error('Erro ao buscar documentos do pagamento');
-      return response.json();
-    },
-
-    upload: async (pagamentoId, file, dados = {}) => {
-      const formData = new FormData();
-      formData.append('arquivo', file);
-      if (dados.tipo) formData.append('tipo', dados.tipo);
-      if (dados.nome) formData.append('nome', dados.nome);
-      if (dados.validade) formData.append('validade', dados.validade);
-      if (dados.observacoes) formData.append('observacoes', dados.observacoes);
-
-      const response = await fetch(`${API_BASE}/pagamentos/${pagamentoId}/documentos/`, {
-        credentials: 'include',
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCSRFToken() },
-        body: formData,
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(extractErrorMessage(error, 'Erro ao enviar documento'));
-      }
-      return response.json();
-    },
-
-    delete: async (pagamentoId, documentoId) => {
-      const response = await fetch(`${API_BASE}/pagamentos/${pagamentoId}/documentos/${documentoId}/`, {
-        ...defaultOptions,
-        method: 'DELETE',
-        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-      });
-      if (!response.ok) throw new Error('Erro ao deletar documento');
-      return true;
-    },
-
-    update: async (pagamentoId, documentoId, dados) => {
-      const response = await fetchWithCSRFRetry(`${API_BASE}/pagamentos/${pagamentoId}/documentos/${documentoId}/`, {
-        ...defaultOptions,
-        method: 'PATCH',
-        headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-        body: JSON.stringify(dados),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(extractErrorMessage(error, 'Erro ao atualizar documento'));
-      }
-      return response.json();
-    }
-  }
 };
 
 // ======================================
@@ -1866,19 +2160,19 @@ export const documentosAPI = {
 export const usuariosAPI = {
   list: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/usuarios/?${params}`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/usuarios/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar usuários');
     return response.json();
   },
 
   get: async (id) => {
-    const response = await fetch(`${API_BASE}/usuarios/${id}/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/usuarios/${id}/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar usuário');
     return response.json();
   },
 
   create: async (data) => {
-    const response = await fetch(`${API_BASE}/usuarios/`, mutationOptions('POST', data));
+    const response = await fetchWithTimeout(`${API_BASE}/usuarios/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
       throw new Error(extractErrorMessage(error));
@@ -1887,19 +2181,19 @@ export const usuariosAPI = {
   },
 
   update: async (id, data) => {
-    const response = await fetch(`${API_BASE}/usuarios/${id}/`, mutationOptions('PUT', data));
+    const response = await fetchWithTimeout(`${API_BASE}/usuarios/${id}/`, mutationOptions('PUT', data));
     if (!response.ok) throw new Error('Erro ao atualizar usuário');
     return response.json();
   },
 
   patch: async (id, data) => {
-    const response = await fetch(`${API_BASE}/usuarios/${id}/`, mutationOptions('PATCH', data));
+    const response = await fetchWithTimeout(`${API_BASE}/usuarios/${id}/`, mutationOptions('PATCH', data));
     if (!response.ok) throw new Error('Erro ao atualizar usuário');
     return response.json();
   },
 
   delete: async (id) => {
-    const response = await fetch(`${API_BASE}/usuarios/${id}/`, {
+    const response = await fetchWithTimeout(`${API_BASE}/usuarios/${id}/`, {
       ...defaultOptions,
       method: 'DELETE',
       headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
@@ -1908,15 +2202,15 @@ export const usuariosAPI = {
     return true;
   },
 
-  // Endpoint para o usuário atual gerenciar seu próprio perfil
+  // Endpoint para o usuario atual gerenciar seu proprio perfil
   me: async () => {
-    const response = await fetch(`${API_BASE}/usuarios/me/`, defaultOptions);
+    const response = await fetchWithTimeout(`${API_BASE}/users/me/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar perfil');
     return response.json();
   },
 
   updateMe: async (data) => {
-    const response = await fetch(`${API_BASE}/usuarios/me/`, mutationOptions('PATCH', data));
+    const response = await fetchWithTimeout(`${API_BASE}/users/me/`, mutationOptions('PATCH', data));
     if (!response.ok) throw new Error('Erro ao atualizar perfil');
     return response.json();
   }
@@ -1938,7 +2232,7 @@ export const externalAPI = {
       throw new Error('CEP deve ter 8 digitos');
     }
 
-    const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+    const response = await fetchWithTimeout(`https://viacep.com.br/ws/${cepLimpo}/json/`);
     if (!response.ok) {
       throw new Error('Erro ao consultar CEP. Tente novamente.');
     }
@@ -1968,7 +2262,7 @@ export const externalAPI = {
       throw new Error('CNPJ deve ter 14 digitos');
     }
 
-    const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+    const response = await fetchWithTimeout(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -1995,6 +2289,105 @@ export const externalAPI = {
   }
 };
 
+// APIs individuais para importação direta
+export const contasPagarAPI = conciliacaoAPI.contasPagar;
+
+// ======================================
+// CIOT
+// ======================================
+export const ciotAPI = {
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/ciots/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar CIOTs');
+    return response.json();
+  },
+  get: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ciots/${id}/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar CIOT');
+    return response.json();
+  },
+  create: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ciots/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(error, 'Erro ao criar CIOT'));
+    }
+    return response.json();
+  },
+  update: async (id, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ciots/${id}/`, mutationOptions('PUT', data));
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(error, 'Erro ao atualizar CIOT'));
+    }
+    return response.json();
+  },
+  delete: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ciots/${id}/`, {
+      ...defaultOptions,
+      method: 'DELETE',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+    });
+    if (!response.ok) throw new Error('Erro ao deletar CIOT');
+    return true;
+  },
+  cancelar: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ciots/${id}/cancelar/`, mutationOptions('POST', {}));
+    if (!response.ok) throw new Error('Erro ao cancelar CIOT');
+    return response.json();
+  },
+  usar: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/ciots/${id}/usar/`, mutationOptions('POST', {}));
+    if (!response.ok) throw new Error('Erro ao marcar CIOT como usado');
+    return response.json();
+  },
+  resumo: async () => {
+    const response = await fetchWithTimeout(`${API_BASE}/ciots/resumo/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar resumo');
+    return response.json();
+  }
+};
+
+// ======================================
+// COMUNICAÇÃO (E-mail / WhatsApp)
+// ======================================
+export const comunicacaoAPI = {
+  enviar: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/comunicacoes/enviar/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(error, 'Erro ao enviar comunicação'));
+    }
+    return response.json();
+  },
+  list: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await fetchWithTimeout(`${API_BASE}/comunicacoes/?${params}`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar histórico');
+    return response.json();
+  }
+};
+
+// ======================================
+// GPS / RASTREAMENTO
+// ======================================
+export const gpsAPI = {
+  enviarWebhook: async (data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/gps/webhook/`, mutationOptions('POST', data));
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(error, 'Erro ao enviar posição GPS'));
+    }
+    return response.json();
+  },
+  ultimaPosicaoVeiculo: async (veiculoId) => {
+    const response = await fetchWithTimeout(`${API_BASE}/gps/veiculos/${veiculoId}/ultima-posicao/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar última posição');
+    return response.json();
+  }
+};
+
 // Exportar tudo
 export default {
   auth: authAPI,
@@ -2007,6 +2400,7 @@ export default {
   pagamentos: pagamentosAPI,
   manutencao: manutencaoAPI,
   financeiro: financeiroAPI,
+  conciliacao: conciliacaoAPI,
   config: configAPI,
   relatorios: relatoriosAPI,
   dashboard: dashboardAPI,
@@ -2016,4 +2410,7 @@ export default {
   documentos: documentosAPI,
   usuarios: usuariosAPI,
   external: externalAPI,
+  gps: gpsAPI,
+  comunicacao: comunicacaoAPI,
+  ciot: ciotAPI,
 };

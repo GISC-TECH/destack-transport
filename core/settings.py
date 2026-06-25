@@ -26,41 +26,64 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-# CSRF Configuration
-CSRF_TRUSTED_ORIGINS = []
-allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '*')
-if allowed_hosts_env != '*':
-    for host in allowed_hosts_env.split(','):
-        host = host.strip()
-        if host:
-            CSRF_TRUSTED_ORIGINS.extend([f'https://{host}', f'http://{host}'])
 
-# Always include localhost and common IPs for development
-CSRF_TRUSTED_ORIGINS.extend([
-    'https://localhost',
-    'http://localhost',
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:5175',
-    'http://localhost:3000',
-    'http://localhost:8001',
-    'http://localhost:8002',
-    'http://127.0.0.1',
-    'https://127.0.0.1',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',
-    'http://127.0.0.1:5175',
-    'http://127.0.0.1:8001',
-    'http://127.0.0.1:8002',
-    'http://31.97.247.165:8001',
-    'https://31.97.247.165:8001',
-    'http://31.97.247.165',
-    'https://31.97.247.165',
-    'http://destacktransporte.site',
-    'https://destacktransporte.site',
-    'http://www.destacktransporte.site',
-    'https://www.destacktransporte.site',
-])
+def _parse_env_list(name, default=None):
+    """Parse a comma-separated environment variable into a cleaned list."""
+    value = os.getenv(name, default)
+    if value is None:
+        return []
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
+# SECURITY WARNING: keep the secret key used in production secret.
+# In production, fail fast instead of silently using a predictable fallback.
+_secret_key = os.getenv('DJANGO_SECRET_KEY')
+if not DEBUG and not _secret_key:
+    raise RuntimeError('DJANGO_SECRET_KEY must be set when DEBUG=False.')
+SECRET_KEY = _secret_key or 'django-insecure-dev-key-change-in-development-only'
+
+
+# Configure allowed hosts
+# In production, ALLOWED_HOSTS must be explicitly provided.
+_allowed_hosts = _parse_env_list('ALLOWED_HOSTS')
+if not DEBUG:
+    if not _allowed_hosts:
+        raise RuntimeError('ALLOWED_HOSTS must be set when DEBUG=False.')
+    ALLOWED_HOSTS = _allowed_hosts
+else:
+    # Development defaults
+    ALLOWED_HOSTS = _allowed_hosts + ['.localhost', '127.0.0.1', '[::1]', 'web', 'nginx', 'frontend']
+
+
+# CSRF Configuration
+# In production, CSRF_TRUSTED_ORIGINS must be explicitly provided and use HTTPS.
+_csrf_origins = _parse_env_list('CSRF_TRUSTED_ORIGINS')
+if not DEBUG:
+    if not _csrf_origins:
+        raise RuntimeError('CSRF_TRUSTED_ORIGINS must be set when DEBUG=False.')
+    for origin in _csrf_origins:
+        if not origin.startswith('https://'):
+            raise RuntimeError(
+                f'CSRF_TRUSTED_ORIGINS must use HTTPS in production. Invalid: {origin}'
+            )
+    CSRF_TRUSTED_ORIGINS = _csrf_origins
+else:
+    # Development defaults
+    CSRF_TRUSTED_ORIGINS = _csrf_origins + [
+        'http://localhost',
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:5175',
+        'http://localhost:3000',
+        'http://localhost:8001',
+        'http://localhost:8002',
+        'http://127.0.0.1',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:5174',
+        'http://127.0.0.1:5175',
+        'http://127.0.0.1:8001',
+        'http://127.0.0.1:8002',
+    ]
 
 # Configurações de CSRF
 CSRF_COOKIE_SECURE = not DEBUG
@@ -78,17 +101,6 @@ if DEBUG:
     CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'
 else:
     CSRF_COOKIE_SAMESITE = 'Lax'
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-dev-key-change-in-production')
-
-# Configure allowed hosts
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
-if DEBUG:
-    ALLOWED_HOSTS.extend(['.localhost', '127.0.0.1', '[::1]'])
 
 
 # Application definition
@@ -110,6 +122,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist', # For token blacklisting on logout (optional)
     'drf_yasg',
     'django.contrib.humanize', # For template tags like `intcomma`
+    'auditlog',
 
     # Local apps
     'transport',
@@ -125,6 +138,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'transport.middleware.APIAuthenticationMiddleware',  # Custom API auth middleware
     'transport.middleware.SessionSecurityMiddleware',    # Custom session security
+    'auditlog.middleware.AuditlogMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -213,11 +227,13 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.getenv('STATIC_ROOT', '/tmp/staticfiles')
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', '/tmp/mediafiles')
 
-# Directories where Django will look for static files in addition to app's 'static' directories.
-STATICFILES_DIRS = [
-    BASE_DIR / 'transport/static', # Your app's static files
-    # BASE_DIR / 'static', # Project-level static files (if any)
+# Directories where Django will look for static files in addition to app's
+# app-level static directories. The React frontend is served separately in
+# production, so this optional legacy directory may not exist in every checkout.
+_optional_static_dirs = [
+    BASE_DIR / 'transport/static',
 ]
+STATICFILES_DIRS = [path for path in _optional_static_dirs if path.exists()]
 
 # Media files (User-uploaded content)
 # https://docs.djangoproject.com/en/5.2/topics/files/
@@ -286,24 +302,10 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/app/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Session Security Settings
-SESSION_COOKIE_AGE = 3600 * 8  # 8 hours
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = not DEBUG  # True in production
-SESSION_SAVE_EVERY_REQUEST = True
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
-# CSRF Security Settings
-# CSRF_COOKIE_HTTPONLY deve ser False para permitir que o JavaScript leia o token
-CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SECURE = not DEBUG  # True in production
-CSRF_COOKIE_SAMESITE = 'Lax'
-
 # Django REST Framework Settings
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         'rest_framework.permissions.IsAuthenticated',
@@ -311,8 +313,12 @@ REST_FRAMEWORK = {
     # Ensure CSRF protection for API calls from web interface
     'DEFAULT_METADATA_CLASS': 'rest_framework.metadata.SimpleMetadata',
     "DEFAULT_RENDERER_CLASSES": (
-        "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer", # Useful for development
+        ("rest_framework.renderers.JSONRenderer",)
+        if not DEBUG
+        else (
+            "rest_framework.renderers.JSONRenderer",
+            "rest_framework.renderers.BrowsableAPIRenderer", # Useful for development
+        )
     ),
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework.parsers.JSONParser",
@@ -320,7 +326,7 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser", # For file uploads
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 50,  # Aumentado para mostrar mais itens por página
+    'PAGE_SIZE': 20,  # Padronizado para 20 itens por pagina
 
 
     # (Optional) Throttling for API rate limiting
@@ -464,12 +470,11 @@ else:
     SERVER_EMAIL = os.environ.get('DJANGO_SERVER_EMAIL', DEFAULT_FROM_EMAIL) # For error reports
 
 # Configurações de Upload (Django as usa para MultiPartParser)
-FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5MB - padrão do Django
-DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5MB - padrão
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000   # padrão
-
-# NOVO/AJUSTADO: Limite para número de arquivos em um upload multipart
-DATA_UPLOAD_MAX_NUMBER_FILES = 9000 # Aumentar conforme necessidade
+# Limit uploads to realistic sizes to reduce memory exhaustion / DoS risk.
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('FILE_UPLOAD_MAX_MEMORY_SIZE', str(10 * 1024 * 1024)))  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('DATA_UPLOAD_MAX_MEMORY_SIZE', str(10 * 1024 * 1024)))  # 10MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000  # default
+DATA_UPLOAD_MAX_NUMBER_FILES = 50     # multipart files per request
 
 
 # --- Security Settings for Production (Uncomment and configure as needed) ---
@@ -533,19 +538,17 @@ if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOW_CREDENTIALS = True
 else:
-    # Em produção, especificar origens permitidas
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8080",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:8080",
-        "https://destacktransporte.site",
-        "https://www.destacktransporte.site",
-        "http://31.97.247.165:8001",
-        "http://31.97.247.165",
-    ]
+    # Em produção, especificar origens permitidas via variável de ambiente.
+    # Origens devem usar HTTPS.
+    _cors_origins = _parse_env_list('CORS_ALLOWED_ORIGINS')
+    if not _cors_origins:
+        raise RuntimeError('CORS_ALLOWED_ORIGINS must be set when DEBUG=False.')
+    for origin in _cors_origins:
+        if not origin.startswith('https://'):
+            raise RuntimeError(
+                f'CORS_ALLOWED_ORIGINS must use HTTPS in production. Invalid: {origin}'
+            )
+    CORS_ALLOWED_ORIGINS = _cors_origins
     CORS_ALLOW_CREDENTIALS = True
 
 # Headers permitidos
@@ -575,4 +578,3 @@ CORS_ALLOW_METHODS = [
 CORS_EXPOSE_HEADERS = [
     'content-disposition',
 ]
-

@@ -677,6 +677,37 @@
     padding: 0;
   }
 
+  .filtros-avancados-panel {
+    padding: 14px !important;
+    border-radius: 10px !important;
+    margin: 0 !important;
+  }
+
+  .filtros-avancados-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .filtro-grupo label {
+    font-size: 13px;
+  }
+
+  .filtro-grupo > div {
+    max-height: 140px;
+  }
+
+  .filtro-grupo label span {
+    white-space: normal !important;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .filtro-grupo input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
   .page-header {
     flex-direction: column;
     align-items: stretch;
@@ -734,13 +765,15 @@
   }
 
   .table-container {
-    overflow-x: auto;
-    margin: 0 -15px;
-    border-radius: 0;
+    overflow-x: visible;
+    margin: 0;
+    border-radius: 12px;
+    background: transparent;
+    box-shadow: none;
   }
 
   .data-table {
-    min-width: 700px;
+    min-width: 0;
   }
 
   .data-table th,
@@ -794,6 +827,81 @@
   font-size: 14px;
   background: #f8f9fa;
   border-radius: 8px;
+}
+
+/* Skeleton viewports */
+.skeleton-desktop {
+  display: block;
+}
+
+.skeleton-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .skeleton-desktop {
+    display: none;
+  }
+
+  .skeleton-mobile {
+    display: block;
+  }
+}
+
+/* Filtros avançados */
+.filtros-avancados-panel {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.filtros-avancados-grid {
+  width: 100%;
+}
+
+.filtro-grupo {
+  min-width: 0;
+}
+
+/* Chart legend mobile */
+.chart-legend-mobile {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 16px;
+  margin-top: 12px;
+  padding: 0 10px;
+}
+
+.chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.chart-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chart-legend-text {
+  white-space: nowrap;
+}
+
+/* Empty state dentro de célula de tabela */
+.data-table .empty-state-container {
+  padding: 30px 15px;
+}
+
+.data-table .empty-state-title {
+  font-size: 16px;
+}
+
+.data-table .empty-state-description {
+  font-size: 13px;
 }
 
 /* Eficiência Display */

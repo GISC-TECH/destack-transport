@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clientesAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
-import Loading from '../Common/Loading';
+import { SkeletonTable, SkeletonMobileCards } from '../Common/Skeleton';
+import EmptyState from '../Common/EmptyState';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import './ClientesList.css';
@@ -125,9 +126,6 @@ function ClientesList() {
     }));
   };
 
-  if (loading) return <Loading message="Carregando clientes..." />;
-  if (error) return <ErrorMessage message={error} onRetry={loadClientes} />;
-
   const clientesIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -136,6 +134,26 @@ function ClientesList() {
       <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
     </svg>
   );
+
+  if (loading) {
+    return (
+      <div className="clientes-list">
+        <PageHeader
+          title="Clientes"
+          subtitle="Carregando..."
+          icon={clientesIcon}
+          breadcrumbs={[{ label: 'Cadastros' }, { label: 'Clientes' }]}
+        />
+        <div className="table-container desktop-only">
+          <SkeletonTable rows={5} columns={8} />
+        </div>
+        <div className="mobile-only">
+          <SkeletonMobileCards count={4} />
+        </div>
+      </div>
+    );
+  }
+  if (error) return <ErrorMessage message={error} onRetry={loadClientes} />;
 
   const headerActions = (
     <button className="btn btn-primary" onClick={() => navigate('/clientes/novo')}>
@@ -179,12 +197,11 @@ function ClientesList() {
 
         <input
           type="text"
-          className="input-filter"
+          className="input-filter uf-filter"
           placeholder="UF"
           maxLength="2"
           value={filtros.estado}
           onChange={(e) => handleFiltroChange('estado', e.target.value.toUpperCase())}
-          style={{ width: '80px' }}
         />
 
         <select
@@ -207,61 +224,119 @@ function ClientesList() {
         </button>
       </div>
 
-      {/* Tabela */}
+      {/* Tabela Desktop */}
       {clientes.length > 0 ? (
-        <div className="table-container">
-          <table className="clientes-table">
-            <thead>
-              <tr>
-                <th>Razão Social</th>
-                <th>Nome Fantasia</th>
-                <th>CNPJ</th>
-                <th>Cidade</th>
-                <th>UF</th>
-                <th>Tipo Frete</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map((cliente) => (
-                <tr key={cliente.id}>
-                  <td>{cliente.razao_social}</td>
-                  <td>{cliente.nome_fantasia || '-'}</td>
-                  <td>{cliente.cnpj_formatado || cliente.cnpj}</td>
-                  <td>{cliente.cidade || '-'}</td>
-                  <td>{cliente.estado || '-'}</td>
-                  <td>
+        <>
+          <div className="table-container desktop-only">
+            <table className="clientes-table">
+              <thead>
+                <tr>
+                  <th>Razão Social</th>
+                  <th>Nome Fantasia</th>
+                  <th>CNPJ</th>
+                  <th>Cidade</th>
+                  <th>UF</th>
+                  <th>Tipo Frete</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clientes.map((cliente) => (
+                  <tr key={cliente.id}>
+                    <td>{cliente.razao_social}</td>
+                    <td>{cliente.nome_fantasia || '-'}</td>
+                    <td>{cliente.cnpj_formatado || cliente.cnpj}</td>
+                    <td>{cliente.cidade || '-'}</td>
+                    <td>{cliente.estado || '-'}</td>
+                    <td>
+                      <span className={`badge badge-${cliente.tipo_frete?.toLowerCase()}`}>
+                        {cliente.tipo_frete}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`status ${cliente.ativo ? 'ativo' : 'inativo'}`}>
+                        {cliente.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                    <td className="actions-cell">
+                      <button
+                        className="btn-action btn-edit"
+                        onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
+                        title="Editar"
+                        aria-label={`Editar ${cliente.razao_social}`}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Cards Mobile */}
+          <div className="mobile-cards mobile-only">
+            {clientes.map((cliente) => (
+              <div key={cliente.id} className="mobile-card" onClick={() => navigate(`/clientes/editar/${cliente.id}`)}>
+                <div className="mobile-card-header">
+                  <h4>{cliente.razao_social}</h4>
+                  <span className={`status ${cliente.ativo ? 'ativo' : 'inativo'}`}>
+                    {cliente.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
+                <div className="mobile-card-body">
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Fantasia</span>
+                    <span className="mobile-card-value">{cliente.nome_fantasia || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">CNPJ</span>
+                    <span className="mobile-card-value">{cliente.cnpj_formatado || cliente.cnpj}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Cidade/UF</span>
+                    <span className="mobile-card-value">{cliente.cidade || '-'} / {cliente.estado || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Tipo Frete</span>
                     <span className={`badge badge-${cliente.tipo_frete?.toLowerCase()}`}>
                       {cliente.tipo_frete}
                     </span>
-                  </td>
-                  <td>
-                    <span className={`status ${cliente.ativo ? 'ativo' : 'inativo'}`}>
-                      {cliente.ativo ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </td>
-                  <td className="actions-cell">
-                    <button
-                      className="btn-action btn-edit"
-                      onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
-                      title="Editar"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </div>
+                <div className="mobile-card-footer">
+                  <button
+                    className="btn-action btn-edit"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/clientes/editar/${cliente.id}`);
+                    }}
+                    aria-label={`Editar ${cliente.razao_social}`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="empty-state">
-          <p>Nenhum cliente encontrado com os filtros selecionados.</p>
-        </div>
+        <EmptyState
+          title="Nenhum cliente encontrado"
+          description="Nao ha clientes com os filtros selecionados."
+          action={
+            <button className="btn btn-primary" onClick={() => navigate('/clientes/novo')}>
+              Novo Cliente
+            </button>
+          }
+        />
       )}
 
       {/* Botões de paginação */}

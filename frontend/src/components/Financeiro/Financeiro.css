@@ -25,6 +25,75 @@
   font-size: 15px;
 }
 
+/* Formulários compartilhados (Contas a Pagar, etc.) */
+.financeiro-page .form-container {
+  background-color: var(--card-bg, #fff);
+  border-radius: 14px;
+  border: 1px solid var(--border-light, #e0e0e0);
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.financeiro-page .form-section {
+  margin-bottom: 28px;
+}
+
+.financeiro-page .form-section > h3 {
+  margin: 0 0 18px 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light, #e0e0e0);
+  padding-bottom: 10px;
+}
+
+.financeiro-page .form-row {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.financeiro-page .form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.financeiro-page .form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary, #374151);
+}
+
+.financeiro-page .form-group input,
+.financeiro-page .form-group select,
+.financeiro-page .form-group textarea {
+  padding: 11px 14px;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--input-bg, #fff);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.financeiro-page .form-group input:focus,
+.financeiro-page .form-group select:focus,
+.financeiro-page .form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(39, 164, 106, 0.1);
+}
+
+.financeiro-page .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-light, #e0e0e0);
+}
+
 /* Período Selector */
 .periodo-selector {
   display: flex;
@@ -133,7 +202,8 @@
   color: var(--green-700);
 }
 
-.fin-kpi-content {
+.fin-kpi-content,
+.fin-kpi-info {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -543,5 +613,22 @@
     flex-direction: column;
     gap: 10px;
     align-items: flex-start;
+  }
+
+  .financeiro-page .form-container {
+    padding: 18px;
+  }
+
+  .financeiro-page .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .financeiro-page .form-group {
+    margin-bottom: 14px;
+  }
+
+  .financeiro-page .form-actions {
+    flex-direction: column-reverse;
   }
 }

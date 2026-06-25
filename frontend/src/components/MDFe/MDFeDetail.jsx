@@ -4,7 +4,6 @@ import { mdfeAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
-import DocumentosAnexos from '../Common/DocumentosAnexos';
 import '../CTe/CTe.css';
 
 function MDFeDetail() {
@@ -197,7 +196,7 @@ function MDFeDetail() {
             </div>
             <div className="detail-row">
               <span className="label">Percurso:</span>
-              <span className="value">{mdfe.percurso?.join(' → ') || '-'}</span>
+              <span className="value">{mdfe.identificacao?.percurso?.map(p => p.uf_per).join(' → ') || '-'}</span>
             </div>
           </div>
         </div>
@@ -236,11 +235,11 @@ function MDFeDetail() {
         </div>
 
         {/* Condutor */}
-        {mdfe.modal_rodoviario?.condutores && mdfe.modal_rodoviario.condutores.length > 0 && (
+        {mdfe.condutores && mdfe.condutores.length > 0 && (
           <div className="detail-card">
             <h3>Condutor</h3>
             <div className="detail-content">
-              {mdfe.modal_rodoviario.condutores.map((condutor, index) => (
+              {mdfe.condutores.map((condutor, index) => (
                 <div key={index}>
                   <div className="detail-row">
                     <span className="label">Nome:</span>
@@ -263,11 +262,11 @@ function MDFeDetail() {
             <div className="detail-content">
               <div className="detail-row">
                 <span className="label">Número Protocolo:</span>
-                <span className="value">{mdfe.protocolo.n_prot}</span>
+                <span className="value">{mdfe.protocolo.numero_protocolo}</span>
               </div>
               <div className="detail-row">
                 <span className="label">Data Autorização:</span>
-                <span className="value">{formatDate(mdfe.protocolo.dh_recbto)}</span>
+                <span className="value">{formatDate(mdfe.protocolo.data_recebimento)}</span>
               </div>
               <div className="detail-row">
                 <span className="label">Código Status:</span>
@@ -275,44 +274,49 @@ function MDFeDetail() {
               </div>
               <div className="detail-row">
                 <span className="label">Descrição:</span>
-                <span className="value">{mdfe.protocolo.x_motivo}</span>
+                <span className="value">{mdfe.protocolo.motivo_status}</span>
               </div>
             </div>
           </div>
         )}
 
         {/* Documentos Vinculados */}
-        <div className="detail-card" style={{gridColumn: '1 / -1'}}>
-          <h3>Documentos Vinculados ({mdfe.docs_vinculados_mdfe?.length || 0})</h3>
-          {mdfe.docs_vinculados_mdfe && mdfe.docs_vinculados_mdfe.length > 0 ? (
-            <div className="table-container" style={{boxShadow: 'none'}}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Chave CT-e</th>
-                    <th>Tipo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mdfe.docs_vinculados_mdfe.map((doc, index) => (
-                    <tr key={index}>
-                      <td style={{fontFamily: 'monospace', fontSize: '12px'}}>
-                        {doc.chave_cte || doc.chave}
-                      </td>
-                      <td>
-                        <span className="badge badge-info">CT-e</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
+        {(() => {
+          const docsVinculados = mdfe.municipios_descarga?.flatMap(m => m.docs_vinculados || []) || [];
+          return (
+            <div className="detail-card" style={{gridColumn: '1 / -1'}}>
+              <h3>Documentos Vinculados ({docsVinculados.length})</h3>
+              {docsVinculados.length > 0 ? (
+                <div className="table-container" style={{boxShadow: 'none'}}>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Chave</th>
+                        <th>Tipo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {docsVinculados.map((doc, index) => (
+                        <tr key={index}>
+                          <td style={{fontFamily: 'monospace', fontSize: '12px'}}>
+                            {doc.chave_documento || doc.cte_info?.chave || '-'}
+                          </td>
+                          <td>
+                            <span className="badge badge-info">{doc.tipo_doc || 'CT-e'}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
             <p style={{color: '#7f8c8d', textAlign: 'center', padding: '20px'}}>
               Nenhum documento vinculado
             </p>
           )}
-        </div>
+            </div>
+          );
+        })()}
 
         {/* Modais não-rodoviários */}
         {mdfe.modal_aereo && (
@@ -364,13 +368,6 @@ function MDFeDetail() {
           </div>
         )}
 
-        {/* Documentos Anexos */}
-        <div className="detail-card" style={{gridColumn: '1 / -1'}}>
-          <DocumentosAnexos
-            entidadeTipo="mdfe"
-            entidadeId={id}
-          />
-        </div>
       </div>
     </div>
   );
