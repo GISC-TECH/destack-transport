@@ -154,6 +154,12 @@ services:
       - postgres
     networks:
       - destack_network
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A core inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
 
   # Celery Beat (agendador de tarefas)
   celery_beat:
@@ -181,6 +187,12 @@ services:
       - postgres
     networks:
       - destack_network
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -q '[c]elery beat' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
 
 volumes:
   apps_postgres_data:
