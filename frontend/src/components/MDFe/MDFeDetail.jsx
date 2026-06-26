@@ -83,6 +83,39 @@ function MDFeDetail() {
     }
   };
 
+  const handleEncerrar = async () => {
+    if (!confirm('Deseja encerrar este MDF-e?\n\nA integração com a SEFAZ deve ser realizada externamente.')) return;
+    try {
+      setActionLoading('encerrar');
+      await mdfeAPI.encerrar(id, {
+        data_encerramento: new Date().toISOString().split('T')[0],
+        municipio_encerramento_cod: mdfe.municipio_encerramento_cod || mdfe.identificacao?.municipio_fim || '',
+        uf_encerramento: mdfe.uf_encerramento || mdfe.identificacao?.uf_fim || ''
+      });
+      toast.success('MDF-e encerrado com sucesso!');
+      loadMDFe();
+    } catch (err) {
+      toast.error('Erro ao encerrar: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCancelar = async () => {
+    const justificativa = prompt('Informe o motivo do cancelamento do MDF-e:');
+    if (!justificativa) return;
+    try {
+      setActionLoading('cancelar');
+      await mdfeAPI.cancelar(id, justificativa);
+      toast.success('MDF-e cancelado com sucesso!');
+      loadMDFe();
+    } catch (err) {
+      toast.error('Erro ao cancelar: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleString('pt-BR');
@@ -145,6 +178,24 @@ function MDFeDetail() {
             >
               {actionLoading === 'reprocessar' ? 'Processando...' : 'Reprocessar'}
             </button>
+            {!mdfe.encerrado && !mdfe.cancelamento && (
+              <button
+                className="btn-action btn-success"
+                onClick={handleEncerrar}
+                disabled={actionLoading === 'encerrar'}
+              >
+                {actionLoading === 'encerrar' ? 'Encerrando...' : 'Encerrar'}
+              </button>
+            )}
+            {!mdfe.cancelamento && (
+              <button
+                className="btn-action btn-danger"
+                onClick={handleCancelar}
+                disabled={actionLoading === 'cancelar'}
+              >
+                {actionLoading === 'cancelar' ? 'Cancelando...' : 'Cancelar'}
+              </button>
+            )}
           </div>
         </div>
       </div>
