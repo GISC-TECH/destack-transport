@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { manutencaoAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
@@ -15,6 +15,7 @@ const COLORS = ['#0d9488', '#f39c12', '#27ae60', '#C8A951', '#e74c3c'];
 
 function ManutencaoList() {
   const toast = useToast();
+  const navigate = useNavigate();
   const [manutencoes, setManutencoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,13 +27,7 @@ function ManutencaoList() {
     veiculo: ''
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadManutencoes();
-    loadGraficos();
-  }, []);
-
-  const loadManutencoes = async () => {
+  const loadManutencoes = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -47,9 +42,9 @@ function ManutencaoList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros]);
 
-  const loadGraficos = async () => {
+  const loadGraficos = useCallback(async () => {
     try {
       const data = await manutencaoAPI.painel.graficos();
       setGraficos(data);
@@ -57,7 +52,12 @@ function ManutencaoList() {
       console.error('Erro ao carregar gráficos:', err);
       setGraficos(null);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadManutencoes();
+    loadGraficos();
+  }, [loadManutencoes, loadGraficos]);
 
   const handleFiltrar = (e) => {
     e.preventDefault();
@@ -353,8 +353,8 @@ function ManutencaoList() {
         <p>Total de {manutencoes.length} manutenç{manutencoes.length !== 1 ? 'ões' : 'ão'}</p>
       </div>
 
-      {/* Tabela */}
-      <div className="table-container">
+      {/* Tabela Desktop */}
+      <div className="table-container desktop-only">
         <table className="data-table">
           <thead>
             <tr>
@@ -428,6 +428,52 @@ function ManutencaoList() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Cards Mobile */}
+      <div className="mobile-only">
+        {manutencoes.length === 0 ? (
+          <div className="empty-state">
+            <p>Nenhuma manutenção encontrada</p>
+          </div>
+        ) : (
+          <div className="mobile-cards">
+            {manutencoes.map((manutencao) => (
+              <div key={manutencao.id} className="mobile-card" onClick={() => navigate(`/manutencoes/${manutencao.id}`)}>
+                <div className="mobile-card-header">
+                  <h4>{manutencao.veiculo_info?.placa || manutencao.veiculo_placa || '-'}</h4>
+                  {getStatusBadge(manutencao.status)}
+                </div>
+                <div className="mobile-card-body">
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Tipo</span>
+                    <span className="mobile-card-value">{getTipoBadge(manutencao.tipo)}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Descrição</span>
+                    <span className="mobile-card-value">{manutencao.descricao || '-'}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Data Agendada</span>
+                    <span className="mobile-card-value">{formatDate(manutencao.data_agendada)}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Custo</span>
+                    <span className="mobile-card-value"><strong>{formatCurrency(manutencao.custo)}</strong></span>
+                  </div>
+                </div>
+                <div className="mobile-card-footer">
+                  <Link to={`/manutencoes/${manutencao.id}`} className="btn-action btn-view" title="Ver detalhes">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
