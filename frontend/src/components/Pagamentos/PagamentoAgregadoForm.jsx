@@ -51,6 +51,60 @@ function PagamentoAgregadoForm() {
   });
   const [comprovanteFile, setComprovanteFile] = useState(null);
 
+  const loadPagamento = useCallback(async () => {
+    try {
+      setLoading(true);
+      const result = await pagamentosAPI.agregados.get(id);
+      setFormData({
+        cte: result.cte_id || '',  // Use cte_id (read-only) since cte is write-only
+        cte_numero: result.cte_numero || '',
+        placa: result.placa || '',
+        condutor_nome: result.condutor_nome || '',
+        condutor_cpf: result.condutor_cpf || '',
+        valor_frete_total: result.valor_frete_total || '',
+        percentual_repasse: result.percentual_repasse || '25.00',
+        desconto: result.desconto || '0.00',
+        data_prevista: result.data_prevista || '',
+        data_pagamento: result.data_pagamento || '',
+        status: result.status || 'pendente',
+        obs: result.obs || ''
+      });
+
+      // Populate the "selected" states so the UI displays the already-selected values
+      // instead of showing empty search boxes
+      if (result.cte_numero || result.cte_id) {
+        setCteSelecionado({
+          id: result.cte_id,  // Use cte_id (read-only) since cte is write-only
+          numero_cte: result.cte_numero,
+          numero: result.cte_numero,
+          cte_chave: result.cte_chave,
+          // These may not be available from the payment API, but we show what we have
+          remetente_nome: null,
+          destinatario_nome: null,
+          valor_total: result.valor_frete_total
+        });
+      }
+
+      if (result.condutor_nome) {
+        setCondutorSelecionado({
+          nome: result.condutor_nome,
+          cpf: result.condutor_cpf
+        });
+      }
+
+      if (result.placa) {
+        setVeiculoSelecionado({
+          placa: result.placa
+        });
+      }
+    } catch (err) {
+      console.error('Erro ao carregar pagamento:', err);
+      setError('Erro ao carregar dados do pagamento.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (isEditing) {
       loadPagamento();
@@ -200,60 +254,6 @@ function PagamentoAgregadoForm() {
       placa: ''
     }));
   };
-
-  const loadPagamento = useCallback(async () => {
-    try {
-      setLoading(true);
-      const result = await pagamentosAPI.agregados.get(id);
-      setFormData({
-        cte: result.cte_id || '',  // Use cte_id (read-only) since cte is write-only
-        cte_numero: result.cte_numero || '',
-        placa: result.placa || '',
-        condutor_nome: result.condutor_nome || '',
-        condutor_cpf: result.condutor_cpf || '',
-        valor_frete_total: result.valor_frete_total || '',
-        percentual_repasse: result.percentual_repasse || '25.00',
-        desconto: result.desconto || '0.00',
-        data_prevista: result.data_prevista || '',
-        data_pagamento: result.data_pagamento || '',
-        status: result.status || 'pendente',
-        obs: result.obs || ''
-      });
-
-      // Populate the "selected" states so the UI displays the already-selected values
-      // instead of showing empty search boxes
-      if (result.cte_numero || result.cte_id) {
-        setCteSelecionado({
-          id: result.cte_id,  // Use cte_id (read-only) since cte is write-only
-          numero_cte: result.cte_numero,
-          numero: result.cte_numero,
-          cte_chave: result.cte_chave,
-          // These may not be available from the payment API, but we show what we have
-          remetente_nome: null,
-          destinatario_nome: null,
-          valor_total: result.valor_frete_total
-        });
-      }
-
-      if (result.condutor_nome) {
-        setCondutorSelecionado({
-          nome: result.condutor_nome,
-          cpf: result.condutor_cpf
-        });
-      }
-
-      if (result.placa) {
-        setVeiculoSelecionado({
-          placa: result.placa
-        });
-      }
-    } catch (err) {
-      console.error('Erro ao carregar pagamento:', err);
-      setError('Erro ao carregar dados do pagamento.');
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
