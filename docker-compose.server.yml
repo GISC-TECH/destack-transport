@@ -69,6 +69,7 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - ./logs:/app/logs
+      - ./backups:/app/backups
     expose:
       - "8000"
     depends_on:
@@ -149,6 +150,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
     volumes:
       - ./logs:/app/logs
+      - ./backups:/app/backups
     depends_on:
       - redis
       - postgres
@@ -182,6 +184,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
     volumes:
       - ./logs:/app/logs
+      - ./backups:/app/backups
     depends_on:
       - redis
       - postgres
