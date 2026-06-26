@@ -8,6 +8,7 @@ from celery import shared_task
 from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +116,7 @@ def gerar_alertas_inteligentes(self):
             criados += 1
 
     # CT-es não pagos e vencidos
-    for cte in CTeDocumento.objects.filter(pago=False, identificacao__data_emissao__lt=datetime.now() - timedelta(days=30)):
+    for cte in CTeDocumento.objects.filter(pago=False, identificacao__data_emissao__lt=timezone.now() - timedelta(days=30)):
         _, created = AlertaSistema.objects.get_or_create(
             tipo='cte_nao_pago',
             referencia=str(cte.id),
@@ -167,7 +168,7 @@ def backup_database(self):
     backup_dir = Path(settings.BASE_DIR) / "backups" / "daily"
     backup_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
     backup_path = backup_dir / f"{timestamp}.dump"
 
     db = settings.DATABASES["default"]
@@ -229,7 +230,7 @@ def backup_database(self):
 
 def _cleanup_old_backups(backup_dir, retention_days=7):
     """Remove arquivos .dump mais antigos que retention_days."""
-    cutoff = datetime.now() - timedelta(days=retention_days)
+    cutoff = timezone.now() - timedelta(days=retention_days)
     removed = 0
     for file_path in backup_dir.glob("*.dump"):
         try:
@@ -285,7 +286,7 @@ def _send_notification(subject, message):
         )
     except Exception:
         # Evita que falha no envio de e-mail quebre o backup.
-        pass
+        logger.warning("Falha ao enviar e-mail de notificacao de backup", exc_info=True)
 
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=30)

@@ -1831,12 +1831,12 @@ class ParametroSistema(models.Model):
        elif self.tipo_dado == 'date':
            try:
                return datetime.strptime(self.valor, '%Y-%m-%d').date()
-           except:
+           except (ValueError, TypeError):
                return None
        elif self.tipo_dado == 'json':
            try:
                return json.loads(self.valor)
-           except:
+           except (json.JSONDecodeError, TypeError, ValueError):
                return {}
        else:  # Assume string
            return self.valor

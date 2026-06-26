@@ -8,6 +8,7 @@ de onde a alteracao se origine (API de CT-e, API de pagamentos, Django Admin).
 from datetime import date, datetime
 from typing import Optional
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 
 from transport.models import CTeDocumento, PagamentoAgregado, PagamentoProprio
@@ -83,7 +84,7 @@ def atualizar_status_pagamento_cte(
     # Sincroniza PagamentoAgregado (OneToOne)
     try:
         pagamento = cte.pagamento_agregado
-    except Exception:
+    except ObjectDoesNotExist:
         pagamento = None
 
     if pagamento:
@@ -94,7 +95,7 @@ def atualizar_status_pagamento_cte(
     # Sincroniza PagamentoProprio (OneToOne)
     try:
         pagamento = cte.pagamento_proprio
-    except Exception:
+    except ObjectDoesNotExist:
         pagamento = None
 
     if pagamento:

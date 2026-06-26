@@ -2,6 +2,7 @@
 """Views para Ordens de Viagem (OS)."""
 
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -42,8 +43,8 @@ class OrdemViagemViewSet(viewsets.ModelViewSet):
         """Gera número sequencial se não informado (reinicia por ano)."""
         numero = serializer.validated_data.get('numero')
         if not numero:
-            from datetime import datetime
-            ano_atual = datetime.now().year
+            from django.utils import timezone
+            ano_atual = timezone.now().year
             prefixo = f"OS{ano_atual}"
             ultima = OrdemViagem.objects.filter(numero__startswith=prefixo).order_by('-numero').first()
             seq = 1
@@ -115,7 +116,7 @@ class OrdemViagemViewSet(viewsets.ModelViewSet):
             velocidade_media = 60
 
         eta_horas = distancia_restante / velocidade_media
-        eta_datetime = datetime.now() + timedelta(hours=eta_horas)
+        eta_datetime = timezone.now() + timedelta(hours=eta_horas)
 
         return Response({
             'ordem_id': ordem.id,

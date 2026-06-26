@@ -13,6 +13,7 @@ from datetime import datetime
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 from transport.models import CTeDocumento, MDFeDocumento
 
@@ -33,7 +34,7 @@ def resolver_ano_mes(instance):
     """Retorna (ano, mes) para composicao do caminho do arquivo."""
     data_referencia = getattr(instance, "data_arquivamento", None) or instance.data_upload
     if not data_referencia:
-        data_referencia = datetime.now()
+        data_referencia = timezone.now()
     return data_referencia.year, data_referencia.month
 
 

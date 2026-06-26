@@ -6,8 +6,10 @@ import traceback
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 from dateutil import parser as date_parser # pip install python-dateutil
+from django.conf import settings
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.utils import timezone
 
 from .xml_utils import safe_xmltodict_parse
 
@@ -89,6 +91,10 @@ except ImportError:
         try:
             # dateutil.parser lida com vários formatos, incluindo timezone
             dt = date_parser.parse(value)
+            if settings.USE_TZ and timezone.is_naive(dt):
+                dt = timezone.make_aware(dt, timezone.get_default_timezone())
+            elif not settings.USE_TZ and timezone.is_aware(dt):
+                dt = timezone.make_naive(dt, timezone.get_default_timezone())
             return dt
         except (ValueError, TypeError, OverflowError):
             logger.warning(f"Falha ao converter data/hora: {value}")

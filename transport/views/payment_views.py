@@ -826,10 +826,14 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                     # Cria o registro de pagamento
                     # data_prevista = último dia do mês do período
                     from datetime import date
-                    if isinstance(periodo_atual, datetime):
-                        data_prevista = date(periodo_atual.year, periodo_atual.month + 1, 1) - timedelta(days=1) if periodo_atual.month < 12 else date(periodo_atual.year, 12, 31)
+                    # periodo_atual é sempre string 'AAAA-MM' ou 'AAAA-MM-XQ'
+                    partes = periodo_atual.split('-')
+                    ano_prev = int(partes[0])
+                    mes_prev = int(partes[1])
+                    if mes_prev < 12:
+                        data_prevista = date(ano_prev, mes_prev + 1, 1) - timedelta(days=1)
                     else:
-                        data_prevista = date(periodo_atual.year, periodo_atual.month + 1, 1) - timedelta(days=1) if periodo_atual.month < 12 else date(periodo_atual.year, 12, 31)
+                        data_prevista = date(ano_prev, 12, 31)
 
                     PagamentoProprio.objects.create(
                         veiculo=veiculo,

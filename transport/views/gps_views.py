@@ -1,6 +1,7 @@
 """Views para integração com rastreamento GPS."""
 from datetime import datetime
 
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -59,6 +60,8 @@ def webhook_posicao_gps(request):
     if data_hora_str:
         try:
             data_hora = datetime.fromisoformat(data_hora_str.replace('Z', '+00:00'))
+            if timezone.is_naive(data_hora):
+                data_hora = timezone.make_aware(data_hora)
         except ValueError:
             pass
 

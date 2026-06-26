@@ -1,10 +1,11 @@
 """Testes do módulo de Contas a Receber (Faturas)."""
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -49,7 +50,7 @@ class FaturasAPITests(APITestCase):
         CTeIdentificacao.objects.create(
             cte=cte,
             numero=int(numero),
-            data_emissao=f'{date.today().year}-01-01 10:00:00',
+            data_emissao=timezone.make_aware(datetime(date.today().year, 1, 1, 10, 0, 0)),
         )
         CTePrestacaoServico.objects.create(
             cte=cte,

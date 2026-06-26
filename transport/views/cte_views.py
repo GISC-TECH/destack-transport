@@ -582,7 +582,7 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(dacte_data)
             
         except Exception as e:
-            logger.error(f"Erro ao preparar dados do DACTE: {str(e)}")
+            logger.exception("Erro ao preparar dados do DACTE: %s", e)
             return Response(
                 {"detail": "Erro ao processar dados do DACTE."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -995,13 +995,13 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 'c_orgao': c_orgao,
                 'tp_amb': 2,
                 'cnpj': cnpj_emit,
-                'dh_evento': datetime.now(),
+                'dh_evento': timezone.now(),
                 'tp_evento': '110111',
                 'n_prot_original': n_prot,
                 'x_just': motivo,
                 'c_stat': 135,
                 'x_motivo': 'Cancelamento registrado no sistema',
-                'dh_reg_evento': datetime.now(),
+                'dh_reg_evento': timezone.now(),
             }
         )
 

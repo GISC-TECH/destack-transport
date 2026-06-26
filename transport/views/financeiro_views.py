@@ -73,10 +73,18 @@ class FaturaViewSet(viewsets.ModelViewSet):
 
         data_inicio = params.get('data_inicio')
         data_fim = params.get('data_fim')
-        if data_inicio:
-            queryset = queryset.filter(data_vencimento__gte=data_inicio)
-        if data_fim:
-            queryset = queryset.filter(data_vencimento__lte=data_fim)
+        try:
+            if data_inicio:
+                data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                queryset = queryset.filter(data_vencimento__gte=data_inicio)
+            if data_fim:
+                data_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                queryset = queryset.filter(data_vencimento__lte=data_fim)
+        except ValueError:
+            return Response(
+                {"detail": "Formato de data inválido. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         vencidas = params.get('vencidas')
         if vencidas is not None:

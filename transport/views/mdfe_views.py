@@ -317,7 +317,8 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 if modelo == '57': tipo_doc = 'CT-e'
                 elif modelo == '55': tipo_doc = 'NF-e'
                 elif modelo == '67': tipo_doc = 'CT-e OS'
-            except: pass
+            except (IndexError, TypeError):
+                pass
 
             # Prepara dados básicos do documento
             item = {

@@ -105,7 +105,7 @@ class DACTEGenerator:
         try:
             value = float(value)
             return f"R$ {value:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-        except:
+        except (ValueError, TypeError):
             return 'R$ 0,00'
     
     def _generate_qrcode(self):
@@ -604,7 +604,7 @@ class DACTEGenerator:
             # Remove arquivo temporário
             try:
                 os.unlink(qr_file)
-            except:
+            except OSError:
                 pass
         
         return elements

@@ -1052,7 +1052,7 @@ def parse_cte_protocolo(cte_doc, prot_cte):
         prot_data = {
             'ambiente': to_int(safe_get(inf_prot, 'tpAmb')) or 2,  # 2 = Homologação padrão
             'versao_aplic': safe_get(inf_prot, 'verAplic') or "VERSÃO NÃO INFORMADA",
-            'data_recebimento': parse_datetime(safe_get(inf_prot, 'dhRecbto')) or datetime.now(),
+            'data_recebimento': parse_datetime(safe_get(inf_prot, 'dhRecbto')) or timezone.now(),
             'numero_protocolo': safe_get(inf_prot, 'nProt') or "PROTOCOLO NÃO INFORMADO",
             'digest_value': safe_get(inf_prot, 'digVal'),
             'codigo_status': codigo_status,

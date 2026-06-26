@@ -431,7 +431,7 @@ class BackupAPIView(viewsets.ViewSet):
                 # Define flag para FileResponse gerenciar o fechamento
                 response.file_to_stream.close_on_del = True
                 return response
-            except Exception:
+            except (IOError, OSError):
                 file_handle.close()
                 raise
         except FileNotFoundError:
@@ -603,9 +603,8 @@ class RelatorioAPIView(APIView):
                  return Response({"detail": f"Formato '{formato}' não suportado."}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            logger.warning("Erro ao gerar relatório '%s': %s", tipo, e)
-            traceback.print_exc()
-            return Response({"detail": f"Erro interno ao gerar relatório: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.exception("Erro ao gerar relatório '%s': %s", tipo, e)
+            return Response({"detail": "Erro interno ao gerar relatório."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # --- Métodos Auxiliares de Geração ---
     def _gerar_relatorio_faturamento(self, data_inicio, data_fim, filtros):

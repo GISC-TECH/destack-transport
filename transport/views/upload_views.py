@@ -122,19 +122,19 @@ def infer_event_type_from_root(root_tag_no_ns, content):
 def to_decimal(value, default=Decimal('0.00')):
     if value is None: return default
     try: return Decimal(str(value).strip().replace(',', '.'))
-    except: return default
+    except (InvalidOperation, ValueError, TypeError): return default
 
 def to_int(value, default=None):
     if value is None: return default
     try: return int(value)
-    except:
+    except (ValueError, TypeError):
         try: return int(float(value))
-        except: return default
+        except (ValueError, TypeError): return default
 
 def parse_datetime(value, default=None):
     if not value: return default
     try: return date_parser.parse(value)
-    except: return default
+    except (ValueError, TypeError, OverflowError): return default
 # --- Fim Helper Functions ---
 
 def _get_chave_from_filename(filename):

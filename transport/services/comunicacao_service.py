@@ -6,10 +6,10 @@ WhatsApp é um placeholder: quando houver gateway contratado (Twilio, Z-API,
 Evolution API, etc.), implementar a chamada real na função _enviar_whatsapp.
 """
 import logging
-from datetime import datetime
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.utils import timezone
 
 from ..models import MensagemComunicacao
 
@@ -39,7 +39,7 @@ def enviar_email(destinatario, assunto, conteudo, cliente=None, motorista=None, 
             fail_silently=False,
         )
         mensagem.status = 'enviado'
-        mensagem.enviado_em = datetime.now()
+        mensagem.enviado_em = timezone.now()
         mensagem.save(update_fields=['status', 'enviado_em'])
         return {'status': 'enviado', 'id': str(mensagem.id)}
     except Exception as exc:

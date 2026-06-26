@@ -1,3 +1,5 @@
+from django.core.exceptions import ObjectDoesNotExist
+
 from .common import *
 
 # === ModelAdmin para MDF-e ===
@@ -57,7 +59,8 @@ class MDFeDocumentoAdmin(admin.ModelAdmin):
     @admin.display(description='Placa Tração', ordering='modal_rodoviario__veiculo_tracao__placa')
     def placa_tracao(self, obj):
         try: return obj.modal_rodoviario.veiculo_tracao.placa
-        except: return '-'
+        except (AttributeError, ObjectDoesNotExist):
+            return '-'
 
     @admin.display(description='CT-es', ordering='ctes_transportados__count')
     def ctes_count(self, obj):
@@ -110,7 +113,8 @@ class MDFeDocumentoAdmin(admin.ModelAdmin):
                 link = reverse(f"admin:transport_{model_name_lower}_change", args=[related_obj.pk])
                 display_text = text if text else str(related_obj)
                 return format_html('<a href="{}" target="_blank">{}</a>', link, display_text)
-        except Exception as e: pass
+        except (AttributeError, ObjectDoesNotExist):
+            pass
         return "-"
 
     @admin.display(description='Identificação')
@@ -154,7 +158,7 @@ class MDFeDocumentoAdmin(admin.ModelAdmin):
         from datetime import datetime
         
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="mdfes_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        response['Content-Disposition'] = f'attachment; filename="mdfes_export_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
         
         writer = csv.writer(response)
         # Cabeçalho
@@ -381,7 +385,8 @@ class MDFeDocumentosVinculadosAdmin(admin.ModelAdmin):
             if modelo == '57': return 'CT-e'
             if modelo == '55': return 'NF-e'
             if modelo == '67': return 'CT-e OS'
-        except: pass
+        except (IndexError, TypeError):
+            pass
         return 'Outro'
     
     @admin.display(description='CT-e Relacionado')

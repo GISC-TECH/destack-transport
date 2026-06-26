@@ -8,6 +8,7 @@ validades em branco para o usuário completar depois.
 """
 import logging
 
+from django.db import IntegrityError
 from transport.models import Motorista
 
 logger = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ def sincronizar_motorista(nome, cpf):
             cnh=None,
             cadastro_automatico=True,
         )
-    except Exception as e:
+    except IntegrityError:
         # Corrida/condição rara: busca novamente antes de desistir.
-        logger.warning("Falha ao auto-cadastrar motorista CPF %s: %s", cpf_digits, e)
+        logger.warning("Corrida ao auto-cadastrar motorista CPF %s", cpf_digits)
         return Motorista.objects.filter(cpf=cpf_digits).first()

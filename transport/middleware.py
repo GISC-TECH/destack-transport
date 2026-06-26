@@ -25,7 +25,7 @@ class APIAuthenticationMiddleware:
                 if user and user.is_active:
                     request.user = user
                     return True
-            except Exception:
+            except (ValueError, TypeError, UnicodeDecodeError):
                 pass
         return False
 

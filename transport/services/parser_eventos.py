@@ -7,8 +7,8 @@ import traceback
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 from dateutil import parser as date_parser
-from django.db import transaction
-from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction, IntegrityError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from .xml_utils import safe_xmltodict_parse
 
@@ -200,8 +200,8 @@ def _registrar_evento_generico(doc_principal, tipo_doc, evento_info, ret_evento_
             defaults=defaults,
         )
         return obj
-    except Exception as e:
-        logger.info(f"WARN: Falha ao registrar evento genérico {tp} para {evento_info.get('ch_documento')}: {e}")
+    except (IntegrityError, ValidationError) as e:
+        logger.warning(f"WARN: Falha ao registrar evento genérico {tp} para {evento_info.get('ch_documento')}: {e}")
         return None
 
 
