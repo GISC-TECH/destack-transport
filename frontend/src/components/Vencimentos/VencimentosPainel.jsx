@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motoristasAPI, veiculosAPI } from '../../services/api';
 import Loading from '../Common/Loading';
@@ -78,12 +78,7 @@ function VencimentosPainel() {
   const [loading, setLoading] = useState(true);
   const [usingMockData, setUsingMockData] = useState(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadVencimentos();
-  }, [diasFiltro, mostrarTodos]);
-
-  const loadVencimentos = async () => {
+  const loadVencimentos = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -104,7 +99,11 @@ function VencimentosPainel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [diasFiltro, mostrarTodos]);
+
+  useEffect(() => {
+    loadVencimentos();
+  }, [loadVencimentos]);
 
   // Combinar todos os documentos vencendo
   const getAllDocumentos = () => {

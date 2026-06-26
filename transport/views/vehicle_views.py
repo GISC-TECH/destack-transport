@@ -42,7 +42,7 @@ from ..utils import csv_response
 
 class VeiculoViewSet(viewsets.ModelViewSet):
     """API para CRUD de Veículos."""
-    queryset = Veiculo.objects.all().order_by('placa')
+    queryset = Veiculo.objects.all().prefetch_related('compartimentos').order_by('placa')
     serializer_class = VeiculoSerializer
     permission_classes = [IsAuthenticated, TransportModelPermission]
 
@@ -214,7 +214,7 @@ class VeiculoViewSet(viewsets.ModelViewSet):
 
 class ManutencaoVeiculoViewSet(viewsets.ModelViewSet):
     """API para CRUD de Manutenções de Veículos."""
-    queryset = ManutencaoVeiculo.objects.all().order_by('-data_agendada', '-criado_em')
+    queryset = ManutencaoVeiculo.objects.select_related('veiculo').order_by('-data_agendada', '-criado_em')
     serializer_class = ManutencaoVeiculoSerializer
     permission_classes = [IsAuthenticated, TransportModelPermission]
 

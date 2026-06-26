@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
@@ -34,10 +34,41 @@ function VeiculosList() {
   const [showAlerts, setShowAlerts] = useState(false);
   const [vencimentos, setVencimentos] = useState([]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const loadVeiculos = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const params = Object.fromEntries(
+        Object.entries(filtros).filter(([, v]) => v !== '')
+      );
+
+      const data = await veiculosAPI.list(params);
+
+      if (data.results) {
+        setVeiculos(data.results);
+        setPagination({
+          count: data.count,
+          next: data.next,
+          previous: data.previous
+        });
+      } else if (Array.isArray(data)) {
+        setVeiculos(data);
+        setPagination({ count: data.length, next: null, previous: null });
+      } else {
+        setVeiculos([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar veículos:', err);
+      setVeiculos([]);
+      setPagination({ count: 0, next: null, previous: null });
+    } finally {
+      setLoading(false);
+    }
+  }, [filtros]);
+
   useEffect(() => {
     loadVeiculos();
-  }, [filtros]);
+  }, [loadVeiculos]);
 
   const fetchPage = async (url) => {
     try {
@@ -78,38 +109,6 @@ function VeiculosList() {
   const handleNextPage = () => {
     if (pagination.next) {
       fetchPage(pagination.next);
-    }
-  };
-
-  const loadVeiculos = async () => {
-    try {
-      setLoading(true);
-
-      const params = Object.fromEntries(
-        Object.entries(filtros).filter(([, v]) => v !== '')
-      );
-
-      const data = await veiculosAPI.list(params);
-
-      if (data.results) {
-        setVeiculos(data.results);
-        setPagination({
-          count: data.count,
-          next: data.next,
-          previous: data.previous
-        });
-      } else if (Array.isArray(data)) {
-        setVeiculos(data);
-        setPagination({ count: data.length, next: null, previous: null });
-      } else {
-        setVeiculos([]);
-      }
-    } catch (err) {
-      console.error('Erro ao carregar veículos:', err);
-      setVeiculos([]);
-      setPagination({ count: 0, next: null, previous: null });
-    } finally {
-      setLoading(false);
     }
   };
 

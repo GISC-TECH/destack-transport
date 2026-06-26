@@ -113,7 +113,11 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         data_inicio = params.get('data_inicio')
         data_fim = params.get('data_fim')
         if data_inicio:
-            queryset = queryset.filter(identificacao__dh_emi__date__gte=data_inicio)
+            try:
+                data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                queryset = queryset.filter(identificacao__dh_emi__date__gte=data_inicio_obj)
+            except ValueError:
+                logger.warning(f"Data início inválida no filtro MDF-e: {data_inicio}")
         if data_fim:
             try:
                 data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date() + timedelta(days=1)

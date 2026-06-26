@@ -26,11 +26,11 @@ services:
     image: redis:7-alpine
     container_name: destack_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_default_password}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_default_password}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -60,17 +60,17 @@ services:
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,destack.gisc.tech}
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-https://destack.gisc.tech}
       - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:-destack_prod_password}@postgres:5432/${POSTGRES_DB:-destack_db}
-      - REDIS_URL=redis://redis:6379/0
-      - REDIS_CACHE_URL=redis://redis:6379/15
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - REDIS_CACHE_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/15
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://destack.gisc.tech}
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - ./logs:/app/logs
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -143,10 +143,10 @@ services:
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-https://destack.gisc.tech}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://destack.gisc.tech}
       - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:-destack_prod_password}@postgres:5432/${POSTGRES_DB:-destack_db}
-      - REDIS_URL=redis://redis:6379/0
-      - REDIS_CACHE_URL=redis://redis:6379/15
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - REDIS_CACHE_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/15
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
     volumes:
       - ./logs:/app/logs
     depends_on:
@@ -176,10 +176,10 @@ services:
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-https://destack.gisc.tech}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://destack.gisc.tech}
       - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:-destack_prod_password}@postgres:5432/${POSTGRES_DB:-destack_db}
-      - REDIS_URL=redis://redis:6379/0
-      - REDIS_CACHE_URL=redis://redis:6379/15
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - REDIS_CACHE_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/15
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
     volumes:
       - ./logs:/app/logs
     depends_on:

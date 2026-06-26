@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
@@ -41,14 +41,7 @@ function VeiculoForm() {
     compartimentos: []
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (isEdit) {
-      loadVeiculo();
-    }
-  }, [id]);
-
-  const loadVeiculo = async () => {
+  const loadVeiculo = useCallback(async () => {
     try {
       setLoading(true);
       const data = await veiculosAPI.get(id);
@@ -70,7 +63,13 @@ function VeiculoForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEdit) {
+      loadVeiculo();
+    }
+  }, [isEdit, loadVeiculo]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
