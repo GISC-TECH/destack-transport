@@ -397,12 +397,12 @@ function PagamentoProprioForm() {
       <form onSubmit={handleSubmit} className="form-container">
         <div className="form-section">
           <h3>Vincular CT-e (Opcional)</h3>
-          <p className="form-hint" style={{ marginBottom: '15px', color: '#666' }}>
+          <p className="form-hint mb-15 text-muted">
             Digite o numero do CT-e para buscar e vincular automaticamente
           </p>
 
           {!cteSelecionado ? (
-            <div className="form-group" style={{ position: 'relative' }}>
+            <div className="form-group search-field-wrapper">
               <label>Buscar CT-e</label>
               <input
                 type="text"
@@ -417,40 +417,20 @@ function PagamentoProprioForm() {
 
               {/* Lista de resultados da busca */}
               {mostrarResultados && resultadosBusca.length > 0 && (
-                <div className="cte-search-results" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  background: '#fff',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  zIndex: 1000,
-                  maxHeight: '300px',
-                  overflowY: 'auto'
-                }}>
+                <div className="search-results-dropdown">
                   {resultadosBusca.map(cte => (
                     <div
                       key={cte.id}
-                      className="cte-search-item"
+                      className="search-result-card"
                       onClick={() => handleSelecionarCte(cte)}
-                      style={{
-                        padding: '12px 15px',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #eee',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
-                      onMouseLeave={(e) => e.target.style.background = '#fff'}
                     >
-                      <div style={{ fontWeight: '600', color: '#333' }}>
+                      <div className="result-title">
                         CT-e #{cte.numero_cte || cte.numero}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+                      <div className="result-subtitle">
                         {cte.remetente_nome || 'N/I'} → {cte.destinatario_nome || 'N/I'}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#27ae60', fontWeight: '500', marginTop: '2px' }}>
+                      <div className="result-value">
                         R$ {(cte.valor_total || cte.valor_prestacao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
@@ -459,20 +439,14 @@ function PagamentoProprioForm() {
               )}
 
               {mostrarResultados && resultadosBusca.length === 0 && buscaCte.length >= 2 && !loadingBusca && (
-                <small className="form-hint" style={{ color: '#e74c3c' }}>
+                <small className="form-hint text-danger">
                   Nenhum CT-e encontrado com esse numero
                 </small>
               )}
             </div>
           ) : (
             /* CT-e selecionado - exibe card com detalhes */
-            <div className="cte-selecionado" style={{
-              background: '#f8f9fa',
-              border: '1px solid #27ae60',
-              borderRadius: '8px',
-              padding: '15px',
-              position: 'relative'
-            }}>
+            <div className="selected-card cte-selected">
               <button
                 type="button"
                 onClick={handleRemoverCte}
@@ -481,27 +455,18 @@ function PagamentoProprioForm() {
               >
                 ×
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <span style={{
-                  background: '#27ae60',
-                  color: '#fff',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  fontWeight: '600'
-                }}>
-                  CT-e VINCULADO
-                </span>
-              </div>
-              <div style={{ fontWeight: '600', fontSize: '16px', color: '#333' }}>
+              <span className="selected-badge">
+                CT-e VINCULADO
+              </span>
+              <div className="selected-title">
                 CT-e #{cteSelecionado.numero_cte || cteSelecionado.numero}
               </div>
-              <div style={{ color: '#666', marginTop: '8px', fontSize: '14px' }}>
+              <div className="selected-subtitle">
                 <div><strong>Remetente:</strong> {cteSelecionado.remetente_nome || 'N/I'}</div>
                 <div><strong>Destinatario:</strong> {cteSelecionado.destinatario_nome || 'N/I'}</div>
-                <div style={{ marginTop: '8px', color: '#27ae60', fontWeight: '600', fontSize: '16px' }}>
-                  Valor: R$ {(cteSelecionado.valor_total || cteSelecionado.valor_prestacao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
+              </div>
+              <div className="selected-value">
+                Valor: R$ {(cteSelecionado.valor_total || cteSelecionado.valor_prestacao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
             </div>
           )}
@@ -512,9 +477,9 @@ function PagamentoProprioForm() {
 
           {/* Busca de Condutor por Nome */}
           {!condutorSelecionado ? (
-            <div className="form-group" style={{ position: 'relative', marginBottom: '20px' }}>
+            <div className="form-group search-field-wrapper">
               <label>Buscar Nome do Condutor</label>
-              <small className="form-hint" style={{ display: 'block', marginBottom: '8px', color: '#666' }}>
+              <small className="form-hint mb-10 text-muted">
                 Digite o nome do motorista para buscar e vincular automaticamente
               </small>
               <input
@@ -530,43 +495,23 @@ function PagamentoProprioForm() {
 
               {/* Lista de resultados da busca de condutor */}
               {mostrarResultadosCondutor && resultadosCondutor.length > 0 && (
-                <div className="condutor-search-results" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  background: '#fff',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  zIndex: 1000,
-                  maxHeight: '300px',
-                  overflowY: 'auto'
-                }}>
+                <div className="search-results-dropdown">
                   {resultadosCondutor.map((motorista, index) => (
                     <div
                       key={`motorista-${motorista.id}-${index}`}
-                      className="condutor-search-item"
+                      className="search-result-card"
                       onClick={() => handleSelecionarCondutor(motorista)}
-                      style={{
-                        padding: '12px 15px',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #eee',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
                     >
-                      <div style={{ fontWeight: '600', color: '#333' }}>
+                      <div className="result-title">
                         {motorista.nome}
                       </div>
                       {motorista.cpf && (
-                        <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                        <div className="result-subtitle">
                           CPF: {motorista.cpf_formatado || motorista.cpf}
                         </div>
                       )}
                       {motorista.categoria_cnh && (
-                        <div style={{ fontSize: '12px', color: 'var(--primary-color)', marginTop: '2px' }}>
+                        <div className="result-meta text-success">
                           CNH: {motorista.categoria_cnh}
                         </div>
                       )}
@@ -576,21 +521,14 @@ function PagamentoProprioForm() {
               )}
 
               {mostrarResultadosCondutor && resultadosCondutor.length === 0 && buscaCondutor.length >= 2 && !loadingCondutor && (
-                <small className="form-hint" style={{ color: '#e74c3c' }}>
+                <small className="form-hint text-danger">
                   Nenhum motorista encontrado
                 </small>
               )}
             </div>
           ) : (
             /* Condutor selecionado - exibe card com detalhes */
-            <div className="condutor-selecionado" style={{
-              background: '#f8f9fa',
-              border: '1px solid var(--primary-color)',
-              borderRadius: '8px',
-              padding: '15px',
-              position: 'relative',
-              marginBottom: '20px'
-            }}>
+            <div className="selected-card condutor-selected">
               <button
                 type="button"
                 onClick={handleRemoverCondutor}
@@ -599,28 +537,19 @@ function PagamentoProprioForm() {
               >
                 ×
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <span style={{
-                  background: 'var(--primary-color)',
-                  color: '#fff',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  fontWeight: '600'
-                }}>
-                  MOTORISTA VINCULADO
-                </span>
-              </div>
-              <div style={{ fontWeight: '600', fontSize: '16px', color: '#333' }}>
+              <span className="selected-badge">
+                MOTORISTA VINCULADO
+              </span>
+              <div className="selected-title">
                 {condutorSelecionado.nome}
               </div>
               {condutorSelecionado.cpf && (
-                <div style={{ color: '#666', marginTop: '4px', fontSize: '14px' }}>
+                <div className="selected-subtitle">
                   CPF: {condutorSelecionado.cpf_formatado || condutorSelecionado.cpf}
                 </div>
               )}
               {condutorSelecionado.categoria_cnh && (
-                <div style={{ color: 'var(--primary-color)', marginTop: '4px', fontSize: '14px' }}>
+                <div className="selected-meta text-success">
                   CNH: {condutorSelecionado.categoria_cnh}
                 </div>
               )}
@@ -629,9 +558,9 @@ function PagamentoProprioForm() {
 
           {/* Busca de Veículo por Placa */}
           {!veiculoSelecionado ? (
-            <div className="form-group" style={{ position: 'relative', marginBottom: '20px' }}>
+            <div className="form-group search-field-wrapper">
               <label>Placa do Veículo *</label>
-              <small className="form-hint" style={{ display: 'block', marginBottom: '8px', color: '#666' }}>
+              <small className="form-hint mb-10 text-muted">
                 Digite a placa do veiculo para buscar e vincular automaticamente
               </small>
               <input
@@ -640,7 +569,7 @@ function PagamentoProprioForm() {
                 onChange={(e) => setBuscaVeiculo(e.target.value.toUpperCase())}
                 placeholder="Digite a placa do veículo..."
                 autoComplete="off"
-                style={{ textTransform: 'uppercase' }}
+                className="input-uppercase"
               />
               {loadingVeiculo && (
                 <small className="form-hint">Buscando...</small>
@@ -648,41 +577,21 @@ function PagamentoProprioForm() {
 
               {/* Lista de resultados da busca de veiculo */}
               {mostrarResultadosVeiculo && resultadosVeiculo.length > 0 && (
-                <div className="veiculo-search-results" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  background: '#fff',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  zIndex: 1000,
-                  maxHeight: '300px',
-                  overflowY: 'auto'
-                }}>
+                <div className="search-results-dropdown">
                   {resultadosVeiculo.map((veiculo, index) => (
                     <div
                       key={`veiculo-${veiculo.id}-${index}`}
-                      className="veiculo-search-item"
+                      className="search-result-card"
                       onClick={() => handleSelecionarVeiculo(veiculo)}
-                      style={{
-                        padding: '12px 15px',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #eee',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
                     >
-                      <div style={{ fontWeight: '700', fontSize: '16px', color: '#333' }}>
+                      <div className="result-title">
                         {veiculo.placa}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+                      <div className="result-subtitle">
                         {veiculo.tipo_carroceria || veiculo.tipo_rodado || 'Tipo N/I'}
                       </div>
                       {veiculo.proprietario_nome && (
-                        <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>
+                        <div className="result-meta">
                           Proprietario: {veiculo.proprietario_nome}
                         </div>
                       )}
@@ -692,21 +601,14 @@ function PagamentoProprioForm() {
               )}
 
               {mostrarResultadosVeiculo && resultadosVeiculo.length === 0 && buscaVeiculo.length >= 2 && !loadingVeiculo && (
-                <small className="form-hint" style={{ color: '#e74c3c' }}>
+                <small className="form-hint text-danger">
                   Nenhum veiculo proprio encontrado com essa placa
                 </small>
               )}
             </div>
           ) : (
             /* Veículo selecionado - exibe card com detalhes */
-            <div className="veiculo-selecionado" style={{
-              background: '#f8f9fa',
-              border: '1px solid #e67e22',
-              borderRadius: '8px',
-              padding: '15px',
-              position: 'relative',
-              marginBottom: '20px'
-            }}>
+            <div className="selected-card veiculo-selected">
               <button
                 type="button"
                 onClick={handleRemoverVeiculo}
@@ -715,26 +617,17 @@ function PagamentoProprioForm() {
               >
                 ×
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <span style={{
-                  background: '#e67e22',
-                  color: '#fff',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  fontWeight: '600'
-                }}>
-                  VEICULO VINCULADO
-                </span>
-              </div>
-              <div style={{ fontWeight: '700', fontSize: '20px', color: '#333' }}>
+              <span className="selected-badge">
+                VEICULO VINCULADO
+              </span>
+              <div className="selected-title">
                 {veiculoSelecionado.placa}
               </div>
-              <div style={{ color: '#666', marginTop: '6px', fontSize: '14px' }}>
+              <div className="selected-subtitle">
                 {veiculoSelecionado.modelo || 'Modelo N/I'} {veiculoSelecionado.marca ? `- ${veiculoSelecionado.marca}` : ''}
               </div>
               {veiculoSelecionado.proprietario_nome && (
-                <div style={{ color: '#888', marginTop: '4px', fontSize: '13px' }}>
+                <div className="selected-meta">
                   Proprietario: {veiculoSelecionado.proprietario_nome}
                 </div>
               )}
@@ -770,10 +663,10 @@ function PagamentoProprioForm() {
                 placeholder="Digite a KM para calcular o valor"
               />
               {calculandoFaixa && (
-                <small className="form-hint" style={{ color: 'var(--primary-color)' }}>Buscando faixa...</small>
+                <small className="form-hint text-success">Buscando faixa...</small>
               )}
               {faixaKmInfo && (
-                <small className="form-hint" style={{ color: '#27ae60' }}>
+                <small className="form-hint text-success">
                   Faixa: {faixaKmInfo.min_km} - {faixaKmInfo.max_km || '+'} km = R$ {faixaKmInfo.valor_pago}
                 </small>
               )}
@@ -892,10 +785,10 @@ function PagamentoProprioForm() {
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
                 onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
-                style={{ padding: '8px' }}
+                className="file-input"
               />
               {comprovanteFile && (
-                <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                <small className="form-hint text-muted">
                   Arquivo selecionado: {comprovanteFile.name}
                 </small>
               )}

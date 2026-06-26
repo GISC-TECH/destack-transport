@@ -371,7 +371,7 @@ function CIOTManager() {
             ))}
           </select>
         </div>
-        <div className="form-group" style={{ flex: 1 }}>
+        <div className="form-group filter-search">
           <label>Buscar</label>
           <input
             type="text"
@@ -387,49 +387,97 @@ function CIOTManager() {
         {filteredCiots.length === 0 ? (
           <p className="empty-text">Nenhum CIOT encontrado.</p>
         ) : (
-          <div className="table-responsive">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Descrição</th>
-                  <th>Contratante</th>
-                  <th>Contratado</th>
-                  <th>Origem</th>
-                  <th>Destino</th>
-                  <th>Validade</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCiots.map(item => (
-                  <tr key={item.id}>
-                    <td><strong>{item.codigo}</strong></td>
-                    <td>{item.descricao || '-'}</td>
-                    <td>{item.cliente_nome || '-'}</td>
-                    <td>{item.motorista_nome || '-'}</td>
-                    <td>{item.origem_cidade ? `${item.origem_cidade}/${item.origem_uf}` : '-'}</td>
-                    <td>{item.destino_cidade ? `${item.destino_cidade}/${item.destino_uf}` : '-'}</td>
-                    <td>{item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '-'}</td>
-                    <td><span className={`status-badge ${getStatusClass(item.status)}`}>{item.status_display}</span></td>
-                    <td>
-                      <div className="action-buttons">
-                        <button className="btn-icon" onClick={() => handleEdit(item)} title="Editar">✏️</button>
-                        {item.status === 'ativo' && (
-                          <button className="btn-icon" onClick={() => handleUsar(item.id)} title="Marcar como usado">✓</button>
-                        )}
-                        {item.status !== 'cancelado' && (
-                          <button className="btn-icon" onClick={() => handleCancelar(item.id)} title="Cancelar">🚫</button>
-                        )}
-                        <button className="btn-icon danger" onClick={() => handleDelete(item.id)} title="Excluir">🗑️</button>
-                      </div>
-                    </td>
+          <>
+            <div className="table-responsive desktop-only">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Descrição</th>
+                    <th>Contratante</th>
+                    <th>Contratado</th>
+                    <th>Origem</th>
+                    <th>Destino</th>
+                    <th>Validade</th>
+                    <th>Status</th>
+                    <th>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredCiots.map(item => (
+                    <tr key={item.id}>
+                      <td><strong>{item.codigo}</strong></td>
+                      <td>{item.descricao || '-'}</td>
+                      <td>{item.cliente_nome || '-'}</td>
+                      <td>{item.motorista_nome || '-'}</td>
+                      <td>{item.origem_cidade ? `${item.origem_cidade}/${item.origem_uf}` : '-'}</td>
+                      <td>{item.destino_cidade ? `${item.destino_cidade}/${item.destino_uf}` : '-'}</td>
+                      <td>{item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '-'}</td>
+                      <td><span className={`status-badge ${getStatusClass(item.status)}`}>{item.status_display}</span></td>
+                      <td>
+                        <div className="action-buttons">
+                          <button className="btn-icon" onClick={() => handleEdit(item)} title="Editar">✏️</button>
+                          {item.status === 'ativo' && (
+                            <button className="btn-icon" onClick={() => handleUsar(item.id)} title="Marcar como usado">✓</button>
+                          )}
+                          {item.status !== 'cancelado' && (
+                            <button className="btn-icon" onClick={() => handleCancelar(item.id)} title="Cancelar">🚫</button>
+                          )}
+                          <button className="btn-icon danger" onClick={() => handleDelete(item.id)} title="Excluir">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="ciot-mobile-cards mobile-only">
+              {filteredCiots.map(item => (
+                <div key={item.id} className="ciot-mobile-card">
+                  <div className="ciot-mobile-card-header">
+                    <div className="ciot-mobile-card-title">
+                      <span className="ciot-mobile-card-primary">{item.codigo}</span>
+                      <span className="ciot-mobile-card-secondary">{item.descricao || 'Sem descrição'}</span>
+                    </div>
+                    <span className={`status-badge ${getStatusClass(item.status)}`}>{item.status_display}</span>
+                  </div>
+                  <div className="ciot-mobile-card-body">
+                    <div className="ciot-mobile-card-row">
+                      <span className="ciot-mobile-card-label">Contratante</span>
+                      <span className="ciot-mobile-card-value">{item.cliente_nome || '-'}</span>
+                    </div>
+                    <div className="ciot-mobile-card-row">
+                      <span className="ciot-mobile-card-label">Contratado</span>
+                      <span className="ciot-mobile-card-value">{item.motorista_nome || '-'}</span>
+                    </div>
+                    <div className="ciot-mobile-card-row">
+                      <span className="ciot-mobile-card-label">Origem</span>
+                      <span className="ciot-mobile-card-value">{item.origem_cidade ? `${item.origem_cidade}/${item.origem_uf}` : '-'}</span>
+                    </div>
+                    <div className="ciot-mobile-card-row">
+                      <span className="ciot-mobile-card-label">Destino</span>
+                      <span className="ciot-mobile-card-value">{item.destino_cidade ? `${item.destino_cidade}/${item.destino_uf}` : '-'}</span>
+                    </div>
+                    <div className="ciot-mobile-card-row">
+                      <span className="ciot-mobile-card-label">Validade</span>
+                      <span className="ciot-mobile-card-value">{item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '-'}</span>
+                    </div>
+                  </div>
+                  <div className="ciot-mobile-card-footer">
+                    <button className="btn-icon" onClick={() => handleEdit(item)} title="Editar">✏️</button>
+                    {item.status === 'ativo' && (
+                      <button className="btn-icon" onClick={() => handleUsar(item.id)} title="Marcar como usado">✓</button>
+                    )}
+                    {item.status !== 'cancelado' && (
+                      <button className="btn-icon" onClick={() => handleCancelar(item.id)} title="Cancelar">🚫</button>
+                    )}
+                    <button className="btn-icon danger" onClick={() => handleDelete(item.id)} title="Excluir">🗑️</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

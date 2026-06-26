@@ -233,6 +233,13 @@
   line-height: 1.5;
 }
 
+.modal-info {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
 .modal-body .form-group {
   margin-bottom: 18px;
 }
@@ -897,6 +904,165 @@
 
 .pagamentos-skeleton {
   margin-bottom: 20px;
+}
+
+/* =========================
+   SEARCH / SELECTION
+   ========================= */
+
+/* Reutiliza .search-field-wrapper, .search-results-dropdown e .search-result-card do App.css.
+   Abaixo estão estilos específicos dos componentes de pagamento. */
+
+.search-result-card .result-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.search-result-card .result-value {
+  font-size: 13px;
+  color: var(--success-color);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.search-result-card.result-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #fff5f5;
+}
+
+.search-result-card.result-disabled:hover,
+.search-result-card.result-disabled:focus {
+  background: #fff5f5;
+}
+
+.search-result-card.result-disabled .result-title {
+  color: var(--text-muted);
+}
+
+.search-result-card.result-disabled .result-value {
+  color: var(--text-muted);
+}
+
+.search-result-card .result-tag {
+  font-size: 11px;
+  background: var(--danger-color);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Selected cards - variante vertical usada nos formulários de pagamento */
+.selected-card {
+  position: relative;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--green-100);
+  border: 1px solid var(--green-200);
+  margin-bottom: 20px;
+}
+
+.selected-card.cte-selected {
+  background: #f0fdf4;
+  border-color: #27ae60;
+}
+
+.selected-card.condutor-selected {
+  background: var(--green-100);
+  border-color: var(--green-200);
+}
+
+.selected-card.veiculo-selected {
+  background: #fff7ed;
+  border-color: #e67e22;
+}
+
+.selected-card .selected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.selected-card.cte-selected .selected-badge {
+  background: #27ae60;
+}
+
+.selected-card.condutor-selected .selected-badge {
+  background: var(--primary-color);
+}
+
+.selected-card.veiculo-selected .selected-badge {
+  background: #e67e22;
+}
+
+.selected-card .selected-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.selected-card .selected-subtitle {
+  color: var(--text-secondary);
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.selected-card .selected-meta {
+  color: var(--text-secondary);
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.selected-card .selected-value {
+  color: var(--success-color);
+  font-weight: 600;
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+/* Pequenos ajustes responsivos para os cards de seleção */
+@media (max-width: 480px) {
+  .selected-card {
+    padding: 14px;
+  }
+
+  .selected-card .selected-title {
+    font-size: 15px;
+  }
+
+  .selected-card .selected-subtitle,
+  .selected-card .selected-meta {
+    font-size: 13px;
+  }
+}
+
+/* Inputs auxiliares */
+.input-uppercase {
+  text-transform: uppercase;
+}
+
+.file-input {
+  width: 100%;
+  padding: 8px;
+}
+
+/* Link de comprovante nos cards mobile */
+.comprovante-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--success-color);
+}
+
+.comprovante-link:hover {
+  color: var(--primary-dark);
 }
 
 /* =========================

@@ -505,10 +505,9 @@ function PagamentosList() {
         </svg>
       </button>
       <button
-        className="btn-action"
+        className="btn-action btn-convert"
         onClick={() => handleAbrirConverter(pagamento)}
         title={activeTab === 'agregados' ? 'Converter para Próprio' : 'Converter para Agregado'}
-        style={{ color: '#6366f1' }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="17 1 21 5 17 9"></polyline>
@@ -710,7 +709,7 @@ function PagamentosList() {
                     placeholder="Ex: 25, 30, 35..."
                     required
                   />
-                  <small style={{ color: '#666', fontSize: '12px' }}>Informe o percentual a ser aplicado sobre o valor do frete (0-100%)</small>
+                  <small className="form-hint text-muted">Informe o percentual a ser aplicado sobre o valor do frete (0-100%)</small>
                 </div>
               )}
 
@@ -752,7 +751,7 @@ function PagamentosList() {
               <p className="modal-description">
                 Confirmar baixa do pagamento:
               </p>
-              <p style={{ fontWeight: '600', marginBottom: '1rem', color: '#333' }}>
+              <p className="modal-info">
                 {modalBaixa.info}
               </p>
 
@@ -763,21 +762,19 @@ function PagamentosList() {
                   value={dataBaixa}
                   onChange={(e) => setDataBaixa(e.target.value)}
                   className="input-filter"
-                  style={{ width: '100%' }}
                 />
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group mt-20">
                 <label>Comprovante (opcional)</label>
                 <input
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
                   onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
-                  className="input-filter"
-                  style={{ width: '100%', padding: '8px' }}
+                  className="input-filter file-input"
                 />
                 {comprovanteFile && (
-                  <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                  <small className="form-hint text-muted">
                     Arquivo selecionado: {comprovanteFile.name}
                   </small>
                 )}
@@ -826,7 +823,7 @@ function PagamentosList() {
                   ? 'Converter este pagamento de Agregado para Próprio. O registro será movido para a lista de pagamentos próprios.'
                   : 'Converter este pagamento de Próprio para Agregado. É necessário informar um CT-e para associar.'}
               </p>
-              <p style={{ fontWeight: '600', marginBottom: '1rem', color: '#333', fontSize: '0.9rem' }}>
+              <p className="modal-info">
                 {modalConverter.info}
               </p>
 
@@ -839,9 +836,8 @@ function PagamentosList() {
                     onChange={(e) => setDadosConversao({...dadosConversao, periodo: e.target.value})}
                     className="input-filter"
                     placeholder="2025-01"
-                    style={{ width: '100%' }}
                   />
-                  <small style={{ color: '#666', fontSize: '0.8rem' }}>
+                  <small className="form-hint text-muted">
                     Período para agrupar no pagamento próprio
                   </small>
                 </div>
@@ -855,7 +851,6 @@ function PagamentosList() {
                       onChange={(e) => setDadosConversao({...dadosConversao, cte_id: e.target.value})}
                       className="input-filter"
                       placeholder="ID do CT-e (obrigatório)"
-                      style={{ width: '100%' }}
                     />
                   </div>
                   <div className="form-row">
@@ -867,7 +862,6 @@ function PagamentosList() {
                         onChange={(e) => setDadosConversao({...dadosConversao, condutor_nome: e.target.value})}
                         className="input-filter"
                         placeholder="Nome do condutor"
-                        style={{ width: '100%' }}
                       />
                     </div>
                     <div className="form-group">
@@ -878,7 +872,6 @@ function PagamentosList() {
                         onChange={(e) => setDadosConversao({...dadosConversao, condutor_cpf: e.target.value})}
                         className="input-filter"
                         placeholder="Apenas números"
-                        style={{ width: '100%' }}
                       />
                     </div>
                   </div>
@@ -892,7 +885,6 @@ function PagamentosList() {
                         className="input-filter"
                         min="0"
                         max="100"
-                        style={{ width: '100%' }}
                       />
                     </div>
                     <div className="form-group">
@@ -902,7 +894,6 @@ function PagamentosList() {
                         value={dadosConversao.data_prevista}
                         onChange={(e) => setDadosConversao({...dadosConversao, data_prevista: e.target.value})}
                         className="input-filter"
-                        style={{ width: '100%' }}
                       />
                     </div>
                   </div>
@@ -943,10 +934,10 @@ function PagamentosList() {
               </button>
             </div>
             <div className="modal-body">
-              <p className="modal-description" style={{ color: '#dc3545' }}>
+              <p className="modal-description text-danger">
                 Tem certeza que deseja excluir este pagamento? Esta acao nao pode ser desfeita.
               </p>
-              <p style={{ fontWeight: '600', marginBottom: '1rem', color: '#333', fontSize: '0.9rem' }}>
+              <p className="modal-info">
                 {modalExcluir.info}
               </p>
             </div>
@@ -959,10 +950,9 @@ function PagamentosList() {
                 Cancelar
               </button>
               <button
-                className="btn-primary"
+                className="btn-danger"
                 onClick={handleConfirmarExcluir}
                 disabled={excluindoPagamento}
-                style={{ backgroundColor: '#dc3545', borderColor: '#dc3545' }}
               >
                 {excluindoPagamento ? 'Excluindo...' : 'Confirmar Exclusao'}
               </button>
@@ -1026,7 +1016,6 @@ function PagamentosList() {
               }
             }}
             className="input-filter"
-            style={{ minWidth: '250px' }}
           />
           <button
             type="button"
@@ -1035,7 +1024,6 @@ function PagamentosList() {
               loadPagamentos(null, 1);
             }}
             className="btn-secondary"
-            style={{ padding: '8px 16px' }}
           >
             Buscar
           </button>
@@ -1129,7 +1117,7 @@ function PagamentosList() {
                       <td>{pagamento.condutor_nome || '-'}</td>
                       <td>{pagamento.placa || '-'}</td>
                       <td>{formatDate(pagamento.data_prevista)}</td>
-                      <td className="text-right" style={{ color: pagamento.desconto > 0 ? '#e74c3c' : '#999' }}>
+                      <td className={`text-right ${pagamento.desconto > 0 ? 'text-danger' : 'text-muted'}`}>
                         {pagamento.desconto > 0 ? `-${formatCurrency(pagamento.desconto)}` : '-'}
                       </td>
                       <td className="text-right">
@@ -1141,9 +1129,8 @@ function PagamentosList() {
                             href={pagamento.comprovante}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="btn-action"
+                            className="comprovante-link"
                             title="Ver Comprovante"
-                            style={{ color: '#27ae60', display: 'inline-flex' }}
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1153,7 +1140,7 @@ function PagamentosList() {
                             </svg>
                           </a>
                         ) : (
-                          <span style={{ color: '#999', fontSize: '12px' }}>-</span>
+                          <span className="text-muted">-</span>
                         )}
                       </td>
                       <td>{getStatusBadge(pagamento.status)}</td>
@@ -1177,9 +1164,8 @@ function PagamentosList() {
                             href={pagamento.comprovante}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="btn-action"
+                            className="comprovante-link"
                             title="Ver Comprovante"
-                            style={{ color: '#27ae60', display: 'inline-flex' }}
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1189,7 +1175,7 @@ function PagamentosList() {
                             </svg>
                           </a>
                         ) : (
-                          <span style={{ color: '#999', fontSize: '12px' }}>-</span>
+                          <span className="text-muted">-</span>
                         )}
                       </td>
                       <td>{getStatusBadge(pagamento.status)}</td>
@@ -1226,7 +1212,7 @@ function PagamentosList() {
                   <>
                     <div className="mobile-card-row">
                       <span className="mobile-card-label">Desconto</span>
-                      <span className="mobile-card-value" style={{ color: pagamento.desconto > 0 ? '#e74c3c' : '#999' }}>
+                      <span className={`mobile-card-value ${pagamento.desconto > 0 ? 'text-danger' : 'text-muted'}`}>
                         {pagamento.desconto > 0 ? `-${formatCurrency(pagamento.desconto)}` : '-'}
                       </span>
                     </div>
@@ -1254,9 +1240,8 @@ function PagamentosList() {
                       href={pagamento.comprovante}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-action"
+                      className="comprovante-link"
                       title="Ver Comprovante"
-                      style={{ color: '#27ae60', display: 'inline-flex' }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1266,7 +1251,7 @@ function PagamentosList() {
                       </svg>
                     </a>
                   ) : (
-                    <span style={{ color: '#999', fontSize: '12px' }}>-</span>
+                    <span className="text-muted">-</span>
                   )}
                 </div>
               </div>

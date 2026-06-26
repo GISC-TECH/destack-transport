@@ -214,36 +214,26 @@ function ClienteForm() {
           <div className="form-row">
             <div className="form-group">
               <label>CNPJ *</label>
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div className="cnpj-input-group">
                 <input
                   type="text"
                   name="cnpj"
+                  className="cnpj-input"
                   value={formData.cnpj}
                   onChange={(e) => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})}
                   required
                   placeholder="00.000.000/0000-00"
-                  style={{ flex: 1 }}
                 />
                 <button
                   type="button"
+                  className={`btn-cnpj ${buscandoCnpj ? 'loading' : ''}`}
                   onClick={buscarCnpj}
                   disabled={buscandoCnpj || formData.cnpj.replace(/\D/g, '').length !== 14}
-                  style={{
-                    padding: '10px 20px',
-                    background: buscandoCnpj ? '#95a5a6' : 'var(--primary-color)',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: buscandoCnpj ? 'wait' : 'pointer',
-                    fontWeight: '600',
-                    whiteSpace: 'nowrap',
-                    minWidth: '120px'
-                  }}
                 >
                   {buscandoCnpj ? 'Buscando...' : 'Buscar CNPJ'}
                 </button>
               </div>
-              <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+              <small className="field-help">
                 Digite o CNPJ e clique em "Buscar CNPJ" para preencher automaticamente
               </small>
             </div>
@@ -258,7 +248,7 @@ function ClienteForm() {
                 placeholder="Isento ou número"
                 maxLength={20}
               />
-              <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+              <small className="field-help muted">
                 A IE não está disponível na consulta CNPJ (registro estadual)
               </small>
             </div>
@@ -321,7 +311,7 @@ function ClienteForm() {
           <h3>Endereço</h3>
 
           <div className="form-row">
-            <div className="form-group" style={{ maxWidth: '150px' }}>
+            <div className="form-group form-group-cep">
               <label>CEP</label>
               <input
                 type="text"
@@ -333,7 +323,7 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group" style={{ flex: 2 }}>
+            <div className="form-group form-group-logradouro">
               <label>Logradouro</label>
               <input
                 type="text"
@@ -345,7 +335,7 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group" style={{ maxWidth: '100px' }}>
+            <div className="form-group form-group-numero">
               <label>Número</label>
               <input
                 type="text"
@@ -383,7 +373,7 @@ function ClienteForm() {
           </div>
 
           <div className="form-row">
-            <div className="form-group" style={{ flex: 2 }}>
+            <div className="form-group form-group-cidade">
               <label>Cidade</label>
               <input
                 type="text"
@@ -394,7 +384,7 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group" style={{ maxWidth: '100px' }}>
+            <div className="form-group form-group-uf">
               <label>UF</label>
               <select
                 name="estado"

@@ -461,7 +461,7 @@ function CTeDetail() {
             <h3>Cartas de Correção</h3>
             <div className="detail-content">
               {cte.cartas_correcao.map((c, i) => (
-                <div key={i} style={{ marginBottom: 8 }}>
+                <div key={i} className="cartas-correcao-item">
                   <div className="detail-row"><span className="label">Seq. {c.sequencia_evento}:</span><span className="value">{formatDate(c.data_evento)} · prot. {c.protocolo || '-'}</span></div>
                   {(c.correcoes || []).map((cor, j) => (
                     <div className="detail-row" key={j}><span className="label">{cor.grupo}/{cor.campo}:</span><span className="value">{cor.valor}</span></div>
@@ -474,7 +474,7 @@ function CTeDetail() {
 
         {/* Linha do tempo de eventos */}
         {cte.eventos?.length > 0 && (
-          <div className="detail-card" style={{gridColumn: '1 / -1'}}>
+          <div className="detail-card detail-card-full">
             <h3>Eventos</h3>
             <div className="detail-content">
               {cte.eventos.map((e, i) => (
@@ -491,7 +491,7 @@ function CTeDetail() {
         )}
 
         {/* Documentos Anexos */}
-        <div className="detail-card" style={{gridColumn: '1 / -1'}}>
+        <div className="detail-card detail-card-full">
           <DocumentosAnexos
             entidadeTipo="cte"
             entidadeId={id}

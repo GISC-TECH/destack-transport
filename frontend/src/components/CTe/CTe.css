@@ -510,6 +510,34 @@
   font-weight: 700 !important;
 }
 
+.detail-card-full {
+  grid-column: 1 / -1;
+}
+
+.cartas-correcao-item {
+  margin-bottom: 8px;
+}
+
+.valor-destaque-sm {
+  font-size: 20px;
+}
+
+.table-container-clean {
+  box-shadow: none;
+}
+
+.chave-doc {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+}
+
+.empty-state-muted {
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 20px;
+  margin: 0;
+}
+
 /* Table Container */
 .table-container {
   background: white;

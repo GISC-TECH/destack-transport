@@ -495,36 +495,116 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
             <p>Nenhum documento anexado</p>
           </div>
         ) : (
-          <table className="documentos-table">
-            <thead>
-              <tr>
-                <th>Tipo</th>
-                <th>Nome</th>
-                <th>Tamanho</th>
-                <th>Validade</th>
-                <th>Data Upload</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            <table className="documentos-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Nome</th>
+                  <th>Tamanho</th>
+                  <th>Validade</th>
+                  <th>Data Upload</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {documentos.map((doc) => (
+                  <tr key={doc.id} className={isExpired(doc.validade) ? 'expired' : isExpiringSoon(doc.validade) ? 'expiring-soon' : ''}>
+                    <td>
+                      <span className="doc-tipo">{doc.tipo_display || doc.tipo}</span>
+                    </td>
+                    <td className="doc-nome">{doc.nome}</td>
+                    <td>{doc.tamanho_formatado || '-'}</td>
+                    <td>
+                      {doc.validade ? (
+                        <span className={`validade ${isExpired(doc.validade) ? 'vencido' : isExpiringSoon(doc.validade) ? 'vencendo' : ''}`}>
+                          {formatDate(doc.validade)}
+                          {isExpired(doc.validade) && <span className="badge-vencido">Vencido</span>}
+                          {isExpiringSoon(doc.validade) && <span className="badge-vencendo">Vencendo</span>}
+                        </span>
+                      ) : '-'}
+                    </td>
+                    <td>{formatDate(doc.criado_em)}</td>
+                    <td className="doc-acoes">
+                      <button
+                        className="btn-icon btn-view"
+                        onClick={() => handleView(doc)}
+                        title="Visualizar"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                      <button
+                        className="btn-icon btn-download"
+                        onClick={() => handleDownload(doc)}
+                        title="Baixar"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                      </button>
+                      {!readOnly && (
+                        <>
+                          <button
+                            className="btn-icon btn-edit"
+                            onClick={() => handleEdit(doc)}
+                            title="Editar"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                          </button>
+                          <button
+                            className="btn-icon btn-delete"
+                            onClick={() => handleDelete(doc.id)}
+                            title="Excluir"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="mobile-cards">
               {documentos.map((doc) => (
-                <tr key={doc.id} className={isExpired(doc.validade) ? 'expired' : isExpiringSoon(doc.validade) ? 'expiring-soon' : ''}>
-                  <td>
+                <div
+                  key={doc.id}
+                  className={`mobile-card ${isExpired(doc.validade) ? 'expired' : isExpiringSoon(doc.validade) ? 'expiring-soon' : ''}`}
+                >
+                  <div className="mobile-card-header">
+                    <div className="mobile-card-title">
+                      <span className="mobile-card-number">{doc.nome}</span>
+                      <span className="mobile-card-date">{formatDate(doc.criado_em)}</span>
+                    </div>
                     <span className="doc-tipo">{doc.tipo_display || doc.tipo}</span>
-                  </td>
-                  <td className="doc-nome">{doc.nome}</td>
-                  <td>{doc.tamanho_formatado || '-'}</td>
-                  <td>
-                    {doc.validade ? (
-                      <span className={`validade ${isExpired(doc.validade) ? 'vencido' : isExpiringSoon(doc.validade) ? 'vencendo' : ''}`}>
-                        {formatDate(doc.validade)}
+                  </div>
+                  <div className="mobile-card-body">
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">Tamanho</span>
+                      <span className="mobile-card-value">{doc.tamanho_formatado || '-'}</span>
+                    </div>
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">Validade</span>
+                      <span className={`mobile-card-value validade ${isExpired(doc.validade) ? 'vencido' : isExpiringSoon(doc.validade) ? 'vencendo' : ''}`}>
+                        {doc.validade ? formatDate(doc.validade) : '-'}
                         {isExpired(doc.validade) && <span className="badge-vencido">Vencido</span>}
                         {isExpiringSoon(doc.validade) && <span className="badge-vencendo">Vencendo</span>}
                       </span>
-                    ) : '-'}
-                  </td>
-                  <td>{formatDate(doc.criado_em)}</td>
-                  <td className="doc-acoes">
+                    </div>
+                  </div>
+                  <div className="mobile-card-footer">
                     <button
                       className="btn-icon btn-view"
                       onClick={() => handleView(doc)}
@@ -570,11 +650,11 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
                         </button>
                       </>
                     )}
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
       )}

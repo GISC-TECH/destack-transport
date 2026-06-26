@@ -246,10 +246,10 @@ function BackupManager() {
             )}
             <input
               type="file"
+              className="file-input-hidden"
               accept=".zip,.sql,.json"
               onChange={handleRestaurar}
               disabled={restaurando}
-              style={{ display: 'none' }}
             />
           </label>
         </div>
@@ -311,6 +311,60 @@ function BackupManager() {
               )}
             </tbody>
           </table>
+
+          <div className="mobile-cards">
+            {backups.length === 0 ? (
+              <div className="mobile-empty">
+                <div className="mobile-empty-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                  </svg>
+                </div>
+                <p className="mobile-empty-text">Nenhum backup encontrado</p>
+              </div>
+            ) : (
+              backups.map((backup) => (
+                <div key={backup.id} className="mobile-card">
+                  <div className="mobile-card-header">
+                    <div className="mobile-card-title">
+                      <span className="mobile-card-number">{backup.nome_arquivo}</span>
+                      <span className="mobile-card-date">{formatDate(backup.data_hora)}</span>
+                    </div>
+                    <span className={`badge badge-${backup.status === 'completo' ? 'success' : backup.status === 'erro' ? 'danger' : 'warning'}`}>
+                      {backup.status || 'Completo'}
+                    </span>
+                  </div>
+                  <div className="mobile-card-body">
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">Tamanho</span>
+                      <span className="mobile-card-value">{formatBytes(backup.tamanho_bytes)}</span>
+                    </div>
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">Usuário</span>
+                      <span className="mobile-card-value">{backup.usuario || '-'}</span>
+                    </div>
+                  </div>
+                  <div className="mobile-card-footer">
+                    <button
+                      className="btn-action btn-download"
+                      onClick={() => handleDownload(backup)}
+                      title="Baixar backup"
+                      disabled={backup.status === 'erro'}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      Baixar
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 

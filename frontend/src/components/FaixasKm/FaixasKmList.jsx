@@ -208,63 +208,119 @@ function FaixasKmList() {
 
       {/* Tabela de Faixas */}
       <div className="faixas-table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Faixa</th>
-              <th>KM Mínimo</th>
-              <th>KM Máximo</th>
-              <th>Valor Pago</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {faixas.length === 0 ? (
+        <div className="desktop-only">
+          <table className="data-table">
+            <thead>
               <tr>
-                <td colSpan="5" className="text-center">
-                  Nenhuma faixa de KM cadastrada
-                </td>
+                <th>Faixa</th>
+                <th>KM Mínimo</th>
+                <th>KM Máximo</th>
+                <th>Valor Pago</th>
+                <th>Ações</th>
               </tr>
-            ) : (
-              faixas.map((faixa, index) => (
-                <tr key={faixa.id}>
-                  <td>
-                    <span className="faixa-badge">Faixa {index + 1}</span>
-                  </td>
-                  <td>{formatKm(faixa.min_km)}</td>
-                  <td>{faixa.max_km ? formatKm(faixa.max_km) : 'Ilimitado'}</td>
-                  <td>
-                    <strong className="valor-km">{formatCurrency(faixa.valor_pago)}</strong>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        className="btn-action btn-edit"
-                        onClick={() => handleOpenModal(faixa)}
-                        title="Editar"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                      </button>
-                      <button
-                        className="btn-action btn-delete"
-                        onClick={() => handleDelete(faixa.id)}
-                        title="Excluir"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                      </button>
-                    </div>
+            </thead>
+            <tbody>
+              {faixas.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center">
+                    Nenhuma faixa de KM cadastrada
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                faixas.map((faixa, index) => (
+                  <tr key={faixa.id}>
+                    <td>
+                      <span className="faixa-badge">Faixa {index + 1}</span>
+                    </td>
+                    <td>{formatKm(faixa.min_km)}</td>
+                    <td>{faixa.max_km ? formatKm(faixa.max_km) : 'Ilimitado'}</td>
+                    <td>
+                      <strong className="valor-km">{formatCurrency(faixa.valor_pago)}</strong>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="btn-action btn-edit"
+                          onClick={() => handleOpenModal(faixa)}
+                          title="Editar"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </button>
+                        <button
+                          className="btn-action btn-delete"
+                          onClick={() => handleDelete(faixa.id)}
+                          title="Excluir"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Cards Mobile */}
+        <div className="mobile-cards mobile-only">
+          {faixas.length === 0 ? (
+            <div className="mobile-empty">
+              <p className="mobile-empty-text">Nenhuma faixa de KM cadastrada</p>
+            </div>
+          ) : (
+            faixas.map((faixa, index) => (
+              <div key={faixa.id} className="mobile-card">
+                <div className="mobile-card-header">
+                  <h4>Faixa {index + 1}</h4>
+                  <strong className="valor-km">{formatCurrency(faixa.valor_pago)}</strong>
+                </div>
+                <div className="mobile-card-body">
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">KM Mínimo</span>
+                    <span className="mobile-card-value">{formatKm(faixa.min_km)}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">KM Máximo</span>
+                    <span className="mobile-card-value">
+                      {faixa.max_km ? formatKm(faixa.max_km) : 'Ilimitado'}
+                    </span>
+                  </div>
+                </div>
+                <div className="mobile-card-footer">
+                  <button
+                    className="btn-action btn-edit"
+                    onClick={() => handleOpenModal(faixa)}
+                    title="Editar"
+                    aria-label={`Editar faixa ${index + 1}`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button
+                    className="btn-action btn-delete"
+                    onClick={() => handleDelete(faixa.id)}
+                    title="Excluir"
+                    aria-label={`Excluir faixa ${index + 1}`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Visualização Gráfica */}

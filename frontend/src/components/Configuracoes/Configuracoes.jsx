@@ -226,7 +226,7 @@ function Configuracoes() {
                 <span>Endereço</span>
               </div>
 
-              <div className="form-group" style={{gridColumn: 'span 2'}}>
+              <div className="form-group span-2">
                 <label>Logradouro</label>
                 <input
                   type="text"

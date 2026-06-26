@@ -1317,6 +1317,252 @@ tbody tr:last-child td {
 }
 
 /* ========================================
+   RESPONSIVE UTILITIES
+   ======================================== */
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.form-row > .form-group {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.form-row > .form-group.form-group-narrow {
+  flex: 0 0 120px;
+}
+
+.form-row > .form-group.form-group-wide {
+  flex: 2 1 300px;
+}
+
+.form-row > .form-group.form-group-full {
+  flex: 1 1 100%;
+}
+
+.grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.grid-responsive-sm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+  .span-2 {
+    grid-column: 1 / -1;
+  }
+
+  .grid-responsive,
+  .grid-responsive-sm {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .form-row > .form-group,
+  .form-row > .form-group.form-group-narrow,
+  .form-row > .form-group.form-group-wide,
+  .form-row > .form-group.form-group-full {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+
+.desktop-only {
+  display: inherit;
+}
+
+.mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: inherit !important;
+  }
+}
+
+/* ========================================
+   MODAL / BOTTOM SHEET
+   ======================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-content.modal-lg {
+  max-width: 900px;
+}
+
+.modal-content.modal-sm {
+  max-width: 420px;
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .modal-content,
+  .modal-content.modal-lg,
+  .modal-content.modal-sm {
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    animation: slideUp 0.25s ease;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   SEARCH / SELECTION COMPONENTS
+   ======================================== */
+
+.search-field-wrapper {
+  position: relative;
+}
+
+.search-results-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.search-result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light);
+  transition: background var(--transition-fast);
+}
+
+.search-result-card:last-child {
+  border-bottom: none;
+}
+
+.search-result-card:hover,
+.search-result-card:focus {
+  background: var(--green-100);
+}
+
+.search-result-card .result-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.search-result-card .result-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.selected-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--green-100);
+  border: 1px solid var(--green-200);
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.selected-item-card .selected-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.selected-item-card .selected-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--green-800);
+}
+
+.selected-item-card .selected-subtitle {
+  font-size: 12px;
+  color: var(--green-700);
+}
+
+.selected-item-card .btn-remove {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--danger-color);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+}
+
+@media (max-width: 480px) {
+  .selected-item-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ========================================
    PAGE LOADER (code-splitting fallback)
    ======================================== */
 

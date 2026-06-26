@@ -257,7 +257,7 @@ function MDFeDetail() {
           <div className="detail-content">
             <div className="detail-row">
               <span className="label">Placa:</span>
-              <span className="value valor-destaque" style={{fontSize: '20px'}}>
+              <span className="value valor-destaque valor-destaque-sm">
                 {mdfe.modal_rodoviario?.veiculo_tracao?.placa || '-'}
               </span>
             </div>
@@ -334,10 +334,10 @@ function MDFeDetail() {
         {(() => {
           const docsVinculados = mdfe.municipios_descarga?.flatMap(m => m.docs_vinculados || []) || [];
           return (
-            <div className="detail-card" style={{gridColumn: '1 / -1'}}>
+            <div className="detail-card detail-card-full">
               <h3>Documentos Vinculados ({docsVinculados.length})</h3>
               {docsVinculados.length > 0 ? (
-                <div className="table-container" style={{boxShadow: 'none'}}>
+                <div className="table-container table-container-clean">
                   <table className="data-table">
                     <thead>
                       <tr>
@@ -348,7 +348,7 @@ function MDFeDetail() {
                     <tbody>
                       {docsVinculados.map((doc, index) => (
                         <tr key={index}>
-                          <td style={{fontFamily: 'monospace', fontSize: '12px'}}>
+                          <td className="chave-doc">
                             {doc.chave_documento || doc.cte_info?.chave || '-'}
                           </td>
                           <td>
@@ -360,7 +360,7 @@ function MDFeDetail() {
                   </table>
                 </div>
               ) : (
-            <p style={{color: '#7f8c8d', textAlign: 'center', padding: '20px'}}>
+            <p className="empty-state-muted">
               Nenhum documento vinculado
             </p>
           )}
@@ -402,7 +402,7 @@ function MDFeDetail() {
 
         {/* Linha do tempo de eventos */}
         {mdfe.eventos?.length > 0 && (
-          <div className="detail-card" style={{gridColumn: '1 / -1'}}>
+          <div className="detail-card detail-card-full">
             <h3>Eventos</h3>
             <div className="detail-content">
               {mdfe.eventos.map((e, i) => (

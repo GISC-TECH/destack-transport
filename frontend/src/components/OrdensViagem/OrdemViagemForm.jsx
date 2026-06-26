@@ -531,10 +531,10 @@ function OrdemViagemForm() {
           <h3>Paradas</h3>
           <div className="os-items-section">
             {formData.paradas.length === 0 && (
-              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Nenhuma parada cadastrada.</p>
+              <p className="os-empty-text">Nenhuma parada cadastrada.</p>
             )}
             {formData.paradas.map((parada, index) => (
-              <div key={index} className="os-item-row" style={{ gridTemplateColumns: '120px 1fr 80px 120px 120px 120px 120px 40px' }}>
+              <div key={index} className="os-item-row os-parada-row">
                 <select
                   value={parada.tipo}
                   onChange={(e) => handleParadaChange(index, 'tipo', e.target.value)}
@@ -896,7 +896,7 @@ function RastreamentoPanel({ ordemId }) {
       <div className="os-items-section">
         <h4>Registrar Posição</h4>
         <form onSubmit={handleRegistrarPosicao}>
-          <div className="os-item-row" style={{ gridTemplateColumns: '1fr 1fr 1fr 120px' }}>
+          <div className="os-item-row os-posicao-row">
             <input
               type="text"
               placeholder="Latitude"

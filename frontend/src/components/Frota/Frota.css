@@ -78,6 +78,110 @@
   background: var(--bg-secondary);
 }
 
+/* Mobile cards */
+.frota-mobile-cards {
+  display: none;
+}
+
+.frota-empty-text {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 30px;
+}
+
+.frota-mobile-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.frota-mobile-card:last-child {
+  margin-bottom: 0;
+}
+
+.frota-mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--green-100);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.frota-mobile-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.frota-mobile-card-primary {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.frota-mobile-card-secondary {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.frota-mobile-card-status {
+  flex-shrink: 0;
+}
+
+.frota-mobile-card-body {
+  padding: 12px 16px;
+}
+
+.frota-mobile-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.frota-mobile-card-row:last-child {
+  border-bottom: none;
+}
+
+.frota-mobile-card-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.frota-mobile-card-value {
+  font-size: 13px;
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.frota-mobile-card-valor {
+  font-weight: 700;
+  color: var(--success-color);
+}
+
+.frota-mobile-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--content-bg);
+  border-top: 1px solid var(--border-light);
+}
+
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -180,12 +284,44 @@
     grid-template-columns: 1fr;
   }
 
-  .frota-table {
-    font-size: 13px;
+  .frota-list-card {
+    overflow-x: visible;
   }
 
-  .frota-table th,
-  .frota-table td {
-    padding: 10px 12px;
+  .frota-table {
+    display: none;
+  }
+
+  .frota-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .frota-section {
+    border-radius: var(--radius-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .frota-mobile-card-header,
+  .frota-mobile-card-body,
+  .frota-mobile-card-footer {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .frota-mobile-card-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .frota-mobile-card-value {
+    text-align: left;
+  }
+
+  .frota-tab {
+    padding: 10px 14px;
+    font-size: 13px;
   }
 }

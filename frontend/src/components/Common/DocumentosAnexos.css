@@ -250,10 +250,23 @@
 .doc-nome {
   font-weight: 500;
   color: var(--text-primary);
-  max-width: 200px;
+  max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+  .doc-nome {
+    max-width: 160px;
+  }
+}
+
+@media (max-width: 768px) {
+  .doc-nome {
+    max-width: none;
+    white-space: normal;
+  }
 }
 
 .validade {
@@ -430,6 +443,10 @@
   border-radius: 0 0 12px 12px;
 }
 
+.mobile-cards {
+  display: none;
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
   .documentos-anexos {
@@ -443,11 +460,138 @@
   }
 
   .documentos-table {
-    display: block;
-    overflow-x: auto;
+    display: none;
+  }
+
+  .mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobile-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+  }
+
+  .mobile-card.expired {
+    background: #fff5f5;
+    border-color: #fecaca;
+  }
+
+  .mobile-card.expiring-soon {
+    background: #fffbeb;
+    border-color: #fde68a;
+  }
+
+  .mobile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .mobile-card-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .mobile-card-number {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    word-break: break-word;
+  }
+
+  .mobile-card-date {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .mobile-card-body {
+    padding: 12px 16px;
+  }
+
+  .mobile-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .mobile-card-row:last-child {
+    border-bottom: none;
+  }
+
+  .mobile-card-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+  }
+
+  .mobile-card-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right;
+    word-break: break-word;
+    max-width: 65%;
+  }
+
+  .mobile-card-value .validade {
+    justify-content: flex-end;
+  }
+
+  .mobile-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
   }
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-card-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .mobile-card-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .mobile-card-value {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .mobile-card-value .validade {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .mobile-card-footer {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 }

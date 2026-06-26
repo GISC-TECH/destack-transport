@@ -264,6 +264,10 @@
     box-shadow: none;
   }
 
+  .motoristas-table {
+    min-width: 0;
+  }
+
   .motoristas-table th,
   .motoristas-table td {
     padding: 12px 10px;

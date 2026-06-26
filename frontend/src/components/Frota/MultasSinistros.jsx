@@ -152,6 +152,40 @@ function MultasSinistros() {
                 ))}
               </tbody>
             </table>
+
+            <div className="frota-mobile-cards">
+              {multas.length === 0 ? (
+                <p className="frota-empty-text">Nenhuma multa registrada.</p>
+              ) : multas.map(m => (
+                <div key={m.id} className="frota-mobile-card">
+                  <div className="frota-mobile-card-header">
+                    <div className="frota-mobile-card-title">
+                      <span className="frota-mobile-card-primary">{formatDate(m.data_infracao)}</span>
+                      <span className="frota-mobile-card-secondary">{m.veiculo_placa}</span>
+                    </div>
+                    <div className="frota-mobile-card-status">{getStatusBadge(m.status, 'multa')}</div>
+                  </div>
+                  <div className="frota-mobile-card-body">
+                    <div className="frota-mobile-card-row">
+                      <span className="frota-mobile-card-label">Auto</span>
+                      <span className="frota-mobile-card-value">{m.auto_infracao || '-'}</span>
+                    </div>
+                    <div className="frota-mobile-card-row">
+                      <span className="frota-mobile-card-label">Infração</span>
+                      <span className="frota-mobile-card-value">{m.descricao || '-'}</span>
+                    </div>
+                    <div className="frota-mobile-card-row">
+                      <span className="frota-mobile-card-label">Valor</span>
+                      <span className="frota-mobile-card-value frota-mobile-card-valor">{formatCurrency(m.valor)}</span>
+                    </div>
+                  </div>
+                  <div className="frota-mobile-card-footer">
+                    <button className="btn-icon" onClick={() => setModal({ tipo: 'multa', id: m.id })} title="Editar">✏️</button>
+                    <button className="btn-icon" onClick={() => handleDelete('multa', m.id)} title="Excluir">🗑️</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -198,6 +232,40 @@ function MultasSinistros() {
                 ))}
               </tbody>
             </table>
+
+            <div className="frota-mobile-cards">
+              {sinistros.length === 0 ? (
+                <p className="frota-empty-text">Nenhum sinistro registrado.</p>
+              ) : sinistros.map(s => (
+                <div key={s.id} className="frota-mobile-card">
+                  <div className="frota-mobile-card-header">
+                    <div className="frota-mobile-card-title">
+                      <span className="frota-mobile-card-primary">{formatDate(s.data)}</span>
+                      <span className="frota-mobile-card-secondary">{s.veiculo_placa}</span>
+                    </div>
+                    <div className="frota-mobile-card-status">{getStatusBadge(s.status, 'sinistro')}</div>
+                  </div>
+                  <div className="frota-mobile-card-body">
+                    <div className="frota-mobile-card-row">
+                      <span className="frota-mobile-card-label">Tipo</span>
+                      <span className="frota-mobile-card-value">{s.tipo_display || s.tipo}</span>
+                    </div>
+                    <div className="frota-mobile-card-row">
+                      <span className="frota-mobile-card-label">Local</span>
+                      <span className="frota-mobile-card-value">{s.local || '-'}</span>
+                    </div>
+                    <div className="frota-mobile-card-row">
+                      <span className="frota-mobile-card-label">Custo</span>
+                      <span className="frota-mobile-card-value frota-mobile-card-valor">{formatCurrency(s.custo_total)}</span>
+                    </div>
+                  </div>
+                  <div className="frota-mobile-card-footer">
+                    <button className="btn-icon" onClick={() => setModal({ tipo: 'sinistro', id: s.id })} title="Editar">✏️</button>
+                    <button className="btn-icon" onClick={() => handleDelete('sinistro', s.id)} title="Excluir">🗑️</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

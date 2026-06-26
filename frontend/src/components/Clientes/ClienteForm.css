@@ -109,6 +109,71 @@ legend {
   cursor: not-allowed;
 }
 
+.cnpj-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.cnpj-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-cnpj {
+  padding: 10px 20px;
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 120px;
+  transition: background 0.2s;
+}
+
+.btn-cnpj:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.btn-cnpj:disabled {
+  background: #95a5a6;
+  cursor: wait;
+}
+
+.btn-cnpj.loading {
+  background: #95a5a6;
+}
+
+.field-help {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.field-help.muted {
+  color: #888;
+}
+
+.form-group-cep {
+  flex: 0 0 150px;
+}
+
+.form-group-logradouro {
+  flex: 2 1 0;
+}
+
+.form-group-numero,
+.form-group-uf {
+  flex: 0 0 100px;
+}
+
+.form-group-cidade {
+  flex: 2 1 0;
+}
+
 .checkbox-label {
   display: inline-flex;
   align-items: center;
@@ -204,6 +269,23 @@ legend {
 
   .form-group {
     margin-bottom: 14px;
+  }
+
+  .cnpj-input-group {
+    flex-direction: column;
+  }
+
+  .btn-cnpj {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .form-group-cep,
+  .form-group-logradouro,
+  .form-group-numero,
+  .form-group-cidade,
+  .form-group-uf {
+    flex: 1 1 100%;
   }
 
   .cliente-form {

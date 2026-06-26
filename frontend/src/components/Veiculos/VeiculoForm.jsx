@@ -515,7 +515,7 @@ function VeiculoForm() {
           <legend>Observações</legend>
 
           <div className="form-row">
-            <div className="form-group" style={{ flex: 3 }}>
+            <div className="form-group form-group-wide">
               <label htmlFor="observacoes">Observações</label>
               <textarea
                 id="observacoes"
