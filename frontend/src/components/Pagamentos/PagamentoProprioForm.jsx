@@ -55,6 +55,33 @@ function PagamentoProprioForm() {
   const [faixaKmInfo, setFaixaKmInfo] = useState(null);
   const [calculandoFaixa, setCalculandoFaixa] = useState(false);
 
+  const loadPagamento = useCallback(async () => {
+    try {
+      setLoading(true);
+      const result = await pagamentosAPI.proprios.get(id);
+      setFormData({
+        veiculo: result.veiculo || '',
+        cte: result.cte || '',
+        cte_numero: result.cte_numero || '',
+        motorista_nome: result.motorista_nome || result.condutor_nome || '',
+        motorista_cpf: result.motorista_cpf || result.condutor_cpf || '',
+        periodo: result.periodo || '',
+        data_prevista: result.data_prevista || '',
+        km_total_periodo: result.km_total_periodo || '',
+        valor_base_faixa: result.valor_base_faixa || result.valor_repassado || '',
+        ajustes: result.ajustes || '0',
+        status: result.status || 'pendente',
+        data_pagamento: result.data_pagamento || '',
+        obs: result.obs || ''
+      });
+    } catch (err) {
+      console.error('Erro ao carregar pagamento:', err);
+      setError('Erro ao carregar dados do pagamento.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (isEditing) {
       loadPagamento();
@@ -228,33 +255,6 @@ function PagamentoProprioForm() {
       motorista_cpf: ''
     }));
   };
-
-  const loadPagamento = useCallback(async () => {
-    try {
-      setLoading(true);
-      const result = await pagamentosAPI.proprios.get(id);
-      setFormData({
-        veiculo: result.veiculo || '',
-        cte: result.cte || '',
-        cte_numero: result.cte_numero || '',
-        motorista_nome: result.motorista_nome || result.condutor_nome || '',
-        motorista_cpf: result.motorista_cpf || result.condutor_cpf || '',
-        periodo: result.periodo || '',
-        data_prevista: result.data_prevista || '',
-        km_total_periodo: result.km_total_periodo || '',
-        valor_base_faixa: result.valor_base_faixa || result.valor_repassado || '',
-        ajustes: result.ajustes || '0',
-        status: result.status || 'pendente',
-        data_pagamento: result.data_pagamento || '',
-        obs: result.obs || ''
-      });
-    } catch (err) {
-      console.error('Erro ao carregar pagamento:', err);
-      setError('Erro ao carregar dados do pagamento.');
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
 
   // Busca o valor da faixa de KM quando o usuário digita a quilometragem
   const handleKmChange = async (e) => {
