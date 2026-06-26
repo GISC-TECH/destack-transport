@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { pagamentosAPI, cteAPI, veiculosAPI, motoristasAPI, faixasKmAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
@@ -55,12 +55,11 @@ function PagamentoProprioForm() {
   const [faixaKmInfo, setFaixaKmInfo] = useState(null);
   const [calculandoFaixa, setCalculandoFaixa] = useState(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isEditing) {
       loadPagamento();
     }
-  }, [id]);
+  }, [isEditing, loadPagamento]);
 
   // Busca Veículo por placa quando usuario digita
   useEffect(() => {
@@ -230,7 +229,7 @@ function PagamentoProprioForm() {
     }));
   };
 
-  const loadPagamento = async () => {
+  const loadPagamento = useCallback(async () => {
     try {
       setLoading(true);
       const result = await pagamentosAPI.proprios.get(id);
@@ -255,7 +254,7 @@ function PagamentoProprioForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   // Busca o valor da faixa de KM quando o usuário digita a quilometragem
   const handleKmChange = async (e) => {

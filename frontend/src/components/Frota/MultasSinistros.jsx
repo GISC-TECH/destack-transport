@@ -19,7 +19,7 @@ function MultasSinistros() {
 
   useEffect(() => {
     loadDados();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const loadDados = async () => {

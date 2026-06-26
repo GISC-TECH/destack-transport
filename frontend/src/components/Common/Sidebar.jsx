@@ -19,11 +19,11 @@ function Sidebar() {
   useEffect(() => {
     if (prevPathnameRef.current !== location.pathname) {
       prevPathnameRef.current = location.pathname;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setIsMobileOpen(false);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setOpenBottomSheet(null);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setOpenMoreMenu(false);
     }
   }, [location.pathname]);

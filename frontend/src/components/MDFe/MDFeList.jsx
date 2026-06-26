@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { mdfeAPI, dashboardAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
@@ -95,15 +95,13 @@ function MDFeList() {
   }, []);
 
   // Handler para filtro de graficos
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handleGraficosFilterChange = useCallback((dateFilters) => {
+  const handleGraficosFilterChange = (dateFilters) => {
     setFiltrosGraficos(dateFilters);
     loadPainelMDFe(dateFilters);
-  }, []);
+  };
 
   // Handler para filtro da tabela
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handleTabelaFilterChange = useCallback((dateFilters) => {
+  const handleTabelaFilterChange = (dateFilters) => {
     setFiltros(prev => ({
       ...prev,
       data_inicio: dateFilters.data_inicio,
@@ -116,7 +114,7 @@ function MDFeList() {
       data_inicio: dateFilters.data_inicio,
       data_fim: dateFilters.data_fim
     }, 1);
-  }, []);
+  };
 
   const handleFiltrar = (e) => {
     e.preventDefault();

@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Inicializacao de autenticacao ao montar o provider.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     initializeAuth();
   }, [initializeAuth]);
 

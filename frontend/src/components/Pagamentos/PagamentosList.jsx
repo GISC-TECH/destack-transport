@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pagamentosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
@@ -114,37 +114,7 @@ function PagamentosList() {
     totalPages: 0
   });
 
-  // Carrega na montagem inicial
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadPagamentos();
-  }, []);
-
-  // Cleanup on unmount to prevent race conditions.
-  // Reseta true no mount: em StrictMode (React 19 dev) o componente monta,
-  // desmonta e remonta — sem isto o ref ficava false e a tela travava no loading.
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // Detecta viewport mobile para alternar entre tabela e cards
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Carrega quando muda a tab - reseta a página
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    setPaginacao(prev => ({ ...prev, page: 1 }));
-    loadPagamentos(null, 1);
-  }, [activeTab]);
-
-  const loadPagamentos = async (customFiltros = null, customPage = null) => {
+  const loadPagamentos = useCallback(async (customFiltros = null, customPage = null) => {
     const filtrosAtivos = customFiltros || filtros;
     const pageAtual = customPage || paginacao.page;
     try {
@@ -186,7 +156,34 @@ function PagamentosList() {
         setLoading(false);
       }
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, filtros, paginacao.pageSize]);
+
+  // Carrega na montagem inicial
+  useEffect(() => {
+    loadPagamentos();
+  }, [loadPagamentos]);
+
+  // Cleanup on unmount to prevent race conditions.
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Detecta viewport mobile para alternar entre tabela e cards
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Carrega quando muda a tab - reseta a página
+  useEffect(() => {
+    setPaginacao(prev => ({ ...prev, page: 1 }));
+    loadPagamentos(null, 1);
+  }, [activeTab, loadPagamentos]);
 
   // Muda de página
   const handlePageChange = (newPage) => {

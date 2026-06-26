@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { manutencaoAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
@@ -31,15 +31,7 @@ function ManutencaoForm() {
   });
   const [arquivoNota, setArquivoNota] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadVeiculos();
-    if (isEditing) {
-      loadManutencao();
-    }
-  }, [id]);
-
-  const loadVeiculos = async () => {
+  const loadVeiculos = useCallback(async () => {
     try {
       // Filtra apenas veículos próprios (tipo_proprietario='00') para manutenção
       const result = await veiculosAPI.list({ tipo_proprietario: '00', ativo: true });
@@ -48,9 +40,9 @@ function ManutencaoForm() {
       console.error('Erro ao carregar veículos:', err);
       setVeiculos([]);
     }
-  };
+  }, []);
 
-  const loadManutencao = async () => {
+  const loadManutencao = useCallback(async () => {
     try {
       setLoading(true);
       const result = await manutencaoAPI.get(id);
@@ -77,7 +69,14 @@ function ManutencaoForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadVeiculos();
+    if (isEditing) {
+      loadManutencao();
+    }
+  }, [isEditing, loadVeiculos, loadManutencao]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motoristasAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
@@ -31,14 +31,7 @@ function MotoristaForm() {
     ativo: true
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (isEdit) {
-      loadMotorista();
-    }
-  }, [id]);
-
-  const loadMotorista = async () => {
+  const loadMotorista = useCallback(async () => {
     try {
       setLoading(true);
       const data = await motoristasAPI.get(id);
@@ -59,7 +52,13 @@ function MotoristaForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEdit) {
+      loadMotorista();
+    }
+  }, [isEdit, loadMotorista]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

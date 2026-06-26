@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { pagamentosAPI, cteAPI, motoristasAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
@@ -51,12 +51,11 @@ function PagamentoAgregadoForm() {
   });
   const [comprovanteFile, setComprovanteFile] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isEditing) {
       loadPagamento();
     }
-  }, [id]);
+  }, [isEditing, loadPagamento]);
 
   // Busca CT-e por numero quando usuario digita
   useEffect(() => {
@@ -202,7 +201,7 @@ function PagamentoAgregadoForm() {
     }));
   };
 
-  const loadPagamento = async () => {
+  const loadPagamento = useCallback(async () => {
     try {
       setLoading(true);
       const result = await pagamentosAPI.agregados.get(id);
@@ -254,7 +253,7 @@ function PagamentoAgregadoForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

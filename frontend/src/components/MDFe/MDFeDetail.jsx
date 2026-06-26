@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { mdfeAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
@@ -14,12 +14,7 @@ function MDFeDetail() {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadMDFe();
-  }, [id]);
-
-  const loadMDFe = async () => {
+  const loadMDFe = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -30,7 +25,11 @@ function MDFeDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadMDFe();
+  }, [loadMDFe]);
 
   const handleDownloadPDF = async () => {
     try {

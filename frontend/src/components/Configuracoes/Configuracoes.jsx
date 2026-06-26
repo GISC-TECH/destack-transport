@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { configAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
@@ -14,34 +14,13 @@ function Configuracoes() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (activeTab === 'empresa') {
       loadEmpresa();
     } else {
       loadParametros();
     }
-  }, [activeTab]);
-
-  const loadEmpresa = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await configAPI.empresa.get();
-      // Se retornou dados válidos
-      if (result && !result.detail) {
-        setEmpresa(result);
-      } else {
-        // Se não existe, inicializa com objeto vazio
-        setEmpresa(getEmpresaVazia());
-      }
-    } catch {
-      // Se não existe (404), inicializa com objeto vazio sem mostrar erro
-      setEmpresa(getEmpresaVazia());
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [activeTab, loadEmpresa, loadParametros]);
 
   const getEmpresaVazia = () => ({
     razao_social: '',
@@ -60,7 +39,27 @@ function Configuracoes() {
     uf: ''
   });
 
-  const loadParametros = async () => {
+  const loadEmpresa = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await configAPI.empresa.get();
+      // Se retornou dados válidos
+      if (result && !result.detail) {
+        setEmpresa(result);
+      } else {
+        // Se não existe, inicializa com objeto vazio
+        setEmpresa(getEmpresaVazia());
+      }
+    } catch {
+      // Se não existe (404), inicializa com objeto vazio sem mostrar erro
+      setEmpresa(getEmpresaVazia());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadParametros = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -71,7 +70,7 @@ function Configuracoes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleEmpresaChange = (field, value) => {
     setEmpresa(prev => ({ ...prev, [field]: value }));

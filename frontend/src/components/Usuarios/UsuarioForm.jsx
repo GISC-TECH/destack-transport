@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usuariosAPI } from '../../services/api';
 import Loading from '../Common/Loading';
@@ -25,14 +25,7 @@ function UsuarioForm() {
     is_superuser: false
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (isEdit) {
-      loadUsuario();
-    }
-  }, [id]);
-
-  const loadUsuario = async () => {
+  const loadUsuario = useCallback(async () => {
     try {
       setLoading(true);
       const data = await usuariosAPI.get(id);
@@ -46,7 +39,13 @@ function UsuarioForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEdit) {
+      loadUsuario();
+    }
+  }, [isEdit, loadUsuario]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
