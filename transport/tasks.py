@@ -234,7 +234,7 @@ def _cleanup_old_backups(backup_dir, retention_days=7):
     removed = 0
     for file_path in backup_dir.glob("*.dump"):
         try:
-            mtime = datetime.fromtimestamp(file_path.stat().st_mtime)
+            mtime = timezone.make_aware(datetime.fromtimestamp(file_path.stat().st_mtime))
             if mtime < cutoff:
                 file_path.unlink()
                 removed += 1
