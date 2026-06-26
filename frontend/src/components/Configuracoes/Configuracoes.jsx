@@ -14,15 +14,7 @@ function Configuracoes() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
-  useEffect(() => {
-    if (activeTab === 'empresa') {
-      loadEmpresa();
-    } else {
-      loadParametros();
-    }
-  }, [activeTab, loadEmpresa, loadParametros]);
-
-  const getEmpresaVazia = () => ({
+  const getEmpresaVazia = useCallback(() => ({
     razao_social: '',
     nome_fantasia: '',
     cnpj: '',
@@ -37,7 +29,7 @@ function Configuracoes() {
     bairro: '',
     municipio: '',
     uf: ''
-  });
+  }), []);
 
   const loadEmpresa = useCallback(async () => {
     try {
@@ -57,7 +49,7 @@ function Configuracoes() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getEmpresaVazia]);
 
   const loadParametros = useCallback(async () => {
     try {
@@ -71,6 +63,14 @@ function Configuracoes() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'empresa') {
+      loadEmpresa();
+    } else {
+      loadParametros();
+    }
+  }, [activeTab, loadEmpresa, loadParametros]);
 
   const handleEmpresaChange = (field, value) => {
     setEmpresa(prev => ({ ...prev, [field]: value }));
