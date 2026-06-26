@@ -28,6 +28,27 @@ const apiTarget = resolveApiTarget();
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (/node_modules\/(react|react-dom|scheduler)\//.test(id)) {
+              return 'vendor-react';
+            }
+            if (/node_modules\/(recharts|d3|victory)/.test(id)) {
+              return 'vendor-charts';
+            }
+            if (/node_modules\/(react-router|react-router-dom|@remix-run)/.test(id)) {
+              return 'vendor-router';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
+  },
   server: {
     host: '0.0.0.0',
     port: parseInt(process.env.PORT || '8000'),
