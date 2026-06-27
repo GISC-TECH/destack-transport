@@ -578,3 +578,18 @@ CORS_ALLOW_METHODS = [
 CORS_EXPOSE_HEADERS = [
     'content-disposition',
 ]
+
+# =============================================================================
+# SERVIÇOS DE ROTEIRIZAÇÃO E GEOCODIFICAÇÃO (OpenStreetMap)
+# =============================================================================
+
+# OSRM — Open Source Routing Machine (rotas gratuitas)
+OSRM_BASE_URL = os.getenv('OSRM_BASE_URL', 'https://router.project-osrm.org')
+OSRM_TIMEOUT = int(os.getenv('OSRM_TIMEOUT', '15'))
+
+# Nominatim — geocodificação gratuita do OpenStreetMap
+# Limite: 1 requisição por segundo. É obrigatório informar User-Agent.
+NOMINATIM_BASE_URL = os.getenv('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org')
+NOMINATIM_USER_AGENT = os.getenv('NOMINATIM_USER_AGENT', 'DestackTransport/1.0')
+NOMINATIM_TIMEOUT = int(os.getenv('NOMINATIM_TIMEOUT', '15'))
+NOMINATIM_DELAY_SECONDS = float(os.getenv('NOMINATIM_DELAY_SECONDS', '1.1'))

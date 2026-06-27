@@ -14,6 +14,7 @@ from dateutil import parser as date_parser
 from django.conf import settings
 
 from .xml_utils import safe_xmltodict_parse
+from .distancia_service import calcular_distancia_cidade_uf
 
 logger = logging.getLogger(__name__)
 
@@ -282,6 +283,25 @@ def parse_cte_identificacao(cte_doc, infcte):
             or None
         ),
     }
+
+    # Se o XML não trouxe distância, tenta calcular via OSRM + Nominatim (OpenStreetMap)
+    if ident_data['dist_km'] is None:
+        try:
+            distancia_calculada = calcular_distancia_cidade_uf(
+                cidade_origem=ident_data.get('nome_mun_ini'),
+                uf_origem=ident_data.get('uf_ini'),
+                cidade_destino=ident_data.get('nome_mun_fim'),
+                uf_destino=ident_data.get('uf_fim'),
+            )
+            if distancia_calculada:
+                ident_data['dist_km'] = distancia_calculada
+                logger.info(
+                    f"Distância calculada para CT-e {cte_doc.chave}: {distancia_calculada} km"
+                )
+        except Exception as e:
+            logger.warning(
+                f"Não foi possível calcular distância para CT-e {cte_doc.chave}: {e}"
+            )
 
     # Remove chaves com valor None para evitar sobrescrever com null no update_or_create
     ident_data_cleaned = {k: v for k, v in ident_data.items() if v is not None}
