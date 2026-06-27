@@ -46,29 +46,38 @@
   align-items: center;
   gap: var(--space-3);
   margin-left: auto;
+  flex-wrap: nowrap;
 }
 
 .dateInputGroup {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .dateInputGroup label {
   font-size: var(--text-sm);
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .dateInput {
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  min-width: 130px;
+  max-width: 160px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--text-primary);
   background: var(--card-bg);
   cursor: pointer;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  font-family: var(--font-body);
 }
 
 .dateInput:hover {
@@ -79,6 +88,18 @@
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Melhora o ícone nativo do input date no WebKit */
+.dateInput::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+  filter: invert(0.4) sepia(0.2) saturate(2) hue-rotate(110deg);
+}
+
+.dateInput::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 .dateInputError {
@@ -114,6 +135,7 @@
   .dateFilter {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--space-3);
   }
 
   .periodButtons {
@@ -128,16 +150,19 @@
   }
 
   .dateInputs {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-2);
+    margin-left: 0;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
   }
 
   .dateInputGroup {
-    width: 100%;
+    flex: 1 1 calc(50% - var(--space-2));
+    min-width: 140px;
   }
 
   .dateInput {
+    max-width: none;
     flex: 1;
   }
 }
@@ -151,5 +176,14 @@
   .periodBtn {
     padding: 10px 8px;
     font-size: var(--text-xs);
+  }
+
+  .dateInputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dateInputGroup {
+    width: 100%;
   }
 }
