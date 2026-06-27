@@ -432,9 +432,9 @@ function CTeList() {
               <th>Remetente</th>
               <th>Destinatario</th>
               <th>Valor</th>
-              <th>Modalidade</th>
+              <th className={sharedStyles.hideTablet}>Modalidade</th>
               <th>Status</th>
-              <th>Pago</th>
+              <th className={sharedStyles.hideTablet}>Pago</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -464,13 +464,13 @@ function CTeList() {
                     <td data-label="Valor" className={sharedStyles.textRight}>
                       {formatCurrency(cte.valor_total)}
                     </td>
-                    <td data-label="Modalidade">
+                    <td data-label="Modalidade" className={sharedStyles.hideTablet}>
                       <StatusPill status={modalidadePill.status}>{modalidadePill.text}</StatusPill>
                     </td>
                     <td data-label="Status">
                       <StatusPill status={statusPill.status}>{statusPill.text}</StatusPill>
                     </td>
-                    <td data-label="Pago">
+                    <td data-label="Pago" className={sharedStyles.hideTablet}>
                       <button
                         className={`${sharedStyles.btnTogglePago} ${cte.pago ? sharedStyles.pago : sharedStyles.naoPago}`}
                         onClick={() => handleTogglePagamento(cte)}
@@ -491,7 +491,7 @@ function CTeList() {
                         )}
                       </button>
                     </td>
-                    <td>
+                    <td data-label="Ações">
                       <div className={sharedStyles.actionButtons}>
                         <button
                           className={`${sharedStyles.btnAction} ${sharedStyles.btnView}`}

@@ -449,6 +449,20 @@
 }
 
 /* Responsivo */
+@media (max-width: 1024px) {
+  .filtrosForm {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+
+  .filtrosForm .inputFilter,
+  .filtrosForm .selectFilter {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 @media (max-width: 768px) {
   .page {
     padding: var(--space-4);

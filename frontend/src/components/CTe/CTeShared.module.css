@@ -96,6 +96,8 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
+  min-width: 0;
+  word-break: break-word;
 }
 
 /* Charts Grid */
@@ -218,6 +220,34 @@
 
 .textRight {
   text-align: right;
+}
+
+/* Hide columns on tablet (<=1024px) */
+.hideTablet {
+  display: table-cell;
+}
+
+@media (max-width: 1024px) {
+  .hideTablet {
+    display: none;
+  }
+
+  .filtrosForm {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .inputFilter,
+  .selectFilter {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .inputFilter:first-child {
+    flex: none;
+    min-width: 0;
+  }
 }
 
 /* Header buttons */
@@ -599,15 +629,9 @@
 }
 
 /* Responsivo */
-@media (max-width: 1400px) {
+@media (max-width: 1024px) {
   .kpiGrid {
     grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 1024px) {
-  .chartsGrid {
-    grid-template-columns: 1fr;
   }
 }
 

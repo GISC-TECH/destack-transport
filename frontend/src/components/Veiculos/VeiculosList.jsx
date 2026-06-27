@@ -312,12 +312,12 @@ function VeiculosList() {
             <thead>
               <tr>
                 <th>Placa</th>
-                <th>RENAVAM</th>
+                <th className={styles.hideTablet}>RENAVAM</th>
                 <th>Tipo</th>
                 <th>Proprietário</th>
-                <th>Capacidade (kg)</th>
+                <th className={styles.hideTablet}>Capacidade (kg)</th>
                 <th>Capacidade (m3)</th>
-                <th>Compartimentos</th>
+                <th className={styles.hideTablet}>Compartimentos</th>
                 <th>Status</th>
                 <th>Ações</th>
               </tr>
@@ -326,16 +326,16 @@ function VeiculosList() {
               {veiculos.map((veiculo) => (
                 <tr key={veiculo.id}>
                   <td data-label="Placa"><strong>{veiculo.placa}</strong></td>
-                  <td data-label="RENAVAM">{veiculo.renavam || '-'}</td>
+                  <td data-label="RENAVAM" className={styles.hideTablet}>{veiculo.renavam || '-'}</td>
                   <td data-label="Tipo">
                     <StatusPill status={getTipoStatus(veiculo.tipo_proprietario)}>
                       {getTipoProprietario(veiculo.tipo_proprietario)}
                     </StatusPill>
                   </td>
                   <td data-label="Proprietário">{veiculo.proprietario_nome || '-'}</td>
-                  <td data-label="Capacidade (kg)">{veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}</td>
+                  <td data-label="Capacidade (kg)" className={styles.hideTablet}>{veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}</td>
                   <td data-label="Capacidade (m3)">{veiculo.capacidade_m3 ? `${veiculo.capacidade_m3} m3` : '-'}</td>
-                  <td data-label="Compartimentos">
+                  <td data-label="Compartimentos" className={styles.hideTablet}>
                     {veiculo.compartimentos && veiculo.compartimentos.length > 0 ? (
                       <StatusPill status="info">
                         {veiculo.compartimentos.length} boca{veiculo.compartimentos.length !== 1 ? 's' : ''}
@@ -349,7 +349,7 @@ function VeiculosList() {
                       {veiculo.ativo ? 'Ativo' : 'Inativo'}
                     </StatusPill>
                   </td>
-                  <td className={styles.actionsCell}>
+                  <td data-label="Ações" className={styles.actionsCell}>
                     <Button
                       variant="primary"
                       size="sm"

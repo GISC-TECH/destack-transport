@@ -136,6 +136,10 @@
   .headerActions {
     width: 100%;
     justify-content: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-width: 100%;
+    overflow-x: auto;
   }
 }
 
@@ -174,5 +178,6 @@
 
   .headerActions {
     width: 100%;
+    flex-direction: column;
   }
 }

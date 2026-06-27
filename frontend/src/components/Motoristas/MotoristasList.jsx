@@ -320,8 +320,8 @@ function MotoristasList() {
                 <th>Nome</th>
                 <th>CPF</th>
                 <th>CNH</th>
-                <th>Categoria</th>
-                <th>Validade CNH</th>
+                <th className={styles.hideTablet}>Categoria</th>
+                <th className={styles.hideTablet}>Validade CNH</th>
                 <th>Status</th>
                 <th>Ações</th>
               </tr>
@@ -343,16 +343,16 @@ function MotoristasList() {
                   </td>
                   <td data-label="CPF">{motorista.cpf_formatado || motorista.cpf}</td>
                   <td data-label="CNH">{motorista.cnh || '-'}</td>
-                  <td data-label="Categoria">
+                  <td data-label="Categoria" className={styles.hideTablet}>
                     <span className={`${styles.badge} ${styles.badgeCategoria}`}>{motorista.categoria_cnh}</span>
                   </td>
-                  <td data-label="Validade CNH">{motorista.validade_cnh_formatada || motorista.validade_cnh || '-'}</td>
+                  <td data-label="Validade CNH" className={styles.hideTablet}>{motorista.validade_cnh_formatada || motorista.validade_cnh || '-'}</td>
                   <td data-label="Status">
                     <StatusPill status={motorista.ativo ? 'ativo' : 'inativo'}>
                       {motorista.ativo ? 'Ativo' : 'Inativo'}
                     </StatusPill>
                   </td>
-                  <td className={styles.actionsCell}>
+                  <td data-label="Ações" className={styles.actionsCell}>
                     <Button
                       variant="primary"
                       size="sm"

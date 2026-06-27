@@ -35,6 +35,16 @@
   max-width: 900px;
 }
 
+@media (max-width: 1024px) {
+  .md {
+    max-width: 520px;
+  }
+
+  .lg {
+    max-width: 720px;
+  }
+}
+
 .header {
   display: flex;
   justify-content: space-between;

@@ -365,6 +365,17 @@ select.select-filter {
     padding-left: 15px;
     padding-right: 15px;
   }
+
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .form-row > .form-group {
+    flex: 1 1 100%;
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -390,16 +401,6 @@ select.select-filter {
     font-size: 13px;
   }
 
-  .form-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
-  }
-
-  .form-row > .form-group {
-    flex: 1 1 100%;
-    width: 100%;
-  }
 }
 
 @media (max-width: 480px) {

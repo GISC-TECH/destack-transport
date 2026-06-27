@@ -153,6 +153,8 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
+  min-width: 0;
+  word-break: break-word;
 }
 
 /* Charts Grid */
@@ -280,6 +282,17 @@
   box-shadow: 0 0 0 3px var(--primary-light);
 }
 
+/* Hide columns on tablet (<=1024px) */
+.hideTablet {
+  display: table-cell;
+}
+
+@media (max-width: 1024px) {
+  .hideTablet {
+    display: none;
+  }
+}
+
 /* Results info */
 .resultsInfo {
   margin-bottom: 15px;
@@ -287,12 +300,6 @@
 
 .tableWrapper {
   /* wrapper handled by TableContainer; extra styles when needed */
-}
-
-@media (max-width: 768px) {
-  .tableWrapper > table {
-    display: none;
-  }
 }
 
 .resultsInfo p {
@@ -820,15 +827,9 @@
 }
 
 /* Responsive */
-@media (max-width: 1400px) {
+@media (max-width: 1024px) {
   .kpiGrid {
     grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 1024px) {
-  .chartsGrid {
-    grid-template-columns: 1fr;
   }
 
   .pageHeader {
@@ -845,6 +846,23 @@
   .actionButtons {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .filtrosForm {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .inputFilter,
+  .selectFilter {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .inputFilter:first-child {
+    flex: none;
+    min-width: 0;
   }
 }
 

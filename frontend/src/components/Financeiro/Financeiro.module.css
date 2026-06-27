@@ -230,6 +230,8 @@
   letter-spacing: -0.02em;
   color: var(--text-primary);
   line-height: 1.2;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .finKpiPercent {
@@ -548,7 +550,7 @@
 }
 
 /* Responsivo */
-@media (max-width: 1400px) {
+@media (max-width: 1024px) {
   .finKpiGrid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -562,7 +564,7 @@
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .finChartsGrid {
     grid-template-columns: 1fr;
   }
@@ -574,9 +576,7 @@
   .finChartCard.resumo {
     grid-column: span 1;
   }
-}
 
-@media (max-width: 768px) {
   .financeiroPage {
     padding: 0;
   }

@@ -436,9 +436,9 @@ function MDFeList() {
               <th>Número</th>
               <th>Data Emissão</th>
               <th>UF Origem</th>
-              <th>UF Destino</th>
+              <th className={styles.hideTablet}>UF Destino</th>
               <th>Veículo</th>
-              <th>CT-es</th>
+              <th className={styles.hideTablet}>CT-es</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
@@ -462,7 +462,7 @@ function MDFeList() {
                       {mdfe.uf_inicio || '-'}
                     </span>
                   </td>
-                  <td data-label="UF Destino">
+                  <td data-label="UF Destino" className={styles.hideTablet}>
                     <span className={styles.badgeSecondary}>
                       {mdfe.uf_fim || '-'}
                     </span>
@@ -470,7 +470,7 @@ function MDFeList() {
                   <td data-label="Veículo">
                     <strong>{mdfe.placa_tracao || '-'}</strong>
                   </td>
-                  <td data-label="CT-es">
+                  <td data-label="CT-es" className={styles.hideTablet}>
                     <span className={styles.badgeInfo}>
                       {mdfe.documentos_count || 0}
                     </span>
@@ -480,7 +480,7 @@ function MDFeList() {
                       {mdfe.status || 'Pendente'}
                     </StatusPill>
                   </td>
-                  <td>
+                  <td data-label="Ações">
                     <div className={styles.actionButtons}>
                       <button
                         className={styles.actionBtnView}

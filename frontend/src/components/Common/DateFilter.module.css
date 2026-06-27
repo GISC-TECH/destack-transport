@@ -100,8 +100,8 @@
 
 @media (max-width: 1024px) {
   .dateFilter {
-    flex-direction: column;
-    align-items: stretch;
+    padding: var(--space-3);
+    gap: var(--space-3);
   }
 
   .dateInputs {
@@ -112,8 +112,8 @@
 
 @media (max-width: 768px) {
   .dateFilter {
-    padding: var(--space-3);
-    gap: var(--space-3);
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .periodButtons {

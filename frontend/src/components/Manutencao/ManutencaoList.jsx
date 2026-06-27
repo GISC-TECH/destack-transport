@@ -348,7 +348,7 @@ function ManutencaoList() {
             onChange={(e) => setFiltros({...filtros, veiculo: e.target.value})}
             className={styles.inputFilter}
           />
-          <button type="submit" variant="primary">Filtrar</button>
+          <Button type="submit" variant="primary">Filtrar</Button>
         </form>
       </div>
 
@@ -363,10 +363,10 @@ function ManutencaoList() {
             <tr>
               <th>Veículo</th>
               <th>Tipo</th>
-              <th>Descrição</th>
+              <th className={styles.hideTablet}>Descrição</th>
               <th>Data Agendada</th>
               <th>Custo</th>
-              <th>Nota Fiscal</th>
+              <th className={styles.hideTablet}>Nota Fiscal</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
@@ -387,7 +387,7 @@ function ManutencaoList() {
                     </small>
                   </td>
                   <td data-label="Tipo">{getTipoPill(manutencao.tipo)}</td>
-                  <td data-label="Descrição">
+                  <td data-label="Descrição" className={styles.hideTablet}>
                     <span className={styles.descricaoTruncate}>
                       {manutencao.descricao || '-'}
                     </span>
@@ -396,7 +396,7 @@ function ManutencaoList() {
                   <td data-label="Custo" className={styles.textRight}>
                     <strong>{formatCurrency(manutencao.custo)}</strong>
                   </td>
-                  <td data-label="Nota Fiscal" className={styles.textCenter}>
+                  <td data-label="Nota Fiscal" className={`${styles.textCenter} ${styles.hideTablet}`}>
                     {manutencao.arquivo_nota ? (
                       <a
                         href={manutencao.arquivo_nota}
@@ -417,7 +417,7 @@ function ManutencaoList() {
                     )}
                   </td>
                   <td data-label="Status">{getStatusPill(manutencao.status)}</td>
-                  <td className={styles.actionsCell}>
+                  <td data-label="Ações" className={styles.actionsCell}>
                     <Link to={`/manutencoes/${manutencao.id}`} className={`${styles.btnAction} ${styles.view}`} title="Ver detalhes">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>

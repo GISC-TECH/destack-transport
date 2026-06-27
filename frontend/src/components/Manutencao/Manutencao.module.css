@@ -178,87 +178,6 @@
   grid-column: 1 / -1;
 }
 
-/* Mobile cards */
-.desktopOnly {
-  display: block;
-}
-
-.mobileOnly {
-  display: none !important;
-}
-
-.mobileCards {
-  display: none;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.mobileCard {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 14px;
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.mobileCard:active {
-  transform: scale(0.995);
-}
-
-.mobileCardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.mobileCardHeader h4 {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  line-height: 1.3;
-  word-break: break-word;
-}
-
-.mobileCardBody {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.mobileCardRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.mobileCardLabel {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.mobileCardValue {
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  text-align: right;
-  word-break: break-word;
-  min-width: 0;
-}
-
-.mobileCardFooter {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-light);
-}
-
 /* Action Buttons */
 .actionsCell {
   text-align: center;
@@ -305,6 +224,17 @@
 /* Utility */
 .textCenter {
   text-align: center;
+}
+
+/* Hide columns on tablet (<=1024px) */
+.hideTablet {
+  display: table-cell;
+}
+
+@media (max-width: 1024px) {
+  .hideTablet {
+    display: none;
+  }
 }
 
 .textRight {
@@ -482,6 +412,18 @@
   .formSection {
     padding: 20px;
   }
+
+  .filtrosForm {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .selectFilter,
+  .inputFilter {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 768px) {
@@ -536,20 +478,6 @@
   .inputFilter {
     width: 100%;
     min-width: 0;
-  }
-}
-
-@media (max-width: 640px) {
-  .desktopOnly {
-    display: none !important;
-  }
-
-  .mobileOnly {
-    display: block !important;
-  }
-
-  .mobileCards {
-    display: flex !important;
   }
 }
 

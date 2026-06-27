@@ -239,8 +239,8 @@ function ClientesList() {
                 <th>Razão Social</th>
                 <th>Nome Fantasia</th>
                 <th>CNPJ</th>
-                <th>Cidade</th>
-                <th>UF</th>
+                <th className={styles.hideTablet}>Cidade</th>
+                <th className={styles.hideTablet}>UF</th>
                 <th>Tipo Frete</th>
                 <th>Status</th>
                 <th>Ações</th>
@@ -252,8 +252,8 @@ function ClientesList() {
                   <td data-label="Razão Social">{cliente.razao_social}</td>
                   <td data-label="Nome Fantasia">{cliente.nome_fantasia || '-'}</td>
                   <td data-label="CNPJ">{cliente.cnpj_formatado || cliente.cnpj}</td>
-                  <td data-label="Cidade">{cliente.cidade || '-'}</td>
-                  <td data-label="UF">{cliente.estado || '-'}</td>
+                  <td data-label="Cidade" className={styles.hideTablet}>{cliente.cidade || '-'}</td>
+                  <td data-label="UF" className={styles.hideTablet}>{cliente.estado || '-'}</td>
                   <td data-label="Tipo Frete">
                     <StatusPill status={cliente.tipo_frete?.toLowerCase()}>
                       {cliente.tipo_frete}
@@ -264,7 +264,7 @@ function ClientesList() {
                       {cliente.ativo ? 'Ativo' : 'Inativo'}
                     </StatusPill>
                   </td>
-                  <td className={styles.actionsCell}>
+                  <td data-label="Ações" className={styles.actionsCell}>
                     <Button
                       variant="primary"
                       size="sm"

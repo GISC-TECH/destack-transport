@@ -465,19 +465,11 @@
   .kpiGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .kpiGridSecondary {
-    grid-template-columns: repeat(3, 1fr);
-  }
 }
 
 @media (max-width: 1200px) {
-  .kpiGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .chartsGrid {
-    grid-template-columns: 1fr;
+  .kpiGridSecondary {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .recentDocsSection {
@@ -490,6 +482,10 @@
 }
 
 @media (max-width: 1024px) {
+  .kpiGridSecondary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .chartCard {
     padding: 20px;
   }
@@ -505,7 +501,11 @@
   }
 
   .kpiGridSecondary {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
+  }
+
+  .chartsGrid {
+    grid-template-columns: 1fr;
   }
 
   .kpiCard {
