@@ -288,9 +288,13 @@
 }
 
 /* Bottom Section */
-.bottom-section {
+.quick-actions-section {
+  margin-bottom: 30px;
+}
+
+.recent-docs-section {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
@@ -535,7 +539,17 @@
     grid-template-columns: 1fr;
   }
 
-  .bottom-section {
+  .recent-docs-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-actions-section {
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .recent-docs-section {
     grid-template-columns: 1fr;
   }
 }
@@ -883,8 +897,12 @@
 
 /* Bottom section mobile - cards em coluna */
 @media (max-width: 768px) {
-  .bottom-section {
+  .recent-docs-section {
     gap: 12px;
+  }
+
+  .quick-actions-section {
+    margin-bottom: 20px;
   }
 
   .quick-actions-card,

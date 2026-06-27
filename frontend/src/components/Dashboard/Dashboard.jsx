@@ -431,7 +431,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="bottom-section">
+      <div className="quick-actions-section">
         <div className="quick-actions-card">
           <h3>Ações Rápidas</h3>
           <div className="quick-actions-grid">
@@ -484,7 +484,9 @@ function Dashboard() {
             </Link>
           </div>
         </div>
+      </div>
 
+      <div className="recent-docs-section">
         <div className="recent-docs-card">
           <h3>Últimos CT-es</h3>
           <div className="recent-docs-list">
