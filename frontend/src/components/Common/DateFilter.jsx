@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styles from './DateFilter.module.css';
 
 // Retorna a data local de hoje no formato YYYY-MM-DD
@@ -70,7 +70,6 @@ function DateFilter({
   const [dataInicio, setDataInicio] = useState(initialDataInicio || defaultDates.data_inicio);
   const [dataFim, setDataFim] = useState(initialDataFim || defaultDates.data_fim);
   const [erro, setErro] = useState(null);
-  const debounceTimer = useRef(null);
 
   // Sincroniza com valores externos se fornecidos
   useEffect(() => {
@@ -84,14 +83,6 @@ function DateFilter({
       setDataFim(initialDataFim);
     }
   }, [initialDataFim]);
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-    };
-  }, []);
 
   const isValidDate = useCallback((value) => {
     if (!value) return false;
@@ -127,38 +118,33 @@ function DateFilter({
     emitFilterChange(dates.data_inicio, dates.data_fim, novoPeriodo);
   };
 
+  // Atualiza o estado local ao digitar/selecionar, mas nao dispara o filtro
   const handleDataChange = (campo, valor) => {
     setPeriodo('custom');
     setErro(null);
 
-    let novaDataInicio = dataInicio;
-    let novaDataFim = dataFim;
-
     if (campo === 'inicio') {
-      novaDataInicio = valor;
       setDataInicio(valor);
       // Se nova data inicial for maior que a final, ajusta a final
-      if (valor > novaDataFim) {
-        novaDataFim = valor;
+      if (valor > dataFim) {
         setDataFim(valor);
       }
     } else {
-      novaDataFim = valor;
       setDataFim(valor);
       // Se nova data final for menor que a inicial, ajusta a inicial
-      if (valor < novaDataInicio) {
-        novaDataInicio = valor;
+      if (valor < dataInicio) {
         setDataInicio(valor);
       }
     }
+  };
 
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
+  // Dispara o filtro ao sair do campo ou clicar em Aplicar
+  const handleBlur = () => {
+    emitFilterChange(dataInicio, dataFim, 'custom');
+  };
 
-    debounceTimer.current = setTimeout(() => {
-      emitFilterChange(novaDataInicio, novaDataFim, 'custom');
-    }, 300);
+  const handleAplicar = () => {
+    emitFilterChange(dataInicio, dataFim, 'custom');
   };
 
   return (
@@ -204,6 +190,7 @@ function DateFilter({
             type="date"
             value={dataInicio}
             onChange={(e) => handleDataChange('inicio', e.target.value)}
+            onBlur={handleBlur}
             className={`${styles.dateInput} ${erro ? styles.dateInputError : ''}`}
             aria-invalid={erro ? 'true' : 'false'}
           />
@@ -215,10 +202,23 @@ function DateFilter({
             type="date"
             value={dataFim}
             onChange={(e) => handleDataChange('fim', e.target.value)}
+            onBlur={handleBlur}
             className={`${styles.dateInput} ${erro ? styles.dateInputError : ''}`}
             aria-invalid={erro ? 'true' : 'false'}
           />
         </div>
+        <button
+          type="button"
+          className={styles.applyBtn}
+          onClick={handleAplicar}
+          aria-label="Aplicar filtro de data"
+          title="Aplicar filtro"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          <span>Aplicar</span>
+        </button>
       </div>
 
       {erro && <span className={styles.errorMessage}>{erro}</span>}
