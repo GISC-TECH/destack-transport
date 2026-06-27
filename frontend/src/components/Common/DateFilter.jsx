@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './DateFilter.module.css';
 
+// Retorna a data local de hoje no formato YYYY-MM-DD
+const getTodayLocal = () => {
+  const hoje = new Date();
+  return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+};
+
 // Funcao para calcular datas baseadas no periodo (fora do componente)
 const getDateRange = (periodo) => {
   const hoje = new Date();
@@ -8,33 +14,41 @@ const getDateRange = (periodo) => {
 
   switch (periodo) {
     case 'hoje':
-      dataInicio = new Date(hoje);
-      dataFim = new Date(hoje);
+      dataInicio = getTodayLocal();
+      dataFim = getTodayLocal();
       break;
     case '7dias':
       dataFim = new Date(hoje);
       dataInicio = new Date(hoje);
       dataInicio.setDate(dataInicio.getDate() - 7);
+      dataInicio = `${dataInicio.getFullYear()}-${String(dataInicio.getMonth() + 1).padStart(2, '0')}-${String(dataInicio.getDate()).padStart(2, '0')}`;
+      dataFim = `${dataFim.getFullYear()}-${String(dataFim.getMonth() + 1).padStart(2, '0')}-${String(dataFim.getDate()).padStart(2, '0')}`;
       break;
     case 'mes':
       // Primeiro e ultimo dia do mes atual
       dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
       dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+      dataInicio = `${dataInicio.getFullYear()}-${String(dataInicio.getMonth() + 1).padStart(2, '0')}-${String(dataInicio.getDate()).padStart(2, '0')}`;
+      dataFim = `${dataFim.getFullYear()}-${String(dataFim.getMonth() + 1).padStart(2, '0')}-${String(dataFim.getDate()).padStart(2, '0')}`;
       break;
     case 'ano':
       // Ano atual completo
       dataInicio = new Date(hoje.getFullYear(), 0, 1);
       dataFim = new Date(hoje.getFullYear(), 11, 31);
+      dataInicio = `${dataInicio.getFullYear()}-${String(dataInicio.getMonth() + 1).padStart(2, '0')}-${String(dataInicio.getDate()).padStart(2, '0')}`;
+      dataFim = `${dataFim.getFullYear()}-${String(dataFim.getMonth() + 1).padStart(2, '0')}-${String(dataFim.getDate()).padStart(2, '0')}`;
       break;
     default:
       // Default: mes atual
       dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
       dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+      dataInicio = `${dataInicio.getFullYear()}-${String(dataInicio.getMonth() + 1).padStart(2, '0')}-${String(dataInicio.getDate()).padStart(2, '0')}`;
+      dataFim = `${dataFim.getFullYear()}-${String(dataFim.getMonth() + 1).padStart(2, '0')}-${String(dataFim.getDate()).padStart(2, '0')}`;
   }
 
   return {
-    data_inicio: dataInicio.toISOString().split('T')[0],
-    data_fim: dataFim.toISOString().split('T')[0]
+    data_inicio: dataInicio,
+    data_fim: dataFim
   };
 };
 
@@ -55,6 +69,7 @@ function DateFilter({
   const [periodo, setPeriodo] = useState(defaultPeriodo);
   const [dataInicio, setDataInicio] = useState(initialDataInicio || defaultDates.data_inicio);
   const [dataFim, setDataFim] = useState(initialDataFim || defaultDates.data_fim);
+  const [erro, setErro] = useState(null);
   const debounceTimer = useRef(null);
 
   // Sincroniza com valores externos se fornecidos
@@ -85,9 +100,16 @@ function DateFilter({
   }, []);
 
   const emitFilterChange = useCallback((inicio, fim, novoPeriodo) => {
+    setErro(null);
     if (!onFilterChange) return;
-    if (!isValidDate(inicio) || !isValidDate(fim)) return;
-    if (inicio > fim) return;
+    if (!isValidDate(inicio) || !isValidDate(fim)) {
+      setErro('Datas invalidas');
+      return;
+    }
+    if (inicio > fim) {
+      setErro('A data inicial nao pode ser maior que a final');
+      return;
+    }
 
     onFilterChange({
       periodo: novoPeriodo,
@@ -107,6 +129,7 @@ function DateFilter({
 
   const handleDataChange = (campo, valor) => {
     setPeriodo('custom');
+    setErro(null);
 
     let novaDataInicio = dataInicio;
     let novaDataFim = dataFim;
@@ -114,9 +137,19 @@ function DateFilter({
     if (campo === 'inicio') {
       novaDataInicio = valor;
       setDataInicio(valor);
+      // Se nova data inicial for maior que a final, ajusta a final
+      if (valor > novaDataFim) {
+        novaDataFim = valor;
+        setDataFim(valor);
+      }
     } else {
       novaDataFim = valor;
       setDataFim(valor);
+      // Se nova data final for menor que a inicial, ajusta a inicial
+      if (valor < novaDataInicio) {
+        novaDataInicio = valor;
+        setDataInicio(valor);
+      }
     }
 
     if (debounceTimer.current) {
@@ -171,7 +204,8 @@ function DateFilter({
             type="date"
             value={dataInicio}
             onChange={(e) => handleDataChange('inicio', e.target.value)}
-            className={styles.dateInput}
+            className={`${styles.dateInput} ${erro ? styles.dateInputError : ''}`}
+            aria-invalid={erro ? 'true' : 'false'}
           />
         </div>
         <div className={styles.dateInputGroup}>
@@ -181,10 +215,13 @@ function DateFilter({
             type="date"
             value={dataFim}
             onChange={(e) => handleDataChange('fim', e.target.value)}
-            className={styles.dateInput}
+            className={`${styles.dateInput} ${erro ? styles.dateInputError : ''}`}
+            aria-invalid={erro ? 'true' : 'false'}
           />
         </div>
       </div>
+
+      {erro && <span className={styles.errorMessage}>{erro}</span>}
     </div>
   );
 }

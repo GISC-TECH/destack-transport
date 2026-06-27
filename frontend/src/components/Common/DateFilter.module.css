@@ -81,6 +81,23 @@
   box-shadow: 0 0 0 3px var(--primary-light);
 }
 
+.dateInputError {
+  border-color: var(--danger-color) !important;
+  background-color: var(--danger-light);
+}
+
+.dateInputError:focus {
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.2);
+}
+
+.errorMessage {
+  width: 100%;
+  color: var(--danger-color);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  margin-top: -4px;
+}
+
 @media (max-width: 1024px) {
   .dateFilter {
     flex-direction: column;
