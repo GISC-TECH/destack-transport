@@ -102,7 +102,7 @@ services:
 
   # Evolution API - Gateway de WhatsApp self-hosted
   evolution_api:
-    image: atendai/evolution-api:v2.2.2
+    image: evoapicloud/evolution-api:v2.2.2
     container_name: destack_evolution_api_local
     restart: unless-stopped
     ports:
