@@ -4,6 +4,7 @@ import { contasPagarAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
 import styles from './Financeiro.module.css';
 
 function ContaPagarForm() {
@@ -120,12 +121,10 @@ function ContaPagarForm() {
 
   return (
     <div className={styles.financeiroPage}>
-      <div className={styles.pageHeader}>
-        <div className={styles.headerTitle}>
-          <h1>{isEditing ? 'Editar Conta a Pagar' : 'Nova Conta a Pagar'}</h1>
-          <p>{isEditing ? 'Atualize os dados da despesa' : 'Cadastre uma nova despesa a pagar'}</p>
-        </div>
-      </div>
+      <PageHeader
+        title={isEditing ? 'Editar Conta a Pagar' : 'Nova Conta a Pagar'}
+        subtitle={isEditing ? 'Atualize os dados da despesa' : 'Cadastre uma nova despesa a pagar'}
+      />
 
       {error && (
         <div className="alert alert-error">

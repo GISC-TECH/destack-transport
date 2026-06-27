@@ -6,6 +6,7 @@ import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import Button from '../Common/Button';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
+import PageHeader from '../Common/PageHeader';
 import styles from './MotoristaForm.module.css';
 
 function MotoristaForm() {
@@ -146,16 +147,18 @@ function MotoristaForm() {
 
   return (
     <div className={styles.motoristaFormContainer}>
-      <div className={styles.formHeader}>
-        <h2>{isEdit ? 'Editar Motorista' : 'Novo Motorista'}</h2>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => navigate('/motoristas')}
-        >
-          ← Voltar
-        </Button>
-      </div>
+      <PageHeader
+        title={isEdit ? 'Editar Motorista' : 'Novo Motorista'}
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate('/motoristas')}
+          >
+            ← Voltar
+          </Button>
+        }
+      />
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
 

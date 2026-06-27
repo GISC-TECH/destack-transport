@@ -4,6 +4,7 @@ import { conciliacaoAPI, clientesAPI, cteAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
 import styles from './Faturas.module.css';
 
 function formatCurrency(value) {
@@ -180,12 +181,10 @@ function FaturaForm() {
 
   return (
     <div className={styles.faturaFormPage}>
-      <div className={styles.pageHeader}>
-        <div className={styles.headerTitle}>
-          <h1>{isEditing ? 'Editar Fatura' : 'Nova Fatura'}</h1>
-          <p>{isEditing ? 'Atualize os dados da fatura' : 'Crie uma nova fatura de contas a receber'}</p>
-        </div>
-      </div>
+      <PageHeader
+        title={isEditing ? 'Editar Fatura' : 'Nova Fatura'}
+        subtitle={isEditing ? 'Atualize os dados da fatura' : 'Crie uma nova fatura de contas a receber'}
+      />
 
       {error && (
         <div className="alert alert-error">

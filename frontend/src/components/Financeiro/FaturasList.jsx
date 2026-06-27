@@ -284,7 +284,7 @@ function FaturasList() {
       {loading ? (
         <>
           <div className="desktop-only">
-            <TableContainer mobileCards={false}>
+            <TableContainer>
               <SkeletonTable rows={5} columns={7} />
             </TableContainer>
           </div>
@@ -299,89 +299,55 @@ function FaturasList() {
         />
       ) : (
         <>
-          <div className="desktop-only">
-            <TableContainer mobileCards={false}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Número</th>
-                    <th>Cliente</th>
-                    <th>Emissão</th>
-                    <th>Vencimento</th>
-                    <th>Status</th>
-                    <th>Valor Total</th>
-                    <th>Ações</th>
+          <TableContainer>
+            <table>
+              <thead>
+                <tr>
+                  <th>Número</th>
+                  <th>Cliente</th>
+                  <th>Emissão</th>
+                  <th>Vencimento</th>
+                  <th>Status</th>
+                  <th>Valor Total</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {faturas.map((f) => (
+                  <tr key={f.id}>
+                    <td data-label="Número"><strong>{f.numero}</strong></td>
+                    <td data-label="Cliente">{f.cliente_nome || '-'}</td>
+                    <td data-label="Emissão">{formatDate(f.data_emissao)}</td>
+                    <td data-label="Vencimento">{formatDate(f.data_vencimento)}</td>
+                    <td data-label="Status">
+                      <StatusPill status={getStatusVariant(f.status)}>
+                        {f.status}
+                      </StatusPill>
+                    </td>
+                    <td data-label="Valor Total">{formatCurrency(f.valor_total)}</td>
+                    <td>
+                      <div className={styles.headerActions}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/faturas/${f.id}/editar`)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleDelete(f.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {faturas.map((f) => (
-                    <tr key={f.id}>
-                      <td><strong>{f.numero}</strong></td>
-                      <td>{f.cliente_nome || '-'}</td>
-                      <td>{formatDate(f.data_emissao)}</td>
-                      <td>{formatDate(f.data_vencimento)}</td>
-                      <td>
-                        <StatusPill status={getStatusVariant(f.status)}>
-                          {f.status}
-                        </StatusPill>
-                      </td>
-                      <td>{formatCurrency(f.valor_total)}</td>
-                      <td>
-                        <div className={styles.headerActions}>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/faturas/${f.id}/editar`)}
-                          >
-                            Editar
-                          </Button>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDelete(f.id)}
-                          >
-                            Excluir
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </TableContainer>
-          </div>
-
-          <div className={styles.mobileCards}>
-            {faturas.map((f) => (
-              <div key={f.id} className={styles.mobileCard}>
-                <div className={styles.mobileCardHeader}>
-                  <span className={styles.mobileCardTitle}>{f.numero}</span>
-                  <StatusPill status={getStatusVariant(f.status)}>{f.status}</StatusPill>
-                </div>
-                <div className={styles.mobileCardBody}>
-                  <p><strong>Cliente:</strong> {f.cliente_nome || '-'}</p>
-                  <p><strong>Vencimento:</strong> {formatDate(f.data_vencimento)}</p>
-                  <p><strong>Valor:</strong> {formatCurrency(f.valor_total)}</p>
-                </div>
-                <div className={styles.mobileCardActions}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/faturas/${f.id}/editar`)}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(f.id)}
-                  >
-                    Excluir
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+                ))}
+              </tbody>
+            </table>
+          </TableContainer>
 
           <div className={styles.pagination}>
             <Button

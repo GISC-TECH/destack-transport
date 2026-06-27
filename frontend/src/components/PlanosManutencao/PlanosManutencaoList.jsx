@@ -213,7 +213,7 @@ function PlanosManutencaoList() {
       </div>
 
       <div className={styles.planosListCard}>
-        <TableContainer mobileCards={false}>
+        <TableContainer>
           <table className={styles.planosTable}>
             <thead>
               <tr>
@@ -242,27 +242,27 @@ function PlanosManutencaoList() {
               ) : (
                 planos.map(plano => (
                   <tr key={plano.id} style={isVencendo(plano) ? { background: tokens.warningLight } : {}}>
-                    <td><strong>{plano.veiculo_placa || '-'}</strong></td>
-                    <td>
+                    <td data-label="Veículo"><strong>{plano.veiculo_placa || '-'}</strong></td>
+                    <td data-label="Tipo">
                       <StatusPill status={getTipoVariant(plano.tipo)}>
                         {getTipoLabel(plano.tipo)}
                       </StatusPill>
                     </td>
-                    <td>{plano.descricao}</td>
-                    <td>
+                    <td data-label="Descrição">{plano.descricao}</td>
+                    <td data-label="Intervalo">
                       {plano.intervalo_km ? `${plano.intervalo_km}km` : ''}
                       {plano.intervalo_km && plano.intervalo_dias ? ' / ' : ''}
                       {plano.intervalo_dias ? `${plano.intervalo_dias}d` : ''}
                     </td>
-                    <td>
+                    <td data-label="Última">
                       {plano.ultima_km ? `${plano.ultima_km}km` : ''}
                       {plano.ultima_data ? ` (${formatDate(plano.ultima_data)})` : '-'}
                     </td>
-                    <td>
+                    <td data-label="Próxima">
                       {plano.proxima_km ? `${plano.proxima_km}km` : ''}
                       {plano.proxima_data ? ` (${formatDate(plano.proxima_data)})` : '-'}
                     </td>
-                    <td>
+                    <td data-label="Status">
                       {plano.ativo ? (
                         isVencendo(plano) ? (
                           <StatusPill status="warning">Vencendo</StatusPill>
@@ -302,32 +302,6 @@ function PlanosManutencaoList() {
             </tbody>
           </table>
         </TableContainer>
-
-        {planos.map(plano => (
-          <div key={plano.id} className={styles.planosMobileCard} style={isVencendo(plano) ? { background: tokens.warningLight } : {}}>
-            <div className={styles.planosMobileRow}>
-              <span><strong>{plano.veiculo_placa || '-'}</strong></span>
-              <StatusPill status={getTipoVariant(plano.tipo)}>{getTipoLabel(plano.tipo)}</StatusPill>
-            </div>
-            <div className={styles.planosMobileRow}>
-              <span className={styles.planosMobileLabel}>Descrição</span>
-              <span>{plano.descricao}</span>
-            </div>
-            <div className={styles.planosMobileRow}>
-              <span className={styles.planosMobileLabel}>Próxima</span>
-              <span>
-                {plano.proxima_km ? `${plano.proxima_km}km` : ''}
-                {plano.proxima_data ? ` (${formatDate(plano.proxima_data)})` : '-'}
-              </span>
-            </div>
-            <div className={styles.planosMobileRow} style={{ marginTop: 12 }}>
-              <Button as={Link} to={`/planos-manutencao/${plano.id}`} variant="primary" size="sm">Editar</Button>
-              <Button variant="secondary" size="sm" onClick={() => handleDelete(plano.id)}>
-                Excluir
-              </Button>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

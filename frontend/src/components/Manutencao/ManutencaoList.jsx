@@ -356,8 +356,8 @@ function ManutencaoList() {
         <p>Total de {manutencoes.length} manutenç{manutencoes.length !== 1 ? 'ões' : 'ão'}</p>
       </div>
 
-      {/* Tabela Desktop */}
-      <TableContainer mobileCards={false} className={styles.desktopOnly}>
+      {/* Tabela */}
+      <TableContainer>
         <table>
           <thead>
             <tr>
@@ -379,32 +379,31 @@ function ManutencaoList() {
             ) : (
               manutencoes.map((manutencao) => (
                 <tr key={manutencao.id}>
-                  <td>
+                  <td data-label="Veículo">
                     <strong>{manutencao.veiculo_info?.placa || manutencao.veiculo_placa || '-'}</strong>
                     <br />
                     <small className={styles.textMuted}>
                       {manutencao.veiculo_info?.modelo || ''}
                     </small>
                   </td>
-                  <td>{getTipoPill(manutencao.tipo)}</td>
-                  <td>
+                  <td data-label="Tipo">{getTipoPill(manutencao.tipo)}</td>
+                  <td data-label="Descrição">
                     <span className={styles.descricaoTruncate}>
                       {manutencao.descricao || '-'}
                     </span>
                   </td>
-                  <td>{formatDate(manutencao.data_agendada)}</td>
-                  <td className={styles.textRight}>
+                  <td data-label="Data Agendada">{formatDate(manutencao.data_agendada)}</td>
+                  <td data-label="Custo" className={styles.textRight}>
                     <strong>{formatCurrency(manutencao.custo)}</strong>
                   </td>
-                  <td className={styles.textCenter}>
+                  <td data-label="Nota Fiscal" className={styles.textCenter}>
                     {manutencao.arquivo_nota ? (
                       <a
                         href={manutencao.arquivo_nota}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={styles.btnAction}
-                        title="Ver Nota Fiscal"
                         className={styles.notaLink}
+                        title="Ver Nota Fiscal"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -417,7 +416,7 @@ function ManutencaoList() {
                       <span className={styles.notaMissing}>-</span>
                     )}
                   </td>
-                  <td>{getStatusPill(manutencao.status)}</td>
+                  <td data-label="Status">{getStatusPill(manutencao.status)}</td>
                   <td className={styles.actionsCell}>
                     <Link to={`/manutencoes/${manutencao.id}`} className={`${styles.btnAction} ${styles.view}`} title="Ver detalhes">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -432,52 +431,6 @@ function ManutencaoList() {
           </tbody>
         </table>
       </TableContainer>
-
-      {/* Cards Mobile */}
-      <div className={styles.mobileOnly}>
-        {manutencoes.length === 0 ? (
-          <div className={styles.emptyState}>
-            <p>Nenhuma manutenção encontrada</p>
-          </div>
-        ) : (
-          <div className={styles.mobileCards}>
-            {manutencoes.map((manutencao) => (
-              <div key={manutencao.id} className={styles.mobileCard} onClick={() => navigate(`/manutencoes/${manutencao.id}`)}>
-                <div className={styles.mobileCardHeader}>
-                  <h4>{manutencao.veiculo_info?.placa || manutencao.veiculo_placa || '-'}</h4>
-                  {getStatusPill(manutencao.status)}
-                </div>
-                <div className={styles.mobileCardBody}>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Tipo</span>
-                    <span className={styles.mobileCardValue}>{getTipoPill(manutencao.tipo)}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Descrição</span>
-                    <span className={styles.mobileCardValue}>{manutencao.descricao || '-'}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Data Agendada</span>
-                    <span className={styles.mobileCardValue}>{formatDate(manutencao.data_agendada)}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Custo</span>
-                    <span className={styles.mobileCardValue}><strong>{formatCurrency(manutencao.custo)}</strong></span>
-                  </div>
-                </div>
-                <div className={styles.mobileCardFooter}>
-                  <Link to={`/manutencoes/${manutencao.id}`} className={`${styles.btnAction} ${styles.view}`} title="Ver detalhes">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

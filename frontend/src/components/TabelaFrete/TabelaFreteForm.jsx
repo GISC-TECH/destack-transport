@@ -4,6 +4,7 @@ import { tabelaFreteAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
 import styles from './TabelaFrete.module.css';
 
 function TabelaFreteForm() {
@@ -110,12 +111,10 @@ function TabelaFreteForm() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <div className={styles.title}>
-          <h1>{isEditing ? 'Editar Tabela de Frete' : 'Nova Tabela de Frete'}</h1>
-          <p>{isEditing ? 'Atualize os dados da tabela' : 'Cadastre uma nova rota e valores'}</p>
-        </div>
-      </div>
+      <PageHeader
+        title={isEditing ? 'Editar Tabela de Frete' : 'Nova Tabela de Frete'}
+        subtitle={isEditing ? 'Atualize os dados da tabela' : 'Cadastre uma nova rota e valores'}
+      />
 
       {error && (
         <div className={`${styles.alert} ${styles.alertError}`}>

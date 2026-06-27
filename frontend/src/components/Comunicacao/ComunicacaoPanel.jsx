@@ -3,6 +3,8 @@ import { comunicacaoAPI, clientesAPI, motoristasAPI, ordemViagemAPI } from '../.
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
+import StatusPill from '../Common/StatusPill';
 import styles from './ComunicacaoPanel.module.css';
 
 function ComunicacaoPanel() {
@@ -115,12 +117,10 @@ function ComunicacaoPanel() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <h1>Comunicação</h1>
-          <p>Envie e-mails e registre mensagens para clientes e motoristas</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Comunicação"
+        subtitle="Envie e-mails e registre mensagens para clientes e motoristas"
+      />
 
       <div className={styles.grid}>
         <div className={styles.card}>
@@ -225,7 +225,9 @@ function ComunicacaoPanel() {
                 <div key={item.id} className={`${styles.historicoItem} ${item.status === 'enviado' ? styles.historicoEnviado : item.status === 'falha' ? styles.historicoFalha : ''}`}>
                   <div className={styles.historicoHeader}>
                     <span className={styles.historicoCanal}>{item.canal.toUpperCase()}</span>
-                    <span className={styles.historicoStatus}>{item.status}</span>
+                    <StatusPill status={item.status === 'enviado' ? 'success' : item.status === 'falha' ? 'danger' : 'info'}>
+                      {item.status}
+                    </StatusPill>
                   </div>
                   <div className={styles.historicoDestinatario}>{item.destinatario}</div>
                   {item.assunto && <div className={styles.historicoAssunto}>{item.assunto}</div>}

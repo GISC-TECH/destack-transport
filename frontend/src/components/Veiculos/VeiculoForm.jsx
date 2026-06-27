@@ -6,6 +6,7 @@ import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import Button from '../Common/Button';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
+import PageHeader from '../Common/PageHeader';
 import styles from './VeiculoForm.module.css';
 
 function VeiculoForm() {
@@ -159,16 +160,18 @@ function VeiculoForm() {
 
   return (
     <div className={styles.veiculoFormContainer}>
-      <div className={styles.formHeader}>
-        <h2>{isEdit ? 'Editar Veículo' : 'Novo Veículo'}</h2>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => navigate('/veiculos')}
-        >
-          ← Voltar
-        </Button>
-      </div>
+      <PageHeader
+        title={isEdit ? 'Editar Veículo' : 'Novo Veículo'}
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate('/veiculos')}
+          >
+            ← Voltar
+          </Button>
+        }
+      />
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
 

@@ -429,8 +429,7 @@ function MDFeList() {
         <p>Total de {pagination.total} MDF-e{pagination.total !== 1 ? 's' : ''} encontrado{pagination.total !== 1 ? 's' : ''}</p>
       </div>
 
-      <TableContainer mobileCards={false} className={styles.tableWrapper}>
-        {/* Desktop Table */}
+      <TableContainer className={styles.tableWrapper}>
         <table className={styles.dataTable}>
           <thead>
             <tr>
@@ -452,31 +451,31 @@ function MDFeList() {
             ) : (
               mdfes.map((mdfe) => (
                 <tr key={mdfe.id}>
-                  <td>
+                  <td data-label="Número">
                     <strong>{mdfe.numero_mdfe || '-'}</strong>
                     <br />
                     <small className={styles.textMuted}>{mdfe.chave?.slice(-10)}</small>
                   </td>
-                  <td>{mdfe.data_emissao || '-'}</td>
-                  <td>
+                  <td data-label="Data Emissão">{mdfe.data_emissao || '-'}</td>
+                  <td data-label="UF Origem">
                     <span className={styles.badgeSecondary}>
                       {mdfe.uf_inicio || '-'}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="UF Destino">
                     <span className={styles.badgeSecondary}>
                       {mdfe.uf_fim || '-'}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Veículo">
                     <strong>{mdfe.placa_tracao || '-'}</strong>
                   </td>
-                  <td>
+                  <td data-label="CT-es">
                     <span className={styles.badgeInfo}>
                       {mdfe.documentos_count || 0}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Status">
                     <StatusPill status={getStatusVariant(mdfe.status)}>
                       {mdfe.status || 'Pendente'}
                     </StatusPill>
@@ -512,79 +511,6 @@ function MDFeList() {
           </tbody>
         </table>
       </TableContainer>
-
-      {/* Mobile Cards */}
-      <div className={styles.mobileCards}>
-        {mdfes.length === 0 ? (
-          <div className={styles.mobileEmpty}>
-            <div className={styles.mobileEmptyIcon}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-              </svg>
-            </div>
-            <p className={styles.mobileEmptyText}>Nenhum MDF-e encontrado</p>
-          </div>
-        ) : (
-          mdfes.map((mdfe) => (
-            <div key={mdfe.id} className={styles.mobileCard}>
-              <div className={styles.mobileCardHeader}>
-                <div className={styles.mobileCardTitle}>
-                  <span className={styles.mobileCardNumber}>MDF-e #{mdfe.numero_mdfe || '-'}</span>
-                  <span className={styles.mobileCardDate}>{mdfe.data_emissao || '-'}</span>
-                </div>
-                <div className={styles.mobileCardStatus}>
-                  <StatusPill status={getStatusVariant(mdfe.status)}>
-                    {mdfe.status || 'Pendente'}
-                  </StatusPill>
-                </div>
-              </div>
-              <div className={styles.mobileCardBody}>
-                <div className={styles.mobileCardRow}>
-                  <span className={styles.mobileCardLabel}>Rota</span>
-                  <span className={styles.mobileCardValue}>
-                    <span className={styles.badgeSecondary} style={{ marginRight: '6px' }}>{mdfe.uf_inicio || '-'}</span>
-                    <span style={{ color: 'var(--text-muted)' }}>→</span>
-                    <span className={styles.badgeSecondary} style={{ marginLeft: '6px' }}>{mdfe.uf_fim || '-'}</span>
-                  </span>
-                </div>
-                <div className={styles.mobileCardRow}>
-                  <span className={styles.mobileCardLabel}>Veículo</span>
-                  <span className={styles.mobileCardValue} style={{ fontWeight: 700 }}>{mdfe.placa_tracao || '-'}</span>
-                </div>
-                <div className={styles.mobileCardRow}>
-                  <span className={styles.mobileCardLabel}>CT-es</span>
-                  <span className={styles.badgeInfo}>{mdfe.documentos_count || 0}</span>
-                </div>
-              </div>
-              <div className={styles.mobileCardFooter}>
-                <div></div>
-                <div className={styles.mobileCardActions}>
-                  <button
-                    className={styles.actionBtnView}
-                    onClick={() => handleOpenModal(mdfe)}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </button>
-                  <button
-                    className={styles.actionBtnDownload}
-                    onClick={() => handleDownloadXML(mdfe.id, mdfe.numero_mdfe)}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="7 10 12 15 17 10"></polyline>
-                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
 
       {pagination.total > 0 && (
         <div className={styles.pagination}>

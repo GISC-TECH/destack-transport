@@ -3,6 +3,7 @@ import { veiculosAPI, gpsAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
 import styles from './RastreamentoPainel.module.css';
 
 function RastreamentoPainel() {
@@ -60,12 +61,10 @@ function RastreamentoPainel() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <h1>Rastreamento GPS</h1>
-          <p>Visualize a última posição dos veículos</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Rastreamento GPS"
+        subtitle="Visualize a última posição dos veículos"
+      />
 
       {error && <ErrorMessage message={error} onRetry={() => { setError(null); loadVeiculos(); }} />}
 

@@ -231,7 +231,7 @@ function OrdensViagemList() {
       </div>
 
       <div className={styles.osListCard}>
-        <TableContainer mobileCards={false}>
+        <TableContainer>
           <table className={styles.osTable}>
             <thead>
               <tr>
@@ -262,22 +262,22 @@ function OrdensViagemList() {
               ) : (
                 ordens.map(ordem => (
                   <tr key={ordem.id}>
-                    <td><strong>{ordem.numero}</strong></td>
-                    <td>
+                    <td data-label="OS"><strong>{ordem.numero}</strong></td>
+                    <td data-label="Status">
                       <StatusPill status={getStatusVariant(ordem.status)}>
                         {getStatusLabel(ordem.status)}
                       </StatusPill>
                     </td>
-                    <td>{ordem.veiculo_placa || '-'}</td>
-                    <td>{ordem.motorista_nome || '-'}</td>
-                    <td>{formatDateTime(ordem.data_saida)}</td>
-                    <td>{formatDateTime(ordem.data_previsao_chegada)}</td>
-                    <td>
+                    <td data-label="Veículo">{ordem.veiculo_placa || '-'}</td>
+                    <td data-label="Motorista">{ordem.motorista_nome || '-'}</td>
+                    <td data-label="Saída">{formatDateTime(ordem.data_saida)}</td>
+                    <td data-label="Previsão">{formatDateTime(ordem.data_previsao_chegada)}</td>
+                    <td data-label="Rota">
                       {ordem.origem_cidade && ordem.destino_cidade
                         ? `${ordem.origem_cidade}/${ordem.origem_uf} → ${ordem.destino_cidade}/${ordem.destino_uf}`
                         : '-'}
                     </td>
-                    <td>{ordem.ctes_count || 0}</td>
+                    <td data-label="CT-es">{ordem.ctes_count || 0}</td>
                     <td>
                       <div className={styles.osActions}>
                         <Link to={`/ordens-viagem/${ordem.id}`} className={styles.btnIcon} title="Editar">
@@ -307,41 +307,6 @@ function OrdensViagemList() {
             </tbody>
           </table>
         </TableContainer>
-
-        {ordens.map(ordem => (
-          <div key={ordem.id} className={styles.osMobileCard}>
-            <div className={styles.osMobileRow}>
-              <span><strong>{ordem.numero}</strong></span>
-              <StatusPill status={getStatusVariant(ordem.status)}>{getStatusLabel(ordem.status)}</StatusPill>
-            </div>
-            <div className={styles.osMobileRow}>
-              <span className={styles.osMobileLabel}>Veículo</span>
-              <span>{ordem.veiculo_placa || '-'}</span>
-            </div>
-            <div className={styles.osMobileRow}>
-              <span className={styles.osMobileLabel}>Motorista</span>
-              <span>{ordem.motorista_nome || '-'}</span>
-            </div>
-            <div className={styles.osMobileRow}>
-              <span className={styles.osMobileLabel}>Saída</span>
-              <span>{formatDateTime(ordem.data_saida)}</span>
-            </div>
-            <div className={styles.osMobileRow}>
-              <span className={styles.osMobileLabel}>Rota</span>
-              <span>
-                {ordem.origem_cidade && ordem.destino_cidade
-                  ? `${ordem.origem_cidade} → ${ordem.destino_cidade}`
-                  : '-'}
-              </span>
-            </div>
-            <div className={styles.osMobileRow} style={{ marginTop: 12 }}>
-              <Button as={Link} to={`/ordens-viagem/${ordem.id}`} variant="primary" size="sm">Editar</Button>
-              <Button variant="secondary" size="sm" onClick={() => handleDelete(ordem.id)}>
-                Excluir
-              </Button>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

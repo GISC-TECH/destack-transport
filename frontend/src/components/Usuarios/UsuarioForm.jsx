@@ -4,6 +4,7 @@ import { usuariosAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
 import styles from './UsuarioForm.module.css';
 
 function UsuarioForm() {
@@ -151,19 +152,19 @@ function UsuarioForm() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <div className={styles.title}>
-          <span className={styles.icon}>{formIcon}</span>
-          <h2>{isEdit ? 'Editar Usuário' : 'Novo Usuário'}</h2>
-        </div>
-        <Button type="button" variant="outline" onClick={() => navigate('/usuarios')}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-          Voltar
-        </Button>
-      </div>
+      <PageHeader
+        title={isEdit ? 'Editar Usuário' : 'Novo Usuário'}
+        icon={formIcon}
+        actions={
+          <Button type="button" variant="outline" onClick={() => navigate('/usuarios')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Voltar
+          </Button>
+        }
+      />
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
 

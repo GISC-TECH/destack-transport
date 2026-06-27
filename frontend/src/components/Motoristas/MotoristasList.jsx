@@ -311,124 +311,67 @@ function MotoristasList() {
         </Button>
       </div>
 
-      {/* Tabela Desktop + Cards Mobile */}
+      {/* Tabela */}
       {motoristas.length > 0 ? (
-        <>
-          <div className={styles.desktopOnly}>
-            <TableContainer mobileCards={false}>
-              <table className={styles.motoristasTable}>
-                <thead>
-                  <tr>
-                    <th>Nome</th>
-                    <th>CPF</th>
-                    <th>CNH</th>
-                    <th>Categoria</th>
-                    <th>Validade CNH</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {motoristas.map((motorista) => (
-                    <tr key={motorista.id}>
-                      <td>
-                        {motorista.nome}
-                        {motorista.cadastro_completo === false && (
-                          <StatusPill
-                            status="warning"
-                            className={styles.badgeWarning}
-                            title="Cadastro incompleto — falta CNH e/ou validade"
-                          >
-                            {motorista.cadastro_automatico ? 'Auto · incompleto' : 'Incompleto'}
-                          </StatusPill>
-                        )}
-                      </td>
-                      <td>{motorista.cpf_formatado || motorista.cpf}</td>
-                      <td>{motorista.cnh || '-'}</td>
-                      <td>
-                        <span className={`${styles.badge} ${styles.badgeCategoria}`}>{motorista.categoria_cnh}</span>
-                      </td>
-                      <td>{motorista.validade_cnh_formatada || motorista.validade_cnh || '-'}</td>
-                      <td>
-                        <StatusPill status={motorista.ativo ? 'ativo' : 'inativo'}>
-                          {motorista.ativo ? 'Ativo' : 'Inativo'}
-                        </StatusPill>
-                      </td>
-                      <td className={styles.actionsCell}>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          iconOnly
-                          onClick={() => navigate(`/motoristas/editar/${motorista.id}`)}
-                          title="Editar"
-                          aria-label={`Editar ${motorista.nome}`}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                          </svg>
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </TableContainer>
-          </div>
-
-          <div className={`${styles.mobileCards} ${styles.mobileOnly}`}>
-            {motoristas.map((motorista) => (
-              <div
-                key={motorista.id}
-                className={styles.mobileCard}
-                onClick={() => navigate(`/motoristas/editar/${motorista.id}`)}
-              >
-                <div className={styles.mobileCardHeader}>
-                  <h4>{motorista.nome}</h4>
-                  <StatusPill status={motorista.ativo ? 'ativo' : 'inativo'}>
-                    {motorista.ativo ? 'Ativo' : 'Inativo'}
-                  </StatusPill>
-                </div>
-                <div className={styles.mobileCardBody}>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>CPF</span>
-                    <span className={styles.mobileCardValue}>{motorista.cpf_formatado || motorista.cpf}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>CNH</span>
-                    <span className={styles.mobileCardValue}>{motorista.cnh || '-'}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Categoria</span>
+        <TableContainer>
+          <table className={styles.motoristasTable}>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>CNH</th>
+                <th>Categoria</th>
+                <th>Validade CNH</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {motoristas.map((motorista) => (
+                <tr key={motorista.id}>
+                  <td data-label="Nome">
+                    {motorista.nome}
+                    {motorista.cadastro_completo === false && (
+                      <StatusPill
+                        status="warning"
+                        className={styles.badgeWarning}
+                        title="Cadastro incompleto — falta CNH e/ou validade"
+                      >
+                        {motorista.cadastro_automatico ? 'Auto · incompleto' : 'Incompleto'}
+                      </StatusPill>
+                    )}
+                  </td>
+                  <td data-label="CPF">{motorista.cpf_formatado || motorista.cpf}</td>
+                  <td data-label="CNH">{motorista.cnh || '-'}</td>
+                  <td data-label="Categoria">
                     <span className={`${styles.badge} ${styles.badgeCategoria}`}>{motorista.categoria_cnh}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Validade CNH</span>
-                    <span className={styles.mobileCardValue}>{motorista.validade_cnh_formatada || motorista.validade_cnh || '-'}</span>
-                  </div>
-                </div>
-                <div className={styles.mobileCardFooter}>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    iconOnly
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/motoristas/editar/${motorista.id}`);
-                    }}
-                    aria-label={`Editar ${motorista.nome}`}
-                    title="Editar"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+                  </td>
+                  <td data-label="Validade CNH">{motorista.validade_cnh_formatada || motorista.validade_cnh || '-'}</td>
+                  <td data-label="Status">
+                    <StatusPill status={motorista.ativo ? 'ativo' : 'inativo'}>
+                      {motorista.ativo ? 'Ativo' : 'Inativo'}
+                    </StatusPill>
+                  </td>
+                  <td className={styles.actionsCell}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      iconOnly
+                      onClick={() => navigate(`/motoristas/editar/${motorista.id}`)}
+                      title="Editar"
+                      aria-label={`Editar ${motorista.nome}`}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableContainer>
       ) : (
         <EmptyState
           title="Nenhum motorista encontrado"

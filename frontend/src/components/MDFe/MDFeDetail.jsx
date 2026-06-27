@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { mdfeAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
@@ -7,6 +7,7 @@ import ErrorMessage from '../Common/ErrorMessage';
 import StatusPill from '../Common/StatusPill';
 import TableContainer from '../Common/TableContainer';
 import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
 import styles from './MDFe.module.css';
 
 function MDFeDetail() {
@@ -146,61 +147,70 @@ function MDFeDetail() {
 
   const status = getStatusInfo();
 
+  const mdfeIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="9" y1="15" x2="15" y2="15"></line>
+    </svg>
+  );
+
+  const headerActions = (
+    <>
+      <StatusPill status={status.variant}>
+        {status.icon} {status.text}
+      </StatusPill>
+      <Button
+        variant="danger"
+        onClick={handleDownloadPDF}
+        disabled={actionLoading === 'pdf'}
+      >
+        {actionLoading === 'pdf' ? 'Baixando...' : 'DAMDFE (PDF)'}
+      </Button>
+      <Button
+        variant="primary"
+        onClick={handleDownloadXML}
+        disabled={actionLoading === 'xml'}
+      >
+        {actionLoading === 'xml' ? 'Baixando...' : 'XML'}
+      </Button>
+      <Button
+        variant="outline"
+        onClick={handleReprocessar}
+        disabled={actionLoading === 'reprocessar'}
+      >
+        {actionLoading === 'reprocessar' ? 'Processando...' : 'Reprocessar'}
+      </Button>
+      {!mdfe.encerrado && !mdfe.cancelamento && (
+        <Button
+          variant="success"
+          onClick={handleEncerrar}
+          disabled={actionLoading === 'encerrar'}
+        >
+          {actionLoading === 'encerrar' ? 'Encerrando...' : 'Encerrar'}
+        </Button>
+      )}
+      {!mdfe.cancelamento && (
+        <Button
+          variant="danger"
+          onClick={handleCancelar}
+          disabled={actionLoading === 'cancelar'}
+        >
+          {actionLoading === 'cancelar' ? 'Cancelando...' : 'Cancelar'}
+        </Button>
+      )}
+    </>
+  );
+
   return (
     <div className={styles.mdfeDetail}>
-      <div className={styles.pageHeader}>
-        <div>
-          <Link to="/mdfes" className={styles.backLink}>← Voltar para lista</Link>
-          <h1>MDF-e #{mdfe.identificacao?.n_mdf}</h1>
-          <p className={styles.chaveCte}>{mdfe.chave}</p>
-        </div>
-        <div className={styles.headerActions}>
-          <StatusPill status={status.variant}>
-            {status.icon} {status.text}
-          </StatusPill>
-          <div className={styles.actionButtons}>
-            <Button
-              variant="danger"
-              onClick={handleDownloadPDF}
-              disabled={actionLoading === 'pdf'}
-            >
-              {actionLoading === 'pdf' ? 'Baixando...' : 'DAMDFE (PDF)'}
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleDownloadXML}
-              disabled={actionLoading === 'xml'}
-            >
-              {actionLoading === 'xml' ? 'Baixando...' : 'XML'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleReprocessar}
-              disabled={actionLoading === 'reprocessar'}
-            >
-              {actionLoading === 'reprocessar' ? 'Processando...' : 'Reprocessar'}
-            </Button>
-            {!mdfe.encerrado && !mdfe.cancelamento && (
-              <Button
-                variant="success"
-                onClick={handleEncerrar}
-                disabled={actionLoading === 'encerrar'}
-              >
-                {actionLoading === 'encerrar' ? 'Encerrando...' : 'Encerrar'}
-              </Button>
-            )}
-            {!mdfe.cancelamento && (
-              <Button
-                variant="danger"
-                onClick={handleCancelar}
-                disabled={actionLoading === 'cancelar'}
-              >
-                {actionLoading === 'cancelar' ? 'Cancelando...' : 'Cancelar'}
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title={`MDF-e #${mdfe.identificacao?.n_mdf}`}
+        subtitle={mdfe.chave}
+        icon={mdfeIcon}
+        breadcrumbs={[{ label: 'MDF-e', path: '/mdfes' }, { label: `MDF-e #${mdfe.identificacao?.n_mdf}` }]}
+        actions={headerActions}
+      />
 
       <div className={styles.detailGrid}>
         {/* Identificação */}

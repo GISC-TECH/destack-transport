@@ -230,116 +230,60 @@ function ClientesList() {
         </Button>
       </div>
 
-      {/* Tabela Desktop */}
+      {/* Tabela */}
       {clientes.length > 0 ? (
-        <>
-          <div className={styles.desktopOnly}>
-            <TableContainer mobileCards={false}>
-              <table className={styles.clientesTable}>
-                <thead>
-                  <tr>
-                    <th>Razão Social</th>
-                    <th>Nome Fantasia</th>
-                    <th>CNPJ</th>
-                    <th>Cidade</th>
-                    <th>UF</th>
-                    <th>Tipo Frete</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clientes.map((cliente) => (
-                    <tr key={cliente.id}>
-                      <td>{cliente.razao_social}</td>
-                      <td>{cliente.nome_fantasia || '-'}</td>
-                      <td>{cliente.cnpj_formatado || cliente.cnpj}</td>
-                      <td>{cliente.cidade || '-'}</td>
-                      <td>{cliente.estado || '-'}</td>
-                      <td>
-                        <StatusPill status={cliente.tipo_frete?.toLowerCase()}>
-                          {cliente.tipo_frete}
-                        </StatusPill>
-                      </td>
-                      <td>
-                        <StatusPill status={cliente.ativo ? 'ativo' : 'inativo'}>
-                          {cliente.ativo ? 'Ativo' : 'Inativo'}
-                        </StatusPill>
-                      </td>
-                      <td className={styles.actionsCell}>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          iconOnly
-                          onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
-                          aria-label={`Editar ${cliente.razao_social}`}
-                          title="Editar"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                          </svg>
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </TableContainer>
-          </div>
-
-          {/* Cards Mobile */}
-          <div className={`${styles.mobileCards} ${styles.mobileOnly}`}>
-            {clientes.map((cliente) => (
-              <div key={cliente.id} className={styles.mobileCard} onClick={() => navigate(`/clientes/editar/${cliente.id}`)}>
-                <div className={styles.mobileCardHeader}>
-                  <h4>{cliente.razao_social}</h4>
-                  <StatusPill status={cliente.ativo ? 'ativo' : 'inativo'}>
-                    {cliente.ativo ? 'Ativo' : 'Inativo'}
-                  </StatusPill>
-                </div>
-                <div className={styles.mobileCardBody}>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Fantasia</span>
-                    <span className={styles.mobileCardValue}>{cliente.nome_fantasia || '-'}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>CNPJ</span>
-                    <span className={styles.mobileCardValue}>{cliente.cnpj_formatado || cliente.cnpj}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Cidade/UF</span>
-                    <span className={styles.mobileCardValue}>{cliente.cidade || '-'} / {cliente.estado || '-'}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Tipo Frete</span>
+        <TableContainer>
+          <table className={styles.clientesTable}>
+            <thead>
+              <tr>
+                <th>Razão Social</th>
+                <th>Nome Fantasia</th>
+                <th>CNPJ</th>
+                <th>Cidade</th>
+                <th>UF</th>
+                <th>Tipo Frete</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clientes.map((cliente) => (
+                <tr key={cliente.id}>
+                  <td data-label="Razão Social">{cliente.razao_social}</td>
+                  <td data-label="Nome Fantasia">{cliente.nome_fantasia || '-'}</td>
+                  <td data-label="CNPJ">{cliente.cnpj_formatado || cliente.cnpj}</td>
+                  <td data-label="Cidade">{cliente.cidade || '-'}</td>
+                  <td data-label="UF">{cliente.estado || '-'}</td>
+                  <td data-label="Tipo Frete">
                     <StatusPill status={cliente.tipo_frete?.toLowerCase()}>
                       {cliente.tipo_frete}
                     </StatusPill>
-                  </div>
-                </div>
-                <div className={styles.mobileCardFooter}>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    iconOnly
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/clientes/editar/${cliente.id}`);
-                    }}
-                    aria-label={`Editar ${cliente.razao_social}`}
-                    title="Editar"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+                  </td>
+                  <td data-label="Status">
+                    <StatusPill status={cliente.ativo ? 'ativo' : 'inativo'}>
+                      {cliente.ativo ? 'Ativo' : 'Inativo'}
+                    </StatusPill>
+                  </td>
+                  <td className={styles.actionsCell}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      iconOnly
+                      onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
+                      aria-label={`Editar ${cliente.razao_social}`}
+                      title="Editar"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableContainer>
       ) : (
         <EmptyState
           title="Nenhum cliente encontrado"

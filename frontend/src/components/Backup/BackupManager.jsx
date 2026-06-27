@@ -248,7 +248,7 @@ function BackupManager() {
       <div className={styles.section}>
         <h2>Backups Disponíveis</h2>
         <div className={styles.tableContainer}>
-          <TableContainer mobileCards={false}>
+          <TableContainer>
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -270,17 +270,17 @@ function BackupManager() {
                 ) : (
                   backups.map((backup) => (
                     <tr key={backup.id}>
-                      <td>
+                      <td data-label="Arquivo">
                         <strong>{backup.nome_arquivo}</strong>
                       </td>
-                      <td>{formatBytes(backup.tamanho_bytes)}</td>
-                      <td>{formatDate(backup.data_hora)}</td>
-                      <td>
+                      <td data-label="Tamanho">{formatBytes(backup.tamanho_bytes)}</td>
+                      <td data-label="Data de Criação">{formatDate(backup.data_hora)}</td>
+                      <td data-label="Status">
                         <StatusPill status={backup.status === 'completo' ? 'success' : backup.status === 'erro' ? 'danger' : 'warning'}>
                           {backup.status || 'Completo'}
                         </StatusPill>
                       </td>
-                      <td>{backup.usuario || '-'}</td>
+                      <td data-label="Usuário">{backup.usuario || '-'}</td>
                       <td>
                         <button
                           className={styles.downloadButton}
@@ -302,60 +302,6 @@ function BackupManager() {
               </tbody>
             </table>
           </TableContainer>
-
-          <div className={styles.mobileCards}>
-            {backups.length === 0 ? (
-              <div className={styles.mobileEmpty}>
-                <div className={styles.mobileEmptyIcon}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                  </svg>
-                </div>
-                <p className={styles.mobileEmptyText}>Nenhum backup encontrado</p>
-              </div>
-            ) : (
-              backups.map((backup) => (
-                <div key={backup.id} className={styles.mobileCard}>
-                  <div className={styles.mobileCardHeader}>
-                    <div className={styles.mobileCardTitle}>
-                      <span className={styles.mobileCardNumber}>{backup.nome_arquivo}</span>
-                      <span className={styles.mobileCardDate}>{formatDate(backup.data_hora)}</span>
-                    </div>
-                    <StatusPill status={backup.status === 'completo' ? 'success' : backup.status === 'erro' ? 'danger' : 'warning'}>
-                      {backup.status || 'Completo'}
-                    </StatusPill>
-                  </div>
-                  <div className={styles.mobileCardBody}>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Tamanho</span>
-                      <span className={styles.mobileCardValue}>{formatBytes(backup.tamanho_bytes)}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Usuário</span>
-                      <span className={styles.mobileCardValue}>{backup.usuario || '-'}</span>
-                    </div>
-                  </div>
-                  <div className={styles.mobileCardFooter}>
-                    <button
-                      className={styles.downloadButton}
-                      onClick={() => handleDownload(backup)}
-                      title="Baixar backup"
-                      disabled={backup.status === 'erro'}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                      </svg>
-                      Baixar
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
         </div>
       </div>
 

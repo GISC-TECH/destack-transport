@@ -229,7 +229,7 @@ function AbastecimentosList() {
       </div>
 
       <div className={styles.abastecimentoListCard}>
-        <TableContainer mobileCards={false}>
+        <TableContainer>
           <table className={styles.abastecimentoTable}>
             <thead>
               <tr>
@@ -263,15 +263,15 @@ function AbastecimentosList() {
               ) : (
                 abastecimentos.map(item => (
                   <tr key={item.id}>
-                    <td>{formatDate(item.data)}</td>
-                    <td><strong>{item.veiculo_placa || '-'}</strong></td>
-                    <td>{getCombustivelLabel(item.tipo_combustivel)}</td>
-                    <td>{formatNumber(item.litros)}L</td>
-                    <td>{formatCurrency(item.valor_total)}</td>
-                    <td>{formatCurrency(item.preco_litro)}</td>
-                    <td>{item.hodometro?.toLocaleString('pt-BR') || '-'}</td>
-                    <td>{item.consumo_medio ? `${item.consumo_medio} km/l` : '-'}</td>
-                    <td>{item.posto || '-'}</td>
+                    <td data-label="Data">{formatDate(item.data)}</td>
+                    <td data-label="Veículo"><strong>{item.veiculo_placa || '-'}</strong></td>
+                    <td data-label="Combustível">{getCombustivelLabel(item.tipo_combustivel)}</td>
+                    <td data-label="Litros">{formatNumber(item.litros)}L</td>
+                    <td data-label="Valor Total">{formatCurrency(item.valor_total)}</td>
+                    <td data-label="Preço/L">{formatCurrency(item.preco_litro)}</td>
+                    <td data-label="KM">{item.hodometro?.toLocaleString('pt-BR') || '-'}</td>
+                    <td data-label="Consumo">{item.consumo_medio ? `${item.consumo_medio} km/l` : '-'}</td>
+                    <td data-label="Posto">{item.posto || '-'}</td>
                     <td>
                       <div className={styles.osActions}>
                         <Link to={`/abastecimentos/${item.id}`} className={styles.btnIcon} title="Editar">
@@ -301,37 +301,6 @@ function AbastecimentosList() {
             </tbody>
           </table>
         </TableContainer>
-
-        {abastecimentos.map(item => (
-          <div key={item.id} className={styles.abastecimentoMobileCard}>
-            <div className={styles.abastecimentoMobileRow}>
-              <span><strong>{item.veiculo_placa || '-'}</strong></span>
-              <span>{formatDate(item.data)}</span>
-            </div>
-            <div className={styles.abastecimentoMobileRow}>
-              <span className={styles.abastecimentoMobileLabel}>Combustível</span>
-              <span>{getCombustivelLabel(item.tipo_combustivel)}</span>
-            </div>
-            <div className={styles.abastecimentoMobileRow}>
-              <span className={styles.abastecimentoMobileLabel}>Litros</span>
-              <span>{formatNumber(item.litros)}L</span>
-            </div>
-            <div className={styles.abastecimentoMobileRow}>
-              <span className={styles.abastecimentoMobileLabel}>Valor</span>
-              <span>{formatCurrency(item.valor_total)}</span>
-            </div>
-            <div className={styles.abastecimentoMobileRow}>
-              <span className={styles.abastecimentoMobileLabel}>Consumo</span>
-              <span>{item.consumo_medio ? `${item.consumo_medio} km/l` : '-'}</span>
-            </div>
-            <div className={styles.abastecimentoMobileRow} style={{ marginTop: 12 }}>
-              <Button as={Link} to={`/abastecimentos/${item.id}`} variant="primary" size="sm">Editar</Button>
-              <Button variant="secondary" size="sm" onClick={() => handleDelete(item.id)}>
-                Excluir
-              </Button>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import Button from '../Common/Button';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
+import PageHeader from '../Common/PageHeader';
 import styles from './ClienteForm.module.css';
 
 function ClienteForm() {
@@ -194,16 +195,18 @@ function ClienteForm() {
 
   return (
     <div className={styles.clienteFormPage}>
-      <div className={styles.formHeader}>
-        <h2>{isEditing ? 'Editar Cliente' : 'Novo Cliente'}</h2>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => navigate('/clientes')}
-        >
-          ← Voltar
-        </Button>
-      </div>
+      <PageHeader
+        title={isEditing ? 'Editar Cliente' : 'Novo Cliente'}
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate('/clientes')}
+          >
+            ← Voltar
+          </Button>
+        }
+      />
 
       {error && (
         <div className={`${styles.alert} ${styles.alertError}`}>

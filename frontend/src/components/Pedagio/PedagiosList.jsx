@@ -178,7 +178,7 @@ function PedagiosList() {
       </div>
 
       <div className={styles.pedagioListCard}>
-        <TableContainer mobileCards={false}>
+        <TableContainer>
           <table className={styles.pedagioTable}>
             <thead>
               <tr>
@@ -210,14 +210,14 @@ function PedagiosList() {
               ) : (
                 pedagios.map(p => (
                   <tr key={p.id}>
-                    <td>{formatDate(p.data)}</td>
-                    <td><strong>{p.veiculo_placa || '-'}</strong></td>
-                    <td>{p.ordem_numero || '-'}</td>
-                    <td>{p.praca}</td>
-                    <td>{p.rodovia || '-'}</td>
-                    <td>{p.km || '-'}</td>
-                    <td>{p.categoria || '-'}</td>
-                    <td>{formatCurrency(p.valor)}</td>
+                    <td data-label="Data">{formatDate(p.data)}</td>
+                    <td data-label="Veículo"><strong>{p.veiculo_placa || '-'}</strong></td>
+                    <td data-label="Ordem">{p.ordem_numero || '-'}</td>
+                    <td data-label="Praça">{p.praca}</td>
+                    <td data-label="Rodovia">{p.rodovia || '-'}</td>
+                    <td data-label="KM">{p.km || '-'}</td>
+                    <td data-label="Categoria">{p.categoria || '-'}</td>
+                    <td data-label="Valor">{formatCurrency(p.valor)}</td>
                     <td>
                       <div className={styles.osActions}>
                         <Link to={`/pedagios/${p.id}`} className={styles.btnIcon} title="Editar">
@@ -247,31 +247,6 @@ function PedagiosList() {
             </tbody>
           </table>
         </TableContainer>
-
-        {pedagios.map(p => (
-          <div key={p.id} className={styles.pedagioMobileCard}>
-            <div className={styles.pedagioMobileRow}>
-              <span><strong>{p.veiculo_placa || '-'}</strong></span>
-              <span>{formatCurrency(p.valor)}</span>
-            </div>
-            <div className={styles.pedagioMobileRow}>
-              <span className={styles.pedagioMobileLabel}>Praça</span>
-              <span>{p.praca}</span>
-            </div>
-            <div className={styles.pedagioMobileRow}>
-              <span className={styles.pedagioMobileLabel}>Rodovia</span>
-              <span>{p.rodovia || '-'}</span>
-            </div>
-            <div className={styles.pedagioMobileRow}>
-              <span className={styles.pedagioMobileLabel}>Data</span>
-              <span>{formatDate(p.data)}</span>
-            </div>
-            <div className={styles.pedagioMobileRow} style={{ marginTop: 12 }}>
-              <Button as={Link} to={`/pedagios/${p.id}`} variant="primary" size="sm">Editar</Button>
-              <Button variant="secondary" size="sm" onClick={() => handleDelete(p.id)}>Excluir</Button>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

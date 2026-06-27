@@ -4,6 +4,7 @@ import { pagamentosAPI, cteAPI, motoristasAPI, veiculosAPI } from '../../service
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
 import styles from './PagamentoForm.module.css';
 
 function PagamentoAgregadoForm() {
@@ -377,12 +378,10 @@ function PagamentoAgregadoForm() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.pageHeader}>
-        <div className={styles.headerTitle}>
-          <h1>{isEditing ? 'Editar Pagamento Agregado' : 'Novo Pagamento Agregado'}</h1>
-          <p>{isEditing ? 'Atualize os dados do pagamento' : 'Cadastre um novo pagamento para motorista agregado'}</p>
-        </div>
-      </div>
+      <PageHeader
+        title={isEditing ? 'Editar Pagamento Agregado' : 'Novo Pagamento Agregado'}
+        subtitle={isEditing ? 'Atualize os dados do pagamento' : 'Cadastre um novo pagamento para motorista agregado'}
+      />
 
       {error && (
         <div className={`${styles.alert} ${styles.alertError}`}>

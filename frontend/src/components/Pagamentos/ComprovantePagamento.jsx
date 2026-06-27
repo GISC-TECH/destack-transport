@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import Modal from '../Common/Modal';
 import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
 import styles from './ComprovantePagamento.module.css';
 
 function ComprovantePagamento({ pagamento, tipo, onClose }) {
@@ -283,11 +284,13 @@ function ComprovantePagamento({ pagamento, tipo, onClose }) {
           </div>
 
           {/* Status */}
-          <div className={`${styles.cupomStatus} ${styles[pagamento.status] || ''}`}>
+          <StatusPill
+            status={pagamento.status === 'pago' ? 'success' : pagamento.status === 'pendente' ? 'warning' : pagamento.status === 'atrasado' ? 'danger' : 'info'}
+          >
             {pagamento.status === 'pago' ? 'PAGO' :
              pagamento.status === 'pendente' ? 'PENDENTE' :
              pagamento.status === 'atrasado' ? 'ATRASADO' : pagamento.status?.toUpperCase()}
-          </div>
+          </StatusPill>
 
           {/* Observações */}
           {pagamento.obs && (

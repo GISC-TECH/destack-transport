@@ -305,142 +305,70 @@ function VeiculosList() {
         </select>
       </div>
 
-      {/* Tabela Desktop */}
+      {/* Tabela */}
       {veiculos.length > 0 ? (
-        <>
-          <div className={styles.desktopOnly}>
-            <TableContainer mobileCards={false}>
-              <table className={styles.veiculosTable}>
-                <thead>
-                  <tr>
-                    <th>Placa</th>
-                    <th>RENAVAM</th>
-                    <th>Tipo</th>
-                    <th>Proprietário</th>
-                    <th>Capacidade (kg)</th>
-                    <th>Capacidade (m3)</th>
-                    <th>Compartimentos</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {veiculos.map((veiculo) => (
-                    <tr key={veiculo.id}>
-                      <td><strong>{veiculo.placa}</strong></td>
-                      <td>{veiculo.renavam || '-'}</td>
-                      <td>
-                        <StatusPill status={getTipoStatus(veiculo.tipo_proprietario)}>
-                          {getTipoProprietario(veiculo.tipo_proprietario)}
-                        </StatusPill>
-                      </td>
-                      <td>{veiculo.proprietario_nome || '-'}</td>
-                      <td>{veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}</td>
-                      <td>{veiculo.capacidade_m3 ? `${veiculo.capacidade_m3} m3` : '-'}</td>
-                      <td>
-                        {veiculo.compartimentos && veiculo.compartimentos.length > 0 ? (
-                          <StatusPill status="info">
-                            {veiculo.compartimentos.length} boca{veiculo.compartimentos.length !== 1 ? 's' : ''}
-                          </StatusPill>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td>
-                        <StatusPill status={veiculo.ativo ? 'ativo' : 'inativo'}>
-                          {veiculo.ativo ? 'Ativo' : 'Inativo'}
-                        </StatusPill>
-                      </td>
-                      <td className={styles.actionsCell}>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          iconOnly
-                          onClick={() => navigate(`/veiculos/editar/${veiculo.id}`)}
-                          title="Editar"
-                          aria-label={`Editar veículo ${veiculo.placa}`}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                          </svg>
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </TableContainer>
-          </div>
-
-          {/* Cards Mobile */}
-          <div className={`${styles.mobileCards} ${styles.mobileOnly}`}>
-            {veiculos.map((veiculo) => (
-              <div key={veiculo.id} className={styles.mobileCard} onClick={() => navigate(`/veiculos/editar/${veiculo.id}`)}>
-                <div className={styles.mobileCardHeader}>
-                  <h4>{veiculo.placa}</h4>
-                  <StatusPill status={veiculo.ativo ? 'ativo' : 'inativo'}>
-                    {veiculo.ativo ? 'Ativo' : 'Inativo'}
-                  </StatusPill>
-                </div>
-                <div className={styles.mobileCardBody}>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Tipo</span>
+        <TableContainer>
+          <table className={styles.veiculosTable}>
+            <thead>
+              <tr>
+                <th>Placa</th>
+                <th>RENAVAM</th>
+                <th>Tipo</th>
+                <th>Proprietário</th>
+                <th>Capacidade (kg)</th>
+                <th>Capacidade (m3)</th>
+                <th>Compartimentos</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {veiculos.map((veiculo) => (
+                <tr key={veiculo.id}>
+                  <td data-label="Placa"><strong>{veiculo.placa}</strong></td>
+                  <td data-label="RENAVAM">{veiculo.renavam || '-'}</td>
+                  <td data-label="Tipo">
                     <StatusPill status={getTipoStatus(veiculo.tipo_proprietario)}>
                       {getTipoProprietario(veiculo.tipo_proprietario)}
                     </StatusPill>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>RENAVAM</span>
-                    <span className={styles.mobileCardValue}>{veiculo.renavam || '-'}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Proprietário</span>
-                    <span className={styles.mobileCardValue}>{veiculo.proprietario_nome || '-'}</span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Capacidade</span>
-                    <span className={styles.mobileCardValue}>
-                      {veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}
-                      {' / '}
-                      {veiculo.capacidade_m3 ? `${veiculo.capacidade_m3} m³` : '-'}
-                    </span>
-                  </div>
-                  <div className={styles.mobileCardRow}>
-                    <span className={styles.mobileCardLabel}>Compartimentos</span>
-                    <span className={styles.mobileCardValue}>
-                      {veiculo.compartimentos && veiculo.compartimentos.length > 0 ? (
-                        <StatusPill status="info">
-                          {veiculo.compartimentos.length} boca{veiculo.compartimentos.length !== 1 ? 's' : ''}
-                        </StatusPill>
-                      ) : (
-                        '-'
-                      )}
-                    </span>
-                  </div>
-                </div>
-                <div className={styles.mobileCardFooter}>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    iconOnly
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/veiculos/editar/${veiculo.id}`);
-                    }}
-                    aria-label={`Editar veículo ${veiculo.placa}`}
-                    title="Editar"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+                  </td>
+                  <td data-label="Proprietário">{veiculo.proprietario_nome || '-'}</td>
+                  <td data-label="Capacidade (kg)">{veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}</td>
+                  <td data-label="Capacidade (m3)">{veiculo.capacidade_m3 ? `${veiculo.capacidade_m3} m3` : '-'}</td>
+                  <td data-label="Compartimentos">
+                    {veiculo.compartimentos && veiculo.compartimentos.length > 0 ? (
+                      <StatusPill status="info">
+                        {veiculo.compartimentos.length} boca{veiculo.compartimentos.length !== 1 ? 's' : ''}
+                      </StatusPill>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                  <td data-label="Status">
+                    <StatusPill status={veiculo.ativo ? 'ativo' : 'inativo'}>
+                      {veiculo.ativo ? 'Ativo' : 'Inativo'}
+                    </StatusPill>
+                  </td>
+                  <td className={styles.actionsCell}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      iconOnly
+                      onClick={() => navigate(`/veiculos/editar/${veiculo.id}`)}
+                      title="Editar"
+                      aria-label={`Editar veículo ${veiculo.placa}`}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableContainer>
       ) : (
         <EmptyState
           title="Nenhum veículo encontrado"

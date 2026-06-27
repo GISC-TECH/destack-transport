@@ -123,7 +123,7 @@ function MultasSinistros() {
             </Button>
           </div>
           <div className={styles.listCard}>
-            <TableContainer mobileCards={false}>
+            <TableContainer>
               <table className={styles.table}>
               <thead>
                 <tr>
@@ -141,12 +141,12 @@ function MultasSinistros() {
                   <tr><td colSpan="7" className="text-center">Nenhuma multa registrada.</td></tr>
                 ) : multas.map(m => (
                   <tr key={m.id}>
-                    <td>{formatDate(m.data_infracao)}</td>
-                    <td>{m.veiculo_placa}</td>
-                    <td>{m.auto_infracao || '-'}</td>
-                    <td>{m.descricao || '-'}</td>
-                    <td>{formatCurrency(m.valor)}</td>
-                    <td>{getStatusBadge(m.status, 'multa')}</td>
+                    <td data-label="Data">{formatDate(m.data_infracao)}</td>
+                    <td data-label="Veículo">{m.veiculo_placa}</td>
+                    <td data-label="Auto">{m.auto_infracao || '-'}</td>
+                    <td data-label="Infração">{m.descricao || '-'}</td>
+                    <td data-label="Valor">{formatCurrency(m.valor)}</td>
+                    <td data-label="Status">{getStatusBadge(m.status, 'multa')}</td>
                     <td>
                       <div className={styles.actions}>
                         <Button variant="outline" size="sm" iconOnly aria-label="Editar" onClick={() => setModal({ tipo: 'multa', id: m.id })}>✏️</Button>
@@ -158,40 +158,6 @@ function MultasSinistros() {
               </tbody>
             </table>
             </TableContainer>
-
-            <div className={styles.mobileCards}>
-              {multas.length === 0 ? (
-                <p className={styles.emptyText}>Nenhuma multa registrada.</p>
-              ) : multas.map(m => (
-                <div key={m.id} className={styles.mobileCard}>
-                  <div className={styles.mobileCardHeader}>
-                    <div className={styles.mobileCardTitle}>
-                      <span className={styles.mobileCardPrimary}>{formatDate(m.data_infracao)}</span>
-                      <span className={styles.mobileCardSecondary}>{m.veiculo_placa}</span>
-                    </div>
-                    <div className={styles.mobileCardStatus}>{getStatusBadge(m.status, 'multa')}</div>
-                  </div>
-                  <div className={styles.mobileCardBody}>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Auto</span>
-                      <span className={styles.mobileCardValue}>{m.auto_infracao || '-'}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Infração</span>
-                      <span className={styles.mobileCardValue}>{m.descricao || '-'}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Valor</span>
-                      <span className={`${styles.mobileCardValue} ${styles.mobileCardValor}`}>{formatCurrency(m.valor)}</span>
-                    </div>
-                  </div>
-                  <div className={styles.mobileCardFooter}>
-                    <Button variant="outline" size="sm" iconOnly aria-label="Editar" onClick={() => setModal({ tipo: 'multa', id: m.id })}>✏️</Button>
-                    <Button variant="outline" size="sm" iconOnly aria-label="Excluir" onClick={() => handleDelete('multa', m.id)}>🗑️</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}
@@ -205,7 +171,7 @@ function MultasSinistros() {
             </Button>
           </div>
           <div className={styles.listCard}>
-            <TableContainer mobileCards={false}>
+            <TableContainer>
               <table className={styles.table}>
               <thead>
                 <tr>
@@ -223,12 +189,12 @@ function MultasSinistros() {
                   <tr><td colSpan="7" className="text-center">Nenhum sinistro registrado.</td></tr>
                 ) : sinistros.map(s => (
                   <tr key={s.id}>
-                    <td>{formatDate(s.data)}</td>
-                    <td>{s.veiculo_placa}</td>
-                    <td>{s.tipo_display || s.tipo}</td>
-                    <td>{s.local || '-'}</td>
-                    <td>{formatCurrency(s.custo_total)}</td>
-                    <td>{getStatusBadge(s.status, 'sinistro')}</td>
+                    <td data-label="Data">{formatDate(s.data)}</td>
+                    <td data-label="Veículo">{s.veiculo_placa}</td>
+                    <td data-label="Tipo">{s.tipo_display || s.tipo}</td>
+                    <td data-label="Local">{s.local || '-'}</td>
+                    <td data-label="Custo">{formatCurrency(s.custo_total)}</td>
+                    <td data-label="Status">{getStatusBadge(s.status, 'sinistro')}</td>
                     <td>
                       <div className={styles.actions}>
                         <Button variant="outline" size="sm" iconOnly aria-label="Editar" onClick={() => setModal({ tipo: 'sinistro', id: s.id })}>✏️</Button>
@@ -240,40 +206,6 @@ function MultasSinistros() {
               </tbody>
             </table>
             </TableContainer>
-
-            <div className={styles.mobileCards}>
-              {sinistros.length === 0 ? (
-                <p className={styles.emptyText}>Nenhum sinistro registrado.</p>
-              ) : sinistros.map(s => (
-                <div key={s.id} className={styles.mobileCard}>
-                  <div className={styles.mobileCardHeader}>
-                    <div className={styles.mobileCardTitle}>
-                      <span className={styles.mobileCardPrimary}>{formatDate(s.data)}</span>
-                      <span className={styles.mobileCardSecondary}>{s.veiculo_placa}</span>
-                    </div>
-                    <div className={styles.mobileCardStatus}>{getStatusBadge(s.status, 'sinistro')}</div>
-                  </div>
-                  <div className={styles.mobileCardBody}>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Tipo</span>
-                      <span className={styles.mobileCardValue}>{s.tipo_display || s.tipo}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Local</span>
-                      <span className={styles.mobileCardValue}>{s.local || '-'}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Custo</span>
-                      <span className={`${styles.mobileCardValue} ${styles.mobileCardValor}`}>{formatCurrency(s.custo_total)}</span>
-                    </div>
-                  </div>
-                  <div className={styles.mobileCardFooter}>
-                    <Button variant="outline" size="sm" iconOnly aria-label="Editar" onClick={() => setModal({ tipo: 'sinistro', id: s.id })}>✏️</Button>
-                    <Button variant="outline" size="sm" iconOnly aria-label="Excluir" onClick={() => handleDelete('sinistro', s.id)}>🗑️</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}

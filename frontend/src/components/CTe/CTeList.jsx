@@ -423,8 +423,7 @@ function CTeList() {
         <p>Total de {pagination.total} CT-e{pagination.total !== 1 ? 's' : ''} encontrado{pagination.total !== 1 ? 's' : ''}</p>
       </div>
 
-      <TableContainer mobileCards={false}>
-        {/* Desktop Table */}
+      <TableContainer>
         <table>
           <thead>
             <tr>
@@ -450,28 +449,28 @@ function CTeList() {
                 const modalidadePill = getModalidadePill(cte.modalidade);
                 return (
                   <tr key={cte.id}>
-                    <td>
+                    <td data-label="Número">
                       <strong>{cte.numero_cte || '-'}</strong>
                       <br />
                       <small className={sharedStyles.textMuted}>{cte.chave?.slice(-10)}</small>
                     </td>
-                    <td>{cte.data_emissao || '-'}</td>
-                    <td>
+                    <td data-label="Data Emissão">{cte.data_emissao || '-'}</td>
+                    <td data-label="Remetente">
                       {cte.remetente_nome || '-'}
                     </td>
-                    <td>
+                    <td data-label="Destinatario">
                       {cte.destinatario_nome || '-'}
                     </td>
-                    <td className={sharedStyles.textRight}>
+                    <td data-label="Valor" className={sharedStyles.textRight}>
                       {formatCurrency(cte.valor_total)}
                     </td>
-                    <td>
+                    <td data-label="Modalidade">
                       <StatusPill status={modalidadePill.status}>{modalidadePill.text}</StatusPill>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       <StatusPill status={statusPill.status}>{statusPill.text}</StatusPill>
                     </td>
-                    <td>
+                    <td data-label="Pago">
                       <button
                         className={`${sharedStyles.btnTogglePago} ${cte.pago ? sharedStyles.pago : sharedStyles.naoPago}`}
                         onClick={() => handleTogglePagamento(cte)}
@@ -523,103 +522,6 @@ function CTeList() {
             )}
           </tbody>
         </table>
-
-        {/* Mobile Cards */}
-        <div className={sharedStyles.mobileCards}>
-          {ctes.length === 0 ? (
-            <div className={sharedStyles.mobileEmpty}>
-              <div className={sharedStyles.mobileEmptyIcon}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
-              </div>
-              <p className={sharedStyles.mobileEmptyText}>Nenhum CT-e encontrado</p>
-            </div>
-          ) : (
-            ctes.map((cte) => {
-              const statusPill = getStatusPill(cte.status);
-              const modalidadePill = getModalidadePill(cte.modalidade);
-              return (
-                <div key={cte.id} className={sharedStyles.mobileCard}>
-                  <div className={sharedStyles.mobileCardHeader}>
-                    <div className={sharedStyles.mobileCardTitle}>
-                      <span className={sharedStyles.mobileCardNumber}>CT-e #{cte.numero_cte || '-'}</span>
-                      <span className={sharedStyles.mobileCardDate}>{cte.data_emissao || '-'}</span>
-                    </div>
-                    <div className={sharedStyles.mobileCardStatus}>
-                      <StatusPill status={statusPill.status}>{statusPill.text}</StatusPill>
-                    </div>
-                  </div>
-                  <div className={sharedStyles.mobileCardBody}>
-                    <div className={sharedStyles.mobileCardRow}>
-                      <span className={sharedStyles.mobileCardLabel}>Remetente</span>
-                      <span className={sharedStyles.mobileCardValue}>{cte.remetente_nome || '-'}</span>
-                    </div>
-                    <div className={sharedStyles.mobileCardRow}>
-                      <span className={sharedStyles.mobileCardLabel}>Destinatario</span>
-                      <span className={sharedStyles.mobileCardValue}>{cte.destinatario_nome || '-'}</span>
-                    </div>
-                    <div className={sharedStyles.mobileCardRow}>
-                      <span className={sharedStyles.mobileCardLabel}>Valor</span>
-                      <span className={`${sharedStyles.mobileCardValue} ${sharedStyles.valor}`}>{formatCurrency(cte.valor_total)}</span>
-                    </div>
-                    <div className={sharedStyles.mobileCardRow}>
-                      <span className={sharedStyles.mobileCardLabel}>Modalidade</span>
-                      <StatusPill status={modalidadePill.status}>{modalidadePill.text}</StatusPill>
-                    </div>
-                  </div>
-                  <div className={sharedStyles.mobileCardFooter}>
-                    <div className={sharedStyles.mobileCardPago}>
-                      <button
-                        className={`${sharedStyles.btnTogglePago} ${cte.pago ? sharedStyles.pago : sharedStyles.naoPago}`}
-                        onClick={() => handleTogglePagamento(cte)}
-                        disabled={atualizandoPagamento === cte.id}
-                      >
-                        {atualizandoPagamento === cte.id ? (
-                          <span className={sharedStyles.loadingSpinnerSmall}></span>
-                        ) : cte.pago ? (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                          </svg>
-                        ) : (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                          </svg>
-                        )}
-                      </button>
-                      <span style={{ fontSize: '12px', color: cte.pago ? 'var(--success-color)' : 'var(--text-muted)' }}>
-                        {cte.pago ? 'Pago' : 'Pendente'}
-                      </span>
-                    </div>
-                    <div className={sharedStyles.mobileCardActions}>
-                      <button
-                        className={`${sharedStyles.btnAction} ${sharedStyles.btnView}`}
-                        onClick={() => handleOpenModal(cte)}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                      </button>
-                      <button
-                        className={`${sharedStyles.btnAction} ${sharedStyles.btnDownload}`}
-                        onClick={() => handleDownloadXML(cte.id, cte.numero_cte)}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="7 10 12 15 17 10"></polyline>
-                          <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
       </TableContainer>
 
       {pagination.total > 0 && (

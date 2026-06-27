@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { cteAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
@@ -7,6 +7,7 @@ import ErrorMessage from '../Common/ErrorMessage';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
 import Button from '../Common/Button';
 import StatusPill from '../Common/StatusPill';
+import PageHeader from '../Common/PageHeader';
 import styles from './CTeDetail.module.css';
 
 function CTeDetail() {
@@ -127,44 +128,50 @@ function CTeDetail() {
     text: modalidade || '-'
   });
 
+  const cteIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="9" y1="15" x2="15" y2="15"></line>
+    </svg>
+  );
+
+  const headerActions = (
+    <>
+      <StatusPill status={status.status}>{status.icon} {status.text}</StatusPill>
+      <Button
+        variant="danger"
+        onClick={handleDownloadPDF}
+        disabled={actionLoading === 'pdf'}
+      >
+        {actionLoading === 'pdf' ? 'Baixando...' : 'DACTE (PDF)'}
+      </Button>
+      <Button
+        variant="primary"
+        onClick={handleDownloadXML}
+        disabled={actionLoading === 'xml'}
+      >
+        {actionLoading === 'xml' ? 'Baixando...' : 'XML'}
+      </Button>
+      <Button
+        variant="warning"
+        onClick={handleReprocessar}
+        disabled={actionLoading === 'reprocessar'}
+      >
+        {actionLoading === 'reprocessar' ? 'Processando...' : 'Reprocessar'}
+      </Button>
+    </>
+  );
+
   return (
     <div className={styles.cteDetail}>
-      <div className={styles.pageHeader}>
-        <div>
-          <Link to="/ctes" className={styles.backLink}>← Voltar para lista</Link>
-          <h1>CT-e #{cte.identificacao?.numero}</h1>
-          <p className={styles.chaveCte}>{cte.chave}</p>
-        </div>
-        <div className={styles.headerActions}>
-          <div className={`${styles.statusBadge} ${status.class}`}>
-            <span className={styles.statusIcon}>{status.icon}</span>
-            {status.text}
-          </div>
-          <div className={styles.actionButtons}>
-            <Button
-              variant="danger"
-              onClick={handleDownloadPDF}
-              disabled={actionLoading === 'pdf'}
-            >
-              {actionLoading === 'pdf' ? 'Baixando...' : 'DACTE (PDF)'}
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleDownloadXML}
-              disabled={actionLoading === 'xml'}
-            >
-              {actionLoading === 'xml' ? 'Baixando...' : 'XML'}
-            </Button>
-            <Button
-              variant="warning"
-              onClick={handleReprocessar}
-              disabled={actionLoading === 'reprocessar'}
-            >
-              {actionLoading === 'reprocessar' ? 'Processando...' : 'Reprocessar'}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title={`CT-e #${cte.identificacao?.numero}`}
+        subtitle={cte.chave}
+        icon={cteIcon}
+        breadcrumbs={[{ label: 'CT-e', path: '/ctes' }, { label: `CT-e #${cte.identificacao?.numero}` }]}
+        actions={headerActions}
+      />
 
       <div className={styles.detailGrid}>
         {/* Identificação */}

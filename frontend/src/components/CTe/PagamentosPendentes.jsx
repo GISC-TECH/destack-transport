@@ -508,7 +508,7 @@ function PagamentosPendentes() {
         </div>
       </div>
 
-      <TableContainer mobileCards={false}>
+      <TableContainer>
         <table>
           <thead>
             <tr>
@@ -536,18 +536,18 @@ function PagamentosPendentes() {
                 const modalidadePill = getModalidadePill(cte.modalidade);
                 return (
                   <tr key={cte.id}>
-                    <td>
+                    <td data-label="Número">
                       <strong>{cte.numero || '-'}</strong>
                       <br />
                       <small className={sharedStyles.textMuted}>{cte.chave?.slice(-10)}</small>
                     </td>
-                    <td>{cte.data_emissao || '-'}</td>
-                    <td>{cte.remetente || '-'}</td>
-                    <td>{cte.destinatario || '-'}</td>
-                    <td className={sharedStyles.textRight}>
+                    <td data-label="Data Emissão">{cte.data_emissao || '-'}</td>
+                    <td data-label="Remetente">{cte.remetente || '-'}</td>
+                    <td data-label="Destinatario">{cte.destinatario || '-'}</td>
+                    <td data-label="Valor" className={sharedStyles.textRight}>
                       <strong>{formatCurrency(cte.valor)}</strong>
                     </td>
-                    <td>
+                    <td data-label="Modalidade">
                       <StatusPill status={modalidadePill.status}>{modalidadePill.text}</StatusPill>
                     </td>
                     <td>
@@ -585,86 +585,6 @@ function PagamentosPendentes() {
             )}
           </tbody>
         </table>
-
-        {/* Mobile Cards View */}
-        <div className={sharedStyles.mobileCards}>
-          {ctesPaginados.length === 0 ? (
-            <EmptyState
-              title="Nenhum CT-e pendente no período"
-              description="Tente ajustar os filtros de data ou limpar os filtros avançados."
-            />
-          ) : (
-            ctesPaginados.map((cte) => {
-              const modalidadePill = getModalidadePill(cte.modalidade);
-              return (
-                <div key={cte.id} className={sharedStyles.mobileCard}>
-                  <div className={sharedStyles.mobileCardHeader}>
-                    <div className={sharedStyles.mobileCardTitle}>
-                      <span className={sharedStyles.mobileCardNumber}>{cte.numero || '-'}</span>
-                      <span className={sharedStyles.mobileCardDate}>{cte.data_emissao || '-'}</span>
-                    </div>
-                    <div className={sharedStyles.mobileCardStatus}>
-                      <StatusPill status={modalidadePill.status}>{modalidadePill.text}</StatusPill>
-                    </div>
-                  </div>
-                  <div className={sharedStyles.mobileCardBody}>
-                    <div className={sharedStyles.mobileCardRow}>
-                      <span className={sharedStyles.mobileCardLabel}>Remetente</span>
-                      <span className={sharedStyles.mobileCardValue}>{cte.remetente || '-'}</span>
-                    </div>
-                    <div className={sharedStyles.mobileCardRow}>
-                      <span className={sharedStyles.mobileCardLabel}>Destinatário</span>
-                      <span className={sharedStyles.mobileCardValue}>{cte.destinatario || '-'}</span>
-                    </div>
-                    <div className={sharedStyles.mobileCardRow}>
-                      <span className={sharedStyles.mobileCardLabel}>Valor</span>
-                      <span className={`${sharedStyles.mobileCardValue} ${sharedStyles.valor}`}>{formatCurrency(cte.valor)}</span>
-                    </div>
-                    {cte.chave && (
-                      <div className={sharedStyles.mobileCardRow}>
-                        <span className={sharedStyles.mobileCardLabel}>Chave</span>
-                        <span className={sharedStyles.mobileCardValue}>{cte.chave.slice(-10)}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className={sharedStyles.mobileCardFooter}>
-                    <div className={sharedStyles.mobileCardActions}>
-                      <button
-                        className={`${sharedStyles.btnAction} ${sharedStyles.btnDownload}`}
-                        onClick={() => handleAbrirModalBaixa(cte.id, cte.numero)}
-                        disabled={atualizandoPagamento === cte.id}
-                        title="Baixar Pagamento"
-                      >
-                        {atualizandoPagamento === cte.id ? (
-                          <span className={sharedStyles.loadingSpinnerSmall}></span>
-                        ) : (
-                          <>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                            </svg>
-                            Baixar
-                          </>
-                        )}
-                      </button>
-                      <Link
-                        to={`/ctes/${cte.id}`}
-                        className={`${sharedStyles.btnAction} ${sharedStyles.btnView}`}
-                        title="Ver Detalhes"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        Ver
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
       </TableContainer>
 
       {/* Paginacao */}

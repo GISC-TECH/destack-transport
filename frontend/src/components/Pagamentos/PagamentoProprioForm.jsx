@@ -4,6 +4,7 @@ import { pagamentosAPI, cteAPI, veiculosAPI, motoristasAPI, faixasKmAPI } from '
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
 import styles from './PagamentoForm.module.css';
 
 function PagamentoProprioForm() {
@@ -381,12 +382,10 @@ function PagamentoProprioForm() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.pageHeader}>
-        <div className={styles.headerTitle}>
-          <h1>{isEditing ? 'Editar Pagamento Proprio' : 'Novo Pagamento Proprio'}</h1>
-          <p>{isEditing ? 'Atualize os dados do pagamento' : 'Cadastre um novo pagamento para veiculo proprio'}</p>
-        </div>
-      </div>
+      <PageHeader
+        title={isEditing ? 'Editar Pagamento Proprio' : 'Novo Pagamento Proprio'}
+        subtitle={isEditing ? 'Atualize os dados do pagamento' : 'Cadastre um novo pagamento para veiculo proprio'}
+      />
 
       {error && (
         <div className={`${styles.alert} ${styles.alertError}`}>
