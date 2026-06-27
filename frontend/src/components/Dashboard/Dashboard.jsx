@@ -57,6 +57,16 @@ function Dashboard() {
     return new Intl.NumberFormat('pt-BR').format(value || 0);
   };
 
+  const formatKmTotal = (km) => {
+    if (km === null || km === undefined) return 'N/A';
+    return `${formatNumber(km)} km`;
+  };
+
+  const formatCustoKm = (custo) => {
+    if (custo === null || custo === undefined) return 'N/A';
+    return formatCurrency(custo);
+  };
+
   const chartData = useMemo(() => {
     if (data?.grafico_cif_fob && data.grafico_cif_fob.length > 0) {
       return data.grafico_cif_fob.map(item => {
@@ -243,7 +253,7 @@ function Dashboard() {
           </div>
           <div className="kpi-content-small">
             <span className="kpi-label-small">KM Total</span>
-            <span className="kpi-value-small">{formatNumber(performanceData?.cards?.km_total || 0)} km</span>
+            <span className="kpi-value-small">{formatKmTotal(performanceData?.cards?.km_total)}</span>
           </div>
         </div>
 
@@ -256,7 +266,7 @@ function Dashboard() {
           </div>
           <div className="kpi-content-small">
             <span className="kpi-label-small">Custo/KM</span>
-            <span className="kpi-value-small">{formatCurrency(performanceData?.cards?.custo_por_km || 0)}</span>
+            <span className="kpi-value-small">{formatCustoKm(performanceData?.cards?.custo_por_km)}</span>
           </div>
         </div>
 

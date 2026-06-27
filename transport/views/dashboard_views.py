@@ -1270,12 +1270,21 @@ class PerformancePainelAPIView(APIView):
         # === KM Total e Custo por KM ===
         ctes_validos = CTeDocumento.objects.filter(filtro_periodo_cte & filtro_cte_valido)
         agregados_km = ctes_validos.aggregate(
-            km_total=Coalesce(Sum('identificacao__dist_km'), 0, output_field=DecimalField()),
-            valor_total=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0'))
+            km_total=Sum('identificacao__dist_km'),
+            valor_total=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0')),
+            ctes_com_distancia=Count('id', filter=Q(identificacao__dist_km__isnull=False))
         )
-        km_total = float(agregados_km['km_total'] or 0)
+        km_total_raw = agregados_km['km_total']
         valor_total = float(agregados_km['valor_total'] or 0)
-        custo_por_km = (valor_total / km_total) if km_total > 0 else 0
+        ctes_com_distancia = agregados_km['ctes_com_distancia'] or 0
+
+        # Se não houver CT-es com distância preenchida, retorna null para exibir N/A
+        if km_total_raw is None or ctes_com_distancia == 0:
+            km_total = None
+            custo_por_km = None
+        else:
+            km_total = float(km_total_raw)
+            custo_por_km = (valor_total / km_total) if km_total > 0 else 0
 
         # === Ticket Medio ===
         ticket_medio = (valor_total / ctes_autorizados) if ctes_autorizados > 0 else 0

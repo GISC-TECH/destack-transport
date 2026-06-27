@@ -273,8 +273,14 @@ def parse_cte_identificacao(cte_doc, infcte):
         'tomador_nome_fantasia': safe_get(toma_node, 'xFant') if toma_tipo == '4' else None,
         'tomador_telefone': safe_get(toma_node, 'fone') if toma_tipo == '4' else None,
         'tomador_endereco': tomador_endereco, # Objeto Endereco ou None
-        # Novo campo de distância KM
-        'dist_km': to_int(safe_get(ide, 'infGlobalizado.distCont') or safe_get(ide, 'infCTeNorm.infModal.rodo.dist')),
+        # Novo campo de distância KM. Busca em infGlobalizado (ide) ou infModal/rodo (infcte).
+        # Valor 0 ou ausente é gravado como NULL para não distorcer métricas.
+        'dist_km': (
+            to_int(safe_get(ide, 'infGlobalizado.distCont'))
+            or to_int(safe_get(infcte, 'infCTeNorm.infModal.rodo.dist'))
+            or to_int(safe_get(infcte, 'infModal.rodo.dist'))
+            or None
+        ),
     }
 
     # Remove chaves com valor None para evitar sobrescrever com null no update_or_create
