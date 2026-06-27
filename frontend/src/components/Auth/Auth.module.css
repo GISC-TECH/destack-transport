@@ -1,10 +1,18 @@
+:root {
+  --auth-brand-bg: linear-gradient(160deg, #0c2418 0%, #11301f 48%, #0a1c13 100%);
+  --auth-brand-text: #eaf3ed;
+  --auth-brand-muted: #a9c6b5;
+  --auth-brand-accent: var(--gold-400);
+}
+
 /* ==========================================================================
-   Login — split-screen (design do protótipo Destack ERP)
+   Login — split-screen responsivo
    ========================================================================== */
 
 .split {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   background: var(--card-bg);
 }
@@ -14,26 +22,25 @@
    -------------------------------------------------------------------------- */
 .brand {
   position: relative;
-  flex: 1 1 52%;
+  flex: 1 1 46%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 56px 64px;
-  color: #eaf3ed;
+  padding: clamp(32px, 5vw, 64px) clamp(28px, 4vw, 64px);
+  color: var(--auth-brand-text);
   overflow: hidden;
   background:
     radial-gradient(1200px 600px at 12% -8%, #246b49 0%, transparent 55%),
     radial-gradient(1100px 800px at 108% 4%, #16422c 0%, transparent 52%),
-    linear-gradient(160deg, #0c2418 0%, #11301f 48%, #0a1c13 100%);
+    var(--auth-brand-bg);
 }
 
-/* anel decorativo sutil */
 .brandGlow {
   position: absolute;
   top: -120px;
   right: -80px;
-  width: 460px;
-  height: 460px;
+  width: min(460px, 50vw);
+  height: min(460px, 50vw);
   border: 1px solid rgba(212, 188, 106, 0.18);
   border-radius: 50%;
   box-shadow: inset 0 0 0 60px rgba(212, 188, 106, 0.04);
@@ -43,75 +50,37 @@
 .brandTop {
   position: relative;
   z-index: 1;
-  max-width: 460px;
+  max-width: 480px;
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 48px;
+  margin-bottom: clamp(28px, 5vh, 48px);
 }
 
-.logoTile {
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  background: linear-gradient(135deg, var(--green-500), var(--green-700));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 24px;
-  color: #fff;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
-}
-
-/* Logo oficial — renderizada em branco sobre o painel verde escuro */
 .logoImg {
-  height: 56px;
+  height: clamp(44px, 5vw, 58px);
   width: auto;
   filter: brightness(0) invert(1);
-}
-
-.logoText {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.05;
-}
-
-.logoText strong {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 19px;
-  color: #fff;
-  letter-spacing: -0.01em;
-}
-
-.logoText small {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--gold-400);
 }
 
 .headline {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(1.9rem, 3.4vw, 2.85rem);
-  line-height: 1.08;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  line-height: 1.1;
   letter-spacing: -0.02em;
   color: #fff;
   margin: 0 0 18px;
 }
 
 .sub {
-  font-size: 1.02rem;
+  font-size: clamp(0.92rem, 1.2vw, 1.05rem);
   line-height: 1.6;
-  color: #a9c6b5;
-  margin: 0 0 36px;
+  color: var(--auth-brand-muted);
+  margin: 0 0 clamp(24px, 4vh, 36px);
   max-width: 420px;
 }
 
@@ -121,14 +90,14 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .features li {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 0.95rem;
+  font-size: clamp(0.88rem, 1.1vw, 0.96rem);
   font-weight: 600;
   color: #dcebe1;
 }
@@ -141,7 +110,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--gold-400);
+  color: var(--auth-brand-accent);
   background: rgba(212, 188, 106, 0.14);
   border: 1px solid rgba(212, 188, 106, 0.4);
 }
@@ -149,7 +118,7 @@
 .copy {
   position: relative;
   z-index: 1;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #6f8c7c;
   margin: 0;
 }
@@ -158,20 +127,20 @@
    Painel do formulário (direita)
    -------------------------------------------------------------------------- */
 .formSide {
-  flex: 1 1 48%;
+  flex: 1 1 54%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 32px;
+  padding: 24px clamp(18px, 3vw, 40px);
   background: var(--content-bg);
 }
 
 .card {
-  width: min(400px, 100%);
+  width: min(420px, 100%);
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-2xl);
-  padding: 40px;
+  padding: clamp(28px, 4vh, 44px) clamp(24px, 3vw, 40px);
   box-shadow: var(--shadow-md);
 }
 
@@ -188,14 +157,14 @@
 .title {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.7rem;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
   letter-spacing: -0.02em;
   color: var(--text-primary);
-  margin: 0 0 28px;
+  margin: 0 0 clamp(20px, 3vh, 28px);
 }
 
 .field {
-  margin-bottom: 18px;
+  margin-bottom: clamp(12px, 2vh, 18px);
 }
 
 .field label {
@@ -212,7 +181,7 @@
 .pass input {
   width: 100%;
   padding: 13px 15px;
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: var(--radius-lg);
   font-family: var(--font-body);
   font-size: 0.95rem;
@@ -269,6 +238,11 @@
   background: var(--green-100);
 }
 
+.toggle:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
 .row {
   display: flex;
   align-items: center;
@@ -310,6 +284,12 @@
   text-decoration: underline;
 }
 
+.link:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .submit {
   width: 100%;
   padding: 14px;
@@ -337,6 +317,11 @@
 .submit:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.submit:focus-visible {
+  outline: 3px solid var(--primary-color);
+  outline-offset: 3px;
 }
 
 .spinner {
@@ -379,9 +364,40 @@
 }
 
 /* --------------------------------------------------------------------------
-   Responsivo
+   Tablet (768px - 1024px): split mais enxuto
    -------------------------------------------------------------------------- */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
+  .brand {
+    flex: 1 1 42%;
+    padding: 32px 28px;
+  }
+
+  .brandTop {
+    max-width: none;
+  }
+
+  .features {
+    gap: 10px;
+  }
+
+  .features li {
+    font-size: 0.84rem;
+  }
+
+  .formSide {
+    flex: 1 1 58%;
+    padding: 24px;
+  }
+
+  .card {
+    padding: 32px 28px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Mobile (< 768px): brand compacto + card flutuante
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
   .split {
     flex-direction: column;
     min-height: 100vh;
@@ -390,19 +406,19 @@
 
   .brand {
     flex: none;
-    padding: 28px 24px 56px;
+    padding: 28px 24px 64px;
     text-align: center;
     align-items: center;
     justify-content: center;
-    min-height: 42vh;
+    min-height: auto;
   }
 
   .brandGlow {
-    top: -140px;
+    top: -120px;
     right: 50%;
     transform: translateX(50%);
-    width: 340px;
-    height: 340px;
+    width: 320px;
+    height: 320px;
   }
 
   .brandTop {
@@ -418,17 +434,17 @@
   }
 
   .logoImg {
-    height: 42px;
+    height: 44px;
   }
 
   .headline {
-    font-size: 1.35rem;
-    margin-bottom: 8px;
+    font-size: 1.45rem;
+    margin-bottom: 10px;
   }
 
   .sub {
-    font-size: 0.88rem;
-    margin-bottom: 14px;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
     max-width: 340px;
   }
 
@@ -442,48 +458,49 @@
 
   .formSide {
     flex: 1;
-    padding: 0 18px 24px;
+    padding: 0 16px 24px;
     align-items: flex-start;
     justify-content: flex-start;
-    margin-top: -42px;
+    margin-top: -48px;
     position: relative;
     z-index: 2;
   }
 
   .card {
-    width: min(440px, 100%);
+    width: min(460px, 100%);
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 22px 22px 0 0;
-    box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.1);
-    padding: 22px 22px 28px;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
+    padding: 28px 24px 32px;
+    margin: 0 auto;
   }
 
   .title {
-    font-size: 1.3rem;
-    margin-bottom: 16px;
+    font-size: 1.35rem;
+    margin-bottom: 18px;
     text-align: center;
   }
 
   .eyebrow {
     text-align: center;
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     margin-bottom: 6px;
   }
 
   .field {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
 
   .field label {
-    font-size: 0.65rem;
-    margin-bottom: 5px;
+    font-size: 0.68rem;
+    margin-bottom: 6px;
   }
 
   .field input,
   .pass input {
-    padding: 11px 12px;
-    font-size: 15px;
+    padding: 12px 14px;
+    font-size: 16px;
     border-radius: 10px;
   }
 
@@ -492,8 +509,8 @@
   }
 
   .toggle {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
   }
 
   .toggle svg {
@@ -502,23 +519,23 @@
   }
 
   .row {
-    margin: 2px 0 16px;
+    margin: 2px 0 18px;
   }
 
   .checkLabel,
   .link {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
   }
 
   .submit {
-    padding: 12px;
-    font-size: 0.95rem;
+    padding: 13px;
+    font-size: 0.98rem;
     border-radius: 10px;
   }
 
   .secure {
-    font-size: 0.7rem;
-    margin-top: 14px;
+    font-size: 0.72rem;
+    margin-top: 16px;
   }
 
   .error {
@@ -528,50 +545,55 @@
   }
 }
 
+/* --------------------------------------------------------------------------
+   Small mobile (< 480px)
+   -------------------------------------------------------------------------- */
 @media (max-width: 480px) {
   .brand {
-    padding: 24px 20px 48px;
-    min-height: 40vh;
+    padding: 22px 20px 48px;
+  }
+
+  .brandGlow {
+    width: 260px;
+    height: 260px;
   }
 
   .logoImg {
-    height: 38px;
+    height: 40px;
   }
 
   .headline {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
   }
 
   .sub {
-    font-size: 0.8rem;
-    margin-bottom: 10px;
+    font-size: 0.84rem;
   }
 
   .formSide {
     padding: 0 12px 20px;
-    margin-top: -38px;
+    margin-top: -40px;
   }
 
   .card {
-    padding: 18px 18px 24px;
+    padding: 22px 18px 28px;
     border-radius: 20px 20px 0 0;
   }
 
   .title {
-    font-size: 1.15rem;
+    font-size: 1.2rem;
     margin-bottom: 14px;
   }
 
   .field input,
   .pass input {
-    padding: 10px 11px;
+    padding: 11px 12px;
     font-size: 16px;
-    border-radius: 10px;
   }
 
   .submit {
     padding: 12px;
-    font-size: 0.92rem;
+    font-size: 0.95rem;
   }
 
   .row {
@@ -583,5 +605,41 @@
 
   .link {
     align-self: flex-end;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Paisagem em mobile pequeno (altura baixa)
+   -------------------------------------------------------------------------- */
+@media (max-height: 600px) and (max-width: 768px) {
+  .brand {
+    padding: 18px 20px 32px;
+  }
+
+  .headline {
+    font-size: 1.15rem;
+    margin-bottom: 6px;
+  }
+
+  .sub {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+
+  .formSide {
+    margin-top: -28px;
+  }
+
+  .card {
+    padding: 18px 18px 22px;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .field {
+    margin-bottom: 10px;
+  }
+
+  .title {
+    margin-bottom: 12px;
   }
 }
