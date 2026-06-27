@@ -121,6 +121,7 @@ function MDFeList() {
       data_inicio: dateFilters.data_inicio,
       data_fim: dateFilters.data_fim
     }));
+    setFiltrosGraficos(dateFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
     loadMDFes({
       q: '',
@@ -128,6 +129,7 @@ function MDFeList() {
       data_inicio: dateFilters.data_inicio,
       data_fim: dateFilters.data_fim
     }, 1);
+    loadPainelMDFe(dateFilters);
   };
 
   const handleFiltrar = (e) => {
