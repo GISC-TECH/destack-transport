@@ -122,13 +122,13 @@ function OrdensViagemList() {
         subtitle="Gerencie viagens, motoristas e CT-es vinculados"
         breadcrumbs={[{ label: 'Operação' }, { label: 'Ordens de Viagem' }]}
         actions={
-          <Link to="/ordens-viagem/nova" className="btn-primary">
+          <Button as={Link} to="/ordens-viagem/nova" variant="primary" size="sm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
             Nova OS
-          </Link>
+          </Button>
         }
       />
 
@@ -335,7 +335,7 @@ function OrdensViagemList() {
               </span>
             </div>
             <div className={styles.osMobileRow} style={{ marginTop: 12 }}>
-              <Link to={`/ordens-viagem/${ordem.id}`} className="btn-primary btn-sm">Editar</Link>
+              <Button as={Link} to={`/ordens-viagem/${ordem.id}`} variant="primary" size="sm">Editar</Button>
               <Button variant="secondary" size="sm" onClick={() => handleDelete(ordem.id)}>
                 Excluir
               </Button>

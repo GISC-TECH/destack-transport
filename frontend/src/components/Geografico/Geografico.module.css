@@ -121,7 +121,6 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 500px;
 }
 
 .table th {

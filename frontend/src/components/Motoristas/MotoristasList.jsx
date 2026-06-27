@@ -149,6 +149,7 @@ function MotoristasList() {
       ...prev,
       [field]: value
     }));
+    setPagination({ count: 0, next: null, previous: null });
   };
 
   const motoristasIcon = (

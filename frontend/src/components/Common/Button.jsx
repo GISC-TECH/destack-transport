@@ -5,15 +5,17 @@ import styles from './Button.module.css';
  * Button — componente base de botão.
  *
  * Props:
+ * - as: componente alternativo (ex: Link do react-router-dom)
  * - variant: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'outline' | 'ghost' | 'gold'
  * - size: 'sm' | 'md' | 'lg'
  * - iconOnly: boolean — quando true, o botão vira quadrado e oculta o texto (use aria-label)
  * - loading: boolean — desabilita e mostra spinner
  * - children: conteúdo
- * - ...rest: props nativas de button
+ * - ...rest: props nativas do elemento
  */
 const Button = forwardRef(function Button(
   {
+    as: Component = 'button',
     variant = 'primary',
     size = 'md',
     iconOnly = false,
@@ -37,15 +39,16 @@ const Button = forwardRef(function Button(
     .join(' ');
 
   return (
-    <button
+    <Component
       ref={ref}
       className={classes}
-      disabled={disabled || loading}
+      disabled={Component === 'button' ? disabled || loading : undefined}
+      aria-busy={loading || undefined}
       {...rest}
     >
       {loading && <span className={styles.spinner} aria-hidden="true" />}
       <span className={styles.content}>{children}</span>
-    </button>
+    </Component>
   );
 });
 

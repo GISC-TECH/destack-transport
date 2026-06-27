@@ -133,6 +133,7 @@ function FaturasList() {
       data_inicio: newFiltros.data_inicio,
       data_fim: newFiltros.data_fim
     }));
+    setPagination({ count: 0, next: null, previous: null });
   };
 
   const handleDelete = async (id) => {

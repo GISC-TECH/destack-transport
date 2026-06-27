@@ -56,9 +56,8 @@ function MDFeList() {
 
   // Dados dos graficos (API /api/painel/mdfe/)
   const [painelData, setPainelData] = useState(null);
-  const [filtrosGraficos, setFiltrosGraficos] = useState(defaultDates);
 
-  // Filtros da tabela
+  // Filtros da tabela (e do painel — unificado)
   const [filtros, setFiltros] = useState({
     q: '',
     status: '',
@@ -69,9 +68,9 @@ function MDFeList() {
 
   // Carregar dados do painel para graficos
   const loadPainelMDFe = async (customFiltros = null) => {
-    const filtrosAtivos = customFiltros || filtrosGraficos;
+    const filtrosAtivos = customFiltros || filtros;
     try {
-      const params = { ...filtrosAtivos };
+      const params = { data_inicio: filtrosAtivos.data_inicio, data_fim: filtrosAtivos.data_fim };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       const result = await dashboardAPI.mdfe(params);
       setPainelData(result);
@@ -108,28 +107,18 @@ function MDFeList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handler para filtro de graficos
-  const handleGraficosFilterChange = (dateFilters) => {
-    setFiltrosGraficos(dateFilters);
-    loadPainelMDFe(dateFilters);
-  };
-
-  // Handler para filtro da tabela
-  const handleTabelaFilterChange = (dateFilters) => {
-    setFiltros(prev => ({
-      ...prev,
-      data_inicio: dateFilters.data_inicio,
-      data_fim: dateFilters.data_fim
-    }));
-    setFiltrosGraficos(dateFilters);
-    setPagination(prev => ({ ...prev, page: 1 }));
-    loadMDFes({
+  // Handler unico para filtro de data (painel + tabela)
+  const handleDateFilterChange = (dateFilters) => {
+    const novosFiltros = {
       q: '',
       status: '',
       data_inicio: dateFilters.data_inicio,
       data_fim: dateFilters.data_fim
-    }, 1);
-    loadPainelMDFe(dateFilters);
+    };
+    setFiltros(novosFiltros);
+    setPagination(prev => ({ ...prev, page: 1 }));
+    loadMDFes(novosFiltros, 1);
+    loadPainelMDFe(novosFiltros);
   };
 
   const handleFiltrar = (e) => {
@@ -321,7 +310,12 @@ function MDFeList() {
       {/* Filtro para Graficos */}
       <div className={styles.sectionHeader}>
         <h3>Analise de MDF-es</h3>
-        <DateFilter onFilterChange={handleGraficosFilterChange} defaultPeriodo="mes" />
+        <DateFilter
+          onFilterChange={handleDateFilterChange}
+          defaultPeriodo="mes"
+          initialDataInicio={filtros.data_inicio}
+          initialDataFim={filtros.data_fim}
+        />
       </div>
 
       {/* Graficos */}
@@ -405,12 +399,6 @@ function MDFeList() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Separador e Filtro para Tabela */}
-      <div className={styles.sectionHeader}>
-        <h3>Listagem de MDF-es</h3>
-        <DateFilter onFilterChange={handleTabelaFilterChange} defaultPeriodo="mes" />
       </div>
 
       {/* Filtros Adicionais */}

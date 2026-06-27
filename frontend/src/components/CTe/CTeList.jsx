@@ -42,9 +42,8 @@ function CTeList() {
 
   // Dados dos graficos (API /api/painel/cte/)
   const [painelData, setPainelData] = useState(null);
-  const [filtrosGraficos, setFiltrosGraficos] = useState(defaultDates);
 
-  // Filtros da tabela
+  // Filtros da tabela (e do painel — unificado)
   const [filtros, setFiltros] = useState({
     q: '',
     status: '',
@@ -56,9 +55,9 @@ function CTeList() {
 
   // Carregar dados do painel para graficos
   const loadPainelCTe = useCallback(async (customFiltros = null) => {
-    const filtrosAtivos = customFiltros || filtrosGraficos;
+    const filtrosAtivos = customFiltros || filtros;
     try {
-      const params = { ...filtrosAtivos };
+      const params = { data_inicio: filtrosAtivos.data_inicio, data_fim: filtrosAtivos.data_fim };
       Object.keys(params).forEach(key => !params[key] && delete params[key]);
       const result = await dashboardAPI.cte(params);
       setPainelData(result);
@@ -66,7 +65,7 @@ function CTeList() {
       console.error('Erro ao carregar painel CT-e:', err);
       setPainelData(null);
     }
-  }, [filtrosGraficos]);
+  }, [filtros]);
 
   // Carregar CT-es para tabela (20 por pagina)
   const loadCTes = useCallback(async (customFiltros = null, customPage = null) => {
@@ -95,29 +94,19 @@ function CTeList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handler para filtro de graficos
-  const handleGraficosFilterChange = useCallback((dateFilters) => {
-    setFiltrosGraficos(dateFilters);
-    loadPainelCTe(dateFilters);
-  }, [loadPainelCTe]);
-
-  // Handler para filtro da tabela
-  const handleTabelaFilterChange = useCallback((dateFilters) => {
-    setFiltros(prev => ({
-      ...prev,
-      data_inicio: dateFilters.data_inicio,
-      data_fim: dateFilters.data_fim
-    }));
-    setFiltrosGraficos(dateFilters);
-    setPagination(prev => ({ ...prev, page: 1 }));
-    loadCTes({
+  // Handler unico para filtro de data (painel + tabela)
+  const handleDateFilterChange = useCallback((dateFilters) => {
+    const novosFiltros = {
       q: '',
       status: '',
       pago: '',
       data_inicio: dateFilters.data_inicio,
       data_fim: dateFilters.data_fim
-    }, 1);
-    loadPainelCTe(dateFilters);
+    };
+    setFiltros(novosFiltros);
+    setPagination(prev => ({ ...prev, page: 1 }));
+    loadCTes(novosFiltros, 1);
+    loadPainelCTe(novosFiltros);
   }, [loadCTes, loadPainelCTe]);
 
   const handleFiltrar = (e) => {
@@ -333,10 +322,15 @@ function CTeList() {
         </div>
       </div>
 
-      {/* Filtro para Graficos */}
+      {/* Filtro unico de periodo */}
       <div className={sharedStyles.sectionHeader}>
         <h3>Analise de CT-es</h3>
-        <DateFilter onFilterChange={handleGraficosFilterChange} defaultPeriodo="mes" />
+        <DateFilter
+          onFilterChange={handleDateFilterChange}
+          defaultPeriodo="mes"
+          initialDataInicio={filtros.data_inicio}
+          initialDataFim={filtros.data_fim}
+        />
       </div>
 
       {/* Graficos */}
@@ -390,12 +384,6 @@ function CTeList() {
             <div className={sharedStyles.emptyChart}>Sem dados para o periodo</div>
           )}
         </div>
-      </div>
-
-      {/* Separador e Filtro para Tabela */}
-      <div className={sharedStyles.sectionHeader}>
-        <h3>Listagem de CT-es</h3>
-        <DateFilter onFilterChange={handleTabelaFilterChange} defaultPeriodo="mes" />
       </div>
 
       {/* Filtros Adicionais */}
