@@ -108,11 +108,16 @@ services:
       - SERVER_URL=${EVOLUTION_SERVER_URL:-https://evolution.destacktransporte.site}
       - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:?set EVOLUTION_API_KEY in .env}
       - DATABASE_ENABLED=true
-      - DATABASE_PROVIDER=${EVOLUTION_DATABASE_PROVIDER:-sqlite}
-      - DATABASE_CONNECTION_URI=${EVOLUTION_DATABASE_URI:-file:./evolution-api.db}
+      - DATABASE_PROVIDER=${EVOLUTION_DATABASE_PROVIDER:-postgresql}
+      - DATABASE_CONNECTION_URI=${EVOLUTION_DATABASE_URI:?set EVOLUTION_DATABASE_URI in .env}
       - DATABASE_SAVE_DATA_INSTANCE=true
       - DATABASE_SAVE_LOGS=true
       - WEBHOOK_GLOBAL_ENABLED=false
+      - REDIS_ENABLED=true
+      - REDIS_HOST=${REDIS_HOST:-destack_redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_default_password}
+      - REDIS_DB=${REDIS_DB:-1}
     volumes:
       - evolution_api_data:/evolution/instances
       - evolution_api_db:/evolution/db
