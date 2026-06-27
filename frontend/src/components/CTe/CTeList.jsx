@@ -5,11 +5,16 @@ import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
+import Button from '../Common/Button';
+import Modal from '../Common/Modal';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import './CTe.css';
+import sharedStyles from './CTeShared.module.css';
+import styles from './CTeList.module.css';
 
 // Cores para os graficos
 const COLORS = ['#0d9488', '#2ecc71', '#e74c3c', '#f39c12', '#C8A951'];
@@ -63,7 +68,7 @@ function CTeList() {
     }
   }, [filtrosGraficos]);
 
-  // Carregar CT-es para tabela (5 por pagina)
+  // Carregar CT-es para tabela (20 por pagina)
   const loadCTes = useCallback(async (customFiltros = null, customPage = null) => {
     const filtrosAtivos = customFiltros || filtros;
     const pageAtivo = customPage !== null ? customPage : pagination.page;
@@ -214,10 +219,22 @@ function CTeList() {
     </svg>
   );
 
+  const getStatusPill = (status) => {
+    if (status === 'Autorizado') return { status: 'success', text: 'Autorizado' };
+    if (status === 'Cancelado') return { status: 'danger', text: 'Cancelado' };
+    if (status?.includes('Rejeitado')) return { status: 'warning', text: status };
+    return { status: 'muted', text: status || 'Pendente' };
+  };
+
+  const getModalidadePill = (modalidade) => ({
+    status: modalidade === 'CIF' ? 'info' : 'warning',
+    text: modalidade || '-'
+  });
+
   const headerActions = (
-    <div className="header-buttons">
-      <button
-        className="btn btn-outline"
+    <div className={sharedStyles.headerButtons}>
+      <Button
+        variant="outline"
         onClick={() => cteAPI.export(filtros)}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -226,8 +243,11 @@ function CTeList() {
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
         Exportar
-      </button>
-      <Link to="/upload" className="btn btn-primary">
+      </Button>
+      <Link
+        to="/upload"
+        className={sharedStyles.btnPrimary}
+      >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="17 8 12 3 7 8"></polyline>
@@ -246,7 +266,7 @@ function CTeList() {
   if (loading && ctes.length === 0) return <Loading message="Carregando CT-es..." />;
 
   return (
-    <div className="cte-list">
+    <div className={sharedStyles.cteList}>
       <PageHeader
         title="CT-e - Conhecimento de Transporte"
         subtitle={`${pagination.total} documentos`}
@@ -256,71 +276,71 @@ function CTeList() {
       />
 
       {/* KPI Cards */}
-      <div className="cte-kpi-grid">
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon blue">
+      <div className={sharedStyles.kpiGrid}>
+        <div className={sharedStyles.kpiCard}>
+          <div className={`${sharedStyles.kpiIcon} ${sharedStyles.blue}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">Total CT-es</span>
-            <span className="cte-kpi-value">{kpis.total}</span>
+          <div className={sharedStyles.kpiContent}>
+            <span className={sharedStyles.kpiLabel}>Total CT-es</span>
+            <span className={sharedStyles.kpiValue}>{kpis.total}</span>
           </div>
         </div>
 
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon green">
+        <div className={sharedStyles.kpiCard}>
+          <div className={`${sharedStyles.kpiIcon} ${sharedStyles.green}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">Autorizados</span>
-            <span className="cte-kpi-value">{kpis.autorizados}</span>
+          <div className={sharedStyles.kpiContent}>
+            <span className={sharedStyles.kpiLabel}>Autorizados</span>
+            <span className={sharedStyles.kpiValue}>{kpis.autorizados}</span>
           </div>
         </div>
 
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon red">
+        <div className={sharedStyles.kpiCard}>
+          <div className={`${sharedStyles.kpiIcon} ${sharedStyles.red}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="15" y1="9" x2="9" y2="15"></line>
               <line x1="9" y1="9" x2="15" y2="15"></line>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">Cancelados</span>
-            <span className="cte-kpi-value">{kpis.cancelados}</span>
+          <div className={sharedStyles.kpiContent}>
+            <span className={sharedStyles.kpiLabel}>Cancelados</span>
+            <span className={sharedStyles.kpiValue}>{kpis.cancelados}</span>
           </div>
         </div>
 
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon purple">
+        <div className={sharedStyles.kpiCard}>
+          <div className={`${sharedStyles.kpiIcon} ${sharedStyles.purple}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">Valor Total</span>
-            <span className="cte-kpi-value">{formatCurrency(kpis.valorTotal)}</span>
+          <div className={sharedStyles.kpiContent}>
+            <span className={sharedStyles.kpiLabel}>Valor Total</span>
+            <span className={sharedStyles.kpiValue}>{formatCurrency(kpis.valorTotal)}</span>
           </div>
         </div>
       </div>
 
       {/* Filtro para Graficos */}
-      <div className="section-header">
+      <div className={sharedStyles.sectionHeader}>
         <h3>Analise de CT-es</h3>
         <DateFilter onFilterChange={handleGraficosFilterChange} defaultPeriodo="mes" />
       </div>
 
       {/* Graficos */}
-      <div className="cte-charts-grid">
+      <div className={sharedStyles.chartsGrid}>
         {/* Grafico de Top Clientes */}
-        <div className="cte-chart-card">
+        <div className={sharedStyles.chartCard}>
           <h3>Top 5 Clientes por Faturamento</h3>
           {clienteData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -333,12 +353,12 @@ function CTeList() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="empty-chart">Sem dados para o periodo</div>
+            <div className={sharedStyles.emptyChart}>Sem dados para o periodo</div>
           )}
         </div>
 
         {/* Grafico de Modalidade */}
-        <div className="cte-chart-card cte-chart-small">
+        <div className={`${sharedStyles.chartCard} ${sharedStyles.chartSmall}`}>
           <h3>Modalidade de Frete</h3>
           {modalidadeData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
@@ -365,31 +385,31 @@ function CTeList() {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="empty-chart">Sem dados para o periodo</div>
+            <div className={sharedStyles.emptyChart}>Sem dados para o periodo</div>
           )}
         </div>
       </div>
 
       {/* Separador e Filtro para Tabela */}
-      <div className="section-header">
+      <div className={sharedStyles.sectionHeader}>
         <h3>Listagem de CT-es</h3>
         <DateFilter onFilterChange={handleTabelaFilterChange} defaultPeriodo="mes" />
       </div>
 
       {/* Filtros Adicionais */}
-      <div className="filtros-section">
-        <form onSubmit={handleFiltrar} className="filtros-form">
+      <div className={sharedStyles.filtrosSection}>
+        <form onSubmit={handleFiltrar} className={sharedStyles.filtrosForm}>
           <input
             type="text"
             placeholder="Buscar por chave, número, remetente, condutor..."
             value={filtros.q}
             onChange={(e) => setFiltros({...filtros, q: e.target.value})}
-            className="input-filter"
+            className={sharedStyles.inputFilter}
           />
           <select
             value={filtros.status}
             onChange={(e) => setFiltros({...filtros, status: e.target.value})}
-            className="select-filter"
+            className={sharedStyles.selectFilter}
           >
             <option value="">Todos os Status</option>
             <option value="autorizado">Autorizado</option>
@@ -399,23 +419,23 @@ function CTeList() {
           <select
             value={filtros.pago}
             onChange={(e) => setFiltros({...filtros, pago: e.target.value})}
-            className="select-filter"
+            className={sharedStyles.selectFilter}
           >
             <option value="">Todos (Pago/Pendente)</option>
             <option value="true">Pagos</option>
             <option value="false">Pendentes</option>
           </select>
-          <button type="submit" className="btn-primary">Filtrar</button>
+          <Button type="submit" variant="primary">Filtrar</Button>
         </form>
       </div>
 
-      <div className="results-info">
+      <div className={sharedStyles.resultsInfo}>
         <p>Total de {pagination.total} CT-e{pagination.total !== 1 ? 's' : ''} encontrado{pagination.total !== 1 ? 's' : ''}</p>
       </div>
 
-      <div className="table-container">
+      <TableContainer mobileCards={false}>
         {/* Desktop Table */}
-        <table className="data-table">
+        <table>
           <thead>
             <tr>
               <th>Número</th>
@@ -432,188 +452,188 @@ function CTeList() {
           <tbody>
             {ctes.length === 0 ? (
               <tr>
-                <td colSpan="9" className="text-center">Nenhum CT-e encontrado</td>
+                <td colSpan="9" className={sharedStyles.textCenter}>Nenhum CT-e encontrado</td>
               </tr>
             ) : (
-              ctes.map((cte) => (
-                <tr key={cte.id}>
-                  <td>
-                    <strong>{cte.numero_cte || '-'}</strong>
-                    <br />
-                    <small className="text-muted">{cte.chave?.slice(-10)}</small>
-                  </td>
-                  <td>{cte.data_emissao || '-'}</td>
-                  <td>
-                    {cte.remetente_nome || '-'}
-                  </td>
-                  <td>
-                    {cte.destinatario_nome || '-'}
-                  </td>
-                  <td className="text-right">
-                    {formatCurrency(cte.valor_total)}
-                  </td>
-                  <td>
-                    <span className={`badge badge-${cte.modalidade === 'CIF' ? 'info' : 'warning'}`}>
-                      {cte.modalidade || '-'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge badge-${cte.status === 'Autorizado' ? 'success' : cte.status === 'Cancelado' ? 'danger' : cte.status?.includes('Rejeitado') ? 'warning' : 'secondary'}`}>
-                      {cte.status || 'Pendente'}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      className={`btn-toggle-pago ${cte.pago ? 'pago' : 'nao-pago'}`}
-                      onClick={() => handleTogglePagamento(cte)}
-                      disabled={atualizandoPagamento === cte.id}
-                      title={cte.pago ? `Pago em ${cte.data_pagamento ? new Date(cte.data_pagamento).toLocaleDateString('pt-BR') : '-'}` : 'Clique para marcar como pago'}
-                    >
-                      {atualizandoPagamento === cte.id ? (
-                        <span className="loading-spinner-small"></span>
-                      ) : cte.pago ? (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                      ) : (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="10"></circle>
-                        </svg>
-                      )}
-                    </button>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
+              ctes.map((cte) => {
+                const statusPill = getStatusPill(cte.status);
+                const modalidadePill = getModalidadePill(cte.modalidade);
+                return (
+                  <tr key={cte.id}>
+                    <td>
+                      <strong>{cte.numero_cte || '-'}</strong>
+                      <br />
+                      <small className={sharedStyles.textMuted}>{cte.chave?.slice(-10)}</small>
+                    </td>
+                    <td>{cte.data_emissao || '-'}</td>
+                    <td>
+                      {cte.remetente_nome || '-'}
+                    </td>
+                    <td>
+                      {cte.destinatario_nome || '-'}
+                    </td>
+                    <td className={sharedStyles.textRight}>
+                      {formatCurrency(cte.valor_total)}
+                    </td>
+                    <td>
+                      <StatusPill status={modalidadePill.status}>{modalidadePill.text}</StatusPill>
+                    </td>
+                    <td>
+                      <StatusPill status={statusPill.status}>{statusPill.text}</StatusPill>
+                    </td>
+                    <td>
                       <button
-                        className="btn-action btn-view"
-                        onClick={() => handleOpenModal(cte)}
-                        title="Ver Detalhes"
+                        className={`${sharedStyles.btnTogglePago} ${cte.pago ? sharedStyles.pago : sharedStyles.naoPago}`}
+                        onClick={() => handleTogglePagamento(cte)}
+                        disabled={atualizandoPagamento === cte.id}
+                        title={cte.pago ? `Pago em ${cte.data_pagamento ? new Date(cte.data_pagamento).toLocaleDateString('pt-BR') : '-'}` : 'Clique para marcar como pago'}
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        {atualizandoPagamento === cte.id ? (
+                          <span className={sharedStyles.loadingSpinnerSmall}></span>
+                        ) : cte.pago ? (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                          </svg>
+                        ) : (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                          </svg>
+                        )}
+                      </button>
+                    </td>
+                    <td>
+                      <div className={sharedStyles.actionButtons}>
+                        <button
+                          className={`${sharedStyles.btnAction} ${sharedStyles.btnView}`}
+                          onClick={() => handleOpenModal(cte)}
+                          title="Ver Detalhes"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                          </svg>
+                        </button>
+                        <button
+                          className={`${sharedStyles.btnAction} ${sharedStyles.btnDownload}`}
+                          onClick={() => handleDownloadXML(cte.id, cte.numero_cte)}
+                          title="Baixar XML"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+
+        {/* Mobile Cards */}
+        <div className={sharedStyles.mobileCards}>
+          {ctes.length === 0 ? (
+            <div className={sharedStyles.mobileEmpty}>
+              <div className={sharedStyles.mobileEmptyIcon}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              </div>
+              <p className={sharedStyles.mobileEmptyText}>Nenhum CT-e encontrado</p>
+            </div>
+          ) : (
+            ctes.map((cte) => {
+              const statusPill = getStatusPill(cte.status);
+              const modalidadePill = getModalidadePill(cte.modalidade);
+              return (
+                <div key={cte.id} className={sharedStyles.mobileCard}>
+                  <div className={sharedStyles.mobileCardHeader}>
+                    <div className={sharedStyles.mobileCardTitle}>
+                      <span className={sharedStyles.mobileCardNumber}>CT-e #{cte.numero_cte || '-'}</span>
+                      <span className={sharedStyles.mobileCardDate}>{cte.data_emissao || '-'}</span>
+                    </div>
+                    <div className={sharedStyles.mobileCardStatus}>
+                      <StatusPill status={statusPill.status}>{statusPill.text}</StatusPill>
+                    </div>
+                  </div>
+                  <div className={sharedStyles.mobileCardBody}>
+                    <div className={sharedStyles.mobileCardRow}>
+                      <span className={sharedStyles.mobileCardLabel}>Remetente</span>
+                      <span className={sharedStyles.mobileCardValue}>{cte.remetente_nome || '-'}</span>
+                    </div>
+                    <div className={sharedStyles.mobileCardRow}>
+                      <span className={sharedStyles.mobileCardLabel}>Destinatario</span>
+                      <span className={sharedStyles.mobileCardValue}>{cte.destinatario_nome || '-'}</span>
+                    </div>
+                    <div className={sharedStyles.mobileCardRow}>
+                      <span className={sharedStyles.mobileCardLabel}>Valor</span>
+                      <span className={`${sharedStyles.mobileCardValue} ${sharedStyles.valor}`}>{formatCurrency(cte.valor_total)}</span>
+                    </div>
+                    <div className={sharedStyles.mobileCardRow}>
+                      <span className={sharedStyles.mobileCardLabel}>Modalidade</span>
+                      <StatusPill status={modalidadePill.status}>{modalidadePill.text}</StatusPill>
+                    </div>
+                  </div>
+                  <div className={sharedStyles.mobileCardFooter}>
+                    <div className={sharedStyles.mobileCardPago}>
+                      <button
+                        className={`${sharedStyles.btnTogglePago} ${cte.pago ? sharedStyles.pago : sharedStyles.naoPago}`}
+                        onClick={() => handleTogglePagamento(cte)}
+                        disabled={atualizandoPagamento === cte.id}
+                      >
+                        {atualizandoPagamento === cte.id ? (
+                          <span className={sharedStyles.loadingSpinnerSmall}></span>
+                        ) : cte.pago ? (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                          </svg>
+                        ) : (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                          </svg>
+                        )}
+                      </button>
+                      <span style={{ fontSize: '12px', color: cte.pago ? 'var(--success-color)' : 'var(--text-muted)' }}>
+                        {cte.pago ? 'Pago' : 'Pendente'}
+                      </span>
+                    </div>
+                    <div className={sharedStyles.mobileCardActions}>
+                      <button
+                        className={`${sharedStyles.btnAction} ${sharedStyles.btnView}`}
+                        onClick={() => handleOpenModal(cte)}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                           <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                       </button>
                       <button
-                        className="btn-action btn-download"
+                        className={`${sharedStyles.btnAction} ${sharedStyles.btnDownload}`}
                         onClick={() => handleDownloadXML(cte.id, cte.numero_cte)}
-                        title="Baixar XML"
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                           <polyline points="7 10 12 15 17 10"></polyline>
                           <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
                       </button>
                     </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        {/* Mobile Cards */}
-        <div className="mobile-cards">
-          {ctes.length === 0 ? (
-            <div className="mobile-empty">
-              <div className="mobile-empty-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
-              </div>
-              <p className="mobile-empty-text">Nenhum CT-e encontrado</p>
-            </div>
-          ) : (
-            ctes.map((cte) => (
-              <div key={cte.id} className="mobile-card">
-                <div className="mobile-card-header">
-                  <div className="mobile-card-title">
-                    <span className="mobile-card-number">CT-e #{cte.numero_cte || '-'}</span>
-                    <span className="mobile-card-date">{cte.data_emissao || '-'}</span>
-                  </div>
-                  <div className="mobile-card-status">
-                    <span className={`badge badge-${cte.status === 'Autorizado' ? 'success' : cte.status === 'Cancelado' ? 'danger' : cte.status?.includes('Rejeitado') ? 'warning' : 'secondary'}`}>
-                      {cte.status || 'Pendente'}
-                    </span>
                   </div>
                 </div>
-                <div className="mobile-card-body">
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Remetente</span>
-                    <span className="mobile-card-value">{cte.remetente_nome || '-'}</span>
-                  </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Destinatario</span>
-                    <span className="mobile-card-value">{cte.destinatario_nome || '-'}</span>
-                  </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Valor</span>
-                    <span className="mobile-card-value valor">{formatCurrency(cte.valor_total)}</span>
-                  </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Modalidade</span>
-                    <span className={`badge badge-${cte.modalidade === 'CIF' ? 'info' : 'warning'}`}>
-                      {cte.modalidade || '-'}
-                    </span>
-                  </div>
-                </div>
-                <div className="mobile-card-footer">
-                  <div className="mobile-card-pago">
-                    <button
-                      className={`btn-toggle-pago ${cte.pago ? 'pago' : 'nao-pago'}`}
-                      onClick={() => handleTogglePagamento(cte)}
-                      disabled={atualizandoPagamento === cte.id}
-                    >
-                      {atualizandoPagamento === cte.id ? (
-                        <span className="loading-spinner-small"></span>
-                      ) : cte.pago ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="10"></circle>
-                        </svg>
-                      )}
-                    </button>
-                    <span style={{ fontSize: '12px', color: cte.pago ? '#27ae60' : '#7f8c8d' }}>
-                      {cte.pago ? 'Pago' : 'Pendente'}
-                    </span>
-                  </div>
-                  <div className="mobile-card-actions">
-                    <button
-                      className="btn-action btn-view"
-                      onClick={() => handleOpenModal(cte)}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    </button>
-                    <button
-                      className="btn-action btn-download"
-                      onClick={() => handleDownloadXML(cte.id, cte.numero_cte)}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
-      </div>
+      </TableContainer>
 
       {pagination.total > 0 && (
-        <div className="pagination">
+        <div className={sharedStyles.pagination}>
           <button
             onClick={() => {
               const newPage = pagination.page - 1;
@@ -621,11 +641,11 @@ function CTeList() {
               loadCTes(null, newPage);
             }}
             disabled={pagination.page === 1}
-            className="btn-page"
+            className={sharedStyles.btnPage}
           >
             Anterior
           </button>
-          <div className="pagination-numbers">
+          <div className={sharedStyles.paginationNumbers}>
             {Array.from({ length: Math.ceil(pagination.total / PAGE_SIZE) }, (_, i) => i + 1)
               .filter(page => {
                 const currentPage = pagination.page;
@@ -634,13 +654,13 @@ function CTeList() {
               })
               .map((page, index, arr) => (
                 <span key={page}>
-                  {index > 0 && arr[index - 1] !== page - 1 && <span className="pagination-ellipsis">...</span>}
+                  {index > 0 && arr[index - 1] !== page - 1 && <span className={sharedStyles.paginationEllipsis}>...</span>}
                   <button
                     onClick={() => {
                       setPagination(p => ({...p, page}));
                       loadCTes(null, page);
                     }}
-                    className={`btn-page-num ${pagination.page === page ? 'active' : ''}`}
+                    className={`${sharedStyles.btnPageNum} ${pagination.page === page ? sharedStyles.active : ''}`}
                   >
                     {page}
                   </button>
@@ -655,7 +675,7 @@ function CTeList() {
               loadCTes(null, newPage);
             }}
             disabled={pagination.page >= Math.ceil(pagination.total / PAGE_SIZE)}
-            className="btn-page"
+            className={sharedStyles.btnPage}
           >
             Proxima
           </button>
@@ -663,77 +683,71 @@ function CTeList() {
       )}
 
       {/* Modal de Detalhes Rapidos */}
-      {modalCte && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
-          <div className="modal-content cte-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>CT-e #{modalCte.numero_cte}</h2>
-              <button className="modal-close" onClick={handleCloseModal}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+      <Modal
+        isOpen={!!modalCte}
+        onClose={handleCloseModal}
+        title={modalCte ? `CT-e #${modalCte.numero_cte}` : ''}
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="success"
+              onClick={() => handleDownloadXML(modalCte.id, modalCte.numero_cte)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Baixar XML
+            </Button>
+            <Button variant="secondary" onClick={handleCloseModal}>
+              Fechar
+            </Button>
+          </>
+        }
+      >
+        {modalCte && (
+          <div className={styles.modalInfoGrid}>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Número</span>
+              <span className={styles.modalInfoValue}>{modalCte.numero_cte || '-'}</span>
             </div>
-            <div className="modal-body">
-              <div className="modal-info-grid">
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Número</span>
-                  <span className="modal-info-value">{modalCte.numero_cte || '-'}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Data Emissão</span>
-                  <span className="modal-info-value">{modalCte.data_emissao || '-'}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Remetente</span>
-                  <span className="modal-info-value">{modalCte.remetente_nome || '-'}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Destinatario</span>
-                  <span className="modal-info-value">{modalCte.destinatario_nome || '-'}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Valor</span>
-                  <span className="modal-info-value valor-destaque">{formatCurrency(modalCte.valor_total)}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Modalidade</span>
-                  <span className={`badge badge-${modalCte.modalidade === 'CIF' ? 'info' : 'warning'}`}>
-                    {modalCte.modalidade || '-'}
-                  </span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Status</span>
-                  <span className={`badge badge-${modalCte.status === 'Autorizado' ? 'success' : modalCte.status === 'Cancelado' ? 'danger' : modalCte.status?.includes('Rejeitado') ? 'warning' : 'secondary'}`}>
-                    {modalCte.status || 'Pendente'}
-                  </span>
-                </div>
-                <div className="modal-info-item full-width">
-                  <span className="modal-info-label">Chave de Acesso</span>
-                  <span className="modal-info-value chave-cte">{modalCte.chave || '-'}</span>
-                </div>
-              </div>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Data Emissão</span>
+              <span className={styles.modalInfoValue}>{modalCte.data_emissao || '-'}</span>
             </div>
-            <div className="modal-footer">
-              <button
-                className="btn-action btn-download"
-                onClick={() => handleDownloadXML(modalCte.id, modalCte.numero_cte)}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Baixar XML
-              </button>
-              <button className="btn-action btn-secondary" onClick={handleCloseModal}>
-                Fechar
-              </button>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Remetente</span>
+              <span className={styles.modalInfoValue}>{modalCte.remetente_nome || '-'}</span>
+            </div>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Destinatario</span>
+              <span className={styles.modalInfoValue}>{modalCte.destinatario_nome || '-'}</span>
+            </div>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Valor</span>
+              <span className={`${styles.modalInfoValue} ${styles.valorDestaque}`}>{formatCurrency(modalCte.valor_total)}</span>
+            </div>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Modalidade</span>
+              <StatusPill status={getModalidadePill(modalCte.modalidade).status}>
+                {getModalidadePill(modalCte.modalidade).text}
+              </StatusPill>
+            </div>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Status</span>
+              <StatusPill status={getStatusPill(modalCte.status).status}>
+                {getStatusPill(modalCte.status).text}
+              </StatusPill>
+            </div>
+            <div className={`${styles.modalInfoItem} ${styles.fullWidth}`}>
+              <span className={styles.modalInfoLabel}>Chave de Acesso</span>
+              <span className={`${styles.modalInfoValue} ${styles.chaveCte}`}>{modalCte.chave || '-'}</span>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

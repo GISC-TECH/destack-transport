@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { faixasKmAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
-import './FaixasKm.css';
+import Modal from '../Common/Modal';
+import Button from '../Common/Button';
+import TableContainer from '../Common/TableContainer';
+import styles from './FaixasKm.module.css';
 
 // Mock data para faixas de KM (usando nomes de campos do backend)
 const mockFaixas = [
@@ -182,120 +185,122 @@ function FaixasKmList() {
   );
 
   return (
-    <div className="faixas-km-page">
+    <div className={styles.page}>
       <PageHeader
         title="Faixas de KM"
         subtitle={usingMockData ? "Configure os valores por quilômetro para cálculo de frete (Modo Demonstração)" : "Configure os valores por quilômetro para cálculo de frete"}
         icon={faixaIcon}
         breadcrumbs={[{ label: 'Configurações' }, { label: 'Faixas de KM' }]}
         actions={
-          <button className="btn-primary" onClick={() => handleOpenModal()}>
+          <Button variant="primary" onClick={() => handleOpenModal()}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
             Nova Faixa
-          </button>
+          </Button>
         }
       />
 
       {message && (
-        <div className={`alert alert-${message.type}`}>
+        <div className={`${styles.alert} ${styles[`alert-${message.type}`]}`}>
           {message.text}
-          <button className="alert-close" onClick={() => setMessage(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setMessage(null)}>&times;</button>
         </div>
       )}
 
       {/* Tabela de Faixas */}
-      <div className="faixas-table-container">
-        <div className="desktop-only">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Faixa</th>
-                <th>KM Mínimo</th>
-                <th>KM Máximo</th>
-                <th>Valor Pago</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {faixas.length === 0 ? (
+      <div className={styles.tableContainer}>
+        <div className={styles.desktopOnly}>
+          <TableContainer mobileCards={false}>
+            <table className={styles.dataTable}>
+              <thead>
                 <tr>
-                  <td colSpan="5" className="text-center">
-                    Nenhuma faixa de KM cadastrada
-                  </td>
+                  <th>Faixa</th>
+                  <th>KM Mínimo</th>
+                  <th>KM Máximo</th>
+                  <th>Valor Pago</th>
+                  <th>Ações</th>
                 </tr>
-              ) : (
-                faixas.map((faixa, index) => (
-                  <tr key={faixa.id}>
-                    <td>
-                      <span className="faixa-badge">Faixa {index + 1}</span>
-                    </td>
-                    <td>{formatKm(faixa.min_km)}</td>
-                    <td>{faixa.max_km ? formatKm(faixa.max_km) : 'Ilimitado'}</td>
-                    <td>
-                      <strong className="valor-km">{formatCurrency(faixa.valor_pago)}</strong>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn-action btn-edit"
-                          onClick={() => handleOpenModal(faixa)}
-                          title="Editar"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                          </svg>
-                        </button>
-                        <button
-                          className="btn-action btn-delete"
-                          onClick={() => handleDelete(faixa.id)}
-                          title="Excluir"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          </svg>
-                        </button>
-                      </div>
+              </thead>
+              <tbody>
+                {faixas.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className={styles.textCenter}>
+                      Nenhuma faixa de KM cadastrada
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  faixas.map((faixa, index) => (
+                    <tr key={faixa.id}>
+                      <td>
+                        <span className={styles.faixaBadge}>Faixa {index + 1}</span>
+                      </td>
+                      <td>{formatKm(faixa.min_km)}</td>
+                      <td>{faixa.max_km ? formatKm(faixa.max_km) : 'Ilimitado'}</td>
+                      <td>
+                        <strong className={styles.valorKm}>{formatCurrency(faixa.valor_pago)}</strong>
+                      </td>
+                      <td>
+                        <div className={styles.actionButtons}>
+                          <button
+                            className={`${styles.btnAction} ${styles.btnEdit}`}
+                            onClick={() => handleOpenModal(faixa)}
+                            title="Editar"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                          </button>
+                          <button
+                            className={`${styles.btnAction} ${styles.btnDelete}`}
+                            onClick={() => handleDelete(faixa.id)}
+                            title="Excluir"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </TableContainer>
         </div>
 
         {/* Cards Mobile */}
-        <div className="mobile-cards mobile-only">
+        <div className={`${styles.mobileCards} ${styles.mobileOnly}`}>
           {faixas.length === 0 ? (
-            <div className="mobile-empty">
-              <p className="mobile-empty-text">Nenhuma faixa de KM cadastrada</p>
+            <div className={styles.mobileEmpty}>
+              <p className={styles.mobileEmptyText}>Nenhuma faixa de KM cadastrada</p>
             </div>
           ) : (
             faixas.map((faixa, index) => (
-              <div key={faixa.id} className="mobile-card">
-                <div className="mobile-card-header">
+              <div key={faixa.id} className={styles.mobileCard}>
+                <div className={styles.mobileCardHeader}>
                   <h4>Faixa {index + 1}</h4>
-                  <strong className="valor-km">{formatCurrency(faixa.valor_pago)}</strong>
+                  <strong className={styles.valorKm}>{formatCurrency(faixa.valor_pago)}</strong>
                 </div>
-                <div className="mobile-card-body">
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">KM Mínimo</span>
-                    <span className="mobile-card-value">{formatKm(faixa.min_km)}</span>
+                <div className={styles.mobileCardBody}>
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>KM Mínimo</span>
+                    <span className={styles.mobileCardValue}>{formatKm(faixa.min_km)}</span>
                   </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">KM Máximo</span>
-                    <span className="mobile-card-value">
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>KM Máximo</span>
+                    <span className={styles.mobileCardValue}>
                       {faixa.max_km ? formatKm(faixa.max_km) : 'Ilimitado'}
                     </span>
                   </div>
                 </div>
-                <div className="mobile-card-footer">
+                <div className={styles.mobileCardFooter}>
                   <button
-                    className="btn-action btn-edit"
+                    className={`${styles.btnAction} ${styles.btnEdit}`}
                     onClick={() => handleOpenModal(faixa)}
                     title="Editar"
                     aria-label={`Editar faixa ${index + 1}`}
@@ -306,7 +311,7 @@ function FaixasKmList() {
                     </svg>
                   </button>
                   <button
-                    className="btn-action btn-delete"
+                    className={`${styles.btnAction} ${styles.btnDelete}`}
                     onClick={() => handleDelete(faixa.id)}
                     title="Excluir"
                     aria-label={`Excluir faixa ${index + 1}`}
@@ -324,17 +329,17 @@ function FaixasKmList() {
       </div>
 
       {/* Visualização Gráfica */}
-      <div className="faixas-visual">
+      <div className={styles.visual}>
         <h3>Visualização das Faixas</h3>
-        <div className="faixas-bars">
+        <div className={styles.bars}>
           {faixas.map((faixa, index) => (
-            <div key={faixa.id} className="faixa-bar">
-              <div className="faixa-bar-header">
-                <span className="faixa-range">{formatKm(faixa.min_km)} - {faixa.max_km ? formatKm(faixa.max_km) : 'Ilimitado'}</span>
-                <span className="faixa-valor">{formatCurrency(faixa.valor_pago)}</span>
+            <div key={faixa.id} className={styles.bar}>
+              <div className={styles.barHeader}>
+                <span className={styles.barRange}>{formatKm(faixa.min_km)} - {faixa.max_km ? formatKm(faixa.max_km) : 'Ilimitado'}</span>
+                <span className={styles.barValue}>{formatCurrency(faixa.valor_pago)}</span>
               </div>
               <div
-                className="faixa-bar-fill"
+                className={styles.barFill}
                 style={{
                   width: `${Math.max(20, 100 - (index * 15))}%`,
                   background: `hsl(${200 + index * 30}, 70%, 50%)`
@@ -346,59 +351,57 @@ function FaixasKmList() {
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{editingFaixa ? 'Editar Faixa' : 'Nova Faixa'}</h2>
-              <button className="modal-close" onClick={handleCloseModal}>&times;</button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>KM Mínimo *</label>
-                  <input
-                    type="number"
-                    value={formData.min_km}
-                    onChange={e => setFormData({...formData, min_km: e.target.value})}
-                    required
-                    min="0"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>KM Máximo</label>
-                  <input
-                    type="number"
-                    value={formData.max_km}
-                    onChange={e => setFormData({...formData, max_km: e.target.value})}
-                    min="0"
-                    placeholder="Deixe vazio para ilimitado"
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Valor a Pagar (R$) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.valor_pago}
-                  onChange={e => setFormData({...formData, valor_pago: e.target.value})}
-                  required
-                  min="0"
-                />
-              </div>
-              <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={handleCloseModal}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary" disabled={saving}>
-                  {saving ? 'Salvando...' : (editingFaixa ? 'Atualizar' : 'Criar')}
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={showModal}
+        onClose={handleCloseModal}
+        title={editingFaixa ? 'Editar Faixa' : 'Nova Faixa'}
+        footer={
+          <div className={styles.formActions}>
+            <Button type="button" variant="secondary" onClick={handleCloseModal}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="primary" loading={saving} form="faixa-form">
+              {editingFaixa ? 'Atualizar' : 'Criar'}
+            </Button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <form id="faixa-form" onSubmit={handleSubmit}>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label>KM Mínimo *</label>
+              <input
+                type="number"
+                value={formData.min_km}
+                onChange={e => setFormData({...formData, min_km: e.target.value})}
+                required
+                min="0"
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>KM Máximo</label>
+              <input
+                type="number"
+                value={formData.max_km}
+                onChange={e => setFormData({...formData, max_km: e.target.value})}
+                min="0"
+                placeholder="Deixe vazio para ilimitado"
+              />
+            </div>
+          </div>
+          <div className={styles.formGroup}>
+            <label>Valor a Pagar (R$) *</label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.valor_pago}
+              onChange={e => setFormData({...formData, valor_pago: e.target.value})}
+              required
+              min="0"
+            />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

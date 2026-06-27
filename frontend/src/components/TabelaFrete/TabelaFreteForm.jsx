@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { tabelaFreteAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import './TabelaFrete.css';
+import Button from '../Common/Button';
+import styles from './TabelaFrete.module.css';
 
 function TabelaFreteForm() {
   const navigate = useNavigate();
@@ -108,49 +109,49 @@ function TabelaFreteForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="tabela-frete-page">
-      <div className="page-header">
-        <div className="header-title">
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <div className={styles.title}>
           <h1>{isEditing ? 'Editar Tabela de Frete' : 'Nova Tabela de Frete'}</h1>
           <p>{isEditing ? 'Atualize os dados da tabela' : 'Cadastre uma nova rota e valores'}</p>
         </div>
       </div>
 
       {error && (
-        <div className="alert alert-error">
+        <div className={`${styles.alert} ${styles.alertError}`}>
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="tabela-form-container">
-        <div className="tabela-form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Rota</h3>
-          <div className="tabela-form-row">
-            <div className="tabela-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Origem UF *</label>
               <input type="text" name="origem_uf" value={formData.origem_uf} onChange={handleChange} required maxLength="2" />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Origem Cidade *</label>
               <input type="text" name="origem_cidade" value={formData.origem_cidade} onChange={handleChange} required />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Destino UF *</label>
               <input type="text" name="destino_uf" value={formData.destino_uf} onChange={handleChange} required maxLength="2" />
             </div>
           </div>
-          <div className="tabela-form-row">
-            <div className="tabela-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Destino Cidade *</label>
               <input type="text" name="destino_cidade" value={formData.destino_cidade} onChange={handleChange} required />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Tipo de Veículo</label>
               <input type="text" name="tipo_veiculo" value={formData.tipo_veiculo} onChange={handleChange} />
             </div>
-            <div className="tabela-form-group">
-              <label className="checkbox-label">
+            <div className={styles.formGroup}>
+              <label className={styles.checkboxLabel}>
                 <input type="checkbox" name="ativo" checked={formData.ativo} onChange={handleChange} />
                 Ativo
               </label>
@@ -158,52 +159,52 @@ function TabelaFreteForm() {
           </div>
         </div>
 
-        <div className="tabela-form-section">
+        <div className={styles.formSection}>
           <h3>Valores</h3>
-          <div className="tabela-form-row">
-            <div className="tabela-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Valor por KM (R$) *</label>
               <input type="number" step="0.01" name="valor_por_km" value={formData.valor_por_km} onChange={handleChange} required min="0" />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Valor Mínimo (R$) *</label>
               <input type="number" step="0.01" name="valor_minimo" value={formData.valor_minimo} onChange={handleChange} required min="0" />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Valor por Tonelada (R$)</label>
               <input type="number" step="0.01" name="valor_tonelada" value={formData.valor_tonelada} onChange={handleChange} min="0" />
             </div>
           </div>
-          <div className="tabela-form-row">
-            <div className="tabela-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Valor por M³ (R$)</label>
               <input type="number" step="0.01" name="valor_m3" value={formData.valor_m3} onChange={handleChange} min="0" />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Início Vigência *</label>
               <input type="date" name="vigencia_inicio" value={formData.vigencia_inicio} onChange={handleChange} required />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Fim Vigência</label>
               <input type="date" name="vigencia_fim" value={formData.vigencia_fim} onChange={handleChange} />
             </div>
           </div>
         </div>
 
-        <div className="tabela-form-section">
+        <div className={styles.formSection}>
           <h3>Observações</h3>
-          <div className="tabela-form-row-2">
-            <div className="tabela-form-group">
+          <div className={styles.formRow2}>
+            <div className={styles.formGroup}>
               <textarea name="observacao" value={formData.observacao} onChange={handleChange} placeholder="Informações adicionais" />
             </div>
           </div>
         </div>
 
-        <div className="form-actions">
-          <button type="button" className="btn-secondary" onClick={() => navigate('/tabelas-frete')}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={saving}>
+        <div className={styles.formActions}>
+          <Button type="button" variant="secondary" onClick={() => navigate('/tabelas-frete')}>Cancelar</Button>
+          <Button type="submit" variant="primary" loading={saving}>
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Tabela')}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

@@ -4,8 +4,9 @@ import { veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
+import Button from '../Common/Button';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
-import './VeiculoForm.css';
+import styles from './VeiculoForm.module.css';
 
 function VeiculoForm() {
   const navigate = useNavigate();
@@ -157,23 +158,27 @@ function VeiculoForm() {
   }
 
   return (
-    <div className="veiculo-form-container">
-      <div className="form-header">
+    <div className={styles.veiculoFormContainer}>
+      <div className={styles.formHeader}>
         <h2>{isEdit ? 'Editar Veículo' : 'Novo Veículo'}</h2>
-        <button type="button" className="btn-back" onClick={() => navigate('/veiculos')}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => navigate('/veiculos')}
+        >
           ← Voltar
-        </button>
+        </Button>
       </div>
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
 
-      <form onSubmit={handleSubmit} className="veiculo-form">
-        <fieldset>
-          <legend>Identificação</legend>
+      <form onSubmit={handleSubmit} className={styles.veiculoForm}>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Identificação</legend>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="placa">Placa <span className="required">*</span></label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="placa">Placa <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 id="placa"
@@ -189,7 +194,7 @@ function VeiculoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="renavam">RENAVAM</label>
               <input
                 type="text"
@@ -202,8 +207,8 @@ function VeiculoForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="tipo_rodado">Tipo de Rodado</label>
               <input
                 type="text"
@@ -215,7 +220,7 @@ function VeiculoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="tipo_carroceria">Tipo de Carroceria</label>
               <input
                 type="text"
@@ -229,11 +234,11 @@ function VeiculoForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>Capacidades</legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Capacidades</legend>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="tara">Tara (kg)</label>
               <input
                 type="number"
@@ -246,7 +251,7 @@ function VeiculoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="capacidade_kg">Capacidade (kg)</label>
               <input
                 type="number"
@@ -259,7 +264,7 @@ function VeiculoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="capacidade_m3">Capacidade (m³)</label>
               <input
                 type="number"
@@ -274,11 +279,11 @@ function VeiculoForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>Proprietário</legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Proprietário</legend>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="tipo_proprietario">Tipo de Proprietário</label>
               <select
                 id="tipo_proprietario"
@@ -292,7 +297,7 @@ function VeiculoForm() {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="proprietario_nome">Nome do Proprietário</label>
               <input
                 type="text"
@@ -305,8 +310,8 @@ function VeiculoForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="rntrc_proprietario">RNTRC</label>
               <input
                 type="text"
@@ -319,7 +324,7 @@ function VeiculoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="uf_proprietario">UF Proprietário</label>
               <input
                 type="text"
@@ -337,11 +342,11 @@ function VeiculoForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>Documentação</legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Documentação</legend>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="civ_validade">Validade CIV</label>
               <input
                 type="date"
@@ -352,7 +357,7 @@ function VeiculoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="cipp_validade">Validade CIPP</label>
               <input
                 type="date"
@@ -363,7 +368,7 @@ function VeiculoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="afericao_validade">Validade Aferição</label>
               <input
                 type="date"
@@ -375,8 +380,8 @@ function VeiculoForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="crlv_validade">Validade CRLV</label>
               <input
                 type="date"
@@ -387,7 +392,7 @@ function VeiculoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="cronotacografo_validade">Validade Cronotacógrafo</label>
               <input
                 type="date"
@@ -400,12 +405,12 @@ function VeiculoForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>Rastreamento GPS</legend>
-          <p className="field-help">Configure o identificador do veículo no sistema de rastreamento GPS externo</p>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Rastreamento GPS</legend>
+          <p className={styles.fieldHelp}>Configure o identificador do veículo no sistema de rastreamento GPS externo</p>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="gps_identificador">ID no GPS</label>
               <input
                 type="text"
@@ -417,7 +422,7 @@ function VeiculoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="gps_provedor">Provedor GPS</label>
               <select
                 id="gps_provedor"
@@ -434,7 +439,7 @@ function VeiculoForm() {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Última Sincronização</label>
               <input
                 type="text"
@@ -448,23 +453,23 @@ function VeiculoForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>Compartimentos (Bocas)</legend>
-          <p className="field-help">Cadastre os compartimentos do tanque para veículos que transportam líquidos</p>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Compartimentos (Bocas)</legend>
+          <p className={styles.fieldHelp}>Cadastre os compartimentos do tanque para veículos que transportam líquidos</p>
 
-          <div className="compartimentos-list">
+          <div className={styles.compartimentosList}>
             {formData.compartimentos.length === 0 ? (
-              <div className="empty-compartimentos">
+              <div className={styles.emptyCompartimentos}>
                 <p>Nenhum compartimento cadastrado</p>
               </div>
             ) : (
               formData.compartimentos.map((comp, index) => (
-                <div key={index} className="compartimento-item">
-                  <div className="compartimento-numero">
-                    <span className="numero-label">Boca</span>
-                    <span className="numero-value">{comp.numero_boca}</span>
+                <div key={index} className={styles.compartimentoItem}>
+                  <div className={styles.compartimentoNumero}>
+                    <span className={styles.numeroLabel}>Boca</span>
+                    <span className={styles.numeroValue}>{comp.numero_boca}</span>
                   </div>
-                  <div className="form-group">
+                  <div className={styles.formGroup}>
                     <label>Capacidade (m³)</label>
                     <input
                       type="number"
@@ -477,7 +482,7 @@ function VeiculoForm() {
                   </div>
                   <button
                     type="button"
-                    className="btn-remove-compartimento"
+                    className={styles.btnRemoveCompartimento}
                     onClick={() => handleRemoveCompartimento(index)}
                     title="Remover compartimento"
                   >
@@ -491,9 +496,9 @@ function VeiculoForm() {
             )}
           </div>
 
-          <button
+          <Button
             type="button"
-            className="btn-add-compartimento"
+            variant="outline"
             onClick={handleAddCompartimento}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -501,21 +506,21 @@ function VeiculoForm() {
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
             Adicionar Compartimento
-          </button>
+          </Button>
 
           {formData.compartimentos.length > 0 && (
-            <div className="compartimentos-resumo">
+            <div className={styles.compartimentosResumo}>
               <strong>Total:</strong> {formData.compartimentos.length} compartimento{formData.compartimentos.length !== 1 ? 's' : ''} |
               <strong> Capacidade Total:</strong> {formData.compartimentos.reduce((acc, c) => acc + (parseFloat(c.capacidade_m3) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³
             </div>
           )}
         </fieldset>
 
-        <fieldset>
-          <legend>Observações</legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Observações</legend>
 
-          <div className="form-row">
-            <div className="form-group form-group-wide">
+          <div className={styles.formRow}>
+            <div className={`${styles.formGroup} ${styles.formGroupWide}`}>
               <label htmlFor="observacoes">Observações</label>
               <textarea
                 id="observacoes"
@@ -526,8 +531,8 @@ function VeiculoForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label className="checkbox-label">
+            <div className={styles.formGroup}>
+              <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   name="ativo"
@@ -540,18 +545,23 @@ function VeiculoForm() {
           </div>
         </fieldset>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-cancel"
+            variant="secondary"
             onClick={() => navigate('/veiculos')}
             disabled={loading}
           >
             Cancelar
-          </button>
-          <button type="submit" className="btn-submit" disabled={loading}>
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={loading}
+            disabled={loading}
+          >
             {loading ? 'Salvando...' : (isEdit ? 'Atualizar' : 'Cadastrar')}
-          </button>
+          </Button>
         </div>
       </form>
 

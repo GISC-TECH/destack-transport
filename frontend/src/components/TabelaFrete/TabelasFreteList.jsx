@@ -5,7 +5,11 @@ import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
-import './TabelaFrete.css';
+import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import Card from '../Common/Card';
+import styles from './TabelaFrete.module.css';
 
 function TabelasFreteList() {
   const toast = useToast();
@@ -95,185 +99,194 @@ function TabelasFreteList() {
   if (error) return <ErrorMessage message={error} onRetry={loadTabelas} />;
 
   return (
-    <div className="tabela-frete-page">
+    <div className={styles.page}>
       <PageHeader
         title="Tabela de Frete"
         subtitle="Cadastro de rotas e simulação de custo"
         breadcrumbs={[{ label: 'Operação' }, { label: 'Tabela de Frete' }]}
         actions={
-          <Link to="/tabelas-frete/nova" className="btn-primary">
+          <Button variant="primary" as={Link} to="/tabelas-frete/nova">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
             Nova Tabela
-          </Link>
+          </Button>
         }
       />
 
-      <div className="card" style={{ marginBottom: 24 }}>
-        <div className="card-header">
-          <h3 className="card-title">Simular Frete</h3>
-        </div>
+      <Card title="Simular Frete" style={{ marginBottom: 24 }}>
         <form onSubmit={handleSimular}>
-          <div className="tabela-form-row">
-            <div className="tabela-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Origem UF</label>
               <input type="text" maxLength="2" value={simData.origem_uf} onChange={e => setSimData({ ...simData, origem_uf: e.target.value })} />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Origem Cidade</label>
               <input type="text" value={simData.origem_cidade} onChange={e => setSimData({ ...simData, origem_cidade: e.target.value })} />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Destino UF</label>
               <input type="text" maxLength="2" value={simData.destino_uf} onChange={e => setSimData({ ...simData, destino_uf: e.target.value })} />
             </div>
           </div>
-          <div className="tabela-form-row">
-            <div className="tabela-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Destino Cidade</label>
               <input type="text" value={simData.destino_cidade} onChange={e => setSimData({ ...simData, destino_cidade: e.target.value })} />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Tipo Veículo</label>
               <input type="text" value={simData.tipo_veiculo} onChange={e => setSimData({ ...simData, tipo_veiculo: e.target.value })} />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Distância (KM)</label>
               <input type="number" value={simData.distancia_km} onChange={e => setSimData({ ...simData, distancia_km: e.target.value })} />
             </div>
           </div>
-          <div className="tabela-form-row">
-            <div className="tabela-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Peso (KG)</label>
               <input type="number" value={simData.peso_kg} onChange={e => setSimData({ ...simData, peso_kg: e.target.value })} />
             </div>
-            <div className="tabela-form-group">
+            <div className={styles.formGroup}>
               <label>Volume (M³)</label>
               <input type="number" value={simData.volume_m3} onChange={e => setSimData({ ...simData, volume_m3: e.target.value })} />
             </div>
-            <div className="tabela-form-group" style={{ display: 'flex', alignItems: 'end' }}>
-              <button type="submit" className="btn-primary" disabled={simulando}>
+            <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'end' }}>
+              <Button type="submit" variant="primary" loading={simulando}>
                 {simulando ? 'Simulando...' : 'Simular Frete'}
-              </button>
+              </Button>
             </div>
           </div>
         </form>
 
         {simulacao && (
-          <div className="simulacao-result">
+          <div className={styles.simulacaoResult}>
             <h4>Resultado da Simulação</h4>
             <p>{simulacao.origem} → {simulacao.destino}</p>
-            <div className="simulacao-result-value">{formatCurrency(simulacao.valor_frete)}</div>
+            <div className={styles.simulacaoValue}>{formatCurrency(simulacao.valor_frete)}</div>
             <small>Valor por KM: {formatCurrency(simulacao.valor_por_km)} | Mínimo: {formatCurrency(simulacao.valor_minimo)}</small>
           </div>
         )}
-      </div>
+      </Card>
 
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Filtros</h3>
-        </div>
-        <form onSubmit={handleFiltrar} className="filtros-form">
-          <div className="filtros-row">
+      <Card title="Filtros">
+        <form onSubmit={handleFiltrar} className={styles.filtrosForm}>
+          <div className={styles.filtrosRow}>
             <input
               type="text"
               placeholder="Buscar por cidade, UF, tipo de veículo..."
               value={filtros.q}
               onChange={(e) => setFiltros({ ...filtros, q: e.target.value })}
             />
-            <button type="submit" className="btn-primary">Filtrar</button>
+            <Button type="submit" variant="primary">Filtrar</Button>
           </div>
         </form>
-      </div>
+      </Card>
 
-      <div className="tabela-list-card">
-        <table className="tabela-table">
-          <thead>
-            <tr>
-              <th>Origem</th>
-              <th>Destino</th>
-              <th>Tipo Veículo</th>
-              <th>Valor/KM</th>
-              <th>Mínimo</th>
-              <th>Tonelada</th>
-              <th>M³</th>
-              <th>Vigência</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tabelas.length === 0 ? (
+      <div className={styles.listCard}>
+        <TableContainer>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan="10" className="text-center">
-                  <div className="os-empty-state">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <line x1="12" y1="1" x2="12" y2="23"></line>
-                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                    </svg>
-                    <p>Nenhuma tabela de frete encontrada.</p>
-                  </div>
-                </td>
+                <th>Origem</th>
+                <th>Destino</th>
+                <th>Tipo Veículo</th>
+                <th>Valor/KM</th>
+                <th>Mínimo</th>
+                <th>Tonelada</th>
+                <th>M³</th>
+                <th>Vigência</th>
+                <th>Status</th>
+                <th>Ações</th>
               </tr>
-            ) : (
-              tabelas.map(t => (
-                <tr key={t.id}>
-                  <td>{t.origem_cidade}/{t.origem_uf}</td>
-                  <td>{t.destino_cidade}/{t.destino_uf}</td>
-                  <td>{t.tipo_veiculo || '-'}</td>
-                  <td>{formatCurrency(t.valor_por_km)}</td>
-                  <td>{formatCurrency(t.valor_minimo)}</td>
-                  <td>{t.valor_tonelada ? formatCurrency(t.valor_tonelada) : '-'}</td>
-                  <td>{t.valor_m3 ? formatCurrency(t.valor_m3) : '-'}</td>
-                  <td>{formatDate(t.vigencia_inicio)} {t.vigencia_fim ? `→ ${formatDate(t.vigencia_fim)}` : ''}</td>
-                  <td>
-                    {t.ativo ? (
-                      <span className="badge badge-success">Ativo</span>
-                    ) : (
-                      <span className="badge badge-secondary">Inativo</span>
-                    )}
-                  </td>
-                  <td>
-                    <div className="os-actions">
-                      <Link to={`/tabelas-frete/${t.id}`} className="btn-icon" title="Editar">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                      </Link>
-                      <button className="btn-icon" onClick={() => handleDelete(t.id)} title="Excluir">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                      </button>
+            </thead>
+            <tbody>
+              {tabelas.length === 0 ? (
+                <tr>
+                  <td colSpan="10" className={styles.textCenter}>
+                    <div className={styles.emptyState}>
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                      </svg>
+                      <p>Nenhuma tabela de frete encontrada.</p>
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                tabelas.map(t => (
+                  <tr key={t.id}>
+                    <td>{t.origem_cidade}/{t.origem_uf}</td>
+                    <td>{t.destino_cidade}/{t.destino_uf}</td>
+                    <td>{t.tipo_veiculo || '-'}</td>
+                    <td>{formatCurrency(t.valor_por_km)}</td>
+                    <td>{formatCurrency(t.valor_minimo)}</td>
+                    <td>{t.valor_tonelada ? formatCurrency(t.valor_tonelada) : '-'}</td>
+                    <td>{t.valor_m3 ? formatCurrency(t.valor_m3) : '-'}</td>
+                    <td>{formatDate(t.vigencia_inicio)} {t.vigencia_fim ? `→ ${formatDate(t.vigencia_fim)}` : ''}</td>
+                    <td>
+                      <StatusPill status={t.ativo ? 'ativo' : 'inativo'}>
+                        {t.ativo ? 'Ativo' : 'Inativo'}
+                      </StatusPill>
+                    </td>
+                    <td>
+                      <div className={styles.actions}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          iconOnly
+                          as={Link}
+                          to={`/tabelas-frete/${t.id}`}
+                          title="Editar"
+                          aria-label="Editar"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          iconOnly
+                          onClick={() => handleDelete(t.id)}
+                          title="Excluir"
+                          aria-label="Excluir"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </TableContainer>
 
         {tabelas.map(t => (
-          <div key={t.id} className="tabela-mobile-card">
-            <div className="tabela-mobile-row">
+          <div key={t.id} className={styles.mobileCard}>
+            <div className={styles.mobileRow}>
               <span><strong>{t.origem_cidade}/{t.origem_uf}</strong></span>
               <span>{formatCurrency(t.valor_por_km)}/km</span>
             </div>
-            <div className="tabela-mobile-row">
-              <span className="tabela-mobile-label">Destino</span>
+            <div className={styles.mobileRow}>
+              <span className={styles.mobileLabel}>Destino</span>
               <span>{t.destino_cidade}/{t.destino_uf}</span>
             </div>
-            <div className="tabela-mobile-row">
-              <span className="tabela-mobile-label">Tipo</span>
+            <div className={styles.mobileRow}>
+              <span className={styles.mobileLabel}>Tipo</span>
               <span>{t.tipo_veiculo || '-'}</span>
             </div>
-            <div className="tabela-mobile-row" style={{ marginTop: 12 }}>
-              <Link to={`/tabelas-frete/${t.id}`} className="btn-primary btn-sm">Editar</Link>
-              <button className="btn-secondary btn-sm" onClick={() => handleDelete(t.id)}>Excluir</button>
+            <div className={styles.mobileRow} style={{ marginTop: 12 }}>
+              <Button variant="primary" size="sm" as={Link} to={`/tabelas-frete/${t.id}`}>Editar</Button>
+              <Button variant="secondary" size="sm" onClick={() => handleDelete(t.id)}>Excluir</Button>
             </div>
           </div>
         ))}

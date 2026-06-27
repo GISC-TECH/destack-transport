@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { planoManutencaoAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import './PlanosManutencao.css';
+import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
+import styles from './PlanoManutencaoForm.module.css';
 
 function PlanoManutencaoForm() {
   const navigate = useNavigate();
@@ -119,26 +121,24 @@ function PlanoManutencaoForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="planos-manutencao-page">
-      <div className="page-header">
-        <div className="header-title">
-          <h1>{isEditing ? 'Editar Plano de Manutenção' : 'Novo Plano de Manutenção'}</h1>
-          <p>{isEditing ? 'Atualize os dados do plano' : 'Cadastre um plano preventivo, preditivo ou corretivo'}</p>
-        </div>
-      </div>
+    <div className={styles.page}>
+      <PageHeader
+        title={isEditing ? 'Editar Plano de Manutenção' : 'Novo Plano de Manutenção'}
+        subtitle={isEditing ? 'Atualize os dados do plano' : 'Cadastre um plano preventivo, preditivo ou corretivo'}
+      />
 
       {error && (
-        <div className="alert alert-error">
+        <div className={`${styles.alert} ${styles.alertError}`}>
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="planos-form-container">
-        <div className="planos-form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Informações Básicas</h3>
-          <div className="planos-form-row">
-            <div className="planos-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Veículo *</label>
               <select name="veiculo" value={formData.veiculo} onChange={handleChange} required>
                 <option value="">Selecione</option>
@@ -147,7 +147,7 @@ function PlanoManutencaoForm() {
                 ))}
               </select>
             </div>
-            <div className="planos-form-group">
+            <div className={styles.formGroup}>
               <label>Tipo *</label>
               <select name="tipo" value={formData.tipo} onChange={handleChange} required>
                 <option value="preventiva">Preventiva</option>
@@ -155,7 +155,7 @@ function PlanoManutencaoForm() {
                 <option value="preditiva">Preditiva</option>
               </select>
             </div>
-            <div className="planos-form-group">
+            <div className={styles.formGroup}>
               <label>Ativo</label>
               <input
                 type="checkbox"
@@ -166,8 +166,8 @@ function PlanoManutencaoForm() {
             </div>
           </div>
 
-          <div className="planos-form-row-2">
-            <div className="planos-form-group">
+          <div className={styles.formRow2}>
+            <div className={styles.formGroup}>
               <label>Descrição do Serviço *</label>
               <input
                 type="text"
@@ -182,10 +182,10 @@ function PlanoManutencaoForm() {
           </div>
         </div>
 
-        <div className="planos-form-section">
+        <div className={styles.formSection}>
           <h3>Intervalos</h3>
-          <div className="planos-form-row">
-            <div className="planos-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Intervalo (KM)</label>
               <input
                 type="number"
@@ -196,7 +196,7 @@ function PlanoManutencaoForm() {
                 placeholder="Ex: 10000"
               />
             </div>
-            <div className="planos-form-group">
+            <div className={styles.formGroup}>
               <label>Intervalo (Dias)</label>
               <input
                 type="number"
@@ -207,14 +207,14 @@ function PlanoManutencaoForm() {
                 placeholder="Ex: 180"
               />
             </div>
-            <div className="planos-form-group"></div>
+            <div className={styles.formGroup}></div>
           </div>
         </div>
 
-        <div className="planos-form-section">
+        <div className={styles.formSection}>
           <h3>Última Manutenção</h3>
-          <div className="planos-form-row">
-            <div className="planos-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Última KM</label>
               <input
                 type="number"
@@ -224,7 +224,7 @@ function PlanoManutencaoForm() {
                 min="0"
               />
             </div>
-            <div className="planos-form-group">
+            <div className={styles.formGroup}>
               <label>Última Data</label>
               <input
                 type="date"
@@ -233,14 +233,14 @@ function PlanoManutencaoForm() {
                 onChange={handleChange}
               />
             </div>
-            <div className="planos-form-group"></div>
+            <div className={styles.formGroup}></div>
           </div>
         </div>
 
-        <div className="planos-form-section">
+        <div className={styles.formSection}>
           <h3>Próxima Manutenção (ou deixe em branco para calcular)</h3>
-          <div className="planos-form-row">
-            <div className="planos-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Próxima KM</label>
               <input
                 type="number"
@@ -250,7 +250,7 @@ function PlanoManutencaoForm() {
                 min="0"
               />
             </div>
-            <div className="planos-form-group">
+            <div className={styles.formGroup}>
               <label>Próxima Data</label>
               <input
                 type="date"
@@ -259,14 +259,14 @@ function PlanoManutencaoForm() {
                 onChange={handleChange}
               />
             </div>
-            <div className="planos-form-group"></div>
+            <div className={styles.formGroup}></div>
           </div>
         </div>
 
-        <div className="planos-form-section">
+        <div className={styles.formSection}>
           <h3>Observações</h3>
-          <div className="planos-form-row-2">
-            <div className="planos-form-group">
+          <div className={styles.formRow2}>
+            <div className={styles.formGroup}>
               <textarea
                 name="observacao"
                 value={formData.observacao}
@@ -277,13 +277,13 @@ function PlanoManutencaoForm() {
           </div>
         </div>
 
-        <div className="form-actions">
-          <button type="button" className="btn-secondary" onClick={() => navigate('/planos-manutencao')}>
+        <div className={styles.formActions}>
+          <Button type="button" variant="secondary" onClick={() => navigate('/planos-manutencao')}>
             Cancelar
-          </button>
-          <button type="submit" className="btn-primary" disabled={saving}>
+          </Button>
+          <Button type="submit" variant="primary" disabled={saving}>
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Plano')}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

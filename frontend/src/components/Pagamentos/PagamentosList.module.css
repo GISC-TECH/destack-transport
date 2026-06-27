@@ -1,0 +1,572 @@
+.page {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Cards de resumo */
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.summaryCard {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.summaryCard.pendente {
+  border-left: 5px solid var(--warning-color);
+}
+
+.summaryCard.pago {
+  border-left: 5px solid var(--success-color);
+}
+
+.summaryLabel {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summaryValue {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Tabs */
+.tabsContainer {
+  display: flex;
+  gap: var(--space-1);
+  background: var(--border-light);
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-6);
+  width: fit-content;
+}
+
+.tabButton {
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-secondary);
+}
+
+.tabButton:hover {
+  color: var(--text-primary);
+}
+
+.tabButton.active {
+  background: var(--card-bg);
+  color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Filtros */
+.filtrosSection {
+  margin-bottom: var(--space-5);
+}
+
+.filtrosForm {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.inputFilter,
+.selectFilter {
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  background: var(--card-bg);
+  flex: 1;
+  min-width: 150px;
+  color: var(--text-primary);
+}
+
+.inputFilter:focus,
+.selectFilter:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.resultsInfo {
+  padding: var(--space-3) 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* Tabela */
+.textRight {
+  text-align: right;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+.textDanger {
+  color: var(--danger-color);
+}
+
+.textMuted {
+  color: var(--text-muted);
+}
+
+.comprovanteLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--success-color);
+  transition: color var(--transition-fast);
+}
+
+.comprovanteLink:hover {
+  color: var(--primary-dark);
+}
+
+/* Botões de ação desktop */
+.actionButtons {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+/* Botões de ação mobile */
+.mobileCards {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.mobileCard {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mobileCardHeader {
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: var(--space-3);
+}
+
+.mobileCardTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+.mobileCardTitle strong {
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+.mobileCardSubtitle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.mobileCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mobileCardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-base);
+}
+
+.mobileCardLabel {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.mobileCardValue {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.mobileCardHighlight {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.mobileCardFooter {
+  border-top: 1px solid var(--border-light);
+  padding-top: var(--space-3);
+}
+
+.mobileCardActions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mobileActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: white;
+  background: var(--text-secondary);
+}
+
+.mobileActionBtn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.mobileActionBtn.view {
+  background: var(--info-light);
+  color: var(--info-dark);
+}
+
+.mobileActionBtn.view:hover {
+  background: var(--info-dark);
+  color: white;
+}
+
+.mobileActionBtn.download {
+  background: var(--success-light);
+  color: var(--success-dark);
+}
+
+.mobileActionBtn.download:hover {
+  background: var(--success-dark);
+  color: white;
+}
+
+.mobileActionBtn.edit {
+  background: var(--green-200);
+  color: var(--primary-color);
+}
+
+.mobileActionBtn.edit:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.mobileActionBtn.convert {
+  background: var(--info-light);
+  color: var(--info-dark);
+}
+
+.mobileActionBtn.convert:hover {
+  background: var(--info-dark);
+  color: white;
+}
+
+.mobileActionBtn.delete {
+  background: var(--danger-light);
+  color: var(--danger-dark);
+}
+
+.mobileActionBtn.delete:hover {
+  background: var(--danger-color);
+  color: white;
+}
+
+.mobileActionBtn.whatsapp {
+  background: var(--success-light);
+  color: var(--success-dark);
+}
+
+.mobileActionBtn.whatsapp:hover:not(:disabled) {
+  background: var(--success-color);
+  color: white;
+}
+
+.mobileActionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Paginação */
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+}
+
+.paginationBtn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-light);
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paginationBtn:hover:not(:disabled) {
+  background: var(--content-bg);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.paginationBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.paginationBtn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+  font-weight: 600;
+}
+
+/* Modais */
+.modalInfo {
+  font-weight: 600;
+  margin-bottom: var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.modalDescription {
+  margin: 0 0 var(--space-5) 0;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+
+.modalDescription.danger {
+  color: var(--danger-color);
+}
+
+.modalBodyGroup {
+  margin-bottom: var(--space-4);
+}
+
+.modalBodyGroup label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: var(--text-base);
+}
+
+.modalBodyRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.modalInput,
+.modalSelect,
+.modalBodyGroup input,
+.modalBodyGroup select,
+.modalBodyGroup textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  transition: all var(--transition-fast);
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.modalInput:focus,
+.modalSelect:focus,
+.modalBodyGroup input:focus,
+.modalBodyGroup select:focus,
+.modalBodyGroup textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.formHint {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.formHint.muted {
+  color: var(--text-muted);
+}
+
+.mt20 {
+  margin-top: var(--space-5);
+}
+
+/* Loading skeleton */
+.skeleton {
+  margin-bottom: var(--space-5);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .page {
+    padding: var(--space-4);
+  }
+
+  .summaryCards {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  .summaryCard {
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .summaryValue {
+    font-size: var(--text-xl);
+  }
+
+  .tabsContainer {
+    width: 100%;
+  }
+
+  .tabButton {
+    flex: 1;
+    text-align: center;
+    padding: var(--space-3);
+    font-size: var(--text-sm);
+  }
+
+  .filtrosForm {
+    flex-direction: column;
+  }
+
+  .filtrosForm .inputFilter,
+  .filtrosForm .selectFilter {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobileCards {
+    display: flex;
+  }
+
+  .desktopTable {
+    display: none;
+  }
+
+  .mobileCardActions {
+    justify-content: space-between;
+  }
+
+  .mobileActionBtn {
+    flex: 1;
+    justify-content: center;
+    min-width: 52px;
+  }
+
+  .mobileActionBtn span {
+    display: none;
+  }
+
+  .paginationContainer {
+    gap: 2px;
+    padding: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .paginationBtn {
+    min-width: 32px;
+    height: 32px;
+    font-size: var(--text-sm);
+  }
+
+  .paginationBtn:first-child,
+  .paginationBtn:last-child {
+    display: none;
+  }
+
+  .modalBodyRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-3);
+  }
+
+  .summaryCards {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryCard {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .summaryLabel {
+    font-size: var(--text-xs);
+  }
+
+  .summaryValue {
+    font-size: var(--text-lg);
+  }
+
+  .tabButton {
+    padding: var(--space-2) var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .paginationContainer {
+    gap: 2px;
+    padding: var(--space-2);
+  }
+
+  .paginationBtn {
+    min-width: 28px;
+    height: 28px;
+    font-size: var(--text-xs);
+    padding: 0 6px;
+  }
+}

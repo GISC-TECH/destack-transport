@@ -5,7 +5,9 @@ import {
 } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import './Abastecimento.css';
+import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
+import styles from './AbastecimentoForm.module.css';
 
 function AbastecimentoForm() {
   const navigate = useNavigate();
@@ -128,26 +130,24 @@ function AbastecimentoForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="abastecimento-page">
-      <div className="page-header">
-        <div className="header-title">
-          <h1>{isEditing ? 'Editar Abastecimento' : 'Novo Abastecimento'}</h1>
-          <p>{isEditing ? 'Atualize os dados do abastecimento' : 'Registre um novo abastecimento da frota'}</p>
-        </div>
-      </div>
+    <div className={styles.page}>
+      <PageHeader
+        title={isEditing ? 'Editar Abastecimento' : 'Novo Abastecimento'}
+        subtitle={isEditing ? 'Atualize os dados do abastecimento' : 'Registre um novo abastecimento da frota'}
+      />
 
       {error && (
-        <div className="alert alert-error">
+        <div className={`${styles.alert} ${styles.alertError}`}>
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="abastecimento-form-container">
-        <div className="abastecimento-form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Informações Básicas</h3>
-          <div className="abastecimento-form-row">
-            <div className="abastecimento-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Veículo *</label>
               <select name="veiculo" value={formData.veiculo} onChange={handleChange} required>
                 <option value="">Selecione</option>
@@ -156,7 +156,7 @@ function AbastecimentoForm() {
                 ))}
               </select>
             </div>
-            <div className="abastecimento-form-group">
+            <div className={styles.formGroup}>
               <label>Motorista</label>
               <select name="motorista" value={formData.motorista} onChange={handleChange}>
                 <option value="">Selecione</option>
@@ -165,7 +165,7 @@ function AbastecimentoForm() {
                 ))}
               </select>
             </div>
-            <div className="abastecimento-form-group">
+            <div className={styles.formGroup}>
               <label>Ordem de Viagem</label>
               <select name="ordem_viagem" value={formData.ordem_viagem} onChange={handleChange}>
                 <option value="">Selecione</option>
@@ -176,8 +176,8 @@ function AbastecimentoForm() {
             </div>
           </div>
 
-          <div className="abastecimento-form-row">
-            <div className="abastecimento-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Data *</label>
               <input
                 type="date"
@@ -187,7 +187,7 @@ function AbastecimentoForm() {
                 required
               />
             </div>
-            <div className="abastecimento-form-group">
+            <div className={styles.formGroup}>
               <label>Tipo de Combustível *</label>
               <select name="tipo_combustivel" value={formData.tipo_combustivel} onChange={handleChange} required>
                 <option value="diesel">Diesel</option>
@@ -199,7 +199,7 @@ function AbastecimentoForm() {
                 <option value="outros">Outros</option>
               </select>
             </div>
-            <div className="abastecimento-form-group">
+            <div className={styles.formGroup}>
               <label>Hodômetro (KM) *</label>
               <input
                 type="number"
@@ -213,10 +213,10 @@ function AbastecimentoForm() {
           </div>
         </div>
 
-        <div className="abastecimento-form-section">
+        <div className={styles.formSection}>
           <h3>Valores</h3>
-          <div className="abastecimento-form-row">
-            <div className="abastecimento-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Litros *</label>
               <input
                 type="number"
@@ -228,7 +228,7 @@ function AbastecimentoForm() {
                 min="0"
               />
             </div>
-            <div className="abastecimento-form-group">
+            <div className={styles.formGroup}>
               <label>Valor Total (R$) *</label>
               <input
                 type="number"
@@ -240,7 +240,7 @@ function AbastecimentoForm() {
                 min="0"
               />
             </div>
-            <div className="abastecimento-form-group">
+            <div className={styles.formGroup}>
               <label>Preço/L (calculado)</label>
               <input
                 type="text"
@@ -254,10 +254,10 @@ function AbastecimentoForm() {
           </div>
         </div>
 
-        <div className="abastecimento-form-section">
+        <div className={styles.formSection}>
           <h3>Fornecedor</h3>
-          <div className="abastecimento-form-row">
-            <div className="abastecimento-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Posto/Fornecedor</label>
               <input
                 type="text"
@@ -267,7 +267,7 @@ function AbastecimentoForm() {
                 maxLength={120}
               />
             </div>
-            <div className="abastecimento-form-group">
+            <div className={styles.formGroup}>
               <label>CNPJ Posto</label>
               <input
                 type="text"
@@ -277,14 +277,14 @@ function AbastecimentoForm() {
                 maxLength={18}
               />
             </div>
-            <div className="abastecimento-form-group"></div>
+            <div className={styles.formGroup}></div>
           </div>
         </div>
 
-        <div className="abastecimento-form-section">
+        <div className={styles.formSection}>
           <h3>Observações</h3>
-          <div className="abastecimento-form-row-2">
-            <div className="abastecimento-form-group">
+          <div className={styles.formRow2}>
+            <div className={styles.formGroup}>
               <textarea
                 name="observacao"
                 value={formData.observacao}
@@ -295,13 +295,13 @@ function AbastecimentoForm() {
           </div>
         </div>
 
-        <div className="form-actions">
-          <button type="button" className="btn-secondary" onClick={() => navigate('/abastecimentos')}>
+        <div className={styles.formActions}>
+          <Button type="button" variant="secondary" onClick={() => navigate('/abastecimentos')}>
             Cancelar
-          </button>
-          <button type="submit" className="btn-primary" disabled={saving}>
+          </Button>
+          <Button type="submit" variant="primary" disabled={saving}>
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Registrar')}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

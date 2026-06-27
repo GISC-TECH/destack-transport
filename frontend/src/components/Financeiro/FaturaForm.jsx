@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { conciliacaoAPI, clientesAPI, cteAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import './Faturas.css';
+import Button from '../Common/Button';
+import styles from './Faturas.module.css';
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('pt-BR', {
@@ -178,9 +179,9 @@ function FaturaForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="fatura-form-page">
-      <div className="page-header">
-        <div className="header-title">
+    <div className={styles.faturaFormPage}>
+      <div className={styles.pageHeader}>
+        <div className={styles.headerTitle}>
           <h1>{isEditing ? 'Editar Fatura' : 'Nova Fatura'}</h1>
           <p>{isEditing ? 'Atualize os dados da fatura' : 'Crie uma nova fatura de contas a receber'}</p>
         </div>
@@ -189,16 +190,16 @@ function FaturaForm() {
       {error && (
         <div className="alert alert-error">
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>×</button>
+          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-container">
-        <div className="form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Informações da Fatura</h3>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Cliente *</label>
               <select
                 name="cliente"
@@ -213,7 +214,7 @@ function FaturaForm() {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Número *</label>
               <input
                 type="text"
@@ -226,8 +227,8 @@ function FaturaForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Data de Emissão *</label>
               <input
                 type="date"
@@ -238,7 +239,7 @@ function FaturaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Data de Vencimento *</label>
               <input
                 type="date"
@@ -249,7 +250,7 @@ function FaturaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Status *</label>
               <select
                 name="status"
@@ -266,7 +267,7 @@ function FaturaForm() {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Observação</label>
             <textarea
               name="observacao"
@@ -277,19 +278,19 @@ function FaturaForm() {
           </div>
         </div>
 
-        <div className="form-section">
-          <div className="section-header">
+        <div className={styles.formSection}>
+          <div className={styles.sectionHeader}>
             <h3>Itens da Fatura</h3>
-            <span className="valor-total">Total: {formatCurrency(valorTotal)}</span>
+            <span className={styles.valorTotal}>Total: {formatCurrency(valorTotal)}</span>
           </div>
 
           {formData.itens.length === 0 && (
-            <p className="hint">Nenhum item adicionado. Clique em "Adicionar Item".</p>
+            <p className={styles.hint}>Nenhum item adicionado. Clique em "Adicionar Item".</p>
           )}
 
           {formData.itens.map((item, index) => (
-            <div key={index} className="item-row">
-              <div className="form-group item-cte">
+            <div key={index} className={styles.itemRow}>
+              <div className={`${styles.formGroup} ${styles.itemCte}`}>
                 <label>CT-e</label>
                 <select
                   value={item.cte}
@@ -304,7 +305,7 @@ function FaturaForm() {
                 </select>
               </div>
 
-              <div className="form-group item-descricao">
+              <div className={`${styles.formGroup} ${styles.itemDescricao}`}>
                 <label>Descrição *</label>
                 <input
                   type="text"
@@ -314,7 +315,7 @@ function FaturaForm() {
                 />
               </div>
 
-              <div className="form-group item-valor">
+              <div className={`${styles.formGroup} ${styles.itemValor}`}>
                 <label>Valor *</label>
                 <input
                   type="number"
@@ -326,36 +327,37 @@ function FaturaForm() {
                 />
               </div>
 
-              <button
+              <Button
                 type="button"
-                className="btn btn-danger btn-remove"
+                variant="danger"
+                className={styles.btnRemove}
                 onClick={() => removeItem(index)}
               >
                 Remover
-              </button>
+              </Button>
             </div>
           ))}
 
-          <button type="button" className="btn btn-outline" onClick={addItem}>
+          <Button type="button" variant="outline" onClick={addItem}>
             + Adicionar Item
-          </button>
+          </Button>
         </div>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn btn-outline"
+            variant="outline"
             onClick={() => navigate('/faturas')}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="btn btn-primary"
+            variant="primary"
             disabled={saving}
           >
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar Fatura' : 'Criar Fatura')}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

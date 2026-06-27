@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import './PageHeader.css';
+import styles from './PageHeader.module.css';
 
 /**
  * PageHeader - Componente reutilizavel para cabecalho de paginas
@@ -13,10 +13,10 @@ import './PageHeader.css';
  */
 function PageHeader({ title, subtitle, icon, breadcrumbs = [], actions }) {
   return (
-    <div className="page-header-component">
+    <div className={styles.pageHeaderComponent}>
       {/* Breadcrumbs */}
       {breadcrumbs.length > 0 && (
-        <nav className="breadcrumbs" aria-label="Breadcrumb">
+        <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
           <ol>
             <li>
               <Link to="/">
@@ -29,13 +29,13 @@ function PageHeader({ title, subtitle, icon, breadcrumbs = [], actions }) {
             </li>
             {breadcrumbs.map((crumb, index) => (
               <li key={index}>
-                <svg className="breadcrumb-separator" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className={styles.breadcrumbSeparator} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
                 {crumb.path && index < breadcrumbs.length - 1 ? (
                   <Link to={crumb.path}>{crumb.label}</Link>
                 ) : (
-                  <span className="current">{crumb.label}</span>
+                  <span className={styles.current}>{crumb.label}</span>
                 )}
               </li>
             ))}
@@ -44,16 +44,16 @@ function PageHeader({ title, subtitle, icon, breadcrumbs = [], actions }) {
       )}
 
       {/* Header Content */}
-      <div className="page-header-content">
-        <div className="page-header-info">
-          {icon && <div className="page-header-icon">{icon}</div>}
-          <div className="page-header-text">
+      <div className={styles.headerContent}>
+        <div className={styles.headerInfo}>
+          {icon && <div className={styles.headerIcon}>{icon}</div>}
+          <div className={styles.headerText}>
             <h1>{title}</h1>
             {subtitle && <p>{subtitle}</p>}
           </div>
         </div>
 
-        {actions && <div className="page-header-actions">{actions}</div>}
+        {actions && <div className={styles.headerActions}>{actions}</div>}
       </div>
     </div>
   );

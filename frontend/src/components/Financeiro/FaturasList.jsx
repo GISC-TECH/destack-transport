@@ -7,7 +7,11 @@ import DateFilter from '../Common/DateFilter';
 import { SkeletonTable, SkeletonMobileCards } from '../Common/Skeleton';
 import EmptyState from '../Common/EmptyState';
 import ErrorMessage from '../Common/ErrorMessage';
-import './Faturas.css';
+import Modal from '../Common/Modal';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import Button from '../Common/Button';
+import styles from './Faturas.module.css';
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('pt-BR', {
@@ -23,13 +27,13 @@ function formatDate(value) {
   return date.toLocaleDateString('pt-BR');
 }
 
-function statusClass(status) {
+function getStatusVariant(status) {
   switch (status) {
-    case 'paga': return 'badge-success';
-    case 'enviada': return 'badge-info';
-    case 'atrasada': return 'badge-danger';
-    case 'cancelada': return 'badge-secondary';
-    default: return 'badge-warning';
+    case 'paga': return 'success';
+    case 'enviada': return 'info';
+    case 'atrasada': return 'danger';
+    case 'cancelada': return 'danger';
+    default: return 'warning';
   }
 }
 
@@ -203,23 +207,23 @@ function FaturasList() {
   );
 
   const headerActions = (
-    <div className="header-actions">
-      <button className="btn btn-secondary" onClick={openLoteModal}>
+    <div className={styles.headerActions}>
+      <Button variant="secondary" onClick={openLoteModal}>
         Gerar em Lote
-      </button>
-      <button className="btn btn-primary" onClick={() => navigate('/faturas/nova')}>
+      </Button>
+      <Button variant="primary" onClick={() => navigate('/faturas/nova')}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
         Nova Fatura
-      </button>
+      </Button>
     </div>
   );
 
   if (error) {
     return (
-      <div className="faturas-list">
+      <div className={styles.faturasList}>
         <PageHeader
           title="Faturas"
           subtitle="Contas a Receber"
@@ -233,7 +237,7 @@ function FaturasList() {
   }
 
   return (
-    <div className="faturas-list">
+    <div className={styles.faturasList}>
       <PageHeader
         title="Faturas"
         subtitle={`${pagination.count} registros`}
@@ -242,7 +246,7 @@ function FaturasList() {
         actions={headerActions}
       />
 
-      <div className="filtros-container">
+      <div className={styles.filtrosContainer}>
         <input
           type="text"
           className="input-filter"
@@ -271,15 +275,17 @@ function FaturasList() {
           showPeriodButtons={false}
         />
 
-        <button className="btn btn-outline" onClick={loadFaturas}>
+        <Button variant="outline" onClick={loadFaturas}>
           Buscar
-        </button>
+        </Button>
       </div>
 
       {loading ? (
         <>
-          <div className="table-container desktop-only">
-            <SkeletonTable rows={5} columns={7} />
+          <div className="desktop-only">
+            <TableContainer mobileCards={false}>
+              <SkeletonTable rows={5} columns={7} />
+            </TableContainer>
           </div>
           <div className="mobile-only">
             <SkeletonMobileCards count={4} />
@@ -292,187 +298,192 @@ function FaturasList() {
         />
       ) : (
         <>
-          <div className="table-container desktop-only">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Número</th>
-                  <th>Cliente</th>
-                  <th>Emissão</th>
-                  <th>Vencimento</th>
-                  <th>Status</th>
-                  <th>Valor Total</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {faturas.map((f) => (
-                  <tr key={f.id}>
-                    <td><strong>{f.numero}</strong></td>
-                    <td>{f.cliente_nome || '-'}</td>
-                    <td>{formatDate(f.data_emissao)}</td>
-                    <td>{formatDate(f.data_vencimento)}</td>
-                    <td>
-                      <span className={`badge ${statusClass(f.status)}`}>
-                        {f.status}
-                      </span>
-                    </td>
-                    <td>{formatCurrency(f.valor_total)}</td>
-                    <td>
-                      <div className="actions">
-                        <button
-                          className="btn btn-sm btn-outline"
-                          onClick={() => navigate(`/faturas/${f.id}/editar`)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(f.id)}
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
+          <div className="desktop-only">
+            <TableContainer mobileCards={false}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Número</th>
+                    <th>Cliente</th>
+                    <th>Emissão</th>
+                    <th>Vencimento</th>
+                    <th>Status</th>
+                    <th>Valor Total</th>
+                    <th>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {faturas.map((f) => (
+                    <tr key={f.id}>
+                      <td><strong>{f.numero}</strong></td>
+                      <td>{f.cliente_nome || '-'}</td>
+                      <td>{formatDate(f.data_emissao)}</td>
+                      <td>{formatDate(f.data_vencimento)}</td>
+                      <td>
+                        <StatusPill status={getStatusVariant(f.status)}>
+                          {f.status}
+                        </StatusPill>
+                      </td>
+                      <td>{formatCurrency(f.valor_total)}</td>
+                      <td>
+                        <div className={styles.headerActions}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/faturas/${f.id}/editar`)}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDelete(f.id)}
+                          >
+                            Excluir
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableContainer>
           </div>
 
-          <div className="mobile-only mobile-cards">
+          <div className={styles.mobileCards}>
             {faturas.map((f) => (
-              <div key={f.id} className="mobile-card">
-                <div className="mobile-card-header">
-                  <span className="mobile-card-title">{f.numero}</span>
-                  <span className={`badge ${statusClass(f.status)}`}>{f.status}</span>
+              <div key={f.id} className={styles.mobileCard}>
+                <div className={styles.mobileCardHeader}>
+                  <span className={styles.mobileCardTitle}>{f.numero}</span>
+                  <StatusPill status={getStatusVariant(f.status)}>{f.status}</StatusPill>
                 </div>
-                <div className="mobile-card-body">
+                <div className={styles.mobileCardBody}>
                   <p><strong>Cliente:</strong> {f.cliente_nome || '-'}</p>
                   <p><strong>Vencimento:</strong> {formatDate(f.data_vencimento)}</p>
                   <p><strong>Valor:</strong> {formatCurrency(f.valor_total)}</p>
                 </div>
-                <div className="mobile-card-actions">
-                  <button
-                    className="btn btn-sm btn-outline"
+                <div className={styles.mobileCardActions}>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => navigate(`/faturas/${f.id}/editar`)}
                   >
                     Editar
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
                     onClick={() => handleDelete(f.id)}
                   >
                     Excluir
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="pagination">
-            <button
-              className="btn btn-outline"
+          <div className={styles.pagination}>
+            <Button
+              variant="outline"
               onClick={() => pagination.previous && fetchPage(pagination.previous)}
               disabled={!pagination.previous}
             >
               Anterior
-            </button>
+            </Button>
             <span>{pagination.count} registros</span>
-            <button
-              className="btn btn-outline"
+            <Button
+              variant="outline"
               onClick={() => pagination.next && fetchPage(pagination.next)}
               disabled={!pagination.next}
             >
               Próximo
-            </button>
+            </Button>
           </div>
         </>
       )}
 
-      {showLoteModal && (
-        <div className="modal-overlay" onClick={() => setShowLoteModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Gerar Fatura em Lote</h3>
-              <button className="modal-close" onClick={() => setShowLoteModal(false)}>×</button>
-            </div>
-            <form onSubmit={handleGerarLote}>
-              <div className="form-group">
-                <label>Cliente *</label>
-                <select
-                  value={lote.cliente}
-                  onChange={(e) => setLote(prev => ({ ...prev, cliente: e.target.value }))}
-                  required
-                >
-                  <option value="">Selecione o cliente</option>
-                  {clientes.map(c => (
-                    <option key={c.id} value={c.id}>{c.razao_social}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Data de Vencimento *</label>
-                  <input
-                    type="date"
-                    value={lote.data_vencimento}
-                    onChange={(e) => setLote(prev => ({ ...prev, data_vencimento: e.target.value }))}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Observação</label>
-                <textarea
-                  rows="2"
-                  value={lote.observacao}
-                  onChange={(e) => setLote(prev => ({ ...prev, observacao: e.target.value }))}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>CT-es disponíveis *</label>
-                {loadingModal ? (
-                  <p>Carregando...</p>
-                ) : ctes.length === 0 ? (
-                  <p>Nenhum CT-e disponível para faturamento.</p>
-                ) : (
-                  <div className="cte-checkbox-list">
-                    {ctes.map(cte => (
-                      <label key={cte.id} className="cte-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={lote.cte_ids.includes(cte.id)}
-                          onChange={() => toggleCte(cte.id)}
-                        />
-                        <span>
-                          CT-e {cte.numero_cte || cte.chave?.slice(-8)} - {cte.remetente_nome || '-'} → {cte.destinatario_nome || '-'} ({formatCurrency(cte.valor_total)})
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="btn btn-outline" onClick={() => setShowLoteModal(false)}>
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={gerandoLote || lote.cte_ids.length === 0}
-                >
-                  {gerandoLote ? 'Gerando...' : 'Gerar Fatura'}
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={showLoteModal}
+        onClose={() => setShowLoteModal(false)}
+        title="Gerar Fatura em Lote"
+        size="lg"
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={() => setShowLoteModal(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="lote-form"
+              variant="primary"
+              disabled={gerandoLote || lote.cte_ids.length === 0}
+            >
+              {gerandoLote ? 'Gerando...' : 'Gerar Fatura'}
+            </Button>
+          </>
+        }
+      >
+        <form id="lote-form" onSubmit={handleGerarLote}>
+          <div className="form-group">
+            <label>Cliente *</label>
+            <select
+              value={lote.cliente}
+              onChange={(e) => setLote(prev => ({ ...prev, cliente: e.target.value }))}
+              required
+            >
+              <option value="">Selecione o cliente</option>
+              {clientes.map(c => (
+                <option key={c.id} value={c.id}>{c.razao_social}</option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Data de Vencimento *</label>
+              <input
+                type="date"
+                value={lote.data_vencimento}
+                onChange={(e) => setLote(prev => ({ ...prev, data_vencimento: e.target.value }))}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Observação</label>
+            <textarea
+              rows="2"
+              value={lote.observacao}
+              onChange={(e) => setLote(prev => ({ ...prev, observacao: e.target.value }))}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>CT-es disponíveis *</label>
+            {loadingModal ? (
+              <p>Carregando...</p>
+            ) : ctes.length === 0 ? (
+              <p>Nenhum CT-e disponível para faturamento.</p>
+            ) : (
+              <div className={styles.cteCheckboxList}>
+                {ctes.map(cte => (
+                  <label key={cte.id} className={styles.cteCheckbox}>
+                    <input
+                      type="checkbox"
+                      checked={lote.cte_ids.includes(cte.id)}
+                      onChange={() => toggleCte(cte.id)}
+                    />
+                    <span>
+                      CT-e {cte.numero_cte || cte.chave?.slice(-8)} - {cte.remetente_nome || '-'} → {cte.destinatario_nome || '-'} ({formatCurrency(cte.valor_total)})
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

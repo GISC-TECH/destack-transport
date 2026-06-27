@@ -1,0 +1,192 @@
+.conciliacaoContainer {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+  color: #1f2937;
+}
+
+.hint {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.uploadRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.uploadRow input[type="file"] {
+  flex: 1;
+  min-width: 200px;
+}
+
+.previewTable {
+  margin-top: 1.5rem;
+  overflow-x: auto;
+}
+
+.previewTable h3 {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  color: #374151;
+}
+
+.filtrosRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.filtroGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 140px;
+  flex: 1;
+}
+
+.filtroGroup label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4b5563;
+  text-transform: uppercase;
+}
+
+.filtroGroup input,
+.filtroGroup select {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.btnLink {
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.btnLink:hover {
+  color: #1d4ed8;
+}
+
+.resumoCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.resumoCard {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.resumoLabel {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.resumoValor {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.valorCredito {
+  color: #2d6a4f;
+}
+
+.valorDebito {
+  color: #dc2626;
+}
+
+.vinculoInfo {
+  color: #374151;
+  font-weight: 500;
+}
+
+.vinculoVazio {
+  color: #9ca3af;
+}
+
+.vinculoSelect {
+  padding: 0.35rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  max-width: 180px;
+}
+
+.successMessage {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.successMessage button {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  color: #166534;
+  cursor: pointer;
+}
+
+.emptyMessage {
+  color: #6b7280;
+  text-align: center;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .conciliacaoContainer {
+    padding: 1rem;
+  }
+
+  .filtrosRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtroGroup {
+    min-width: 100%;
+  }
+
+  .uploadRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -3,7 +3,11 @@ import { ciotAPI, clientesAPI, motoristasAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
-import './CIOTManager.css';
+import PageHeader from '../Common/PageHeader';
+import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import styles from './CIOTManager.module.css';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos' },
@@ -196,48 +200,58 @@ function CIOTManager() {
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'ativo': return 'status-success';
-      case 'usado': return 'status-info';
-      case 'vencido': return 'status-warning';
-      case 'cancelado': return 'status-danger';
+      case 'ativo': return styles.statusSuccess;
+      case 'usado': return styles.statusInfo;
+      case 'vencido': return styles.statusWarning;
+      case 'cancelado': return styles.statusDanger;
       default: return '';
+    }
+  };
+
+  const getStatusVariant = (status) => {
+    switch (status) {
+      case 'ativo': return 'success';
+      case 'usado': return 'info';
+      case 'vencido': return 'warning';
+      case 'cancelado': return 'danger';
+      default: return 'default';
     }
   };
 
   if (loading && ciots.length === 0) return <Loading message="Carregando CIOTs..." />;
 
   return (
-    <div className="ciot-page">
-      <div className="page-header">
-        <div className="header-title">
-          <h1>CIOT - Operações de Transporte</h1>
-          <p>Gerencie os Códigos de Identificação da Operação de Transporte</p>
-        </div>
-        <button
-          className="btn-primary"
-          onClick={() => { setShowForm(!showForm); if (showForm) resetForm(); }}
-        >
-          {showForm ? 'Fechar Formulário' : 'Novo CIOT'}
-        </button>
-      </div>
+    <div className={styles.page}>
+      <PageHeader
+        title="CIOT - Operações de Transporte"
+        subtitle="Gerencie os Códigos de Identificação da Operação de Transporte"
+        actions={
+          <Button
+            variant="primary"
+            onClick={() => { setShowForm(!showForm); if (showForm) resetForm(); }}
+          >
+            {showForm ? 'Fechar Formulário' : 'Novo CIOT'}
+          </Button>
+        }
+      />
 
       {error && <ErrorMessage message={error} onRetry={loadData} />}
 
-      <div className="ciot-resumo">
+      <div className={styles.resumo}>
         {STATUS_OPTIONS.filter(s => s.value).map(opt => (
-          <div key={opt.value} className={`ciot-resumo-card ${getStatusClass(opt.value)}`}>
-            <span className="resumo-value">{resumo[opt.value] || 0}</span>
-            <span className="resumo-label">{opt.label}</span>
+          <div key={opt.value} className={`${styles.resumoCard} ${getStatusClass(opt.value)}`}>
+            <span className={styles.resumoValue}>{resumo[opt.value] || 0}</span>
+            <span className={styles.resumoLabel}>{opt.label}</span>
           </div>
         ))}
       </div>
 
       {showForm && (
-        <div className="ciot-form-card">
+        <div className={styles.formCard}>
           <h3>{editingId ? 'Editar CIOT' : 'Novo CIOT'}</h3>
           <form onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
                 <label>Código CIOT *</label>
                 <input
                   type="text"
@@ -249,7 +263,7 @@ function CIOTManager() {
                   required
                 />
               </div>
-              <div className="form-group" style={{ flex: 2 }}>
+              <div className={styles.formGroup} style={{ flex: 2 }}>
                 <label>Descrição</label>
                 <input
                   type="text"
@@ -261,8 +275,8 @@ function CIOTManager() {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
                 <label>CNPJ Responsável</label>
                 <input
                   type="text"
@@ -273,7 +287,7 @@ function CIOTManager() {
                   placeholder="Apenas números"
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>CPF Responsável</label>
                 <input
                   type="text"
@@ -284,7 +298,7 @@ function CIOTManager() {
                   placeholder="Apenas números"
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Valor da Operação</label>
                 <input
                   type="number"
@@ -296,8 +310,8 @@ function CIOTManager() {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
                 <label>Contratante (Cliente)</label>
                 <select name="cliente" value={form.cliente} onChange={handleChange}>
                   <option value="">Selecione</option>
@@ -306,7 +320,7 @@ function CIOTManager() {
                   ))}
                 </select>
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Contratado (Motorista)</label>
                 <select name="motorista" value={form.motorista} onChange={handleChange}>
                   <option value="">Selecione</option>
@@ -317,53 +331,53 @@ function CIOTManager() {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
                 <label>Origem - Cidade</label>
                 <input type="text" name="origem_cidade" value={form.origem_cidade} onChange={handleChange} />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Origem - UF</label>
                 <input type="text" name="origem_uf" value={form.origem_uf} onChange={handleChange} maxLength={2} />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Destino - Cidade</label>
                 <input type="text" name="destino_cidade" value={form.destino_cidade} onChange={handleChange} />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Destino - UF</label>
                 <input type="text" name="destino_uf" value={form.destino_uf} onChange={handleChange} maxLength={2} />
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
                 <label>Data de Emissão</label>
                 <input type="date" name="data_emissao" value={form.data_emissao} onChange={handleChange} />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Data de Validade</label>
                 <input type="date" name="data_validade" value={form.data_validade} onChange={handleChange} />
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group" style={{ flex: 1 }}>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup} style={{ flex: 1 }}>
                 <label>Observação</label>
                 <textarea name="observacao" value={form.observacao} onChange={handleChange} rows={3} />
               </div>
             </div>
 
-            <div className="form-actions">
-              <button type="submit" className="btn-primary">{editingId ? 'Salvar Alterações' : 'Cadastrar CIOT'}</button>
-              <button type="button" className="btn-secondary" onClick={() => { resetForm(); setShowForm(false); }}>Cancelar</button>
+            <div className={styles.formActions}>
+              <Button type="submit" variant="primary">{editingId ? 'Salvar Alterações' : 'Cadastrar CIOT'}</Button>
+              <Button type="button" variant="secondary" onClick={() => { resetForm(); setShowForm(false); }}>Cancelar</Button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="ciot-filters">
-        <div className="form-group">
+      <div className={styles.filters}>
+        <div className={styles.formGroup}>
           <label>Status</label>
           <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
             {STATUS_OPTIONS.map(opt => (
@@ -371,7 +385,7 @@ function CIOTManager() {
             ))}
           </select>
         </div>
-        <div className="form-group filter-search">
+        <div className={`${styles.formGroup} ${styles.filterSearch}`}>
           <label>Buscar</label>
           <input
             type="text"
@@ -382,97 +396,105 @@ function CIOTManager() {
         </div>
       </div>
 
-      <div className="ciot-list-card">
+      <div className={styles.listCard}>
         <h3>Lista de CIOTs</h3>
         {filteredCiots.length === 0 ? (
-          <p className="empty-text">Nenhum CIOT encontrado.</p>
+          <p className={styles.emptyText}>Nenhum CIOT encontrado.</p>
         ) : (
           <>
-            <div className="table-responsive desktop-only">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Código</th>
-                    <th>Descrição</th>
-                    <th>Contratante</th>
-                    <th>Contratado</th>
-                    <th>Origem</th>
-                    <th>Destino</th>
-                    <th>Validade</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCiots.map(item => (
-                    <tr key={item.id}>
-                      <td><strong>{item.codigo}</strong></td>
-                      <td>{item.descricao || '-'}</td>
-                      <td>{item.cliente_nome || '-'}</td>
-                      <td>{item.motorista_nome || '-'}</td>
-                      <td>{item.origem_cidade ? `${item.origem_cidade}/${item.origem_uf}` : '-'}</td>
-                      <td>{item.destino_cidade ? `${item.destino_cidade}/${item.destino_uf}` : '-'}</td>
-                      <td>{item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '-'}</td>
-                      <td><span className={`status-badge ${getStatusClass(item.status)}`}>{item.status_display}</span></td>
-                      <td>
-                        <div className="action-buttons">
-                          <button className="btn-icon" onClick={() => handleEdit(item)} title="Editar">✏️</button>
-                          {item.status === 'ativo' && (
-                            <button className="btn-icon" onClick={() => handleUsar(item.id)} title="Marcar como usado">✓</button>
-                          )}
-                          {item.status !== 'cancelado' && (
-                            <button className="btn-icon" onClick={() => handleCancelar(item.id)} title="Cancelar">🚫</button>
-                          )}
-                          <button className="btn-icon danger" onClick={() => handleDelete(item.id)} title="Excluir">🗑️</button>
-                        </div>
-                      </td>
+            <div className={styles.desktopOnly}>
+              <TableContainer>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Código</th>
+                      <th>Descrição</th>
+                      <th>Contratante</th>
+                      <th>Contratado</th>
+                      <th>Origem</th>
+                      <th>Destino</th>
+                      <th>Validade</th>
+                      <th>Status</th>
+                      <th>Ações</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filteredCiots.map(item => (
+                      <tr key={item.id}>
+                        <td><strong>{item.codigo}</strong></td>
+                        <td>{item.descricao || '-'}</td>
+                        <td>{item.cliente_nome || '-'}</td>
+                        <td>{item.motorista_nome || '-'}</td>
+                        <td>{item.origem_cidade ? `${item.origem_cidade}/${item.origem_uf}` : '-'}</td>
+                        <td>{item.destino_cidade ? `${item.destino_cidade}/${item.destino_uf}` : '-'}</td>
+                        <td>{item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '-'}</td>
+                        <td>
+                          <StatusPill status={getStatusVariant(item.status)}>
+                            {item.status_display || item.status}
+                          </StatusPill>
+                        </td>
+                        <td>
+                          <div className={styles.actionButtons}>
+                            <Button variant="ghost" size="sm" iconOnly onClick={() => handleEdit(item)} title="Editar" aria-label="Editar">✏️</Button>
+                            {item.status === 'ativo' && (
+                              <Button variant="ghost" size="sm" iconOnly onClick={() => handleUsar(item.id)} title="Marcar como usado" aria-label="Marcar como usado">✓</Button>
+                            )}
+                            {item.status !== 'cancelado' && (
+                              <Button variant="warning" size="sm" iconOnly onClick={() => handleCancelar(item.id)} title="Cancelar" aria-label="Cancelar">🚫</Button>
+                            )}
+                            <Button variant="danger" size="sm" iconOnly onClick={() => handleDelete(item.id)} title="Excluir" aria-label="Excluir">🗑️</Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
             </div>
 
-            <div className="ciot-mobile-cards mobile-only">
+            <div className={`${styles.mobileCards} ${styles.mobileOnly}`}>
               {filteredCiots.map(item => (
-                <div key={item.id} className="ciot-mobile-card">
-                  <div className="ciot-mobile-card-header">
-                    <div className="ciot-mobile-card-title">
-                      <span className="ciot-mobile-card-primary">{item.codigo}</span>
-                      <span className="ciot-mobile-card-secondary">{item.descricao || 'Sem descrição'}</span>
+                <div key={item.id} className={styles.mobileCard}>
+                  <div className={styles.mobileCardHeader}>
+                    <div className={styles.mobileCardTitle}>
+                      <span className={styles.mobileCardPrimary}>{item.codigo}</span>
+                      <span className={styles.mobileCardSecondary}>{item.descricao || 'Sem descrição'}</span>
                     </div>
-                    <span className={`status-badge ${getStatusClass(item.status)}`}>{item.status_display}</span>
+                    <StatusPill status={getStatusVariant(item.status)}>
+                      {item.status_display || item.status}
+                    </StatusPill>
                   </div>
-                  <div className="ciot-mobile-card-body">
-                    <div className="ciot-mobile-card-row">
-                      <span className="ciot-mobile-card-label">Contratante</span>
-                      <span className="ciot-mobile-card-value">{item.cliente_nome || '-'}</span>
+                  <div className={styles.mobileCardBody}>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Contratante</span>
+                      <span className={styles.mobileCardValue}>{item.cliente_nome || '-'}</span>
                     </div>
-                    <div className="ciot-mobile-card-row">
-                      <span className="ciot-mobile-card-label">Contratado</span>
-                      <span className="ciot-mobile-card-value">{item.motorista_nome || '-'}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Contratado</span>
+                      <span className={styles.mobileCardValue}>{item.motorista_nome || '-'}</span>
                     </div>
-                    <div className="ciot-mobile-card-row">
-                      <span className="ciot-mobile-card-label">Origem</span>
-                      <span className="ciot-mobile-card-value">{item.origem_cidade ? `${item.origem_cidade}/${item.origem_uf}` : '-'}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Origem</span>
+                      <span className={styles.mobileCardValue}>{item.origem_cidade ? `${item.origem_cidade}/${item.origem_uf}` : '-'}</span>
                     </div>
-                    <div className="ciot-mobile-card-row">
-                      <span className="ciot-mobile-card-label">Destino</span>
-                      <span className="ciot-mobile-card-value">{item.destino_cidade ? `${item.destino_cidade}/${item.destino_uf}` : '-'}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Destino</span>
+                      <span className={styles.mobileCardValue}>{item.destino_cidade ? `${item.destino_cidade}/${item.destino_uf}` : '-'}</span>
                     </div>
-                    <div className="ciot-mobile-card-row">
-                      <span className="ciot-mobile-card-label">Validade</span>
-                      <span className="ciot-mobile-card-value">{item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '-'}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Validade</span>
+                      <span className={styles.mobileCardValue}>{item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '-'}</span>
                     </div>
                   </div>
-                  <div className="ciot-mobile-card-footer">
-                    <button className="btn-icon" onClick={() => handleEdit(item)} title="Editar">✏️</button>
+                  <div className={styles.mobileCardFooter}>
+                    <Button variant="ghost" size="sm" iconOnly onClick={() => handleEdit(item)} title="Editar" aria-label="Editar">✏️</Button>
                     {item.status === 'ativo' && (
-                      <button className="btn-icon" onClick={() => handleUsar(item.id)} title="Marcar como usado">✓</button>
+                      <Button variant="ghost" size="sm" iconOnly onClick={() => handleUsar(item.id)} title="Marcar como usado" aria-label="Marcar como usado">✓</Button>
                     )}
                     {item.status !== 'cancelado' && (
-                      <button className="btn-icon" onClick={() => handleCancelar(item.id)} title="Cancelar">🚫</button>
+                      <Button variant="warning" size="sm" iconOnly onClick={() => handleCancelar(item.id)} title="Cancelar" aria-label="Cancelar">🚫</Button>
                     )}
-                    <button className="btn-icon danger" onClick={() => handleDelete(item.id)} title="Excluir">🗑️</button>
+                    <Button variant="danger" size="sm" iconOnly onClick={() => handleDelete(item.id)} title="Excluir" aria-label="Excluir">🗑️</Button>
                   </div>
                 </div>
               ))}

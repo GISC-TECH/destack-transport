@@ -1,19 +1,24 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 import { pagamentosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import { SkeletonTable, SkeletonMobileCards } from '../Common/Skeleton';
 import EmptyState from '../Common/EmptyState';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
+import Button from '../Common/Button';
+import Modal from '../Common/Modal';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
 import ComprovantePagamento from './ComprovantePagamento';
-import './Pagamentos.css';
+import styles from './PagamentosList.module.css';
 
 function PagamentosList() {
   const navigate = useNavigate();
   const toast = useToast();
   const isMountedRef = useRef(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('agregados');
   const [pagamentos, setPagamentos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -172,13 +177,6 @@ function PagamentosList() {
     };
   }, []);
 
-  // Detecta viewport mobile para alternar entre tabela e cards
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   // Carrega quando muda a tab - reseta a página
   useEffect(() => {
     setPaginacao(prev => ({ ...prev, page: 1 }));
@@ -261,13 +259,12 @@ function PagamentosList() {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      'pendente': { class: 'warning', text: 'Pendente' },
-      'pago': { class: 'success', text: 'Pago' },
-      'atrasado': { class: 'danger', text: 'Atrasado' },
-      'cancelado': { class: 'secondary', text: 'Cancelado' }
+      'pendente': 'Pendente',
+      'pago': 'Pago',
+      'atrasado': 'Atrasado',
+      'cancelado': 'Cancelado'
     };
-    const s = statusMap[status] || { class: 'secondary', text: status };
-    return <span className={`badge badge-${s.class}`}>{s.text}</span>;
+    return <StatusPill status={status}>{statusMap[status] || status}</StatusPill>;
   };
 
   const calcularTotais = () => {
@@ -488,11 +485,14 @@ function PagamentosList() {
 
   // Botoes de acao desktop (todos visiveis)
   const renderActionButtons = (pagamento) => (
-    <div className="action-buttons">
-      <button
-        className="btn-action btn-view"
+    <div className={styles.actionButtons}>
+      <Button
+        variant="outline"
+        size="sm"
+        iconOnly
         onClick={() => handleAbrirComprovante(pagamento)}
         title="Gerar Comprovante"
+        aria-label="Gerar Comprovante"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -500,45 +500,57 @@ function PagamentosList() {
           <line x1="12" y1="18" x2="12" y2="12"></line>
           <line x1="9" y1="15" x2="15" y2="15"></line>
         </svg>
-      </button>
+      </Button>
       {pagamento.status !== 'pago' && (
-        <button
-          className="btn-action btn-download"
+        <Button
+          variant="success"
+          size="sm"
+          iconOnly
           onClick={() => handleAbrirBaixa(pagamento)}
           title="Baixar Pagamento"
+          aria-label="Baixar Pagamento"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
-        </button>
+        </Button>
       )}
-      <button
-        className="btn-action btn-edit"
+      <Button
+        variant="ghost"
+        size="sm"
+        iconOnly
         onClick={() => handleEditarPagamento(pagamento.id)}
         title="Editar"
+        aria-label="Editar"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
         </svg>
-      </button>
+      </Button>
       {pagamento.status !== 'pago' && (
-        <button
-          className="btn-action btn-whatsapp"
+        <Button
+          variant="success"
+          size="sm"
+          iconOnly
           onClick={() => handleNotificarGestor(pagamento)}
           disabled={notificando[pagamento.id]}
           title="Notificar gestor via WhatsApp"
+          aria-label="Notificar gestor via WhatsApp"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
           </svg>
-        </button>
+        </Button>
       )}
-      <button
-        className="btn-action btn-convert"
+      <Button
+        variant="outline"
+        size="sm"
+        iconOnly
         onClick={() => handleAbrirConverter(pagamento)}
         title={activeTab === 'agregados' ? 'Converter para Próprio' : 'Converter para Agregado'}
+        aria-label={activeTab === 'agregados' ? 'Converter para Próprio' : 'Converter para Agregado'}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="17 1 21 5 17 9"></polyline>
@@ -546,25 +558,28 @@ function PagamentosList() {
           <polyline points="7 23 3 19 7 15"></polyline>
           <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
         </svg>
-      </button>
-      <button
-        className="btn-action btn-delete"
+      </Button>
+      <Button
+        variant="danger"
+        size="sm"
+        iconOnly
         onClick={() => handleAbrirExcluir(pagamento)}
         title="Excluir"
+        aria-label="Excluir"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="3 6 5 6 21 6"></polyline>
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
         </svg>
-      </button>
+      </Button>
     </div>
   );
 
   // Botoes de acao mobile compactos (icones com label reduzido)
   const renderMobileActions = (pagamento) => (
-    <div className="mobile-card-actions">
+    <div className={styles.mobileCardActions}>
       <button
-        className="mobile-action-btn view"
+        className={`${styles.mobileActionBtn} ${styles.view}`}
         onClick={() => handleAbrirComprovante(pagamento)}
         title="Gerar Comprovante"
       >
@@ -578,7 +593,7 @@ function PagamentosList() {
       </button>
       {pagamento.status !== 'pago' && (
         <button
-          className="mobile-action-btn download"
+          className={`${styles.mobileActionBtn} ${styles.download}`}
           onClick={() => handleAbrirBaixa(pagamento)}
           title="Baixar Pagamento"
         >
@@ -590,7 +605,7 @@ function PagamentosList() {
         </button>
       )}
       <button
-        className="mobile-action-btn edit"
+        className={`${styles.mobileActionBtn} ${styles.edit}`}
         onClick={() => handleEditarPagamento(pagamento.id)}
         title="Editar"
       >
@@ -602,7 +617,7 @@ function PagamentosList() {
       </button>
       {pagamento.status !== 'pago' && (
         <button
-          className="mobile-action-btn whatsapp"
+          className={`${styles.mobileActionBtn} ${styles.whatsapp}`}
           onClick={() => handleNotificarGestor(pagamento)}
           disabled={notificando[pagamento.id]}
           title="Notificar gestor via WhatsApp"
@@ -614,7 +629,7 @@ function PagamentosList() {
         </button>
       )}
       <button
-        className="mobile-action-btn convert"
+        className={`${styles.mobileActionBtn} ${styles.convert}`}
         onClick={() => handleAbrirConverter(pagamento)}
         title={activeTab === 'agregados' ? 'Converter' : 'Converter'}
       >
@@ -627,7 +642,7 @@ function PagamentosList() {
         <span>Conv.</span>
       </button>
       <button
-        className="mobile-action-btn delete"
+        className={`${styles.mobileActionBtn} ${styles.delete}`}
         onClick={() => handleAbrirExcluir(pagamento)}
         title="Excluir"
       >
@@ -642,21 +657,15 @@ function PagamentosList() {
 
   const headerActions = (
     <>
-      <button
-        className="btn btn-outline"
-        onClick={handleExport}
-      >
+      <Button variant="outline" onClick={handleExport}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
         <span>Exportar</span>
-      </button>
-      <button
-        className="btn btn-secondary"
-        onClick={() => setShowGerarLote(true)}
-      >
+      </Button>
+      <Button variant="secondary" onClick={() => setShowGerarLote(true)}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -664,22 +673,19 @@ function PagamentosList() {
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
         <span>Gerar Lote</span>
-      </button>
-      <button
-        className="btn btn-primary"
-        onClick={handleNovoPagamento}
-      >
+      </Button>
+      <Button variant="primary" onClick={handleNovoPagamento}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
         <span>Novo Pagamento</span>
-      </button>
+      </Button>
     </>
   );
 
   return (
-    <div className="pagamentos-page">
+    <div className={styles.page}>
       <PageHeader
         title="Pagamentos"
         subtitle="Gerencie pagamentos de agregados e próprios"
@@ -689,335 +695,288 @@ function PagamentosList() {
       />
 
       {/* Modal de Geração em Lote */}
-      {showGerarLote && (
-        <div className="modal-overlay">
-          <div className="modal-content modal-lote">
-            <div className="modal-header">
-              <h3>Gerar Pagamentos em Lote</h3>
-              <button className="modal-close" onClick={() => setShowGerarLote(false)}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div className="modal-body">
-              <p className="modal-description">
-                Gere pagamentos automaticamente para todos os CT-es do período selecionado.
-              </p>
+      <Modal
+        isOpen={showGerarLote}
+        onClose={() => setShowGerarLote(false)}
+        title="Gerar Pagamentos em Lote"
+        size="md"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setShowGerarLote(false)} disabled={gerandoLote}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGerarLote} disabled={gerandoLote}>
+              {gerandoLote ? 'Gerando...' : 'Gerar Pagamentos'}
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.modalDescription}>
+          Gere pagamentos automaticamente para todos os CT-es do período selecionado.
+        </p>
 
-              <div className="form-group">
-                <label>Tipo de Pagamento</label>
-                <select
-                  value={loteConfig.tipo}
-                  onChange={(e) => setLoteConfig({...loteConfig, tipo: e.target.value})}
-                  className="select-filter"
-                >
-                  <option value="agregados">Agregados</option>
-                  <option value="proprios">Próprios</option>
-                </select>
-              </div>
+        <div className={styles.modalBodyGroup}>
+          <label>Tipo de Pagamento</label>
+          <select
+            value={loteConfig.tipo}
+            onChange={(e) => setLoteConfig({...loteConfig, tipo: e.target.value})}
+            className={styles.modalSelect}
+          >
+            <option value="agregados">Agregados</option>
+            <option value="proprios">Próprios</option>
+          </select>
+        </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Data Início</label>
-                  <input
-                    type="date"
-                    value={loteConfig.data_inicio}
-                    onChange={(e) => setLoteConfig({...loteConfig, data_inicio: e.target.value})}
-                    className="input-filter"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Data Fim</label>
-                  <input
-                    type="date"
-                    value={loteConfig.data_fim}
-                    onChange={(e) => setLoteConfig({...loteConfig, data_fim: e.target.value})}
-                    className="input-filter"
-                  />
-                </div>
-              </div>
-
-              {loteConfig.tipo === 'agregados' && (
-                <div className="form-group">
-                  <label>Percentual de Repasse (%) *</label>
-                  <input
-                    type="number"
-                    value={loteConfig.percentual}
-                    onChange={(e) => setLoteConfig({...loteConfig, percentual: e.target.value})}
-                    className="input-filter"
-                    min="0.01"
-                    max="100"
-                    step="0.01"
-                    placeholder="Ex: 25, 30, 35..."
-                    required
-                  />
-                  <small className="form-hint text-muted">Informe o percentual a ser aplicado sobre o valor do frete (0-100%)</small>
-                </div>
-              )}
-
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn-cancel"
-                onClick={() => setShowGerarLote(false)}
-                disabled={gerandoLote}
-              >
-                Cancelar
-              </button>
-              <button
-                className="btn-primary"
-                onClick={handleGerarLote}
-                disabled={gerandoLote}
-              >
-                {gerandoLote ? 'Gerando...' : 'Gerar Pagamentos'}
-              </button>
-            </div>
+        <div className={styles.modalBodyRow}>
+          <div className={styles.modalBodyGroup}>
+            <label>Data Início</label>
+            <input
+              type="date"
+              value={loteConfig.data_inicio}
+              onChange={(e) => setLoteConfig({...loteConfig, data_inicio: e.target.value})}
+              className={styles.modalInput}
+            />
+          </div>
+          <div className={styles.modalBodyGroup}>
+            <label>Data Fim</label>
+            <input
+              type="date"
+              value={loteConfig.data_fim}
+              onChange={(e) => setLoteConfig({...loteConfig, data_fim: e.target.value})}
+              className={styles.modalInput}
+            />
           </div>
         </div>
-      )}
+
+        {loteConfig.tipo === 'agregados' && (
+          <div className={styles.modalBodyGroup}>
+            <label>Percentual de Repasse (%) *</label>
+            <input
+              type="number"
+              value={loteConfig.percentual}
+              onChange={(e) => setLoteConfig({...loteConfig, percentual: e.target.value})}
+              className={styles.modalInput}
+              min="0.01"
+              max="100"
+              step="0.01"
+              placeholder="Ex: 25, 30, 35..."
+              required
+            />
+            <small className={`${styles.formHint} ${styles.muted}`}>Informe o percentual a ser aplicado sobre o valor do frete (0-100%)</small>
+          </div>
+        )}
+      </Modal>
 
       {/* Modal de Baixa Rápida */}
-      {modalBaixa.show && (
-        <div className="modal-overlay">
-          <div className="modal-content modal-baixa">
-            <div className="modal-header">
-              <h3>Baixar Pagamento</h3>
-              <button className="modal-close" onClick={() => setModalBaixa({ show: false, id: null, info: '' })}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div className="modal-body">
-              <p className="modal-description">
-                Confirmar baixa do pagamento:
-              </p>
-              <p className="modal-info">
-                {modalBaixa.info}
-              </p>
+      <Modal
+        isOpen={modalBaixa.show}
+        onClose={() => setModalBaixa({ show: false, id: null, info: '' })}
+        title="Baixar Pagamento"
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setModalBaixa({ show: false, id: null, info: '' })}
+              disabled={processandoBaixa}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmarBaixa}
+              disabled={processandoBaixa || !dataBaixa}
+            >
+              {processandoBaixa ? 'Processando...' : 'Confirmar Baixa'}
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.modalDescription}>
+          Confirmar baixa do pagamento:
+        </p>
+        <p className={styles.modalInfo}>
+          {modalBaixa.info}
+        </p>
 
-              <div className="form-group">
-                <label>Data do Pagamento</label>
-                <input
-                  type="date"
-                  value={dataBaixa}
-                  onChange={(e) => setDataBaixa(e.target.value)}
-                  className="input-filter"
-                />
-              </div>
-
-              <div className="form-group mt-20">
-                <label>Comprovante (opcional)</label>
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
-                  className="input-filter file-input"
-                />
-                {comprovanteFile && (
-                  <small className="form-hint text-muted">
-                    Arquivo selecionado: {comprovanteFile.name}
-                  </small>
-                )}
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn-cancel"
-                onClick={() => setModalBaixa({ show: false, id: null, info: '' })}
-                disabled={processandoBaixa}
-              >
-                Cancelar
-              </button>
-              <button
-                className="btn-primary"
-                onClick={handleConfirmarBaixa}
-                disabled={processandoBaixa || !dataBaixa}
-              >
-                {processandoBaixa ? 'Processando...' : 'Confirmar Baixa'}
-              </button>
-            </div>
-          </div>
+        <div className={styles.modalBodyGroup}>
+          <label>Data do Pagamento</label>
+          <input
+            type="date"
+            value={dataBaixa}
+            onChange={(e) => setDataBaixa(e.target.value)}
+            className={styles.modalInput}
+          />
         </div>
-      )}
+
+        <div className={`${styles.modalBodyGroup} ${styles.mt20}`}>
+          <label>Comprovante (opcional)</label>
+          <input
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+            className={`${styles.modalInput} ${styles.fileInput}`}
+          />
+          {comprovanteFile && (
+            <small className={`${styles.formHint} ${styles.muted}`}>
+              Arquivo selecionado: {comprovanteFile.name}
+            </small>
+          )}
+        </div>
+      </Modal>
 
       {/* Modal de Conversão */}
-      {modalConverter.show && (
-        <div className="modal-overlay">
-          <div className="modal-content modal-converter">
-            <div className="modal-header">
-              <h3>
-                {modalConverter.tipo === 'agregado_para_proprio'
-                  ? 'Converter para Próprio'
-                  : 'Converter para Agregado'}
-              </h3>
-              <button className="modal-close" onClick={() => setModalConverter({ show: false, id: null, tipo: '', info: '' })}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div className="modal-body">
-              <p className="modal-description">
-                {modalConverter.tipo === 'agregado_para_proprio'
-                  ? 'Converter este pagamento de Agregado para Próprio. O registro será movido para a lista de pagamentos próprios.'
-                  : 'Converter este pagamento de Próprio para Agregado. É necessário informar um CT-e para associar.'}
-              </p>
-              <p className="modal-info">
-                {modalConverter.info}
-              </p>
+      <Modal
+        isOpen={modalConverter.show}
+        onClose={() => setModalConverter({ show: false, id: null, tipo: '', info: '' })}
+        title={modalConverter.tipo === 'agregado_para_proprio' ? 'Converter para Próprio' : 'Converter para Agregado'}
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setModalConverter({ show: false, id: null, tipo: '', info: '' })}
+              disabled={convertendoPagamento}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmarConversao}
+              disabled={convertendoPagamento}
+            >
+              {convertendoPagamento ? 'Convertendo...' : 'Confirmar Conversão'}
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.modalDescription}>
+          {modalConverter.tipo === 'agregado_para_proprio'
+            ? 'Converter este pagamento de Agregado para Próprio. O registro será movido para a lista de pagamentos próprios.'
+            : 'Converter este pagamento de Próprio para Agregado. É necessário informar um CT-e para associar.'}
+        </p>
+        <p className={styles.modalInfo}>
+          {modalConverter.info}
+        </p>
 
-              {modalConverter.tipo === 'agregado_para_proprio' ? (
-                <div className="form-group">
-                  <label>Período (AAAA-MM)</label>
-                  <input
-                    type="text"
-                    value={dadosConversao.periodo}
-                    onChange={(e) => setDadosConversao({...dadosConversao, periodo: e.target.value})}
-                    className="input-filter"
-                    placeholder="2025-01"
-                  />
-                  <small className="form-hint text-muted">
-                    Período para agrupar no pagamento próprio
-                  </small>
-                </div>
-              ) : (
-                <>
-                  <div className="form-group">
-                    <label>ID do CT-e *</label>
-                    <input
-                      type="text"
-                      value={dadosConversao.cte_id}
-                      onChange={(e) => setDadosConversao({...dadosConversao, cte_id: e.target.value})}
-                      className="input-filter"
-                      placeholder="ID do CT-e (obrigatório)"
-                    />
-                  </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Nome do Condutor *</label>
-                      <input
-                        type="text"
-                        value={dadosConversao.condutor_nome}
-                        onChange={(e) => setDadosConversao({...dadosConversao, condutor_nome: e.target.value})}
-                        className="input-filter"
-                        placeholder="Nome do condutor"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>CPF do Condutor</label>
-                      <input
-                        type="text"
-                        value={dadosConversao.condutor_cpf}
-                        onChange={(e) => setDadosConversao({...dadosConversao, condutor_cpf: e.target.value})}
-                        className="input-filter"
-                        placeholder="Apenas números"
-                      />
-                    </div>
-                  </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Percentual Repasse (%)</label>
-                      <input
-                        type="number"
-                        value={dadosConversao.percentual_repasse}
-                        onChange={(e) => setDadosConversao({...dadosConversao, percentual_repasse: e.target.value})}
-                        className="input-filter"
-                        min="0"
-                        max="100"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Data Prevista</label>
-                      <input
-                        type="date"
-                        value={dadosConversao.data_prevista}
-                        onChange={(e) => setDadosConversao({...dadosConversao, data_prevista: e.target.value})}
-                        className="input-filter"
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn-cancel"
-                onClick={() => setModalConverter({ show: false, id: null, tipo: '', info: '' })}
-                disabled={convertendoPagamento}
-              >
-                Cancelar
-              </button>
-              <button
-                className="btn-primary"
-                onClick={handleConfirmarConversao}
-                disabled={convertendoPagamento}
-              >
-                {convertendoPagamento ? 'Convertendo...' : 'Confirmar Conversão'}
-              </button>
-            </div>
+        {modalConverter.tipo === 'agregado_para_proprio' ? (
+          <div className={styles.modalBodyGroup}>
+            <label>Período (AAAA-MM)</label>
+            <input
+              type="text"
+              value={dadosConversao.periodo}
+              onChange={(e) => setDadosConversao({...dadosConversao, periodo: e.target.value})}
+              className={styles.modalInput}
+              placeholder="2025-01"
+            />
+            <small className={`${styles.formHint} ${styles.muted}`}>
+              Período para agrupar no pagamento próprio
+            </small>
           </div>
-        </div>
-      )}
+        ) : (
+          <>
+            <div className={styles.modalBodyGroup}>
+              <label>ID do CT-e *</label>
+              <input
+                type="text"
+                value={dadosConversao.cte_id}
+                onChange={(e) => setDadosConversao({...dadosConversao, cte_id: e.target.value})}
+                className={styles.modalInput}
+                placeholder="ID do CT-e (obrigatório)"
+              />
+            </div>
+            <div className={styles.modalBodyRow}>
+              <div className={styles.modalBodyGroup}>
+                <label>Nome do Condutor *</label>
+                <input
+                  type="text"
+                  value={dadosConversao.condutor_nome}
+                  onChange={(e) => setDadosConversao({...dadosConversao, condutor_nome: e.target.value})}
+                  className={styles.modalInput}
+                  placeholder="Nome do condutor"
+                />
+              </div>
+              <div className={styles.modalBodyGroup}>
+                <label>CPF do Condutor</label>
+                <input
+                  type="text"
+                  value={dadosConversao.condutor_cpf}
+                  onChange={(e) => setDadosConversao({...dadosConversao, condutor_cpf: e.target.value})}
+                  className={styles.modalInput}
+                  placeholder="Apenas números"
+                />
+              </div>
+            </div>
+            <div className={styles.modalBodyRow}>
+              <div className={styles.modalBodyGroup}>
+                <label>Percentual Repasse (%)</label>
+                <input
+                  type="number"
+                  value={dadosConversao.percentual_repasse}
+                  onChange={(e) => setDadosConversao({...dadosConversao, percentual_repasse: e.target.value})}
+                  className={styles.modalInput}
+                  min="0"
+                  max="100"
+                />
+              </div>
+              <div className={styles.modalBodyGroup}>
+                <label>Data Prevista</label>
+                <input
+                  type="date"
+                  value={dadosConversao.data_prevista}
+                  onChange={(e) => setDadosConversao({...dadosConversao, data_prevista: e.target.value})}
+                  className={styles.modalInput}
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </Modal>
 
       {/* Modal de Exclusao */}
-      {modalExcluir.show && (
-        <div className="modal-overlay">
-          <div className="modal-content modal-excluir">
-            <div className="modal-header">
-              <h3>Excluir Pagamento</h3>
-              <button className="modal-close" onClick={() => setModalExcluir({ show: false, id: null, info: '' })}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div className="modal-body">
-              <p className="modal-description text-danger">
-                Tem certeza que deseja excluir este pagamento? Esta acao nao pode ser desfeita.
-              </p>
-              <p className="modal-info">
-                {modalExcluir.info}
-              </p>
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn-cancel"
-                onClick={() => setModalExcluir({ show: false, id: null, info: '' })}
-                disabled={excluindoPagamento}
-              >
-                Cancelar
-              </button>
-              <button
-                className="btn-danger"
-                onClick={handleConfirmarExcluir}
-                disabled={excluindoPagamento}
-              >
-                {excluindoPagamento ? 'Excluindo...' : 'Confirmar Exclusao'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={modalExcluir.show}
+        onClose={() => setModalExcluir({ show: false, id: null, info: '' })}
+        title="Excluir Pagamento"
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setModalExcluir({ show: false, id: null, info: '' })}
+              disabled={excluindoPagamento}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleConfirmarExcluir}
+              disabled={excluindoPagamento}
+            >
+              {excluindoPagamento ? 'Excluindo...' : 'Confirmar Exclusao'}
+            </Button>
+          </>
+        }
+      >
+        <p className={`${styles.modalDescription} ${styles.danger}`}>
+          Tem certeza que deseja excluir este pagamento? Esta acao nao pode ser desfeita.
+        </p>
+        <p className={styles.modalInfo}>
+          {modalExcluir.info}
+        </p>
+      </Modal>
 
       {/* Cards de resumo */}
-      <div className="summary-cards">
-        <div className="summary-card">
-          <span className="summary-label">Total</span>
-          <span className="summary-value">{formatCurrency(totais.total)}</span>
+      <div className={styles.summaryCards}>
+        <div className={styles.summaryCard}>
+          <span className={styles.summaryLabel}>Total</span>
+          <span className={styles.summaryValue}>{formatCurrency(totais.total)}</span>
         </div>
-        <div className="summary-card pendente">
-          <span className="summary-label">Pendente</span>
-          <span className="summary-value">{formatCurrency(totais.pendente)}</span>
+        <div className={`${styles.summaryCard} ${styles.pendente}`}>
+          <span className={styles.summaryLabel}>Pendente</span>
+          <span className={styles.summaryValue}>{formatCurrency(totais.pendente)}</span>
         </div>
-        <div className="summary-card pago">
-          <span className="summary-label">Pago</span>
-          <span className="summary-value">{formatCurrency(totais.pago)}</span>
+        <div className={`${styles.summaryCard} ${styles.pago}`}>
+          <span className={styles.summaryLabel}>Pago</span>
+          <span className={styles.summaryValue}>{formatCurrency(totais.pago)}</span>
         </div>
       </div>
 
@@ -1030,15 +989,15 @@ function PagamentosList() {
       />
 
       {/* Tabs */}
-      <div className="tabs-container">
+      <div className={styles.tabsContainer}>
         <button
-          className={`tab-button ${activeTab === 'agregados' ? 'active' : ''}`}
+          className={`${styles.tabButton} ${activeTab === 'agregados' ? styles.active : ''}`}
           onClick={() => setActiveTab('agregados')}
         >
           Agregados
         </button>
         <button
-          className={`tab-button ${activeTab === 'proprios' ? 'active' : ''}`}
+          className={`${styles.tabButton} ${activeTab === 'proprios' ? styles.active : ''}`}
           onClick={() => setActiveTab('proprios')}
         >
           Próprios
@@ -1046,8 +1005,8 @@ function PagamentosList() {
       </div>
 
       {/* Filtros */}
-      <div className="filtros-section">
-        <div className="filtros-form">
+      <div className={styles.filtrosSection}>
+        <div className={styles.filtrosForm}>
           <input
             type="text"
             placeholder="Buscar por CT-e, placa ou condutor..."
@@ -1059,18 +1018,18 @@ function PagamentosList() {
                 loadPagamentos(null, 1);
               }
             }}
-            className="input-filter"
+            className={styles.inputFilter}
           />
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => {
               setPaginacao(prev => ({ ...prev, page: 1 }));
               loadPagamentos(null, 1);
             }}
-            className="btn-secondary"
           >
             Buscar
-          </button>
+          </Button>
           <select
             value={filtros.status}
             onChange={(e) => {
@@ -1078,7 +1037,7 @@ function PagamentosList() {
               setPaginacao(prev => ({ ...prev, page: 1 }));
               setTimeout(() => loadPagamentos(null, 1), 100);
             }}
-            className="select-filter"
+            className={styles.selectFilter}
           >
             <option value="">Todos os Status</option>
             <option value="pendente">Pendente</option>
@@ -1088,7 +1047,7 @@ function PagamentosList() {
         </div>
       </div>
 
-      <div className="results-info">
+      <div className={styles.resultsInfo}>
         <p>
           {paginacao.total > 0 ? (
             <>Mostrando {((paginacao.page - 1) * paginacao.pageSize) + 1} - {Math.min(paginacao.page * paginacao.pageSize, paginacao.total)} de {paginacao.total} pagamento{paginacao.total !== 1 ? 's' : ''}</>
@@ -1100,7 +1059,7 @@ function PagamentosList() {
 
       {/* Loading skeletons */}
       {loading && pagamentos.length === 0 && (
-        <div className="pagamentos-skeleton">
+        <div className={styles.skeleton}>
           {isMobile ? (
             <SkeletonMobileCards count={4} />
           ) : (
@@ -1119,8 +1078,8 @@ function PagamentosList() {
 
       {/* Tabela desktop */}
       {!loading && pagamentos.length > 0 && !isMobile && (
-        <div className="table-container">
-          <table className="data-table">
+        <TableContainer className={styles.desktopTable}>
+          <table>
             <thead>
               <tr>
                 {activeTab === 'agregados' ? (
@@ -1161,19 +1120,19 @@ function PagamentosList() {
                       <td>{pagamento.condutor_nome || '-'}</td>
                       <td>{pagamento.placa || '-'}</td>
                       <td>{formatDate(pagamento.data_prevista)}</td>
-                      <td className={`text-right ${pagamento.desconto > 0 ? 'text-danger' : 'text-muted'}`}>
+                      <td className={`${styles.textRight} ${pagamento.desconto > 0 ? styles.textDanger : styles.textMuted}`}>
                         {pagamento.desconto > 0 ? `-${formatCurrency(pagamento.desconto)}` : '-'}
                       </td>
-                      <td className="text-right">
+                      <td className={styles.textRight}>
                         <strong>{formatCurrency(pagamento.valor_repassado)}</strong>
                       </td>
-                      <td className="text-center">
+                      <td className={styles.textCenter}>
                         {pagamento.comprovante ? (
                           <a
                             href={pagamento.comprovante}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="comprovante-link"
+                            className={styles.comprovanteLink}
                             title="Ver Comprovante"
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1184,7 +1143,7 @@ function PagamentosList() {
                             </svg>
                           </a>
                         ) : (
-                          <span className="text-muted">-</span>
+                          <span className={styles.textMuted}>-</span>
                         )}
                       </td>
                       <td>{getStatusBadge(pagamento.status)}</td>
@@ -1198,17 +1157,17 @@ function PagamentosList() {
                       <td>{pagamento.condutor_nome || pagamento.motorista_nome || '-'}</td>
                       <td>{pagamento.placa || pagamento.veiculo_placa || '-'}</td>
                       <td>{formatDate(pagamento.data_prevista)}</td>
-                      <td className="text-center">{pagamento.km_total_periodo || '-'}</td>
-                      <td className="text-right">
+                      <td className={styles.textCenter}>{pagamento.km_total_periodo || '-'}</td>
+                      <td className={styles.textRight}>
                         <strong>{formatCurrency(pagamento.valor_repassado || pagamento.valor_base_faixa)}</strong>
                       </td>
-                      <td className="text-center">
+                      <td className={styles.textCenter}>
                         {pagamento.comprovante ? (
                           <a
                             href={pagamento.comprovante}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="comprovante-link"
+                            className={styles.comprovanteLink}
                             title="Ver Comprovante"
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1219,7 +1178,7 @@ function PagamentosList() {
                             </svg>
                           </a>
                         ) : (
-                          <span className="text-muted">-</span>
+                          <span className={styles.textMuted}>-</span>
                         )}
                       </td>
                       <td>{getStatusBadge(pagamento.status)}</td>
@@ -1230,61 +1189,61 @@ function PagamentosList() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableContainer>
       )}
 
       {/* Cards mobile */}
       {!loading && pagamentos.length > 0 && isMobile && (
-        <div className="mobile-cards">
+        <div className={styles.mobileCards}>
           {pagamentos.map((pagamento) => (
-            <div key={pagamento.id} className="mobile-card">
-              <div className="mobile-card-header">
-                <div className="mobile-card-title">
+            <div key={pagamento.id} className={styles.mobileCard}>
+              <div className={styles.mobileCardHeader}>
+                <div className={styles.mobileCardTitle}>
                   <strong>#{pagamento.cte_numero || '-'}</strong>
                   <span>{getStatusBadge(pagamento.status)}</span>
                 </div>
-                <div className="mobile-card-subtitle">
+                <div className={styles.mobileCardSubtitle}>
                   {pagamento.condutor_nome || pagamento.motorista_nome || '-'} · {pagamento.placa || pagamento.veiculo_placa || '-'}
                 </div>
               </div>
-              <div className="mobile-card-body">
-                <div className="mobile-card-row">
-                  <span className="mobile-card-label">Data Prevista</span>
-                  <span className="mobile-card-value">{formatDate(pagamento.data_prevista)}</span>
+              <div className={styles.mobileCardBody}>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Data Prevista</span>
+                  <span className={styles.mobileCardValue}>{formatDate(pagamento.data_prevista)}</span>
                 </div>
                 {activeTab === 'agregados' ? (
                   <>
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">Desconto</span>
-                      <span className={`mobile-card-value ${pagamento.desconto > 0 ? 'text-danger' : 'text-muted'}`}>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Desconto</span>
+                      <span className={`${styles.mobileCardValue} ${pagamento.desconto > 0 ? styles.textDanger : styles.textMuted}`}>
                         {pagamento.desconto > 0 ? `-${formatCurrency(pagamento.desconto)}` : '-'}
                       </span>
                     </div>
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">Valor Repasse</span>
-                      <span className="mobile-card-value mobile-card-highlight">{formatCurrency(pagamento.valor_repassado)}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Valor Repasse</span>
+                      <span className={`${styles.mobileCardValue} ${styles.mobileCardHighlight}`}>{formatCurrency(pagamento.valor_repassado)}</span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">KM</span>
-                      <span className="mobile-card-value">{pagamento.km_total_periodo || '-'}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>KM</span>
+                      <span className={styles.mobileCardValue}>{pagamento.km_total_periodo || '-'}</span>
                     </div>
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">Valor Repasse</span>
-                      <span className="mobile-card-value mobile-card-highlight">{formatCurrency(pagamento.valor_repassado || pagamento.valor_base_faixa)}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Valor Repasse</span>
+                      <span className={`${styles.mobileCardValue} ${styles.mobileCardHighlight}`}>{formatCurrency(pagamento.valor_repassado || pagamento.valor_base_faixa)}</span>
                     </div>
                   </>
                 )}
-                <div className="mobile-card-row">
-                  <span className="mobile-card-label">Comprovante</span>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Comprovante</span>
                   {pagamento.comprovante ? (
                     <a
                       href={pagamento.comprovante}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="comprovante-link"
+                      className={styles.comprovanteLink}
                       title="Ver Comprovante"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1295,11 +1254,11 @@ function PagamentosList() {
                       </svg>
                     </a>
                   ) : (
-                    <span className="text-muted">-</span>
+                    <span className={styles.textMuted}>-</span>
                   )}
                 </div>
               </div>
-              <div className="mobile-card-footer">
+              <div className={styles.mobileCardFooter}>
                 {renderMobileActions(pagamento)}
               </div>
             </div>
@@ -1318,9 +1277,9 @@ function PagamentosList() {
 
       {/* Paginação */}
       {paginacao.totalPages > 1 && (
-        <div className="pagination-container">
+        <div className={styles.paginationContainer}>
           <button
-            className="pagination-btn"
+            className={styles.paginationBtn}
             onClick={() => handlePageChange(1)}
             disabled={paginacao.page === 1}
             title="Primeira página"
@@ -1328,7 +1287,7 @@ function PagamentosList() {
             &laquo;
           </button>
           <button
-            className="pagination-btn"
+            className={styles.paginationBtn}
             onClick={() => handlePageChange(paginacao.page - 1)}
             disabled={paginacao.page === 1}
             title="Página anterior"
@@ -1351,7 +1310,7 @@ function PagamentosList() {
               pages.push(
                 <button
                   key={i}
-                  className={`pagination-btn ${paginacao.page === i ? 'active' : ''}`}
+                  className={`${styles.paginationBtn} ${paginacao.page === i ? styles.active : ''}`}
                   onClick={() => handlePageChange(i)}
                 >
                   {i}
@@ -1362,7 +1321,7 @@ function PagamentosList() {
           })()}
 
           <button
-            className="pagination-btn"
+            className={styles.paginationBtn}
             onClick={() => handlePageChange(paginacao.page + 1)}
             disabled={paginacao.page === paginacao.totalPages}
             title="Próxima página"
@@ -1370,7 +1329,7 @@ function PagamentosList() {
             &rsaquo;
           </button>
           <button
-            className="pagination-btn"
+            className={styles.paginationBtn}
             onClick={() => handlePageChange(paginacao.totalPages)}
             disabled={paginacao.page === paginacao.totalPages}
             title="Última página"

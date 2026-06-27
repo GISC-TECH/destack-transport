@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { pedagioAPI, veiculosAPI, ordemViagemAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import './Pedagio.css';
+import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
+import styles from './PedagioForm.module.css';
 
 function PedagioForm() {
   const navigate = useNavigate();
@@ -119,26 +121,24 @@ function PedagioForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="pedagio-page">
-      <div className="page-header">
-        <div className="header-title">
-          <h1>{isEditing ? 'Editar Pedágio' : 'Novo Pedágio'}</h1>
-          <p>{isEditing ? 'Atualize os dados do pedágio' : 'Registre um novo pedágio'}</p>
-        </div>
-      </div>
+    <div className={styles.page}>
+      <PageHeader
+        title={isEditing ? 'Editar Pedágio' : 'Novo Pedágio'}
+        subtitle={isEditing ? 'Atualize os dados do pedágio' : 'Registre um novo pedágio'}
+      />
 
       {error && (
-        <div className="alert alert-error">
+        <div className={`${styles.alert} ${styles.alertError}`}>
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="pedagio-form-container">
-        <div className="pedagio-form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Informações Básicas</h3>
-          <div className="pedagio-form-row">
-            <div className="pedagio-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Veículo *</label>
               <select name="veiculo" value={formData.veiculo} onChange={handleChange} required>
                 <option value="">Selecione</option>
@@ -147,7 +147,7 @@ function PedagioForm() {
                 ))}
               </select>
             </div>
-            <div className="pedagio-form-group">
+            <div className={styles.formGroup}>
               <label>Ordem de Viagem</label>
               <select name="ordem" value={formData.ordem} onChange={handleChange}>
                 <option value="">Selecione</option>
@@ -156,57 +156,57 @@ function PedagioForm() {
                 ))}
               </select>
             </div>
-            <div className="pedagio-form-group">
+            <div className={styles.formGroup}>
               <label>Data *</label>
               <input type="date" name="data" value={formData.data} onChange={handleChange} required />
             </div>
           </div>
 
-          <div className="pedagio-form-row">
-            <div className="pedagio-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Praça/Pedágio *</label>
               <input type="text" name="praca" value={formData.praca} onChange={handleChange} required maxLength={120} />
             </div>
-            <div className="pedagio-form-group">
+            <div className={styles.formGroup}>
               <label>Rodovia/BR</label>
               <input type="text" name="rodovia" value={formData.rodovia} onChange={handleChange} maxLength={20} />
             </div>
-            <div className="pedagio-form-group">
+            <div className={styles.formGroup}>
               <label>KM</label>
               <input type="number" name="km" value={formData.km} onChange={handleChange} min="0" />
             </div>
           </div>
 
-          <div className="pedagio-form-row">
-            <div className="pedagio-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Categoria</label>
               <input type="text" name="categoria" value={formData.categoria} onChange={handleChange} maxLength={10} />
             </div>
-            <div className="pedagio-form-group">
+            <div className={styles.formGroup}>
               <label>Tag/Passagem</label>
               <input type="text" name="tag" value={formData.tag} onChange={handleChange} maxLength={30} />
             </div>
-            <div className="pedagio-form-group">
+            <div className={styles.formGroup}>
               <label>Valor (R$) *</label>
               <input type="number" step="0.01" name="valor" value={formData.valor} onChange={handleChange} required min="0" />
             </div>
           </div>
         </div>
 
-        <div className="pedagio-form-section">
+        <div className={styles.formSection}>
           <h3>Observações</h3>
-          <div className="pedagio-form-row-2">
-            <div className="pedagio-form-group">
+          <div className={styles.formRow2}>
+            <div className={styles.formGroup}>
               <textarea name="observacao" value={formData.observacao} onChange={handleChange} placeholder="Informações adicionais" />
             </div>
           </div>
         </div>
 
-        <div className="form-actions">
-          <button type="button" className="btn-secondary" onClick={() => navigate('/pedagios')}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={saving}>
+        <div className={styles.formActions}>
+          <Button type="button" variant="secondary" onClick={() => navigate('/pedagios')}>Cancelar</Button>
+          <Button type="submit" variant="primary" disabled={saving}>
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Registrar')}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

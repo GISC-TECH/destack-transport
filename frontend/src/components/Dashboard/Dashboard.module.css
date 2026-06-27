@@ -1,0 +1,736 @@
+.dashboard {
+  padding: 0;
+  max-width: 100%;
+  margin: 0 auto;
+  background: transparent;
+  min-height: auto;
+}
+
+/* KPI Grid - Layout 3x2 */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* KPI Grid Secondary - Cards menores em 6 colunas */
+.kpiGridSecondary {
+  grid-template-columns: repeat(6, 1fr);
+  gap: 15px;
+}
+
+.kpiCard {
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 22px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  border: 1px solid var(--border-light);
+  box-shadow: none;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+  text-decoration: none;
+  color: inherit;
+}
+
+.kpiCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-card);
+}
+
+/* Card de destaque (faturamento) */
+.kpiCardHighlight {
+  background: linear-gradient(150deg, var(--green-700), var(--green-900));
+  border-color: transparent;
+  box-shadow: 0 16px 32px -18px rgba(16, 51, 31, 0.55);
+}
+
+.kpiCardHighlight .kpiLabel {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.kpiCardHighlight .kpiValue {
+  color: var(--card-bg);
+}
+
+.kpiCardHighlight .kpiChange {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.kpiCardHighlight .kpiIcon {
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--card-bg);
+}
+
+.kpiIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpiIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.kpiIconBlue,
+.kpiIconGreen,
+.kpiIconCif {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.kpiIconPurple {
+  background: rgba(45, 106, 79, 0.1);
+  color: var(--green-700);
+}
+
+.kpiIconOrange,
+.kpiIconFob {
+  background: rgba(200, 169, 81, 0.16);
+  color: var(--gold-600);
+}
+
+.kpiCardSmall {
+  padding: 15px;
+  gap: 12px;
+}
+
+.kpiIconSmall {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpiIconSmallBlue,
+.kpiIconSmallGreen {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.kpiIconSmallPurple {
+  background: rgba(45, 106, 79, 0.1);
+  color: var(--green-700);
+}
+
+.kpiIconSmallOrange {
+  background: rgba(200, 169, 81, 0.16);
+  color: var(--gold-600);
+}
+
+.kpiIconSmallRed {
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.kpiContentSmall {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kpiLabelSmall {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+}
+
+.kpiValueSmall {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.kpiContent {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.kpiLabel {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.kpiValue {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.kpiChange {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.kpiChangePositive {
+  color: var(--success-color);
+}
+
+.kpiChangeNegative {
+  color: var(--danger-color);
+}
+
+.kpiChangeNeutral {
+  color: var(--text-muted);
+}
+
+/* Charts Grid */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.chartCard {
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 24px;
+  border: 1px solid var(--border-light);
+  box-shadow: none;
+}
+
+.chartCard h3 {
+  margin: 0 0 20px 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.chartCardSmall {
+  grid-column: span 1;
+}
+
+.emptyChart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  background: var(--border-light);
+  border-radius: 8px;
+}
+
+/* Alerts Summary Card */
+.alertsSummaryCard {
+  min-height: auto;
+}
+
+.alertsSummary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.alertSummaryItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--border-light);
+  border-radius: 10px;
+  transition: background var(--transition-fast);
+}
+
+.alertSummaryItem:hover {
+  background: var(--border-color);
+}
+
+.alertSummaryIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.alertSummaryIconWarning {
+  background: linear-gradient(135deg, var(--warning-color) 0%, var(--warning-dark) 100%);
+  color: var(--card-bg);
+}
+
+.alertSummaryIconDanger {
+  background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-dark) 100%);
+  color: var(--card-bg);
+}
+
+.alertSummaryIconInfo {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: var(--card-bg);
+}
+
+.alertSummaryContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alertSummaryValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.alertSummaryLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Quick Actions */
+.quickActionsSection {
+  margin-bottom: 30px;
+}
+
+.quickActionsCard {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: var(--shadow-md);
+}
+
+.quickActionsCard h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.quickActionsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.quickActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  background: var(--border-light);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--transition-normal), color var(--transition-normal), transform var(--transition-fast);
+}
+
+.quickActionBtn:hover {
+  background: var(--primary-color);
+  color: var(--card-bg);
+}
+
+.quickActionBtn svg {
+  stroke: currentColor;
+}
+
+/* Recent Docs */
+.recentDocsSection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.recentDocsCard {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: var(--shadow-md);
+}
+
+.recentDocsCard h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.recentDocsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recentDocItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.recentDocItem:last-child {
+  border-bottom: none;
+}
+
+.docInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.docNumber {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.docCliente {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.docMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.docValor {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.docPlaca {
+  font-weight: 600;
+  color: var(--info-color);
+  font-size: 13px;
+}
+
+.docData {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.emptyList {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.viewAllLink {
+  display: block;
+  text-align: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-light);
+  color: var(--primary-color);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.viewAllLink:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kpiGridSecondary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .recentDocsSection {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quickActionsSection {
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .chartCard {
+    padding: 20px;
+  }
+
+  .chartCard h3 {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpiGridSecondary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kpiCard {
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .kpiValue {
+    font-size: 22px;
+  }
+
+  .kpiIcon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .kpiIcon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .chartsGrid {
+    gap: 12px;
+  }
+
+  .chartCard {
+    padding: 16px;
+  }
+
+  .chartCard .recharts-wrapper,
+  .chartCard .recharts-surface {
+    max-height: 220px !important;
+  }
+
+  .chartCardSmall .recharts-wrapper {
+    max-height: 200px !important;
+  }
+
+  .quickActionsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .quickActionsCard,
+  .recentDocsCard {
+    padding: 18px;
+  }
+
+  .alertsSummary {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .alertSummaryItem {
+    padding: 10px;
+  }
+
+  .alertSummaryIcon {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .alertSummaryValue {
+    font-size: 18px;
+  }
+
+  .alertSummaryLabel {
+    font-size: 10px;
+  }
+
+  .emptyChart {
+    height: 150px;
+    font-size: 13px;
+  }
+
+  .recentDocsSection {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .quickActionsSection {
+    margin-bottom: 20px;
+  }
+
+  .quickActionsCard,
+  .recentDocsCard {
+    border-radius: 12px;
+  }
+
+  .quickActionsCard h3,
+  .recentDocsCard h3 {
+    font-size: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 12px;
+  }
+
+  .kpiCard:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .quickActionBtn:active {
+    transform: scale(0.98);
+  }
+
+  .recentDocItem {
+    border-radius: 8px;
+    padding: 12px;
+    margin: 0 -12px;
+    width: calc(100% + 24px);
+  }
+
+  .recentDocItem:active {
+    background: var(--border-light);
+  }
+}
+
+@media (max-width: 480px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .kpiGridSecondary {
+    grid-template-columns: 1fr;
+  }
+
+  .kpiCard {
+    padding: 14px;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .kpiIcon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .kpiIcon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .kpiLabel {
+    font-size: 11px;
+  }
+
+  .kpiValue {
+    font-size: 18px;
+  }
+
+  .kpiChange {
+    font-size: 11px;
+  }
+
+  .chartCard {
+    padding: 14px;
+    margin: 0 -10px;
+    border-radius: 0;
+  }
+
+  .chartCard h3,
+  .quickActionsCard h3,
+  .recentDocsCard h3 {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .quickActionsCard,
+  .recentDocsCard {
+    padding: 14px;
+  }
+
+  .quickActionsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .quickActionBtn {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .recentDocItem {
+    padding: 10px 0;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .docInfo {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .docNumber {
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+    display: block;
+  }
+
+  .docCliente {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+    display: block;
+  }
+
+  .docValor {
+    font-size: 13px;
+  }
+
+  .docPlaca {
+    font-size: 12px;
+  }
+
+  .docData {
+    font-size: 10px;
+  }
+}

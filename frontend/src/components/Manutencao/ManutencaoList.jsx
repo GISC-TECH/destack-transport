@@ -5,11 +5,14 @@ import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import Button from '../Common/Button';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
 } from 'recharts';
-import './Manutencao.css';
+import styles from './Manutencao.module.css';
 
 const COLORS = ['#0d9488', '#f39c12', '#27ae60', '#C8A951', '#e74c3c'];
 
@@ -86,25 +89,25 @@ function ManutencaoList() {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusPill = (status) => {
     const statusMap = {
-      'agendada': { class: 'info', text: 'Agendada' },
-      'em_andamento': { class: 'warning', text: 'Em Andamento' },
-      'concluida': { class: 'success', text: 'Concluída' },
-      'cancelada': { class: 'danger', text: 'Cancelada' }
+      'agendada': { variant: 'info', text: 'Agendada' },
+      'em_andamento': { variant: 'warning', text: 'Em Andamento' },
+      'concluida': { variant: 'success', text: 'Concluída' },
+      'cancelada': { variant: 'danger', text: 'Cancelada' }
     };
-    const s = statusMap[status] || { class: 'secondary', text: status };
-    return <span className={`badge badge-${s.class}`}>{s.text}</span>;
+    const s = statusMap[status] || { variant: 'default', text: status };
+    return <StatusPill status={s.variant}>{s.text}</StatusPill>;
   };
 
-  const getTipoBadge = (tipo) => {
+  const getTipoPill = (tipo) => {
     const tipoMap = {
-      'preventiva': { class: 'info', text: 'Preventiva' },
-      'corretiva': { class: 'warning', text: 'Corretiva' },
-      'preditiva': { class: 'success', text: 'Preditiva' }
+      'preventiva': { variant: 'info', text: 'Preventiva' },
+      'corretiva': { variant: 'warning', text: 'Corretiva' },
+      'preditiva': { variant: 'success', text: 'Preditiva' }
     };
-    const t = tipoMap[tipo] || { class: 'secondary', text: tipo };
-    return <span className={`badge badge-${t.class}`}>{t.text}</span>;
+    const t = tipoMap[tipo] || { variant: 'default', text: tipo };
+    return <StatusPill status={t.variant}>{t.text}</StatusPill>;
   };
 
   // Calcular contagens
@@ -124,7 +127,7 @@ function ManutencaoList() {
   );
 
   return (
-    <div className="manutencao-page">
+    <div className={styles.page}>
       <PageHeader
         title="Manutenção de Veículos"
         subtitle="Gerencie as manutenções preventivas e corretivas"
@@ -132,8 +135,8 @@ function ManutencaoList() {
         breadcrumbs={[{ label: 'Manutenção' }]}
         actions={
           <>
-            <button
-              className="btn-secondary"
+            <Button
+              variant="secondary"
               onClick={handleExport}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -142,22 +145,22 @@ function ManutencaoList() {
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
               Exportar CSV
-            </button>
-            <Link to="/manutencoes/nova" className="btn-primary">
+            </Button>
+            <Button variant="primary" onClick={() => navigate('/manutencoes/nova')}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
               Nova Manutenção
-            </Link>
+            </Button>
           </>
         }
       />
 
       {/* Cards de resumo */}
-      <div className="manutencao-summary">
-        <div className="summary-item">
-          <div className="summary-icon agendadas">
+      <div className={styles.summary}>
+        <div className={styles.summaryItem}>
+          <div className={`${styles.summaryIcon} ${styles.agendadas}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -165,41 +168,41 @@ function ManutencaoList() {
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
           </div>
-          <div className="summary-info">
-            <span className="summary-number">{contagens.agendadas}</span>
-            <span className="summary-label">Agendadas</span>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryNumber}>{contagens.agendadas}</span>
+            <span className={styles.summaryLabel}>Agendadas</span>
           </div>
         </div>
-        <div className="summary-item">
-          <div className="summary-icon andamento">
+        <div className={styles.summaryItem}>
+          <div className={`${styles.summaryIcon} ${styles.andamento}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
           </div>
-          <div className="summary-info">
-            <span className="summary-number">{contagens.em_andamento}</span>
-            <span className="summary-label">Em Andamento</span>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryNumber}>{contagens.em_andamento}</span>
+            <span className={styles.summaryLabel}>Em Andamento</span>
           </div>
         </div>
-        <div className="summary-item">
-          <div className="summary-icon concluidas">
+        <div className={styles.summaryItem}>
+          <div className={`${styles.summaryIcon} ${styles.concluidas}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
           </div>
-          <div className="summary-info">
-            <span className="summary-number">{contagens.concluidas}</span>
-            <span className="summary-label">Concluídas</span>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryNumber}>{contagens.concluidas}</span>
+            <span className={styles.summaryLabel}>Concluídas</span>
           </div>
         </div>
       </div>
 
       {/* Toggle Gráficos */}
-      <div className="graficos-toggle">
+      <div className={styles.graficosToggle}>
         <button
-          className={`btn-toggle ${showGraficos ? 'active' : ''}`}
+          className={`${styles.btnToggle} ${showGraficos ? styles.active : ''}`}
           onClick={() => setShowGraficos(!showGraficos)}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -213,10 +216,10 @@ function ManutencaoList() {
 
       {/* Seção de Gráficos */}
       {showGraficos && graficos && (
-        <div className="graficos-section">
-          <div className="graficos-row">
+        <div className={styles.graficosSection}>
+          <div className={styles.graficosRow}>
             {/* Gráfico por Tipo (Pizza) */}
-            <div className="grafico-card">
+            <div className={styles.graficoCard}>
               <h3>Manutenções por Tipo</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
@@ -241,7 +244,7 @@ function ManutencaoList() {
             </div>
 
             {/* Evolução Mensal */}
-            <div className="grafico-card wide">
+            <div className={`${styles.graficoCard} ${styles.wide}`}>
               <h3>Evolução Mensal</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={graficos.evolucao_mensal || []}>
@@ -258,9 +261,9 @@ function ManutencaoList() {
             </div>
           </div>
 
-          <div className="graficos-row">
+          <div className={styles.graficosRow}>
             {/* Custos por Tipo */}
-            <div className="grafico-card">
+            <div className={styles.graficoCard}>
               <h3>Custos por Tipo</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={graficos.por_tipo || []}>
@@ -274,7 +277,7 @@ function ManutencaoList() {
             </div>
 
             {/* Top Veículos */}
-            <div className="grafico-card wide">
+            <div className={`${styles.graficoCard} ${styles.wide}`}>
               <h3>Veículos com Mais Manutenções</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={graficos.por_veiculo || []} layout="vertical">
@@ -290,8 +293,8 @@ function ManutencaoList() {
           </div>
 
           {/* Evolução de Custos */}
-          <div className="graficos-row">
-            <div className="grafico-card full-width">
+          <div className={styles.graficosRow}>
+            <div className={`${styles.graficoCard} ${styles.fullWidth}`}>
               <h3>Evolução de Custos Mensal</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={graficos.evolucao_mensal || []}>
@@ -315,12 +318,12 @@ function ManutencaoList() {
       )}
 
       {/* Filtros */}
-      <div className="filtros-section">
-        <form onSubmit={handleFiltrar} className="filtros-form">
+      <div className={styles.filtrosSection}>
+        <form onSubmit={handleFiltrar} className={styles.filtrosForm}>
           <select
             value={filtros.status}
             onChange={(e) => setFiltros({...filtros, status: e.target.value})}
-            className="select-filter"
+            className={styles.selectFilter}
           >
             <option value="">Todos os Status</option>
             <option value="agendada">Agendada</option>
@@ -331,7 +334,7 @@ function ManutencaoList() {
           <select
             value={filtros.tipo}
             onChange={(e) => setFiltros({...filtros, tipo: e.target.value})}
-            className="select-filter"
+            className={styles.selectFilter}
           >
             <option value="">Todos os Tipos</option>
             <option value="preventiva">Preventiva</option>
@@ -343,19 +346,19 @@ function ManutencaoList() {
             placeholder="Placa do veículo..."
             value={filtros.veiculo}
             onChange={(e) => setFiltros({...filtros, veiculo: e.target.value})}
-            className="input-filter"
+            className={styles.inputFilter}
           />
-          <button type="submit" className="btn-primary">Filtrar</button>
+          <button type="submit" variant="primary">Filtrar</button>
         </form>
       </div>
 
-      <div className="results-info">
+      <div className={styles.resultsInfo}>
         <p>Total de {manutencoes.length} manutenç{manutencoes.length !== 1 ? 'ões' : 'ão'}</p>
       </div>
 
       {/* Tabela Desktop */}
-      <div className="table-container desktop-only">
-        <table className="data-table">
+      <TableContainer mobileCards={false} className={styles.desktopOnly}>
+        <table>
           <thead>
             <tr>
               <th>Veículo</th>
@@ -371,7 +374,7 @@ function ManutencaoList() {
           <tbody>
             {manutencoes.length === 0 ? (
               <tr>
-                <td colSpan="8" className="text-center">Nenhuma manutenção encontrada</td>
+                <td colSpan="8" className={styles.textCenter}>Nenhuma manutenção encontrada</td>
               </tr>
             ) : (
               manutencoes.map((manutencao) => (
@@ -379,29 +382,29 @@ function ManutencaoList() {
                   <td>
                     <strong>{manutencao.veiculo_info?.placa || manutencao.veiculo_placa || '-'}</strong>
                     <br />
-                    <small className="text-muted">
+                    <small className={styles.textMuted}>
                       {manutencao.veiculo_info?.modelo || ''}
                     </small>
                   </td>
-                  <td>{getTipoBadge(manutencao.tipo)}</td>
+                  <td>{getTipoPill(manutencao.tipo)}</td>
                   <td>
-                    <span className="descricao-truncate">
+                    <span className={styles.descricaoTruncate}>
                       {manutencao.descricao || '-'}
                     </span>
                   </td>
                   <td>{formatDate(manutencao.data_agendada)}</td>
-                  <td className="text-right">
+                  <td className={styles.textRight}>
                     <strong>{formatCurrency(manutencao.custo)}</strong>
                   </td>
-                  <td className="text-center">
+                  <td className={styles.textCenter}>
                     {manutencao.arquivo_nota ? (
                       <a
                         href={manutencao.arquivo_nota}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-action"
+                        className={styles.btnAction}
                         title="Ver Nota Fiscal"
-                        style={{ color: '#27ae60', display: 'inline-flex' }}
+                        className={styles.notaLink}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -411,12 +414,12 @@ function ManutencaoList() {
                         </svg>
                       </a>
                     ) : (
-                      <span style={{ color: '#999', fontSize: '12px' }}>-</span>
+                      <span className={styles.notaMissing}>-</span>
                     )}
                   </td>
-                  <td>{getStatusBadge(manutencao.status)}</td>
-                  <td className="actions-cell">
-                    <Link to={`/manutencoes/${manutencao.id}`} className="btn-action btn-view" title="Ver detalhes">
+                  <td>{getStatusPill(manutencao.status)}</td>
+                  <td className={styles.actionsCell}>
+                    <Link to={`/manutencoes/${manutencao.id}`} className={`${styles.btnAction} ${styles.view}`} title="Ver detalhes">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
@@ -428,42 +431,42 @@ function ManutencaoList() {
             )}
           </tbody>
         </table>
-      </div>
+      </TableContainer>
 
       {/* Cards Mobile */}
-      <div className="mobile-only">
+      <div className={styles.mobileOnly}>
         {manutencoes.length === 0 ? (
-          <div className="empty-state">
+          <div className={styles.emptyState}>
             <p>Nenhuma manutenção encontrada</p>
           </div>
         ) : (
-          <div className="mobile-cards">
+          <div className={styles.mobileCards}>
             {manutencoes.map((manutencao) => (
-              <div key={manutencao.id} className="mobile-card" onClick={() => navigate(`/manutencoes/${manutencao.id}`)}>
-                <div className="mobile-card-header">
+              <div key={manutencao.id} className={styles.mobileCard} onClick={() => navigate(`/manutencoes/${manutencao.id}`)}>
+                <div className={styles.mobileCardHeader}>
                   <h4>{manutencao.veiculo_info?.placa || manutencao.veiculo_placa || '-'}</h4>
-                  {getStatusBadge(manutencao.status)}
+                  {getStatusPill(manutencao.status)}
                 </div>
-                <div className="mobile-card-body">
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Tipo</span>
-                    <span className="mobile-card-value">{getTipoBadge(manutencao.tipo)}</span>
+                <div className={styles.mobileCardBody}>
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>Tipo</span>
+                    <span className={styles.mobileCardValue}>{getTipoPill(manutencao.tipo)}</span>
                   </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Descrição</span>
-                    <span className="mobile-card-value">{manutencao.descricao || '-'}</span>
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>Descrição</span>
+                    <span className={styles.mobileCardValue}>{manutencao.descricao || '-'}</span>
                   </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Data Agendada</span>
-                    <span className="mobile-card-value">{formatDate(manutencao.data_agendada)}</span>
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>Data Agendada</span>
+                    <span className={styles.mobileCardValue}>{formatDate(manutencao.data_agendada)}</span>
                   </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Custo</span>
-                    <span className="mobile-card-value"><strong>{formatCurrency(manutencao.custo)}</strong></span>
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>Custo</span>
+                    <span className={styles.mobileCardValue}><strong>{formatCurrency(manutencao.custo)}</strong></span>
                   </div>
                 </div>
-                <div className="mobile-card-footer">
-                  <Link to={`/manutencoes/${manutencao.id}`} className="btn-action btn-view" title="Ver detalhes">
+                <div className={styles.mobileCardFooter}>
+                  <Link to={`/manutencoes/${manutencao.id}`} className={`${styles.btnAction} ${styles.view}`} title="Ver detalhes">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                       <circle cx="12" cy="12" r="3"></circle>

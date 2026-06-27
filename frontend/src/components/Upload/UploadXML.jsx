@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { uploadAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import PageHeader from '../Common/PageHeader';
-import './Upload.css';
+import Button from '../Common/Button';
+import styles from './Upload.module.css';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -196,7 +197,7 @@ function UploadXML() {
   );
 
   return (
-    <div className="upload-page">
+    <div className={styles.page}>
       <PageHeader
         title="Upload de XML"
         subtitle="Importe arquivos CT-e e MDF-e para o sistema"
@@ -204,26 +205,26 @@ function UploadXML() {
         breadcrumbs={[{ label: 'Documentos' }, { label: 'Upload XML' }]}
       />
 
-      <div className="upload-container">
+      <div className={styles.container}>
         <div
-          className={`upload-dropzone ${dragOver ? 'drag-over' : ''}`}
+          className={`${styles.dropzone} ${dragOver ? styles.dragOver : ''}`}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={() => fileInputRef.current?.click()}
         >
-          <div className="dropzone-content">
-            <div className="dropzone-icon">
+          <div className={styles.dropzoneContent}>
+            <div className={styles.dropzoneIcon}>
               <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
             </div>
-            <p className="dropzone-text">
+            <p className={styles.dropzoneText}>
               Arraste arquivos XML aqui ou clique para selecionar
             </p>
-            <p className="dropzone-hint">
+            <p className={styles.dropzoneHint}>
               Suporta CT-e e MDF-e (arquivos .xml)
             </p>
           </div>
@@ -238,25 +239,25 @@ function UploadXML() {
         </div>
 
         {files.length > 0 && (
-          <div className="files-list">
+          <div className={styles.filesList}>
             <h3>Arquivos selecionados ({files.length})</h3>
-            <div className="files-grid">
+            <div className={styles.filesGrid}>
               {files.map((file, index) => (
-                <div key={index} className="file-item">
-                  <div className="file-icon">
+                <div key={index} className={styles.fileItem}>
+                  <div className={styles.fileIcon}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                       <polyline points="14 2 14 8 20 8" />
                     </svg>
                   </div>
-                  <div className="file-info">
-                    <span className="file-name">{file.name}</span>
-                    <span className="file-size">
+                  <div className={styles.fileInfo}>
+                    <span className={styles.fileName}>{file.name}</span>
+                    <span className={styles.fileSize}>
                       {(file.size / 1024).toFixed(1)} KB
                     </span>
                   </div>
                   <button
-                    className="file-remove"
+                    className={styles.fileRemove}
                     onClick={(e) => {
                       e.stopPropagation();
                       removeFile(index);
@@ -268,51 +269,53 @@ function UploadXML() {
               ))}
             </div>
 
-            <div className="upload-actions">
-              <button
-                className="btn-secondary"
+            <div className={styles.uploadActions}>
+              <Button
+                variant="secondary"
                 onClick={() => setFiles([])}
                 disabled={uploading}
               >
                 Limpar
-              </button>
-              <button
-                className="btn-primary"
+              </Button>
+              <Button
+                variant="primary"
                 onClick={handleUpload}
+                loading={uploading}
                 disabled={uploading}
               >
                 {uploading ? 'Enviando...' : 'Enviar Arquivos'}
-              </button>
+              </Button>
               {files.length > 1 && (
-                <button
-                  className="btn-success"
+                <Button
+                  variant="success"
                   onClick={handleBatchUpload}
+                  loading={uploading}
                   disabled={uploading}
                 >
                   Enviar em Lote
-                </button>
+                </Button>
               )}
             </div>
           </div>
         )}
 
         {results.length > 0 && (
-          <div className="results-section">
+          <div className={styles.resultsSection}>
             <h3>Resultados do Upload</h3>
-            <div className="results-list">
+            <div className={styles.resultsList}>
               {results.map((result, index) => (
                 <div
                   key={index}
-                  className={`result-item ${result.success ? 'success' : 'error'}`}
+                  className={`${styles.resultItem} ${result.success ? styles.success : styles.error}`}
                 >
-                  <div className="result-icon">
+                  <div className={styles.resultIcon}>
                     {result.success ? '✓' : '✕'}
                   </div>
-                  <div className="result-info">
-                    <span className="result-file">{result.file}</span>
-                    <span className="result-message">{result.message}</span>
+                  <div className={styles.resultInfo}>
+                    <span className={styles.resultFile}>{result.file}</span>
+                    <span className={styles.resultMessage}>{result.message}</span>
                     {result.tipo && (
-                      <span className="result-tipo">
+                      <span className={styles.resultTipo}>
                         Tipo: {result.tipo} | Número: {result.numero}
                       </span>
                     )}
@@ -321,19 +324,19 @@ function UploadXML() {
               ))}
             </div>
 
-            <div className="results-actions">
-              <button
-                className="btn-primary"
+            <div className={styles.resultsActions}>
+              <Button
+                variant="primary"
                 onClick={() => navigate('/ctes')}
               >
                 Ver CT-es
-              </button>
-              <button
-                className="btn-secondary"
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={() => navigate('/mdfes')}
               >
                 Ver MDF-es
-              </button>
+              </Button>
             </div>
           </div>
         )}

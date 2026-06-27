@@ -5,7 +5,10 @@ import {
 } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import './OrdensViagem.css';
+import Button from '../Common/Button';
+import TableContainer from '../Common/TableContainer';
+import PageHeader from '../Common/PageHeader';
+import styles from './OrdemViagemForm.module.css';
 
 function OrdemViagemForm() {
   const navigate = useNavigate();
@@ -244,26 +247,24 @@ function OrdemViagemForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="ordens-viagem-page">
-      <div className="page-header">
-        <div className="header-title">
-          <h1>{isEditing ? 'Editar Ordem de Viagem' : 'Nova Ordem de Viagem'}</h1>
-          <p>{isEditing ? 'Atualize os dados da viagem' : 'Cadastre uma nova ordem de serviço'}</p>
-        </div>
-      </div>
+    <div className={styles.page}>
+      <PageHeader
+        title={isEditing ? 'Editar Ordem de Viagem' : 'Nova Ordem de Viagem'}
+        subtitle={isEditing ? 'Atualize os dados da viagem' : 'Cadastre uma nova ordem de serviço'}
+      />
 
       {error && (
-        <div className="alert alert-error">
+        <div className={`${styles.alert} ${styles.alertError}`}>
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="os-form-container">
-        <div className="os-form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Informações Básicas</h3>
-          <div className="os-form-row">
-            <div className="os-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Número</label>
               <input
                 type="text"
@@ -273,7 +274,7 @@ function OrdemViagemForm() {
                 placeholder="Gerado automaticamente se vazio"
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Tipo</label>
               <select name="tipo" value={formData.tipo} onChange={handleChange}>
                 <option value="carga">Carga</option>
@@ -282,7 +283,7 @@ function OrdemViagemForm() {
                 <option value="outros">Outros</option>
               </select>
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Status</label>
               <select name="status" value={formData.status} onChange={handleChange}>
                 <option value="rascunho">Rascunho</option>
@@ -294,8 +295,8 @@ function OrdemViagemForm() {
             </div>
           </div>
 
-          <div className="os-form-row">
-            <div className="os-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Veículo *</label>
               <select name="veiculo" value={formData.veiculo} onChange={handleChange} required>
                 <option value="">Selecione</option>
@@ -304,7 +305,7 @@ function OrdemViagemForm() {
                 ))}
               </select>
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Motorista</label>
               <select name="motorista" value={formData.motorista} onChange={handleChange}>
                 <option value="">Selecione</option>
@@ -313,7 +314,7 @@ function OrdemViagemForm() {
                 ))}
               </select>
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Cliente</label>
               <select name="cliente" value={formData.cliente} onChange={handleChange}>
                 <option value="">Selecione</option>
@@ -325,10 +326,10 @@ function OrdemViagemForm() {
           </div>
         </div>
 
-        <div className="os-form-section">
+        <div className={styles.formSection}>
           <h3>Datas e Quilometragem</h3>
-          <div className="os-form-row">
-            <div className="os-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Data/Hora Saída</label>
               <input
                 type="datetime-local"
@@ -337,7 +338,7 @@ function OrdemViagemForm() {
                 onChange={handleChange}
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Previsão Chegada</label>
               <input
                 type="datetime-local"
@@ -346,7 +347,7 @@ function OrdemViagemForm() {
                 onChange={handleChange}
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Data/Hora Retorno</label>
               <input
                 type="datetime-local"
@@ -357,8 +358,8 @@ function OrdemViagemForm() {
             </div>
           </div>
 
-          <div className="os-form-row">
-            <div className="os-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>KM Inicial</label>
               <input
                 type="number"
@@ -368,7 +369,7 @@ function OrdemViagemForm() {
                 min="0"
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>KM Final</label>
               <input
                 type="number"
@@ -378,7 +379,7 @@ function OrdemViagemForm() {
                 min="0"
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Distância (KM)</label>
               <input
                 type="text"
@@ -392,10 +393,10 @@ function OrdemViagemForm() {
           </div>
         </div>
 
-        <div className="os-form-section">
+        <div className={styles.formSection}>
           <h3>Rota</h3>
-          <div className="os-form-row">
-            <div className="os-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Origem - Cidade</label>
               <input
                 type="text"
@@ -404,7 +405,7 @@ function OrdemViagemForm() {
                 onChange={handleChange}
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Origem - UF</label>
               <input
                 type="text"
@@ -414,7 +415,7 @@ function OrdemViagemForm() {
                 maxLength="2"
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Origem - Latitude</label>
               <input
                 type="number"
@@ -425,7 +426,7 @@ function OrdemViagemForm() {
                 placeholder="-23.5505"
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Origem - Longitude</label>
               <input
                 type="number"
@@ -437,8 +438,8 @@ function OrdemViagemForm() {
               />
             </div>
           </div>
-          <div className="os-form-row">
-            <div className="os-form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Destino - Cidade</label>
               <input
                 type="text"
@@ -447,7 +448,7 @@ function OrdemViagemForm() {
                 onChange={handleChange}
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Destino - UF</label>
               <input
                 type="text"
@@ -457,7 +458,7 @@ function OrdemViagemForm() {
                 maxLength="2"
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Destino - Latitude</label>
               <input
                 type="number"
@@ -468,7 +469,7 @@ function OrdemViagemForm() {
                 placeholder="-23.5505"
               />
             </div>
-            <div className="os-form-group">
+            <div className={styles.formGroup}>
               <label>Destino - Longitude</label>
               <input
                 type="number"
@@ -482,14 +483,14 @@ function OrdemViagemForm() {
           </div>
         </div>
 
-        <div className="os-form-section">
+        <div className={styles.formSection}>
           <h3>CT-es Vinculados</h3>
-          <div className="os-items-section">
+          <div className={styles.itemsSection}>
             {formData.ctes.length === 0 && (
-              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Nenhum CT-e vinculado.</p>
+              <p className={styles.emptyText}>Nenhum CT-e vinculado.</p>
             )}
             {formData.ctes.map((cte, index) => (
-              <div key={index} className="os-item-row">
+              <div key={index} className={styles.itemRow}>
                 <select
                   value={cte.cte}
                   onChange={(e) => handleCteChange(index, 'cte', e.target.value)}
@@ -510,7 +511,7 @@ function OrdemViagemForm() {
                 />
                 <button
                   type="button"
-                  className="btn-icon"
+                  className={styles.btnIcon}
                   onClick={() => handleRemoveCte(index)}
                   title="Remover"
                 >
@@ -521,20 +522,20 @@ function OrdemViagemForm() {
                 </button>
               </div>
             ))}
-            <button type="button" className="btn-secondary" onClick={handleAddCte}>
+            <Button type="button" variant="secondary" onClick={handleAddCte}>
               + Vincular CT-e
-            </button>
+            </Button>
           </div>
         </div>
 
-        <div className="os-form-section">
+        <div className={styles.formSection}>
           <h3>Paradas</h3>
-          <div className="os-items-section">
+          <div className={styles.itemsSection}>
             {formData.paradas.length === 0 && (
-              <p className="os-empty-text">Nenhuma parada cadastrada.</p>
+              <p className={styles.emptyText}>Nenhuma parada cadastrada.</p>
             )}
             {formData.paradas.map((parada, index) => (
-              <div key={index} className="os-item-row os-parada-row">
+              <div key={index} className={`${styles.itemRow} ${styles.paradaRow}`}>
                 <select
                   value={parada.tipo}
                   onChange={(e) => handleParadaChange(index, 'tipo', e.target.value)}
@@ -578,7 +579,7 @@ function OrdemViagemForm() {
                 />
                 <button
                   type="button"
-                  className="btn-icon"
+                  className={styles.btnIcon}
                   onClick={() => handleRemoveParada(index)}
                   title="Remover"
                 >
@@ -589,16 +590,16 @@ function OrdemViagemForm() {
                 </button>
               </div>
             ))}
-            <button type="button" className="btn-secondary" onClick={handleAddParada}>
+            <Button type="button" variant="secondary" onClick={handleAddParada}>
               + Adicionar Parada
-            </button>
+            </Button>
           </div>
         </div>
 
-        <div className="os-form-section">
+        <div className={styles.formSection}>
           <h3>CIOT</h3>
-          <div className="os-form-row-2">
-            <div className="os-form-group">
+          <div className={styles.formRow2}>
+            <div className={styles.formGroup}>
               <label>Código CIOT Vinculado</label>
               <select
                 name="ciot"
@@ -616,15 +617,15 @@ function OrdemViagemForm() {
                   <option value={formData.ciot} disabled>CIOT atual (já usado)</option>
                 )}
               </select>
-              <p className="field-help">O CIOT vinculado será automaticamente marcado como usado ao salvar.</p>
+              <p className={styles.fieldHelp}>O CIOT vinculado será automaticamente marcado como usado ao salvar.</p>
             </div>
           </div>
         </div>
 
-        <div className="os-form-section">
+        <div className={styles.formSection}>
           <h3>Observações</h3>
-          <div className="os-form-row-2">
-            <div className="os-form-group">
+          <div className={styles.formRow2}>
+            <div className={styles.formGroup}>
               <textarea
                 name="observacoes"
                 value={formData.observacoes}
@@ -638,13 +639,13 @@ function OrdemViagemForm() {
         {isEditing && <RastreamentoPanel ordemId={id} />}
         {isEditing && <RoteirizacaoPanel ordemId={id} />}
 
-        <div className="form-actions">
-          <button type="button" className="btn-secondary" onClick={() => navigate('/ordens-viagem')}>
+        <div className={styles.formActions}>
+          <Button type="button" variant="secondary" onClick={() => navigate('/ordens-viagem')}>
             Cancelar
-          </button>
-          <button type="submit" className="btn-primary" disabled={saving}>
+          </Button>
+          <Button type="submit" variant="primary" disabled={saving}>
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar OS')}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
@@ -702,47 +703,47 @@ function RoteirizacaoPanel({ ordemId }) {
   }
 
   return (
-    <div className="os-form-section">
+    <div className={styles.formSection}>
       <h3>Roteirização e Otimização de Rotas</h3>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
-        <button
+      <div className={styles.kpiGrid}>
+        <Button
           type="button"
-          className="btn-primary"
+          variant="primary"
           onClick={() => handleCalcularRota(true)}
           disabled={loading}
         >
           {loading ? 'Calculando...' : 'Calcular Rota Otimizada'}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="btn-secondary"
+          variant="secondary"
           onClick={() => handleCalcularRota(false)}
           disabled={loading}
         >
           Calcular Rota Original
-        </button>
+        </Button>
       </div>
 
       {rotaAtual && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
-          <div className="fin-kpi-card" style={{ padding: 14 }}>
-            <div className="fin-kpi-label">Distância</div>
-            <div className="fin-kpi-value" style={{ fontSize: 18 }}>{rotaAtual.distancia_km} km</div>
+        <div className={styles.kpiGrid}>
+          <div className={styles.kpiCardCompact}>
+            <div className={styles.kpiLabel}>Distância</div>
+            <div className={styles.kpiValue}>{rotaAtual.distancia_km} km</div>
           </div>
-          <div className="fin-kpi-card" style={{ padding: 14 }}>
-            <div className="fin-kpi-label">Duração Estimada</div>
-            <div className="fin-kpi-value" style={{ fontSize: 18 }}>{rotaAtual.duracao_min} min</div>
+          <div className={styles.kpiCardCompact}>
+            <div className={styles.kpiLabel}>Duração Estimada</div>
+            <div className={styles.kpiValue}>{rotaAtual.duracao_min} min</div>
           </div>
-          <div className="fin-kpi-card" style={{ padding: 14 }}>
-            <div className="fin-kpi-label">Provedor</div>
-            <div className="fin-kpi-value" style={{ fontSize: 18, textTransform: 'uppercase' }}>{rotaAtual.provedor}</div>
+          <div className={styles.kpiCardCompact}>
+            <div className={styles.kpiLabel}>Provedor</div>
+            <div className={`${styles.kpiValue} ${styles.kpiValueUppercase}`}>{rotaAtual.provedor}</div>
           </div>
         </div>
       )}
 
       {mapUrl && (
-        <div style={{ marginBottom: 20, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border-light)' }}>
+        <div className={styles.mapContainer}>
           <iframe
             title="Rota"
             width="100%"
@@ -750,15 +751,15 @@ function RoteirizacaoPanel({ ordemId }) {
             frameBorder="0"
             scrolling="no"
             src={mapUrl}
-            style={{ border: 0 }}
           />
         </div>
       )}
 
       {waypoints.length > 0 && (
-        <div style={{ overflowX: 'auto' }}>
-          <table className="data-table" style={{ minWidth: '100%' }}>
-            <thead>
+        <div className={styles.tableWrapper}>
+          <TableContainer mobileCards={false}>
+            <table>
+              <thead>
               <tr>
                 <th>Ordem</th>
                 <th>Descrição</th>
@@ -780,15 +781,17 @@ function RoteirizacaoPanel({ ordemId }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </TableContainer>
         </div>
       )}
 
       {rotas.length > 0 && (
-        <div style={{ marginTop: 20 }}>
+        <div className={styles.sectionMarginTop}>
           <h4>Rotas Calculadas Anteriormente</h4>
-          <div style={{ overflowX: 'auto' }}>
-            <table className="data-table" style={{ minWidth: '100%' }}>
+          <div className={styles.tableWrapper}>
+            <TableContainer mobileCards={false}>
+              <table>
               <thead>
                 <tr>
                   <th>Data</th>
@@ -807,7 +810,8 @@ function RoteirizacaoPanel({ ordemId }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </TableContainer>
           </div>
         </div>
       )}
@@ -859,28 +863,28 @@ function RastreamentoPanel({ ordemId }) {
     : null;
 
   return (
-    <div className="os-form-section">
+    <div className={styles.formSection}>
       <h3>Rastreamento e ETA</h3>
 
       {eta && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
-          <div className="fin-kpi-card" style={{ padding: 16 }}>
-            <div className="fin-kpi-label">Status</div>
-            <div className="fin-kpi-value" style={{ fontSize: 18 }}>{eta.status.replace('_', ' ')}</div>
+        <div className={styles.kpiGrid}>
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Status</div>
+            <div className={styles.kpiValue}>{eta.status.replace('_', ' ')}</div>
           </div>
-          <div className="fin-kpi-card" style={{ padding: 16 }}>
-            <div className="fin-kpi-label">Distância Restante</div>
-            <div className="fin-kpi-value" style={{ fontSize: 18 }}>{eta.distancia_restante_km ? `${eta.distancia_restante_km} km` : '-'}</div>
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Distância Restante</div>
+            <div className={styles.kpiValue}>{eta.distancia_restante_km ? `${eta.distancia_restante_km} km` : '-'}</div>
           </div>
-          <div className="fin-kpi-card" style={{ padding: 16 }}>
-            <div className="fin-kpi-label">Previsão Chegada</div>
-            <div className="fin-kpi-value" style={{ fontSize: 18 }}>{eta.eta_texto}</div>
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Previsão Chegada</div>
+            <div className={styles.kpiValue}>{eta.eta_texto}</div>
           </div>
         </div>
       )}
 
       {mapUrl && (
-        <div style={{ marginBottom: 20, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border-light)' }}>
+        <div className={styles.mapContainer}>
           <iframe
             title="Mapa"
             width="100%"
@@ -888,15 +892,14 @@ function RastreamentoPanel({ ordemId }) {
             frameBorder="0"
             scrolling="no"
             src={mapUrl}
-            style={{ border: 0 }}
           />
         </div>
       )}
 
-      <div className="os-items-section">
+      <div className={styles.itemsSection}>
         <h4>Registrar Posição</h4>
         <form onSubmit={handleRegistrarPosicao}>
-          <div className="os-item-row os-posicao-row">
+          <div className={`${styles.itemRow} ${styles.posicaoRow}`}>
             <input
               type="text"
               placeholder="Latitude"
@@ -917,7 +920,7 @@ function RastreamentoPanel({ ordemId }) {
               value={posicao.velocidade}
               onChange={e => setPosicao({ ...posicao, velocidade: e.target.value })}
             />
-            <button type="submit" className="btn-primary" disabled={loading}>Registrar</button>
+            <Button type="submit" variant="primary" disabled={loading}>Registrar</Button>
           </div>
         </form>
       </div>

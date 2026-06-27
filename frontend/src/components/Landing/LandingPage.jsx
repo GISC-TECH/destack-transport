@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import logoSvg from '../../assets/images/logo.svg';
 import logoLarge from '../../assets/images/logo-large.png';
 import truckImg from '../../assets/images/truck.png';
-import './LandingPage.css';
+import styles from './LandingPage.module.css';
 
 function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -25,7 +25,7 @@ function LandingPage() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('in-view');
+            entry.target.classList.add(styles.inView);
             observer.unobserve(entry.target);
           }
         });
@@ -158,26 +158,26 @@ function LandingPage() {
   };
 
   return (
-    <div className="landing-page" ref={revealRef}>
+    <div className={styles.page} ref={revealRef}>
       {/* Navbar */}
-      <nav className={`landing-navbar ${scrolled ? 'scrolled' : ''}`}>
-        <div className="navbar-container">
-          <a href="#" className="navbar-brand">
-            <img src={logoSvg} alt="Destack Logo" className="navbar-logo" />
-            <span className="navbar-brand-text">Destack Transportes</span>
+      <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
+        <div className={styles.navbarContainer}>
+          <a href="#" className={styles.navbarBrand}>
+            <img src={logoSvg} alt="Destack Logo" className={styles.navbarLogo} />
+            <span className={styles.navbarBrandText}>Destack Transportes</span>
           </a>
 
           {/* Desktop Menu */}
-          <div className="navbar-menu desktop-menu">
+          <div className={`${styles.navbarMenu} ${styles.desktopMenu}`}>
             <a href="#sobre" onClick={(e) => scrollToSection(e, 'sobre')}>Sobre</a>
             <a href="#servicos" onClick={(e) => scrollToSection(e, 'servicos')}>Serviços</a>
             <a href="#contato" onClick={(e) => scrollToSection(e, 'contato')}>Contato</a>
-            <Link to="/login" className="btn-admin">Área Adm</Link>
+            <Link to="/login" className={styles.btnAdmin}>Área Adm</Link>
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="mobile-menu-btn"
+            className={styles.mobileMenuBtn}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Abrir menu"
           >
@@ -197,27 +197,27 @@ function LandingPage() {
         </div>
 
         {/* Mobile Menu */}
-        <div className={`mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>
+        <div className={`${styles.mobileMenu} ${mobileMenuOpen ? styles.open : ''}`}>
           <a href="#sobre" onClick={(e) => scrollToSection(e, 'sobre')}>Sobre</a>
           <a href="#servicos" onClick={(e) => scrollToSection(e, 'servicos')}>Serviços</a>
           <a href="#contato" onClick={(e) => scrollToSection(e, 'contato')}>Contato</a>
-          <Link to="/login" className="btn-admin">Área Adm</Link>
+          <Link to="/login" className={styles.btnAdmin}>Área Adm</Link>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-background">
-          <img src={truckImg} alt="Caminhão Euro 6 da Destack Transportes" className="hero-image" />
-          <div className="hero-overlay"></div>
-          <div className="hero-grid"></div>
-          <span className="hazard-diamond diamond-1" aria-hidden="true"></span>
-          <span className="hazard-diamond diamond-2" aria-hidden="true"></span>
-          <span className="hazard-diamond diamond-3" aria-hidden="true"></span>
+      <section className={styles.hero}>
+        <div className={styles.heroBackground}>
+          <img src={truckImg} alt="Caminhão Euro 6 da Destack Transportes" className={styles.heroImage} />
+          <div className={styles.heroOverlay}></div>
+          <div className={styles.heroGrid}></div>
+          <span className={`${styles.hazardDiamond} ${styles.diamond1}`} aria-hidden="true"></span>
+          <span className={`${styles.hazardDiamond} ${styles.diamond2}`} aria-hidden="true"></span>
+          <span className={`${styles.hazardDiamond} ${styles.diamond3}`} aria-hidden="true"></span>
         </div>
 
-        <div className="hero-content">
-          <span className="hero-badge">
+        <div className={styles.heroContent}>
+          <span className={styles.heroBadge}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
               <line x1="12" y1="9" x2="12" y2="13"/>
@@ -227,17 +227,17 @@ function LandingPage() {
           </span>
           <h1>
             Transporte especializado em<br/>
-            <span className="hero-highlight">produtos perigosos</span>
+            <span className={styles.heroHighlight}>produtos perigosos</span>
           </h1>
           <p>
             Tecnologia avançada e segurança máxima para cargas sensíveis.
             Sua carga entregue com a excelência que a sua operação exige.
           </p>
-          <div className="hero-actions">
-            <a href="#contato" onClick={(e) => scrollToSection(e, 'contato')} className="btn-cta">
+          <div className={styles.heroActions}>
+            <a href="#contato" onClick={(e) => scrollToSection(e, 'contato')} className={styles.btnCta}>
               Solicitar Orçamento
             </a>
-            <a href="#servicos" onClick={(e) => scrollToSection(e, 'servicos')} className="btn-ghost">
+            <a href="#servicos" onClick={(e) => scrollToSection(e, 'servicos')} className={styles.btnGhost}>
               Conheça os serviços
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
                 <line x1="5" y1="12" x2="19" y2="12"/>
@@ -246,9 +246,9 @@ function LandingPage() {
             </a>
           </div>
 
-          <div className="hero-stats">
+          <div className={styles.heroStats}>
             {heroStats.map((stat, idx) => (
-              <div className="hero-stat" key={idx}>
+              <div className={styles.heroStat} key={idx}>
                 <strong>{stat.value}</strong>
                 <span>{stat.label}</span>
               </div>
@@ -258,33 +258,33 @@ function LandingPage() {
       </section>
 
       {/* Sobre Section */}
-      <section id="sobre" className="sobre-section">
-        <div className="section-container">
-          <div className="sobre-grid">
-            <div className="sobre-text" data-reveal>
-              <span className="section-eyebrow">Quem somos</span>
+      <section id="sobre" className={styles.sobre}>
+        <div className={styles.sectionContainer}>
+          <div className={styles.sobreGrid}>
+            <div className={styles.sobreText} data-reveal>
+              <span className={styles.sectionEyebrow}>Quem somos</span>
               <h2>Destack Transportes</h2>
-              <p className="lead">
+              <p className={styles.lead}>
                 Especialistas em transporte de produtos perigosos com mais de 15 anos de experiência no mercado brasileiro.
               </p>
               <p>
                 Nossa empresa combina tecnologia de ponta, equipe altamente qualificada e os mais rígidos padrões de segurança para garantir o transporte seguro e eficiente de cargas especializadas.
               </p>
 
-              <div className="stats-grid">
-                <div className="stat-card">
+              <div className={styles.statsGrid}>
+                <div className={styles.statCard}>
                   <h3>15+</h3>
                   <p>Anos de Experiência</p>
                 </div>
-                <div className="stat-card">
+                <div className={styles.statCard}>
                   <h3>100%</h3>
                   <p>Segurança Garantida</p>
                 </div>
               </div>
             </div>
 
-            <div className="sobre-card" data-reveal>
-              <div className="card-glow"></div>
+            <div className={styles.sobreCard} data-reveal>
+              <div className={styles.cardGlow}></div>
               <h4>Por que escolher a Destack?</h4>
               <ul>
                 {diferenciais.map((item, idx) => (
@@ -303,27 +303,27 @@ function LandingPage() {
       </section>
 
       {/* Servicos Section */}
-      <section id="servicos" className="servicos-section">
-        <div className="section-container">
-          <div className="section-head" data-reveal>
-            <span className="section-eyebrow">O que fazemos</span>
+      <section id="servicos" className={styles.servicos}>
+        <div className={styles.sectionContainer}>
+          <div className={styles.sectionHead} data-reveal>
+            <span className={styles.sectionEyebrow}>O que fazemos</span>
             <h2>Nossos Serviços</h2>
             <p>Soluções completas para cada etapa do transporte de cargas críticas.</p>
           </div>
 
-          <div className="servicos-grid">
+          <div className={styles.servicosGrid}>
             {services.map((service, index) => (
               <div
                 key={index}
-                className={`service-card service-${service.color}`}
+                className={`${styles.serviceCard} ${styles[`service${service.color.charAt(0).toUpperCase() + service.color.slice(1)}`]}`}
                 data-reveal
                 style={{ transitionDelay: `${(index % 3) * 80}ms` }}
               >
-                <div className="service-card-top">
-                  <div className={`service-icon icon-${service.color}`}>
+                <div className={styles.serviceCardTop}>
+                  <div className={`${styles.serviceIcon} ${styles[`icon${service.color.charAt(0).toUpperCase() + service.color.slice(1)}`]}`}>
                     {getIconSvg(service.icon)}
                   </div>
-                  <span className="service-index">{String(index + 1).padStart(2, '0')}</span>
+                  <span className={styles.serviceIndex}>{String(index + 1).padStart(2, '0')}</span>
                 </div>
                 <h3>{service.title}</h3>
                 <ul>
@@ -343,16 +343,16 @@ function LandingPage() {
       </section>
 
       {/* Contato Section */}
-      <section id="contato" className="contato-section">
-        <div className="section-container">
-          <div className="section-head" data-reveal>
-            <span className="section-eyebrow">Fale conosco</span>
+      <section id="contato" className={styles.contato}>
+        <div className={styles.sectionContainer}>
+          <div className={styles.sectionHead} data-reveal>
+            <span className={styles.sectionEyebrow}>Fale conosco</span>
             <h2>Vamos transportar a sua carga?</h2>
             <p>Solicite um orçamento ou visite a nossa base em São Sebastião do Passé.</p>
           </div>
 
-          <div className="contato-grid">
-            <div className="map-container" data-reveal>
+          <div className={styles.contatoGrid}>
+            <div className={styles.mapContainer} data-reveal>
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.032730292895!2d-38.46678768465429!3d-12.972851563346624!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x7161a0d9e3c99df%3A0x4d4a8e2b5c915c0!2sAv.%20Ernani%20de%20Oliveira%20Rocha%2C%202450%20-%20S%C3%A3o%20Sebasti%C3%A3o%20do%20Pass%C3%A9%20-%20BA%2C%2043850-000!5e0!3m2!1spt-BR!2sbr!4v1678905677974!5m2!1spt-BR!2sbr"
                 width="100%"
@@ -365,12 +365,12 @@ function LandingPage() {
               ></iframe>
             </div>
 
-            <div className="contato-card" data-reveal>
+            <div className={styles.contatoCard} data-reveal>
               <h2>Entre em Contato</h2>
 
-              <div className="contato-info">
-                <div className="info-item">
-                  <div className="info-icon">
+              <div className={styles.contatoInfo}>
+                <div className={styles.infoItem}>
+                  <div className={styles.infoIcon}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                       <circle cx="12" cy="10" r="3"/>
@@ -383,8 +383,8 @@ function LandingPage() {
                   </div>
                 </div>
 
-                <div className="info-item">
-                  <div className="info-icon">
+                <div className={styles.infoItem}>
+                  <div className={styles.infoIcon}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                     </svg>
@@ -395,7 +395,7 @@ function LandingPage() {
                   </div>
                 </div>
 
-                <a href="mailto:contato@destacktransportes.com.br" className="btn-email">
+                <a href="mailto:contato@destacktransportes.com.br" className={styles.btnEmail}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                     <polyline points="22,6 12,13 2,6"/>
@@ -409,15 +409,15 @@ function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="landing-footer">
-        <div className="section-container">
-          <div className="footer-grid">
-            <div className="footer-brand">
-              <img src={logoLarge} alt="Logo Destack" className="footer-logo" />
+      <footer className={styles.footer}>
+        <div className={styles.sectionContainer}>
+          <div className={styles.footerGrid}>
+            <div className={styles.footerBrand}>
+              <img src={logoLarge} alt="Logo Destack" className={styles.footerLogo} />
               <p>Transporte especializado em produtos perigosos, garantindo segurança e eficiência.</p>
             </div>
 
-            <div className="footer-contact">
+            <div className={styles.footerContact}>
               <h5>Contato</h5>
               <ul>
                 <li>
@@ -443,7 +443,7 @@ function LandingPage() {
               </ul>
             </div>
 
-            <div className="footer-certs">
+            <div className={styles.footerCerts}>
               <h5>Certificações</h5>
               <ul>
                 <li>CNPJ: 24.633.774/0001-18</li>
@@ -459,7 +459,7 @@ function LandingPage() {
             </div>
           </div>
 
-          <div className="footer-bottom">
+          <div className={styles.footerBottom}>
             <p>&copy; 2026 Destack Transportes. Todos os direitos reservados.</p>
           </div>
         </div>

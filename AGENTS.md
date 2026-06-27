@@ -139,9 +139,11 @@ frontend/src/
 
 ### Adding a New Frontend Page
 1. Create component in `frontend/src/components/FeatureName/`
-2. Add CSS file in same directory
-3. Add route in `frontend/src/App.jsx`
-4. Add navigation link in `frontend/src/components/Common/Sidebar.jsx`
+2. Add **CSS Module** file: `FeatureName.module.css`
+3. Import it as `import styles from './FeatureName.module.css'` and use `className={styles.className}`
+4. Use shared components from `frontend/src/components/Common/` (`PageHeader`, `Button`, `Modal`, `Card`, `TableContainer`, `StatusPill`, `DateFilter`)
+5. Add route in `frontend/src/App.jsx`
+6. Add navigation link in `frontend/src/components/Common/Sidebar.jsx`
 
 ### Database Changes
 1. Modify models in `transport/models.py`
@@ -213,13 +215,63 @@ REDIS_URL=redis://redis:6379/0
 4. Creates main document + related records in transaction
 5. Sets `processado=True` on success
 
-## CSS Breakpoints
+## Frontend Style Guide
 
-All components use:
-- Desktop: > 1024px
-- Tablet: 768px - 1024px
-- Mobile: < 768px
-- Small mobile: < 480px
+### CSS Architecture
+
+- **CSS Modules**: every component uses CSS Modules (`*.module.css`). No new global CSS files.
+- **Design tokens**: all visual tokens live in `frontend/src/styles/tokens.module.css` (colors, spacing, shadows, radius, breakpoints).
+- **Shared components**: reuse primitives from `frontend/src/components/Common/` instead of duplicating styles.
+  - `Button` — primary, secondary, success, danger, warning, outline, ghost, gold, sm, lg, iconOnly, loading
+  - `Modal` — sm/md/lg, auto bottom-sheet on mobile
+  - `Card` — container with optional title/actions
+  - `TableContainer` — scroll + mobile card view (`<=640px`)
+  - `StatusPill` — success/warning/danger/info/muted
+  - `PageHeader` — title, subtitle, breadcrumbs, actions
+  - `DateFilter` — period buttons + date inputs
+  - `Loading`, `EmptyState`, `ErrorMessage`, `Skeleton*`
+
+### Responsiveness
+
+Use the shared hook for viewport logic:
+
+```js
+import { useIsMobile, useIsSmallScreen, useMediaQuery } from '../hooks/useMediaQuery';
+
+const isMobile = useIsMobile();        // <= 768px
+const isSmall = useIsSmallScreen();    // <= 640px
+const isTablet = useMediaQuery('(max-width: 1024px)');
+```
+
+Prefer CSS media queries for layout changes; use the hook only for behavioral changes.
+
+### Breakpoints
+
+| Name | Width | Usage |
+|------|-------|-------|
+| xs | <= 480px | Small mobile |
+| sm | <= 640px | Card-view tables |
+| md | <= 768px | Mobile / bottom nav |
+| lg | <= 1024px | Tablet / sidebar drawer |
+| xl | <= 1200px | Large tablets |
+| xxl | <= 1400px | Small desktops |
+
+### Naming
+
+- Use camelCase for class names in CSS Modules: `.pageHeader`, `.actionButton`.
+- Keep component module name matching the component: `FeatureName.jsx` + `FeatureName.module.css`.
+- Do not add global utility classes; prefer local module classes or the shared tokens.
+
+### Colors
+
+- Use tokens instead of hardcoded colors. Examples:
+  - Success: `var(--success-color)` (#15A66B)
+  - Danger: `var(--danger-color)` (#E5484D)
+  - Warning: `var(--warning-color)` (#F59E0B)
+  - Primary: `var(--primary-color)` (#40916C)
+  - Info: `var(--info-color)` (#3B82F6)
+  - Gold accent: `var(--gold-500)` (#C8A951)
+- Recharts colors can be imported from `tokens.module.css` via `:export` values.
 
 ## Quick Testing
 

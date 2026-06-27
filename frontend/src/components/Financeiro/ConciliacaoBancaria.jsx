@@ -3,7 +3,10 @@ import { conciliacaoAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
-import './ConciliacaoBancaria.css';
+import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import styles from './ConciliacaoBancaria.module.css';
 
 function formatCurrency(value) {
   if (value === undefined || value === null) return 'R$ 0,00';
@@ -157,21 +160,21 @@ function ConciliacaoBancaria() {
     .reduce((acc, t) => acc + Number(t.valor), 0);
 
   return (
-    <div className="conciliacao-container">
+    <div className={styles.conciliacaoContainer}>
       <PageHeader title="Conciliação Bancária" subtitle="Importe extratos e vincule transações a faturas e contas a pagar" />
 
       {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
       {success && (
-        <div className="success-message">
+        <div className={styles.successMessage}>
           {success}
           <button onClick={() => setSuccess(null)} aria-label="Fechar">×</button>
         </div>
       )}
 
-      <section className="card upload-section">
+      <section className={styles.card}>
         <h2>Importar Extrato Bancário</h2>
-        <p className="hint">Arquivos suportados: OFX, QFX ou CSV.</p>
-        <div className="upload-row">
+        <p className={styles.hint}>Arquivos suportados: OFX, QFX ou CSV.</p>
+        <div className={styles.uploadRow}>
           <input
             ref={fileInputRef}
             type="file"
@@ -180,52 +183,54 @@ function ConciliacaoBancaria() {
             disabled={uploadLoading}
           />
           {previewTransacoes.length > 0 && (
-            <button
-              className="btn-primary"
+            <Button
+              variant="primary"
               onClick={handleImportar}
               disabled={uploadLoading}
             >
               {uploadLoading ? 'Importando...' : `Importar ${previewTransacoes.length} transações`}
-            </button>
+            </Button>
           )}
         </div>
         {uploadLoading && <Loading size="small" />}
 
         {previewTransacoes.length > 0 && (
-          <div className="preview-table">
+          <div className={styles.previewTable}>
             <h3>Pré-visualização</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Descrição</th>
-                  <th>Tipo</th>
-                  <th>Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {previewTransacoes.slice(0, 10).map((tx, idx) => (
-                  <tr key={idx}>
-                    <td>{formatDate(tx.data)}</td>
-                    <td>{tx.descricao}</td>
-                    <td>{tx.tipo === 'credito' ? 'Crédito' : 'Débito'}</td>
-                    <td className={tx.tipo === 'credito' ? 'valor-credito' : 'valor-debito'}>
-                      {formatCurrency(tx.valor)}
-                    </td>
+            <TableContainer mobileCards={false}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Tipo</th>
+                    <th>Valor</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {previewTransacoes.slice(0, 10).map((tx, idx) => (
+                    <tr key={idx}>
+                      <td>{formatDate(tx.data)}</td>
+                      <td>{tx.descricao}</td>
+                      <td>{tx.tipo === 'credito' ? 'Crédito' : 'Débito'}</td>
+                      <td className={tx.tipo === 'credito' ? styles.valorCredito : styles.valorDebito}>
+                        {formatCurrency(tx.valor)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableContainer>
             {previewTransacoes.length > 10 && (
-              <p className="hint">...e mais {previewTransacoes.length - 10} transações.</p>
+              <p className={styles.hint}>...e mais {previewTransacoes.length - 10} transações.</p>
             )}
           </div>
         )}
       </section>
 
-      <section className="card filtros-section">
-        <form onSubmit={handleBuscar} className="filtros-row">
-          <div className="filtro-group">
+      <section className={styles.card}>
+        <form onSubmit={handleBuscar} className={styles.filtrosRow}>
+          <div className={styles.filtroGroup}>
             <label htmlFor="busca">Buscar</label>
             <input
               id="busca"
@@ -236,7 +241,7 @@ function ConciliacaoBancaria() {
               onChange={handleFiltroChange}
             />
           </div>
-          <div className="filtro-group">
+          <div className={styles.filtroGroup}>
             <label htmlFor="tipo">Tipo</label>
             <select id="tipo" name="tipo" value={filtros.tipo} onChange={handleFiltroChange}>
               <option value="">Todos</option>
@@ -244,7 +249,7 @@ function ConciliacaoBancaria() {
               <option value="debito">Débito</option>
             </select>
           </div>
-          <div className="filtro-group">
+          <div className={styles.filtroGroup}>
             <label htmlFor="conciliado">Conciliação</label>
             <select id="conciliado" name="conciliado" value={filtros.conciliado} onChange={handleFiltroChange}>
               <option value="">Todas</option>
@@ -252,44 +257,44 @@ function ConciliacaoBancaria() {
               <option value="false">Pendentes</option>
             </select>
           </div>
-          <div className="filtro-group">
+          <div className={styles.filtroGroup}>
             <label htmlFor="data_inicio">De</label>
             <input id="data_inicio" name="data_inicio" type="date" value={filtros.data_inicio} onChange={handleFiltroChange} />
           </div>
-          <div className="filtro-group">
+          <div className={styles.filtroGroup}>
             <label htmlFor="data_fim">Até</label>
             <input id="data_fim" name="data_fim" type="date" value={filtros.data_fim} onChange={handleFiltroChange} />
           </div>
-          <button type="submit" className="btn-primary">Buscar</button>
+          <Button type="submit" variant="primary">Buscar</Button>
         </form>
 
-        <div className="resumo-cards">
-          <div className="resumo-card">
-            <span className="resumo-label">Total Créditos</span>
-            <span className="resumo-valor valor-credito">{formatCurrency(totalCreditos)}</span>
+        <div className={styles.resumoCards}>
+          <div className={styles.resumoCard}>
+            <span className={styles.resumoLabel}>Total Créditos</span>
+            <span className={`${styles.resumoValor} ${styles.valorCredito}`}>{formatCurrency(totalCreditos)}</span>
           </div>
-          <div className="resumo-card">
-            <span className="resumo-label">Total Débitos</span>
-            <span className="resumo-valor valor-debito">{formatCurrency(totalDebitos)}</span>
+          <div className={styles.resumoCard}>
+            <span className={styles.resumoLabel}>Total Débitos</span>
+            <span className={`${styles.resumoValor} ${styles.valorDebito}`}>{formatCurrency(totalDebitos)}</span>
           </div>
-          <div className="resumo-card">
-            <span className="resumo-label">Saldo</span>
-            <span className={`resumo-valor ${totalCreditos - totalDebitos >= 0 ? 'valor-credito' : 'valor-debito'}`}>
+          <div className={styles.resumoCard}>
+            <span className={styles.resumoLabel}>Saldo</span>
+            <span className={`${styles.resumoValor} ${totalCreditos - totalDebitos >= 0 ? styles.valorCredito : styles.valorDebito}`}>
               {formatCurrency(totalCreditos - totalDebitos)}
             </span>
           </div>
         </div>
       </section>
 
-      <section className="card transacoes-section">
+      <section className={styles.card}>
         <h2>Transações</h2>
         {loading && transacoes.length === 0 ? (
           <Loading />
         ) : transacoes.length === 0 ? (
-          <p className="empty-message">Nenhuma transação encontrada.</p>
+          <p className={styles.emptyMessage}>Nenhuma transação encontrada.</p>
         ) : (
-          <div className="table-responsive">
-            <table className="data-table">
+          <TableContainer mobileCards={false}>
+            <table>
               <thead>
                 <tr>
                   <th>Data</th>
@@ -304,32 +309,32 @@ function ConciliacaoBancaria() {
               </thead>
               <tbody>
                 {transacoes.map(tx => (
-                  <tr key={tx.id} className={tx.conciliado ? 'conciliada' : 'pendente'}>
+                  <tr key={tx.id}>
                     <td>{formatDate(tx.data)}</td>
                     <td>{tx.descricao}</td>
                     <td>{tx.arquivo_origem}</td>
                     <td>{tx.tipo === 'credito' ? 'Crédito' : 'Débito'}</td>
-                    <td className={tx.tipo === 'credito' ? 'valor-credito' : 'valor-debito'}>
+                    <td className={tx.tipo === 'credito' ? styles.valorCredito : styles.valorDebito}>
                       {formatCurrency(tx.valor)}
                     </td>
                     <td>
-                      <span className={`badge ${tx.conciliado ? 'badge-success' : 'badge-warning'}`}>
+                      <StatusPill status={tx.conciliado ? 'success' : 'warning'}>
                         {tx.conciliado ? 'Conciliada' : 'Pendente'}
-                      </span>
+                      </StatusPill>
                     </td>
                     <td>
                       {tx.fatura_id ? (
-                        <span className="vinculo-info">Fatura: {tx.fatura_numero}</span>
+                        <span className={styles.vinculoInfo}>Fatura: {tx.fatura_numero}</span>
                       ) : tx.conta_pagar_id ? (
-                        <span className="vinculo-info">Conta: {tx.conta_pagar_descricao}</span>
+                        <span className={styles.vinculoInfo}>Conta: {tx.conta_pagar_descricao}</span>
                       ) : (
-                        <span className="vinculo-vazio">—</span>
+                        <span className={styles.vinculoVazio}>—</span>
                       )}
                     </td>
                     <td>
                       {!tx.conciliado && tx.tipo === 'credito' && faturas.length > 0 && (
                         <select
-                          className="vinculo-select"
+                          className={styles.vinculoSelect}
                           value=""
                           onChange={(e) => handleVincular(tx.id, 'fatura', e.target.value)}
                         >
@@ -343,7 +348,7 @@ function ConciliacaoBancaria() {
                       )}
                       {!tx.conciliado && tx.tipo === 'debito' && contasPagar.length > 0 && (
                         <select
-                          className="vinculo-select"
+                          className={styles.vinculoSelect}
                           value=""
                           onChange={(e) => handleVincular(tx.id, 'conta_pagar', e.target.value)}
                         >
@@ -357,7 +362,7 @@ function ConciliacaoBancaria() {
                       )}
                       {tx.conciliado && (
                         <button
-                          className="btn-link"
+                          className={styles.btnLink}
                           onClick={() => handleDesvincular(tx.id)}
                           disabled={loading}
                         >
@@ -369,7 +374,7 @@ function ConciliacaoBancaria() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableContainer>
         )}
       </section>
     </div>

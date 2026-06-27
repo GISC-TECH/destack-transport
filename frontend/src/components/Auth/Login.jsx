@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/images/logo.svg';
-import './Auth.css';
+import styles from './Auth.module.css';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -41,25 +41,25 @@ function Login() {
   ];
 
   return (
-    <div className="auth-split" role="main">
+    <div className={styles.split} role="main">
       {/* Painel da marca */}
-      <aside className="auth-brand">
-        <div className="auth-brand-glow" aria-hidden="true"></div>
+      <aside className={styles.brand}>
+        <div className={styles.brandGlow} aria-hidden="true"></div>
 
-        <div className="auth-brand-top">
-          <div className="auth-logo">
-            <img src={logo} alt="Destack Transporte" className="auth-logo-img" />
+        <div className={styles.brandTop}>
+          <div className={styles.logo}>
+            <img src={logo} alt="Destack Transporte" className={styles.logoImg} />
           </div>
 
-          <h2 className="auth-headline">Gestão completa de transporte e logística</h2>
-          <p className="auth-sub">
+          <h2 className={styles.headline}>Gestão completa de transporte e logística</h2>
+          <p className={styles.sub}>
             Emissão fiscal, financeiro, frota e inteligência operacional em uma única plataforma.
           </p>
 
-          <ul className="auth-features">
+          <ul className={styles.features}>
             {features.map((f, i) => (
               <li key={i}>
-                <span className="auth-check" aria-hidden="true">
+                <span className={styles.check} aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" width="13" height="13">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
@@ -70,17 +70,17 @@ function Login() {
           </ul>
         </div>
 
-        <p className="auth-copy">&copy; 2026 Destack Transportes Ltda &middot; Belo Horizonte/MG</p>
+        <p className={styles.copy}>&copy; 2026 Destack Transportes Ltda &middot; Belo Horizonte/MG</p>
       </aside>
 
       {/* Painel do formulario */}
-      <div className="auth-form-side">
-        <form onSubmit={handleSubmit} className="auth-card" aria-label="Formulario de login">
-          <span className="auth-eyebrow">Bem-vindo de volta</span>
-          <h1 className="auth-title">Acessar o sistema</h1>
+      <div className={styles.formSide}>
+        <form onSubmit={handleSubmit} className={styles.card} aria-label="Formulario de login">
+          <span className={styles.eyebrow}>Bem-vindo de volta</span>
+          <h1 className={styles.title}>Acessar o sistema</h1>
 
           {error && (
-            <div className="auth-error" role="alert" aria-live="assertive">
+            <div className={styles.error} role="alert" aria-live="assertive">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -90,7 +90,7 @@ function Login() {
             </div>
           )}
 
-          <div className="auth-field">
+          <div className={styles.field}>
             <label htmlFor="username">Usuário</label>
             <input
               type="text"
@@ -106,9 +106,9 @@ function Login() {
             />
           </div>
 
-          <div className="auth-field">
+          <div className={styles.field}>
             <label htmlFor="password">Senha</label>
-            <div className="auth-pass">
+            <div className={styles.pass}>
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
@@ -123,7 +123,7 @@ function Login() {
               />
               <button
                 type="button"
-                className="auth-toggle"
+                className={styles.toggle}
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
                 aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
@@ -144,24 +144,24 @@ function Login() {
             </div>
           </div>
 
-          <div className="auth-row">
-            <label className="auth-check-label">
+          <div className={styles.row}>
+            <label className={styles.checkLabel}>
               <input type="checkbox" defaultChecked disabled={loading} />
               Manter conectado
             </label>
-            <button type="button" className="auth-link">Esqueci minha senha</button>
+            <button type="button" className={styles.link}>Esqueci minha senha</button>
           </div>
 
           <button
             type="submit"
-            className="auth-submit"
+            className={styles.submit}
             disabled={loading}
             aria-busy={loading}
             aria-label={loading ? 'Processando login' : 'Entrar no sistema'}
           >
             {loading ? (
               <>
-                <span className="auth-spinner" aria-hidden="true"></span>
+                <span className={styles.spinner} aria-hidden="true"></span>
                 Entrando...
               </>
             ) : (
@@ -169,7 +169,7 @@ function Login() {
             )}
           </button>
 
-          <p className="auth-secure">Ambiente seguro &middot; Certificado digital A1 ativo</p>
+          <p className={styles.secure}>Ambiente seguro &middot; Certificado digital A1 ativo</p>
         </form>
       </div>
     </div>

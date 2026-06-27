@@ -4,8 +4,9 @@ import { motoristasAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
+import Button from '../Common/Button';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
-import './MotoristaForm.css';
+import styles from './MotoristaForm.module.css';
 
 function MotoristaForm() {
   const navigate = useNavigate();
@@ -144,23 +145,27 @@ function MotoristaForm() {
   }
 
   return (
-    <div className="motorista-form-container">
-      <div className="form-header">
+    <div className={styles.motoristaFormContainer}>
+      <div className={styles.formHeader}>
         <h2>{isEdit ? 'Editar Motorista' : 'Novo Motorista'}</h2>
-        <button type="button" className="btn-back" onClick={() => navigate('/motoristas')}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => navigate('/motoristas')}
+        >
           ← Voltar
-        </button>
+        </Button>
       </div>
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
 
-      <form onSubmit={handleSubmit} className="motorista-form">
-        <fieldset>
-          <legend>Dados Pessoais</legend>
+      <form onSubmit={handleSubmit} className={styles.motoristaForm}>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Dados Pessoais</legend>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="nome">Nome Completo <span className="required">*</span></label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="nome">Nome Completo <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 id="nome"
@@ -172,8 +177,8 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="cpf">CPF <span className="required">*</span></label>
+            <div className={styles.formGroup}>
+              <label htmlFor="cpf">CPF <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 id="cpf"
@@ -186,8 +191,8 @@ function MotoristaForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="telefone">Telefone</label>
               <input
                 type="tel"
@@ -199,7 +204,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="email">E-mail</label>
               <input
                 type="email"
@@ -213,12 +218,12 @@ function MotoristaForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>Documentação</legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Documentação</legend>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="cnh">CNH <span className="required">*</span></label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="cnh">CNH <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 id="cnh"
@@ -230,8 +235,8 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="categoria_cnh">Categoria CNH <span className="required">*</span></label>
+            <div className={styles.formGroup}>
+              <label htmlFor="categoria_cnh">Categoria CNH <span className={styles.required}>*</span></label>
               <select
                 id="categoria_cnh"
                 name="categoria_cnh"
@@ -247,7 +252,7 @@ function MotoristaForm() {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="validade_cnh">Validade CNH</label>
               <input
                 type="date"
@@ -259,8 +264,8 @@ function MotoristaForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="nr20_validade">Validade NR20</label>
               <input
                 type="date"
@@ -271,7 +276,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="nr35_validade">Validade NR35</label>
               <input
                 type="date"
@@ -282,7 +287,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="mopp_validade">Validade MOPP</label>
               <input
                 type="date"
@@ -294,8 +299,8 @@ function MotoristaForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="toxicologico_validade">Validade Exame Toxicol.</label>
               <input
                 type="date"
@@ -306,7 +311,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="aso_validade">Validade ASO</label>
               <input
                 type="date"
@@ -317,8 +322,8 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label className="checkbox-label">
+            <div className={styles.formGroup}>
+              <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   name="ativo"
@@ -331,11 +336,11 @@ function MotoristaForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>Dados Bancários / Pix</legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Dados Bancários / Pix</legend>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="tipo_chave_pix">Tipo de Chave Pix</label>
               <select
                 id="tipo_chave_pix"
@@ -352,7 +357,7 @@ function MotoristaForm() {
               </select>
             </div>
 
-            <div className="form-group span-2">
+            <div className={`${styles.formGroup} ${styles.span2}`}>
               <label htmlFor="chave_pix">Chave Pix</label>
               <input
                 type="text"
@@ -365,8 +370,8 @@ function MotoristaForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="banco">Banco</label>
               <input
                 type="text"
@@ -378,7 +383,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="agencia">Agência</label>
               <input
                 type="text"
@@ -390,7 +395,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="conta">Conta</label>
               <input
                 type="text"
@@ -402,7 +407,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="tipo_conta">Tipo de Conta</label>
               <select
                 id="tipo_conta"
@@ -418,8 +423,8 @@ function MotoristaForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group full">
+          <div className={styles.formRow}>
+            <div className={`${styles.formGroup} ${styles.full}`}>
               <label htmlFor="favorecido">Favorecido</label>
               <input
                 type="text"
@@ -433,18 +438,23 @@ function MotoristaForm() {
           </div>
         </fieldset>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-cancel"
+            variant="secondary"
             onClick={() => navigate('/motoristas')}
             disabled={loading}
           >
             Cancelar
-          </button>
-          <button type="submit" className="btn-submit" disabled={loading}>
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={loading}
+            disabled={loading}
+          >
             {loading ? 'Salvando...' : (isEdit ? 'Atualizar' : 'Cadastrar')}
-          </button>
+          </Button>
         </div>
       </form>
 

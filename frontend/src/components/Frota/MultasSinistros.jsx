@@ -4,7 +4,11 @@ import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
-import './Frota.css';
+import Button from '../Common/Button';
+import Modal from '../Common/Modal';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import styles from './Frota.module.css';
 
 function MultasSinistros() {
   const toast = useToast();
@@ -74,36 +78,36 @@ function MultasSinistros() {
       'pendente': 'warning',
       'paga': 'success',
       'impugnada': 'info',
-      'cancelada': 'secondary'
+      'cancelada': 'danger'
     } : {
       'aberto': 'warning',
       'em_andamento': 'info',
       'resolvido': 'success',
-      'cancelado': 'secondary'
+      'cancelado': 'danger'
     };
-    return <span className={`badge badge-${map[status] || 'secondary'}`}>{status.replace('_', ' ')}</span>;
+    return <StatusPill status={map[status] || 'default'}>{status.replace('_', ' ')}</StatusPill>;
   };
 
   if (loading && multas.length === 0 && sinistros.length === 0) return <Loading message="Carregando..." />;
   if (error) return <ErrorMessage message={error} onRetry={loadDados} />;
 
   return (
-    <div className="frota-page">
+    <div className={styles.page}>
       <PageHeader
         title="Multas e Sinistros"
         subtitle="Gestão de infrações e ocorrências da frota"
         breadcrumbs={[{ label: 'Operação' }, { label: 'Multas e Sinistros' }]}
       />
 
-      <div className="frota-tabs">
+      <div className={styles.tabs}>
         <button
-          className={`frota-tab ${abaAtiva === 'multas' ? 'active' : ''}`}
+          className={`${styles.tab} ${abaAtiva === 'multas' ? styles.tabActive : ''}`}
           onClick={() => setAbaAtiva('multas')}
         >
           Multas ({multas.length})
         </button>
         <button
-          className={`frota-tab ${abaAtiva === 'sinistros' ? 'active' : ''}`}
+          className={`${styles.tab} ${abaAtiva === 'sinistros' ? styles.tabActive : ''}`}
           onClick={() => setAbaAtiva('sinistros')}
         >
           Sinistros ({sinistros.length})
@@ -111,15 +115,16 @@ function MultasSinistros() {
       </div>
 
       {abaAtiva === 'multas' && (
-        <div className="frota-section">
-          <div className="frota-section-header">
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
             <h3>Multas</h3>
-            <button className="btn-primary" onClick={() => setModal({ tipo: 'multa' })}>
+            <Button onClick={() => setModal({ tipo: 'multa' })}>
               + Nova Multa
-            </button>
+            </Button>
           </div>
-          <div className="frota-list-card">
-            <table className="frota-table">
+          <div className={styles.listCard}>
+            <TableContainer mobileCards={false}>
+              <table className={styles.table}>
               <thead>
                 <tr>
                   <th>Data</th>
@@ -143,45 +148,46 @@ function MultasSinistros() {
                     <td>{formatCurrency(m.valor)}</td>
                     <td>{getStatusBadge(m.status, 'multa')}</td>
                     <td>
-                      <div className="os-actions">
-                        <button className="btn-icon" onClick={() => setModal({ tipo: 'multa', id: m.id })}>✏️</button>
-                        <button className="btn-icon" onClick={() => handleDelete('multa', m.id)}>🗑️</button>
+                      <div className={styles.actions}>
+                        <Button variant="outline" size="sm" iconOnly aria-label="Editar" onClick={() => setModal({ tipo: 'multa', id: m.id })}>✏️</Button>
+                        <Button variant="outline" size="sm" iconOnly aria-label="Excluir" onClick={() => handleDelete('multa', m.id)}>🗑️</Button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </TableContainer>
 
-            <div className="frota-mobile-cards">
+            <div className={styles.mobileCards}>
               {multas.length === 0 ? (
-                <p className="frota-empty-text">Nenhuma multa registrada.</p>
+                <p className={styles.emptyText}>Nenhuma multa registrada.</p>
               ) : multas.map(m => (
-                <div key={m.id} className="frota-mobile-card">
-                  <div className="frota-mobile-card-header">
-                    <div className="frota-mobile-card-title">
-                      <span className="frota-mobile-card-primary">{formatDate(m.data_infracao)}</span>
-                      <span className="frota-mobile-card-secondary">{m.veiculo_placa}</span>
+                <div key={m.id} className={styles.mobileCard}>
+                  <div className={styles.mobileCardHeader}>
+                    <div className={styles.mobileCardTitle}>
+                      <span className={styles.mobileCardPrimary}>{formatDate(m.data_infracao)}</span>
+                      <span className={styles.mobileCardSecondary}>{m.veiculo_placa}</span>
                     </div>
-                    <div className="frota-mobile-card-status">{getStatusBadge(m.status, 'multa')}</div>
+                    <div className={styles.mobileCardStatus}>{getStatusBadge(m.status, 'multa')}</div>
                   </div>
-                  <div className="frota-mobile-card-body">
-                    <div className="frota-mobile-card-row">
-                      <span className="frota-mobile-card-label">Auto</span>
-                      <span className="frota-mobile-card-value">{m.auto_infracao || '-'}</span>
+                  <div className={styles.mobileCardBody}>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Auto</span>
+                      <span className={styles.mobileCardValue}>{m.auto_infracao || '-'}</span>
                     </div>
-                    <div className="frota-mobile-card-row">
-                      <span className="frota-mobile-card-label">Infração</span>
-                      <span className="frota-mobile-card-value">{m.descricao || '-'}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Infração</span>
+                      <span className={styles.mobileCardValue}>{m.descricao || '-'}</span>
                     </div>
-                    <div className="frota-mobile-card-row">
-                      <span className="frota-mobile-card-label">Valor</span>
-                      <span className="frota-mobile-card-value frota-mobile-card-valor">{formatCurrency(m.valor)}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Valor</span>
+                      <span className={`${styles.mobileCardValue} ${styles.mobileCardValor}`}>{formatCurrency(m.valor)}</span>
                     </div>
                   </div>
-                  <div className="frota-mobile-card-footer">
-                    <button className="btn-icon" onClick={() => setModal({ tipo: 'multa', id: m.id })} title="Editar">✏️</button>
-                    <button className="btn-icon" onClick={() => handleDelete('multa', m.id)} title="Excluir">🗑️</button>
+                  <div className={styles.mobileCardFooter}>
+                    <Button variant="outline" size="sm" iconOnly aria-label="Editar" onClick={() => setModal({ tipo: 'multa', id: m.id })}>✏️</Button>
+                    <Button variant="outline" size="sm" iconOnly aria-label="Excluir" onClick={() => handleDelete('multa', m.id)}>🗑️</Button>
                   </div>
                 </div>
               ))}
@@ -191,15 +197,16 @@ function MultasSinistros() {
       )}
 
       {abaAtiva === 'sinistros' && (
-        <div className="frota-section">
-          <div className="frota-section-header">
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
             <h3>Sinistros</h3>
-            <button className="btn-primary" onClick={() => setModal({ tipo: 'sinistro' })}>
+            <Button onClick={() => setModal({ tipo: 'sinistro' })}>
               + Novo Sinistro
-            </button>
+            </Button>
           </div>
-          <div className="frota-list-card">
-            <table className="frota-table">
+          <div className={styles.listCard}>
+            <TableContainer mobileCards={false}>
+              <table className={styles.table}>
               <thead>
                 <tr>
                   <th>Data</th>
@@ -223,45 +230,46 @@ function MultasSinistros() {
                     <td>{formatCurrency(s.custo_total)}</td>
                     <td>{getStatusBadge(s.status, 'sinistro')}</td>
                     <td>
-                      <div className="os-actions">
-                        <button className="btn-icon" onClick={() => setModal({ tipo: 'sinistro', id: s.id })}>✏️</button>
-                        <button className="btn-icon" onClick={() => handleDelete('sinistro', s.id)}>🗑️</button>
+                      <div className={styles.actions}>
+                        <Button variant="outline" size="sm" iconOnly aria-label="Editar" onClick={() => setModal({ tipo: 'sinistro', id: s.id })}>✏️</Button>
+                        <Button variant="outline" size="sm" iconOnly aria-label="Excluir" onClick={() => handleDelete('sinistro', s.id)}>🗑️</Button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </TableContainer>
 
-            <div className="frota-mobile-cards">
+            <div className={styles.mobileCards}>
               {sinistros.length === 0 ? (
-                <p className="frota-empty-text">Nenhum sinistro registrado.</p>
+                <p className={styles.emptyText}>Nenhum sinistro registrado.</p>
               ) : sinistros.map(s => (
-                <div key={s.id} className="frota-mobile-card">
-                  <div className="frota-mobile-card-header">
-                    <div className="frota-mobile-card-title">
-                      <span className="frota-mobile-card-primary">{formatDate(s.data)}</span>
-                      <span className="frota-mobile-card-secondary">{s.veiculo_placa}</span>
+                <div key={s.id} className={styles.mobileCard}>
+                  <div className={styles.mobileCardHeader}>
+                    <div className={styles.mobileCardTitle}>
+                      <span className={styles.mobileCardPrimary}>{formatDate(s.data)}</span>
+                      <span className={styles.mobileCardSecondary}>{s.veiculo_placa}</span>
                     </div>
-                    <div className="frota-mobile-card-status">{getStatusBadge(s.status, 'sinistro')}</div>
+                    <div className={styles.mobileCardStatus}>{getStatusBadge(s.status, 'sinistro')}</div>
                   </div>
-                  <div className="frota-mobile-card-body">
-                    <div className="frota-mobile-card-row">
-                      <span className="frota-mobile-card-label">Tipo</span>
-                      <span className="frota-mobile-card-value">{s.tipo_display || s.tipo}</span>
+                  <div className={styles.mobileCardBody}>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Tipo</span>
+                      <span className={styles.mobileCardValue}>{s.tipo_display || s.tipo}</span>
                     </div>
-                    <div className="frota-mobile-card-row">
-                      <span className="frota-mobile-card-label">Local</span>
-                      <span className="frota-mobile-card-value">{s.local || '-'}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Local</span>
+                      <span className={styles.mobileCardValue}>{s.local || '-'}</span>
                     </div>
-                    <div className="frota-mobile-card-row">
-                      <span className="frota-mobile-card-label">Custo</span>
-                      <span className="frota-mobile-card-value frota-mobile-card-valor">{formatCurrency(s.custo_total)}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Custo</span>
+                      <span className={`${styles.mobileCardValue} ${styles.mobileCardValor}`}>{formatCurrency(s.custo_total)}</span>
                     </div>
                   </div>
-                  <div className="frota-mobile-card-footer">
-                    <button className="btn-icon" onClick={() => setModal({ tipo: 'sinistro', id: s.id })} title="Editar">✏️</button>
-                    <button className="btn-icon" onClick={() => handleDelete('sinistro', s.id)} title="Excluir">🗑️</button>
+                  <div className={styles.mobileCardFooter}>
+                    <Button variant="outline" size="sm" iconOnly aria-label="Editar" onClick={() => setModal({ tipo: 'sinistro', id: s.id })}>✏️</Button>
+                    <Button variant="outline" size="sm" iconOnly aria-label="Excluir" onClick={() => handleDelete('sinistro', s.id)}>🗑️</Button>
                   </div>
                 </div>
               ))}
@@ -370,22 +378,22 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{isEditing ? 'Editar' : 'Novo'} {tipo === 'multa' ? 'Multa' : 'Sinistro'}</h3>
-          <button className="modal-close" onClick={onClose}>&times;</button>
-        </div>
-        <form onSubmit={handleSubmit} className="modal-form">
-          <div className="frota-form-row">
-            <div className="frota-form-group">
+    <Modal
+      isOpen={!!tipo}
+      onClose={onClose}
+      title={`${isEditing ? 'Editar' : 'Novo'} ${tipo === 'multa' ? 'Multa' : 'Sinistro'}`}
+      size="lg"
+    >
+      <form onSubmit={handleSubmit}>
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
               <label>Veículo *</label>
               <select name="veiculo" value={formData.veiculo} onChange={handleChange} required>
                 <option value="">Selecione</option>
                 {veiculos.map(v => <option key={v.id} value={v.id}>{v.placa}</option>)}
               </select>
             </div>
-            <div className="frota-form-group">
+            <div className={styles.formGroup}>
               <label>Motorista</label>
               <select name="motorista" value={formData.motorista} onChange={handleChange}>
                 <option value="">Selecione</option>
@@ -396,16 +404,16 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
 
           {tipo === 'multa' ? (
             <>
-              <div className="frota-form-row">
-                <div className="frota-form-group">
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
                   <label>Data Infração *</label>
                   <input type="date" name="data_infracao" value={formData.data_infracao} onChange={handleChange} required />
                 </div>
-                <div className="frota-form-group">
+                <div className={styles.formGroup}>
                   <label>Auto de Infração</label>
                   <input type="text" name="auto_infracao" value={formData.auto_infracao} onChange={handleChange} />
                 </div>
-                <div className="frota-form-group">
+                <div className={styles.formGroup}>
                   <label>Gravidade</label>
                   <select name="gravidade" value={formData.gravidade} onChange={handleChange}>
                     <option value="leve">Leve</option>
@@ -415,16 +423,16 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
                   </select>
                 </div>
               </div>
-              <div className="frota-form-row">
-                <div className="frota-form-group">
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
                   <label>Valor (R$) *</label>
                   <input type="number" step="0.01" name="valor" value={formData.valor} onChange={handleChange} required />
                 </div>
-                <div className="frota-form-group">
+                <div className={styles.formGroup}>
                   <label>Pontos</label>
                   <input type="number" name="pontos" value={formData.pontos} onChange={handleChange} />
                 </div>
-                <div className="frota-form-group">
+                <div className={styles.formGroup}>
                   <label>Status</label>
                   <select name="status" value={formData.status} onChange={handleChange}>
                     <option value="pendente">Pendente</option>
@@ -437,12 +445,12 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
             </>
           ) : (
             <>
-              <div className="frota-form-row">
-                <div className="frota-form-group">
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
                   <label>Data *</label>
                   <input type="date" name="data" value={formData.data} onChange={handleChange} required />
                 </div>
-                <div className="frota-form-group">
+                <div className={styles.formGroup}>
                   <label>Tipo</label>
                   <select name="tipo" value={formData.tipo} onChange={handleChange}>
                     <option value="colisao">Colisão</option>
@@ -452,7 +460,7 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
                     <option value="outros">Outros</option>
                   </select>
                 </div>
-                <div className="frota-form-group">
+                <div className={styles.formGroup}>
                   <label>Status</label>
                   <select name="status" value={formData.status} onChange={handleChange}>
                     <option value="aberto">Aberto</option>
@@ -462,16 +470,16 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
                   </select>
                 </div>
               </div>
-              <div className="frota-form-row">
-                <div className="frota-form-group">
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
                   <label>Custo Total (R$)</label>
                   <input type="number" step="0.01" name="custo_total" value={formData.custo_total} onChange={handleChange} />
                 </div>
-                <div className="frota-form-group">
+                <div className={styles.formGroup}>
                   <label>Número Sinistro</label>
                   <input type="text" name="numero_sinistro" value={formData.numero_sinistro} onChange={handleChange} />
                 </div>
-                <div className="frota-form-group">
+                <div className={styles.formGroup}>
                   <label>Seguradora</label>
                   <input type="text" name="seguradora" value={formData.seguradora} onChange={handleChange} />
                 </div>
@@ -479,33 +487,32 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
             </>
           )}
 
-          <div className="frota-form-row-2">
-            <div className="frota-form-group">
+          <div className={styles.formRow2}>
+            <div className={styles.formGroup}>
               <label>Local</label>
               <input type="text" name="local" value={formData.local} onChange={handleChange} />
             </div>
-            <div className="frota-form-group">
+            <div className={styles.formGroup}>
               <label>Descrição</label>
               <input type="text" name="descricao" value={formData.descricao} onChange={handleChange} />
             </div>
           </div>
 
-          <div className="frota-form-row-2">
-            <div className="frota-form-group">
+          <div className={styles.formRow2}>
+            <div className={styles.formGroup}>
               <label>Observação</label>
               <textarea name="observacao" value={formData.observacao} onChange={handleChange} />
             </div>
           </div>
 
-          <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn-primary" disabled={saving}>
+          <div className={styles.formActions}>
+            <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
+            <Button type="submit" loading={saving} disabled={saving}>
               {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar')}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </Modal>
   );
 }
 

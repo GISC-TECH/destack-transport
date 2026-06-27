@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { veiculosAPI, gpsAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
-import './RastreamentoPainel.css';
+import Button from '../Common/Button';
+import styles from './RastreamentoPainel.module.css';
 
 function RastreamentoPainel() {
   const [veiculos, setVeiculos] = useState([]);
@@ -58,9 +59,9 @@ function RastreamentoPainel() {
   if (loading) return <Loading message="Carregando veículos..." />;
 
   return (
-    <div className="rastreamento-page">
-      <div className="page-header">
-        <div className="header-title">
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <div className={styles.headerTitle}>
           <h1>Rastreamento GPS</h1>
           <p>Visualize a última posição dos veículos</p>
         </div>
@@ -68,9 +69,9 @@ function RastreamentoPainel() {
 
       {error && <ErrorMessage message={error} onRetry={() => { setError(null); loadVeiculos(); }} />}
 
-      <div className="rastreamento-card">
-        <div className="form-row">
-          <div className="form-group" style={{ flex: 2 }}>
+      <div className={styles.card}>
+        <div className={styles.formRow}>
+          <div className={styles.formGroup} style={{ flex: 2 }}>
             <label>Veículo</label>
             <select
               value={veiculoSelecionado}
@@ -84,48 +85,48 @@ function RastreamentoPainel() {
               ))}
             </select>
           </div>
-          <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button
-              className="btn-primary"
+          <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <Button
               onClick={handleBuscarPosicao}
+              loading={loadingPosicao}
               disabled={!veiculoSelecionado || loadingPosicao}
             >
               {loadingPosicao ? 'Buscando...' : 'Atualizar Posição'}
-            </button>
+            </Button>
           </div>
         </div>
 
         {posicao && (
-          <div className="rastreamento-info">
-            <div className="info-grid">
-              <div className="info-item">
-                <span className="info-label">Placa</span>
-                <span className="info-value">{posicao.placa}</span>
+          <div className={styles.info}>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Placa</span>
+                <span className={styles.infoValue}>{posicao.placa}</span>
               </div>
-              <div className="info-item">
-                <span className="info-label">Latitude</span>
-                <span className="info-value">{posicao.latitude.toFixed(6)}</span>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Latitude</span>
+                <span className={styles.infoValue}>{posicao.latitude.toFixed(6)}</span>
               </div>
-              <div className="info-item">
-                <span className="info-label">Longitude</span>
-                <span className="info-value">{posicao.longitude.toFixed(6)}</span>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Longitude</span>
+                <span className={styles.infoValue}>{posicao.longitude.toFixed(6)}</span>
               </div>
-              <div className="info-item">
-                <span className="info-label">Velocidade</span>
-                <span className="info-value">{posicao.velocidade ? `${posicao.velocidade} km/h` : '-'}</span>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Velocidade</span>
+                <span className={styles.infoValue}>{posicao.velocidade ? `${posicao.velocidade} km/h` : '-'}</span>
               </div>
-              <div className="info-item">
-                <span className="info-label">Data/Hora</span>
-                <span className="info-value">{new Date(posicao.data_hora).toLocaleString('pt-BR')}</span>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Data/Hora</span>
+                <span className={styles.infoValue}>{new Date(posicao.data_hora).toLocaleString('pt-BR')}</span>
               </div>
-              <div className="info-item">
-                <span className="info-label">Fonte</span>
-                <span className="info-value">{posicao.fonte === 'gps' ? 'GPS' : posicao.fonte}</span>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Fonte</span>
+                <span className={styles.infoValue}>{posicao.fonte === 'gps' ? 'GPS' : posicao.fonte}</span>
               </div>
             </div>
 
             {getMapUrl() && (
-              <div className="mapa-container">
+              <div className={styles.mapaContainer}>
                 <iframe
                   title="Mapa de rastreamento"
                   width="100%"
@@ -141,7 +142,7 @@ function RastreamentoPainel() {
         )}
 
         {veiculoSelecionado && !posicao && !loadingPosicao && (
-          <div className="empty-state">
+          <div className={styles.emptyState}>
             <p>Nenhuma posição registrada para este veículo.</p>
           </div>
         )}

@@ -5,20 +5,34 @@ import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
+import Modal from '../Common/Modal';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import Button from '../Common/Button';
+import tokens from '../../styles/tokens.module.css';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import '../CTe/CTe.css';
+import styles from './MDFe.module.css';
 
 // Cores para os graficos
 const STATUS_COLORS = {
-  autorizado: '#27ae60',
-  encerrado: '#0d9488',
-  cancelado: '#e74c3c',
-  pendente: '#95a5a6'
+  autorizado: tokens.successColor,
+  encerrado: tokens.infoColor,
+  cancelado: tokens.dangerColor,
+  pendente: '#9AA8A0'
 };
 const PAGE_SIZE = 20;
+
+const getStatusVariant = (status) => {
+  const s = status?.toLowerCase() || '';
+  if (s === 'autorizado') return 'success';
+  if (s === 'encerrado') return 'info';
+  if (s === 'cancelado') return 'danger';
+  if (s.includes('rejeitado')) return 'warning';
+  return 'muted';
+};
 
 // Funcao para obter datas do mes atual
 const getDefaultMDFeDates = () => {
@@ -67,7 +81,7 @@ function MDFeList() {
     }
   };
 
-  // Carregar MDF-es para tabela (5 por pagina)
+  // Carregar MDF-es para tabela
   const loadMDFes = async (customFiltros = null, customPage = null) => {
     const filtrosAtivos = customFiltros || filtros;
     const pageAtivo = customPage !== null ? customPage : pagination.page;
@@ -208,19 +222,16 @@ function MDFeList() {
   );
 
   const headerActions = (
-    <div className="header-buttons">
-      <button
-        className="btn btn-outline"
-        onClick={handleExport}
-      >
+    <div className={styles.headerButtons}>
+      <Button variant="outline" onClick={handleExport}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
         Exportar
-      </button>
-      <Link to="/upload" className="btn btn-primary">
+      </Button>
+      <Link to="/upload" className={styles.uploadLink}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="17 8 12 3 7 8"></polyline>
@@ -240,7 +251,7 @@ function MDFeList() {
   if (loading && mdfes.length === 0) return <Loading message="Carregando MDF-es..." />;
 
   return (
-    <div className="mdfe-list">
+    <div className={styles.mdfeList}>
       <PageHeader
         title="MDF-e - Manifesto de Documentos"
         subtitle={`${pagination.total} documentos`}
@@ -250,107 +261,107 @@ function MDFeList() {
       />
 
       {/* KPI Cards */}
-      <div className="cte-kpi-grid">
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon blue">
+      <div className={styles.kpiGrid}>
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiIconBlue}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">Total MDF-es</span>
-            <span className="cte-kpi-value">{kpis.total}</span>
+          <div className={styles.kpiContent}>
+            <span className={styles.kpiLabel}>Total MDF-es</span>
+            <span className={styles.kpiValue}>{kpis.total}</span>
           </div>
         </div>
 
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon green">
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiIconGreen}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">Autorizados</span>
-            <span className="cte-kpi-value">{kpis.autorizados}</span>
+          <div className={styles.kpiContent}>
+            <span className={styles.kpiLabel}>Autorizados</span>
+            <span className={styles.kpiValue}>{kpis.autorizados}</span>
           </div>
         </div>
 
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon purple">
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiIconPurple}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
               <polyline points="9 11 12 14 22 4"></polyline>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">Encerrados</span>
-            <span className="cte-kpi-value">{kpis.encerrados}</span>
+          <div className={styles.kpiContent}>
+            <span className={styles.kpiLabel}>Encerrados</span>
+            <span className={styles.kpiValue}>{kpis.encerrados}</span>
           </div>
         </div>
 
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon orange">
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiIconOrange}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
               <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
               <line x1="12" y1="22.08" x2="12" y2="12"></line>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">CT-es Vinculados</span>
-            <span className="cte-kpi-value">{kpis.totalCtesEmMdfes}</span>
+          <div className={styles.kpiContent}>
+            <span className={styles.kpiLabel}>CT-es Vinculados</span>
+            <span className={styles.kpiValue}>{kpis.totalCtesEmMdfes}</span>
           </div>
         </div>
       </div>
 
       {/* Filtro para Graficos */}
-      <div className="section-header">
+      <div className={styles.sectionHeader}>
         <h3>Analise de MDF-es</h3>
         <DateFilter onFilterChange={handleGraficosFilterChange} defaultPeriodo="mes" />
       </div>
 
       {/* Graficos */}
-      <div className="cte-charts-grid">
+      <div className={styles.chartsGrid}>
         {/* Grafico de Top Veículos */}
-        <div className="cte-chart-card">
+        <div className={styles.chartCard}>
           <h3>Top 5 Veículos</h3>
           {veiculosData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={veiculosData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke={tokens.borderColor || '#f0f0f0'} />
                 <XAxis type="number" tick={{ fontSize: 12 }} />
                 <YAxis type="category" dataKey="placa" tick={{ fontSize: 11 }} width={80} />
                 <Tooltip formatter={(value) => `${value} MDF-es`} />
-                <Bar dataKey="total" fill="#C8A951" radius={[0, 4, 4, 0]} name="MDF-es" />
+                <Bar dataKey="total" fill={tokens.goldColor} radius={[0, 4, 4, 0]} name="MDF-es" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="empty-chart">Sem dados para o periodo</div>
+            <div className={styles.emptyChart}>Sem dados para o periodo</div>
           )}
         </div>
 
         {/* Grafico de CT-es por MDF-e */}
-        <div className="cte-chart-card">
+        <div className={styles.chartCard}>
           <h3>Distribuicao de CT-es por MDF-e</h3>
           {cteDistribuicaoData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={cteDistribuicaoData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke={tokens.borderColor || '#f0f0f0'} />
                 <XAxis dataKey="categoria" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(value) => `${value} MDF-es`} />
-                <Bar dataKey="contagem" fill="#0d9488" radius={[4, 4, 0, 0]} name="MDF-es" />
+                <Bar dataKey="contagem" fill={tokens.infoColor} radius={[4, 4, 0, 0]} name="MDF-es" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="empty-chart">Sem dados para o periodo</div>
+            <div className={styles.emptyChart}>Sem dados para o periodo</div>
           )}
         </div>
 
         {/* Grafico de Status */}
-        <div className="cte-chart-card cte-chart-small">
+        <div className={`${styles.chartCard} ${styles.chartSmall}`}>
           <h3>Distribuicao por Status</h3>
           {statusData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
@@ -377,17 +388,17 @@ function MDFeList() {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="empty-chart">Sem dados para o periodo</div>
+            <div className={styles.emptyChart}>Sem dados para o periodo</div>
           )}
         </div>
 
         {/* Eficiencia */}
-        <div className="cte-chart-card cte-chart-small">
+        <div className={`${styles.chartCard} ${styles.chartSmall}`}>
           <h3>Eficiência de Encerramento</h3>
-          <div className="eficiencia-display">
-            <div className="eficiencia-value">{kpis.eficiencia.toFixed(1)}%</div>
-            <div className="eficiencia-label">MDF-es Encerrados</div>
-            <div className="eficiencia-detail">
+          <div className={styles.eficienciaDisplay}>
+            <div className={styles.eficienciaValue}>{kpis.eficiencia.toFixed(1)}%</div>
+            <div className={styles.eficienciaLabel}>MDF-es Encerrados</div>
+            <div className={styles.eficienciaDetail}>
               {kpis.encerrados} de {kpis.total} MDF-es
             </div>
           </div>
@@ -395,42 +406,42 @@ function MDFeList() {
       </div>
 
       {/* Separador e Filtro para Tabela */}
-      <div className="section-header">
+      <div className={styles.sectionHeader}>
         <h3>Listagem de MDF-es</h3>
         <DateFilter onFilterChange={handleTabelaFilterChange} defaultPeriodo="mes" />
       </div>
 
       {/* Filtros Adicionais */}
-      <div className="filtros-section">
-        <form onSubmit={handleFiltrar} className="filtros-form">
+      <div className={styles.filtrosSection}>
+        <form onSubmit={handleFiltrar} className={styles.filtrosForm}>
           <input
             type="text"
             placeholder="Buscar por chave, número, placa, condutor..."
             value={filtros.q}
             onChange={(e) => setFiltros({...filtros, q: e.target.value})}
-            className="input-filter"
+            className={styles.inputFilter}
           />
           <select
             value={filtros.status}
             onChange={(e) => setFiltros({...filtros, status: e.target.value})}
-            className="select-filter"
+            className={styles.selectFilter}
           >
             <option value="">Todos os Status</option>
             <option value="autorizado">Autorizado</option>
             <option value="encerrado">Encerrado</option>
             <option value="cancelado">Cancelado</option>
           </select>
-          <button type="submit" className="btn-primary">Filtrar</button>
+          <Button type="submit" variant="primary">Filtrar</Button>
         </form>
       </div>
 
-      <div className="results-info">
+      <div className={styles.resultsInfo}>
         <p>Total de {pagination.total} MDF-e{pagination.total !== 1 ? 's' : ''} encontrado{pagination.total !== 1 ? 's' : ''}</p>
       </div>
 
-      <div className="table-container">
+      <TableContainer mobileCards={false} className={styles.tableWrapper}>
         {/* Desktop Table */}
-        <table className="data-table">
+        <table className={styles.dataTable}>
           <thead>
             <tr>
               <th>Número</th>
@@ -446,7 +457,7 @@ function MDFeList() {
           <tbody>
             {mdfes.length === 0 ? (
               <tr>
-                <td colSpan="8" className="text-center">Nenhum MDF-e encontrado</td>
+                <td colSpan="8" className={styles.textCenter}>Nenhum MDF-e encontrado</td>
               </tr>
             ) : (
               mdfes.map((mdfe) => (
@@ -454,16 +465,16 @@ function MDFeList() {
                   <td>
                     <strong>{mdfe.numero_mdfe || '-'}</strong>
                     <br />
-                    <small className="text-muted">{mdfe.chave?.slice(-10)}</small>
+                    <small className={styles.textMuted}>{mdfe.chave?.slice(-10)}</small>
                   </td>
                   <td>{mdfe.data_emissao || '-'}</td>
                   <td>
-                    <span className="badge badge-secondary">
+                    <span className={styles.badgeSecondary}>
                       {mdfe.uf_inicio || '-'}
                     </span>
                   </td>
                   <td>
-                    <span className="badge badge-secondary">
+                    <span className={styles.badgeSecondary}>
                       {mdfe.uf_fim || '-'}
                     </span>
                   </td>
@@ -471,19 +482,19 @@ function MDFeList() {
                     <strong>{mdfe.placa_tracao || '-'}</strong>
                   </td>
                   <td>
-                    <span className="badge badge-info">
+                    <span className={styles.badgeInfo}>
                       {mdfe.documentos_count || 0}
                     </span>
                   </td>
                   <td>
-                    <span className={`badge badge-${mdfe.status === 'Autorizado' ? 'success' : mdfe.status === 'Encerrado' ? 'info' : mdfe.status === 'Cancelado' ? 'danger' : mdfe.status?.includes('Rejeitado') ? 'warning' : 'secondary'}`}>
+                    <StatusPill status={getStatusVariant(mdfe.status)}>
                       {mdfe.status || 'Pendente'}
-                    </span>
+                    </StatusPill>
                   </td>
                   <td>
-                    <div className="action-buttons">
+                    <div className={styles.actionButtons}>
                       <button
-                        className="btn-action btn-view"
+                        className={styles.actionBtnView}
                         onClick={() => handleOpenModal(mdfe)}
                         title="Ver Detalhes"
                       >
@@ -493,7 +504,7 @@ function MDFeList() {
                         </svg>
                       </button>
                       <button
-                        className="btn-action btn-download"
+                        className={styles.actionBtnDownload}
                         onClick={() => handleDownloadXML(mdfe.id, mdfe.numero_mdfe)}
                         title="Baixar XML"
                       >
@@ -510,83 +521,83 @@ function MDFeList() {
             )}
           </tbody>
         </table>
+      </TableContainer>
 
-        {/* Mobile Cards */}
-        <div className="mobile-cards">
-          {mdfes.length === 0 ? (
-            <div className="mobile-empty">
-              <div className="mobile-empty-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
-              </div>
-              <p className="mobile-empty-text">Nenhum MDF-e encontrado</p>
+      {/* Mobile Cards */}
+      <div className={styles.mobileCards}>
+        {mdfes.length === 0 ? (
+          <div className={styles.mobileEmpty}>
+            <div className={styles.mobileEmptyIcon}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
             </div>
-          ) : (
-            mdfes.map((mdfe) => (
-              <div key={mdfe.id} className="mobile-card">
-                <div className="mobile-card-header">
-                  <div className="mobile-card-title">
-                    <span className="mobile-card-number">MDF-e #{mdfe.numero_mdfe || '-'}</span>
-                    <span className="mobile-card-date">{mdfe.data_emissao || '-'}</span>
-                  </div>
-                  <div className="mobile-card-status">
-                    <span className={`badge badge-${mdfe.status === 'Autorizado' ? 'success' : mdfe.status === 'Encerrado' ? 'info' : mdfe.status === 'Cancelado' ? 'danger' : mdfe.status?.includes('Rejeitado') ? 'warning' : 'secondary'}`}>
-                      {mdfe.status || 'Pendente'}
-                    </span>
-                  </div>
+            <p className={styles.mobileEmptyText}>Nenhum MDF-e encontrado</p>
+          </div>
+        ) : (
+          mdfes.map((mdfe) => (
+            <div key={mdfe.id} className={styles.mobileCard}>
+              <div className={styles.mobileCardHeader}>
+                <div className={styles.mobileCardTitle}>
+                  <span className={styles.mobileCardNumber}>MDF-e #{mdfe.numero_mdfe || '-'}</span>
+                  <span className={styles.mobileCardDate}>{mdfe.data_emissao || '-'}</span>
                 </div>
-                <div className="mobile-card-body">
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Rota</span>
-                    <span className="mobile-card-value">
-                      <span className="badge badge-secondary" style={{ marginRight: '6px' }}>{mdfe.uf_inicio || '-'}</span>
-                      <span style={{ color: '#7f8c8d' }}>→</span>
-                      <span className="badge badge-secondary" style={{ marginLeft: '6px' }}>{mdfe.uf_fim || '-'}</span>
-                    </span>
-                  </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Veículo</span>
-                    <span className="mobile-card-value" style={{ fontWeight: 700 }}>{mdfe.placa_tracao || '-'}</span>
-                  </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">CT-es</span>
-                    <span className="badge badge-info">{mdfe.documentos_count || 0}</span>
-                  </div>
-                </div>
-                <div className="mobile-card-footer">
-                  <div></div>
-                  <div className="mobile-card-actions">
-                    <button
-                      className="btn-action btn-view"
-                      onClick={() => handleOpenModal(mdfe)}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    </button>
-                    <button
-                      className="btn-action btn-download"
-                      onClick={() => handleDownloadXML(mdfe.id, mdfe.numero_mdfe)}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                      </svg>
-                    </button>
-                  </div>
+                <div className={styles.mobileCardStatus}>
+                  <StatusPill status={getStatusVariant(mdfe.status)}>
+                    {mdfe.status || 'Pendente'}
+                  </StatusPill>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+              <div className={styles.mobileCardBody}>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Rota</span>
+                  <span className={styles.mobileCardValue}>
+                    <span className={styles.badgeSecondary} style={{ marginRight: '6px' }}>{mdfe.uf_inicio || '-'}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>→</span>
+                    <span className={styles.badgeSecondary} style={{ marginLeft: '6px' }}>{mdfe.uf_fim || '-'}</span>
+                  </span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Veículo</span>
+                  <span className={styles.mobileCardValue} style={{ fontWeight: 700 }}>{mdfe.placa_tracao || '-'}</span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>CT-es</span>
+                  <span className={styles.badgeInfo}>{mdfe.documentos_count || 0}</span>
+                </div>
+              </div>
+              <div className={styles.mobileCardFooter}>
+                <div></div>
+                <div className={styles.mobileCardActions}>
+                  <button
+                    className={styles.actionBtnView}
+                    onClick={() => handleOpenModal(mdfe)}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                  <button
+                    className={styles.actionBtnDownload}
+                    onClick={() => handleDownloadXML(mdfe.id, mdfe.numero_mdfe)}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {pagination.total > 0 && (
-        <div className="pagination">
+        <div className={styles.pagination}>
           <button
             onClick={() => {
               const newPage = pagination.page - 1;
@@ -594,11 +605,11 @@ function MDFeList() {
               loadMDFes(null, newPage);
             }}
             disabled={pagination.page === 1}
-            className="btn-page"
+            className={styles.btnPage}
           >
             Anterior
           </button>
-          <div className="pagination-numbers">
+          <div className={styles.paginationNumbers}>
             {Array.from({ length: Math.ceil(pagination.total / PAGE_SIZE) }, (_, i) => i + 1)
               .filter(page => {
                 const currentPage = pagination.page;
@@ -607,13 +618,13 @@ function MDFeList() {
               })
               .map((page, index, arr) => (
                 <span key={page}>
-                  {index > 0 && arr[index - 1] !== page - 1 && <span className="pagination-ellipsis">...</span>}
+                  {index > 0 && arr[index - 1] !== page - 1 && <span className={styles.paginationEllipsis}>...</span>}
                   <button
                     onClick={() => {
                       setPagination(p => ({...p, page}));
                       loadMDFes(null, page);
                     }}
-                    className={`btn-page-num ${pagination.page === page ? 'active' : ''}`}
+                    className={`${styles.btnPageNum} ${pagination.page === page ? styles.active : ''}`}
                   >
                     {page}
                   </button>
@@ -628,7 +639,7 @@ function MDFeList() {
               loadMDFes(null, newPage);
             }}
             disabled={pagination.page >= Math.ceil(pagination.total / PAGE_SIZE)}
-            className="btn-page"
+            className={styles.btnPage}
           >
             Proxima
           </button>
@@ -636,86 +647,80 @@ function MDFeList() {
       )}
 
       {/* Modal de Detalhes Rapidos */}
-      {modalMdfe && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
-          <div className="modal-content mdfe-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #40916C 0%, #2D6A4F 100%)' }}>
-              <h2>MDF-e #{modalMdfe.numero_mdfe}</h2>
-              <button className="modal-close" onClick={handleCloseModal}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+      <Modal
+        isOpen={!!modalMdfe}
+        onClose={handleCloseModal}
+        title={modalMdfe ? `MDF-e #${modalMdfe.numero_mdfe}` : ''}
+        size="md"
+        footer={
+          <>
+            <Link
+              to={modalMdfe ? `/mdfes/${modalMdfe.id}` : '#'}
+              className={styles.actionBtnView}
+              onClick={handleCloseModal}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              Ver Detalhes
+            </Link>
+            <Button
+              variant="outline"
+              onClick={() => modalMdfe && handleDownloadXML(modalMdfe.id, modalMdfe.numero_mdfe)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Baixar XML
+            </Button>
+            <Button variant="secondary" onClick={handleCloseModal}>
+              Fechar
+            </Button>
+          </>
+        }
+      >
+        {modalMdfe && (
+          <div className={styles.modalInfoGrid}>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Número</span>
+              <span className={styles.modalInfoValue}>{modalMdfe.numero_mdfe || '-'}</span>
             </div>
-            <div className="modal-body">
-              <div className="modal-info-grid">
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Número</span>
-                  <span className="modal-info-value">{modalMdfe.numero_mdfe || '-'}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Data Emissão</span>
-                  <span className="modal-info-value">{modalMdfe.data_emissao || '-'}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">UF Origem</span>
-                  <span className="badge badge-secondary">{modalMdfe.uf_inicio || '-'}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">UF Destino</span>
-                  <span className="badge badge-secondary">{modalMdfe.uf_fim || '-'}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Veículo (Placa)</span>
-                  <span className="modal-info-value" style={{ fontWeight: 700 }}>{modalMdfe.placa_tracao || '-'}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">CT-es Vinculados</span>
-                  <span className="badge badge-info">{modalMdfe.documentos_count || 0}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Status</span>
-                  <span className={`badge badge-${modalMdfe.status === 'Autorizado' ? 'success' : modalMdfe.status === 'Encerrado' ? 'info' : modalMdfe.status === 'Cancelado' ? 'danger' : modalMdfe.status?.includes('Rejeitado') ? 'warning' : 'secondary'}`}>
-                    {modalMdfe.status || 'Pendente'}
-                  </span>
-                </div>
-                <div className="modal-info-item full-width">
-                  <span className="modal-info-label">Chave de Acesso</span>
-                  <span className="modal-info-value chave-cte">{modalMdfe.chave || '-'}</span>
-                </div>
-              </div>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Data Emissão</span>
+              <span className={styles.modalInfoValue}>{modalMdfe.data_emissao || '-'}</span>
             </div>
-            <div className="modal-footer">
-              <Link
-                to={`/mdfes/${modalMdfe.id}`}
-                className="btn-action btn-view"
-                onClick={handleCloseModal}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-                Ver Detalhes
-              </Link>
-              <button
-                className="btn-action btn-download"
-                onClick={() => handleDownloadXML(modalMdfe.id, modalMdfe.numero_mdfe)}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Baixar XML
-              </button>
-              <button className="btn-action btn-secondary" onClick={handleCloseModal}>
-                Fechar
-              </button>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>UF Origem</span>
+              <span className={styles.badgeSecondary}>{modalMdfe.uf_inicio || '-'}</span>
+            </div>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>UF Destino</span>
+              <span className={styles.badgeSecondary}>{modalMdfe.uf_fim || '-'}</span>
+            </div>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Veículo (Placa)</span>
+              <span className={styles.modalInfoValue} style={{ fontWeight: 700 }}>{modalMdfe.placa_tracao || '-'}</span>
+            </div>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>CT-es Vinculados</span>
+              <span className={styles.badgeInfo}>{modalMdfe.documentos_count || 0}</span>
+            </div>
+            <div className={styles.modalInfoItem}>
+              <span className={styles.modalInfoLabel}>Status</span>
+              <StatusPill status={getStatusVariant(modalMdfe.status)}>
+                {modalMdfe.status || 'Pendente'}
+              </StatusPill>
+            </div>
+            <div className={`${styles.modalInfoItem} ${styles.modalInfoItemFull}`}>
+              <span className={styles.modalInfoLabel}>Chave de Acesso</span>
+              <span className={`${styles.modalInfoValue} ${styles.chaveCte}`}>{modalMdfe.chave || '-'}</span>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

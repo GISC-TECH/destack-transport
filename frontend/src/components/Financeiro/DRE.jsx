@@ -8,9 +8,11 @@ import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
-import './Financeiro.css';
+import Button from '../Common/Button';
+import tokens from '../../styles/tokens.module.css';
+import styles from './Financeiro.module.css';
 
-const COLORS = ['#27ae60', '#e74c3c', '#f39c12', '#3498db'];
+const COLORS = [tokens.successColor, tokens.dangerColor, tokens.warningColor, tokens.infoColor];
 
 function DRE() {
   const [dados, setDados] = useState(null);
@@ -119,8 +121,8 @@ function DRE() {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="custom-tooltip">
-          <p className="tooltip-label">{label}</p>
+        <div className={styles.customTooltip}>
+          <p className={styles.tooltipLabel}>{label}</p>
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
@@ -152,7 +154,7 @@ function DRE() {
   ].filter(c => c.valor > 0);
 
   return (
-    <div className="financeiro-page">
+    <div className={styles.financeiroPage}>
       <PageHeader
         title="DRE Simplificada"
         subtitle="Demonstrativo de resultado por período"
@@ -160,13 +162,12 @@ function DRE() {
         breadcrumbs={[{ label: 'Financeiro' }, { label: 'DRE' }]}
         actions={
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <button
+            <Button
               onClick={handleExport}
-              className="period-btn active"
-              style={{ border: 'none', cursor: 'pointer' }}
+              variant="primary"
             >
               Exportar CSV
-            </button>
+            </Button>
             <DateFilter
               onFilterChange={handleDateFilterChange}
               defaultPeriodo="ano"
@@ -178,68 +179,68 @@ function DRE() {
       />
 
       {/* KPIs */}
-      <div className="fin-kpi-grid">
-        <div className="fin-kpi-card principal">
-          <div className="fin-kpi-icon">
+      <div className={styles.finKpiGrid}>
+        <div className={`${styles.finKpiCard} ${styles.principal}`}>
+          <div className={styles.finKpiIcon}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Receita Total</span>
-            <span className="fin-kpi-value">{formatCurrency(dados?.resumo?.receita_total)}</span>
-            <span className="fin-kpi-subtext">
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Receita Total</span>
+            <span className={styles.finKpiValue}>{formatCurrency(dados?.resumo?.receita_total)}</span>
+            <span className={styles.finKpiSubtext}>
               Período: {dados?.filtros?.data_inicio} a {dados?.filtros?.data_fim}
             </span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(231, 76, 60, 0.12)', color: '#e74c3c' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.dangerLight, color: tokens.dangerColor }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
               <line x1="1" y1="10" x2="23" y2="10"></line>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Custos Totais</span>
-            <span className="fin-kpi-value">{formatCurrency(dados?.resumo?.custos?.total)}</span>
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Custos Totais</span>
+            <span className={styles.finKpiValue}>{formatCurrency(dados?.resumo?.custos?.total)}</span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(39, 174, 96, 0.12)', color: '#27ae60' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.successLight, color: tokens.successColor }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
               <polyline points="17 6 23 6 23 12"></polyline>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Lucro</span>
-            <span className="fin-kpi-value">{formatCurrency(dados?.resumo?.lucro)}</span>
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Lucro</span>
+            <span className={styles.finKpiValue}>{formatCurrency(dados?.resumo?.lucro)}</span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(52, 152, 219, 0.12)', color: '#3498db' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.infoLight, color: tokens.infoColor }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="6" x2="12" y2="12"></line>
               <line x1="12" y1="18" x2="12.01" y2="18"></line>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Margem</span>
-            <span className="fin-kpi-value">{(dados?.resumo?.margem_percentual || 0).toFixed(1)}%</span>
-            <span className="fin-kpi-subtext">{dados?.resumo?.qtd_ctes || 0} CT-es</span>
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Margem</span>
+            <span className={styles.finKpiValue}>{(dados?.resumo?.margem_percentual || 0).toFixed(1)}%</span>
+            <span className={styles.finKpiSubtext}>{dados?.resumo?.qtd_ctes || 0} CT-es</span>
           </div>
         </div>
       </div>
 
-      <div className="fin-charts-grid">
+      <div className={styles.finChartsGrid}>
         {/* Evolução mensal */}
-        <div className="fin-chart-card">
+        <div className={styles.finChartCard}>
           <h3>Evolução Mensal</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dados?.evolucao_mensal || []}>
@@ -248,15 +249,15 @@ function DRE() {
               <YAxis tickFormatter={formatCurrencyShort} tick={{ fontSize: 11 }} />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Bar dataKey="receita" name="Receita" fill="#27ae60" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="custos" name="Custos" fill="#e74c3c" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="lucro" name="Lucro" fill="#3498db" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="receita" name="Receita" fill={tokens.successColor} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="custos" name="Custos" fill={tokens.dangerColor} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="lucro" name="Lucro" fill={tokens.infoColor} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Composição de custos */}
-        <div className="fin-chart-card">
+        <div className={styles.finChartCard}>
           <h3>Composição de Custos</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -282,27 +283,27 @@ function DRE() {
       </div>
 
       {/* Tabela DRE */}
-      <div className="fin-chart-card" style={{ marginTop: '30px' }}>
+      <div className={styles.finChartCard} style={{ marginTop: '30px' }}>
         <h3>Demonstrativo por Mês</h3>
-        <div className="clientes-list">
+        <div className={styles.clientesList}>
           {(dados?.evolucao_mensal || []).map((item, index) => (
-            <div key={index} className="cliente-item">
-              <div className="cliente-rank">{item.mes}</div>
-              <div className="cliente-info">
-                <span className="cliente-nome">
+            <div key={index} className={styles.clienteItem}>
+              <div className={styles.clienteRank}>{item.mes}</div>
+              <div className={styles.clienteInfo}>
+                <span className={styles.clienteNome}>
                   Receita: {formatCurrency(item.receita)} | Custos: {formatCurrency(item.custos)} | Margem: {item.margem.toFixed(1)}%
                 </span>
-                <div className="cliente-bar-container">
+                <div className={styles.clienteBarContainer}>
                   <div
-                    className="cliente-bar"
+                    className={styles.clienteBar}
                     style={{
                       width: `${Math.min((Math.abs(item.lucro) / (Math.max(...(dados?.evolucao_mensal?.map(e => Math.abs(e.lucro)) || [1]))) * 100), 100)}%`,
-                      background: item.lucro >= 0 ? '#27ae60' : '#e74c3c'
+                      background: item.lucro >= 0 ? tokens.successColor : tokens.dangerColor
                     }}
                   ></div>
                 </div>
               </div>
-              <span className="cliente-valor" style={{ color: item.lucro >= 0 ? '#27ae60' : '#e74c3c' }}>
+              <span className={styles.clienteValor} style={{ color: item.lucro >= 0 ? tokens.successColor : tokens.dangerColor }}>
                 {formatCurrency(item.lucro)}
               </span>
             </div>

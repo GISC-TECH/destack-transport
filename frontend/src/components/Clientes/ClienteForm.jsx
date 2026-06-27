@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { clientesAPI, externalAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
+import Button from '../Common/Button';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
-import './ClientesList.css';
+import styles from './ClienteForm.module.css';
 
 function ClienteForm() {
   const navigate = useNavigate();
@@ -192,33 +193,37 @@ function ClienteForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="cliente-form-page">
-      <div className="page-header">
-        <div className="header-title">
-          <h1>{isEditing ? 'Editar Cliente' : 'Novo Cliente'}</h1>
-          <p>{isEditing ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente'}</p>
-        </div>
+    <div className={styles.clienteFormPage}>
+      <div className={styles.formHeader}>
+        <h2>{isEditing ? 'Editar Cliente' : 'Novo Cliente'}</h2>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => navigate('/clientes')}
+        >
+          ← Voltar
+        </Button>
       </div>
 
       {error && (
-        <div className="alert alert-error">
+        <div className={`${styles.alert} ${styles.alertError}`}>
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-container">
-        <div className="form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Identificação</h3>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>CNPJ *</label>
-              <div className="cnpj-input-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label>CNPJ <span className={styles.required}>*</span></label>
+              <div className={styles.cnpjInputGroup}>
                 <input
                   type="text"
                   name="cnpj"
-                  className="cnpj-input"
+                  className={styles.cnpjInput}
                   value={formData.cnpj}
                   onChange={(e) => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})}
                   required
@@ -226,19 +231,19 @@ function ClienteForm() {
                 />
                 <button
                   type="button"
-                  className={`btn-cnpj ${buscandoCnpj ? 'loading' : ''}`}
+                  className={`${styles.btnCnpj} ${buscandoCnpj ? styles.loading : ''}`}
                   onClick={buscarCnpj}
                   disabled={buscandoCnpj || formData.cnpj.replace(/\D/g, '').length !== 14}
                 >
                   {buscandoCnpj ? 'Buscando...' : 'Buscar CNPJ'}
                 </button>
               </div>
-              <small className="field-help">
+              <small className={styles.fieldHelp}>
                 Digite o CNPJ e clique em "Buscar CNPJ" para preencher automaticamente
               </small>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Inscrição Estadual</label>
               <input
                 type="text"
@@ -248,15 +253,15 @@ function ClienteForm() {
                 placeholder="Isento ou número"
                 maxLength={20}
               />
-              <small className="field-help muted">
+              <small className={`${styles.fieldHelp} ${styles.muted}`}>
                 A IE não está disponível na consulta CNPJ (registro estadual)
               </small>
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Razão Social *</label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label>Razão Social <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 name="razao_social"
@@ -267,7 +272,7 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Nome Fantasia</label>
               <input
                 type="text"
@@ -279,9 +284,9 @@ function ClienteForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Tipo de Frete *</label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label>Tipo de Frete <span className={styles.required}>*</span></label>
               <select
                 name="tipo_frete"
                 value={formData.tipo_frete}
@@ -293,7 +298,7 @@ function ClienteForm() {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Distancia (km)</label>
               <input
                 type="number"
@@ -307,11 +312,11 @@ function ClienteForm() {
           </div>
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Endereço</h3>
 
-          <div className="form-row">
-            <div className="form-group form-group-cep">
+          <div className={styles.formRow}>
+            <div className={`${styles.formGroup} ${styles.formGroupCep}`}>
               <label>CEP</label>
               <input
                 type="text"
@@ -323,7 +328,7 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group form-group-logradouro">
+            <div className={`${styles.formGroup} ${styles.formGroupLogradouro}`}>
               <label>Logradouro</label>
               <input
                 type="text"
@@ -335,7 +340,7 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group form-group-numero">
+            <div className={`${styles.formGroup} ${styles.formGroupNumero}`}>
               <label>Número</label>
               <input
                 type="text"
@@ -347,8 +352,8 @@ function ClienteForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Complemento</label>
               <input
                 type="text"
@@ -360,7 +365,7 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Bairro</label>
               <input
                 type="text"
@@ -372,8 +377,8 @@ function ClienteForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group form-group-cidade">
+          <div className={styles.formRow}>
+            <div className={`${styles.formGroup} ${styles.formGroupCidade}`}>
               <label>Cidade</label>
               <input
                 type="text"
@@ -384,7 +389,7 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group form-group-uf">
+            <div className={`${styles.formGroup} ${styles.formGroupUf}`}>
               <label>UF</label>
               <select
                 name="estado"
@@ -399,8 +404,8 @@ function ClienteForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>E-mail</label>
               <input
                 type="email"
@@ -412,7 +417,7 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Telefone</label>
               <input
                 type="text"
@@ -426,10 +431,10 @@ function ClienteForm() {
           </div>
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Informações Adicionais</h3>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Observações</label>
             <textarea
               name="observacoes"
@@ -440,7 +445,7 @@ function ClienteForm() {
             />
           </div>
 
-          <div className="form-group checkbox-group">
+          <div className={`${styles.formGroup} ${styles.checkboxGroup}`}>
             <label>
               <input
                 type="checkbox"
@@ -453,21 +458,22 @@ function ClienteForm() {
           </div>
         </div>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
             onClick={() => navigate('/clientes')}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="btn-primary"
+            variant="primary"
+            loading={saving}
             disabled={saving}
           >
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Cadastrar')}
-          </button>
+          </Button>
         </div>
       </form>
 

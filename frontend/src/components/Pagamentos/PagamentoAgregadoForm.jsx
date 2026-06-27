@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { pagamentosAPI, cteAPI, motoristasAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import './Pagamentos.css';
+import Button from '../Common/Button';
+import styles from './PagamentoForm.module.css';
 
 function PagamentoAgregadoForm() {
   const navigate = useNavigate();
@@ -375,30 +376,30 @@ function PagamentoAgregadoForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="pagamento-form-page">
-      <div className="page-header">
-        <div className="header-title">
+    <div className={styles.page}>
+      <div className={styles.pageHeader}>
+        <div className={styles.headerTitle}>
           <h1>{isEditing ? 'Editar Pagamento Agregado' : 'Novo Pagamento Agregado'}</h1>
           <p>{isEditing ? 'Atualize os dados do pagamento' : 'Cadastre um novo pagamento para motorista agregado'}</p>
         </div>
       </div>
 
       {error && (
-        <div className="alert alert-error">
+        <div className={`${styles.alert} ${styles.alertError}`}>
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-container">
-        <div className="form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Vincular CT-e (Opcional)</h3>
-          <p className="form-hint mb-15 text-muted">
+          <p className={`${styles.formHint} ${styles.mb15} ${styles.textMuted}`}>
             Digite o numero do CT-e para buscar e vincular automaticamente
           </p>
 
           {!cteSelecionado ? (
-            <div className="form-group search-field-wrapper">
+            <div className={`${styles.formGroup} ${styles.searchFieldWrapper}`}>
               <label>Buscar CT-e</label>
               <input
                 type="text"
@@ -408,28 +409,28 @@ function PagamentoAgregadoForm() {
                 autoComplete="off"
               />
               {loadingBusca && (
-                <small className="form-hint">Buscando...</small>
+                <small className={styles.formHint}>Buscando...</small>
               )}
 
               {/* Lista de resultados da busca */}
               {mostrarResultados && resultadosBusca.length > 0 && (
-                <div className="search-results-dropdown">
+                <div className={styles.searchResultsDropdown}>
                   {resultadosBusca.map(cte => (
                     <div
                       key={cte.id}
                       className={`search-result-card ${cte.tem_pagamento_agregado ? 'result-disabled' : ''}`}
                       onClick={() => !cte.tem_pagamento_agregado && handleSelecionarCte(cte)}
                     >
-                      <div className="result-title">
+                      <div className={styles.resultTitle}>
                         CT-e #{cte.numero_cte || cte.numero}
                         {cte.tem_pagamento_agregado && (
-                          <span className="result-tag">Já tem pagamento</span>
+                          <span className={styles.resultTag}>Já tem pagamento</span>
                         )}
                       </div>
-                      <div className="result-subtitle">
+                      <div className={styles.resultSubtitle}>
                         {cte.remetente_nome || 'N/I'} → {cte.destinatario_nome || 'N/I'}
                       </div>
-                      <div className="result-value">
+                      <div className={styles.resultValue}>
                         R$ {(cte.valor_total || cte.valor_prestacao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
@@ -438,47 +439,47 @@ function PagamentoAgregadoForm() {
               )}
 
               {mostrarResultados && resultadosBusca.length === 0 && buscaCte.length >= 2 && !loadingBusca && (
-                <small className="form-hint text-danger">
+                <small className={`${styles.formHint} ${styles.textDanger}`}>
                   Nenhum CT-e encontrado com esse numero
                 </small>
               )}
             </div>
           ) : (
             /* CT-e selecionado - exibe card com detalhes */
-            <div className="selected-card cte-selected">
+            <div className={`${styles.selectedCard} ${styles.cteSelected}`}>
               <button
                 type="button"
                 onClick={handleRemoverCte}
-                className="btn-remove-circle btn-sm"
+                className={`${styles.btnRemoveCircle} ${styles.btnSm}`}
                 title="Remover CT-e"
               >
                 ×
               </button>
-              <span className="selected-badge">
+              <span className={styles.selectedBadge}>
                 CT-e VINCULADO
               </span>
-              <div className="selected-title">
+              <div className={styles.selectedTitle}>
                 CT-e #{cteSelecionado.numero_cte || cteSelecionado.numero}
               </div>
-              <div className="selected-subtitle">
+              <div className={styles.selectedSubtitle}>
                 <div><strong>Remetente:</strong> {cteSelecionado.remetente_nome || 'N/I'}</div>
                 <div><strong>Destinatario:</strong> {cteSelecionado.destinatario_nome || 'N/I'}</div>
               </div>
-              <div className="selected-value">
+              <div className={styles.selectedValue}>
                 Valor: R$ {(cteSelecionado.valor_total || cteSelecionado.valor_prestacao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
             </div>
           )}
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Dados do Condutor</h3>
 
           {/* Busca de Condutor por Nome */}
           {!condutorSelecionado ? (
-            <div className="form-group search-field-wrapper">
+            <div className={`${styles.formGroup} ${styles.searchFieldWrapper}`}>
               <label>Buscar Nome do Condutor</label>
-              <small className="form-hint mb-10 text-muted">
+              <small className={`${styles.formHint} ${styles.mb10} ${styles.textMuted}`}>
                 Digite o nome do motorista para buscar e vincular automaticamente
               </small>
               <input
@@ -489,28 +490,28 @@ function PagamentoAgregadoForm() {
                 autoComplete="off"
               />
               {loadingCondutor && (
-                <small className="form-hint">Buscando...</small>
+                <small className={styles.formHint}>Buscando...</small>
               )}
 
               {/* Lista de resultados da busca de condutor */}
               {mostrarResultadosCondutor && resultadosCondutor.length > 0 && (
-                <div className="search-results-dropdown">
+                <div className={styles.searchResultsDropdown}>
                   {resultadosCondutor.map((motorista, index) => (
                     <div
                       key={`motorista-${motorista.id}-${index}`}
-                      className="search-result-card"
+                      className={styles.searchResultCard}
                       onClick={() => handleSelecionarCondutor(motorista)}
                     >
-                      <div className="result-title">
+                      <div className={styles.resultTitle}>
                         {motorista.nome}
                       </div>
                       {motorista.cpf && (
-                        <div className="result-subtitle">
+                        <div className={styles.resultSubtitle}>
                           CPF: {motorista.cpf_formatado || motorista.cpf}
                         </div>
                       )}
                       {motorista.categoria_cnh && (
-                        <div className="result-meta text-success">
+                        <div className={`${styles.resultMeta} ${styles.textSuccess}`}>
                           CNH: {motorista.categoria_cnh}
                         </div>
                       )}
@@ -520,30 +521,30 @@ function PagamentoAgregadoForm() {
               )}
 
               {mostrarResultadosCondutor && resultadosCondutor.length === 0 && buscaCondutor.length >= 2 && !loadingCondutor && (
-                <small className="form-hint text-danger">
+                <small className={`${styles.formHint} ${styles.textDanger}`}>
                   Nenhum motorista encontrado
                 </small>
               )}
             </div>
           ) : (
             /* Condutor selecionado - exibe card com detalhes */
-            <div className="selected-card condutor-selected">
+            <div className={`${styles.selectedCard} ${styles.condutorSelected}`}>
               <button
                 type="button"
                 onClick={handleRemoverCondutor}
-                className="btn-remove-circle btn-sm"
+                className={`${styles.btnRemoveCircle} ${styles.btnSm}`}
                 title="Remover condutor"
               >
                 ×
               </button>
-              <span className="selected-badge">
+              <span className={styles.selectedBadge}>
                 MOTORISTA VINCULADO
               </span>
-              <div className="selected-title">
+              <div className={styles.selectedTitle}>
                 {condutorSelecionado.nome}
               </div>
               {condutorSelecionado.cpf && (
-                <div className="selected-subtitle">
+                <div className={styles.selectedSubtitle}>
                   CPF: {condutorSelecionado.cpf_formatado || condutorSelecionado.cpf}
                 </div>
               )}
@@ -552,9 +553,9 @@ function PagamentoAgregadoForm() {
 
           {/* Busca de Veículo por Placa */}
           {!veiculoSelecionado ? (
-            <div className="form-group search-field-wrapper">
+            <div className={`${styles.formGroup} ${styles.searchFieldWrapper}`}>
               <label>Placa do Veículo *</label>
-              <small className="form-hint mb-10 text-muted">
+              <small className={`${styles.formHint} ${styles.mb10} ${styles.textMuted}`}>
                 Digite a placa do veiculo para buscar e vincular automaticamente
               </small>
               <input
@@ -563,29 +564,29 @@ function PagamentoAgregadoForm() {
                 onChange={(e) => setBuscaVeiculo(e.target.value.toUpperCase())}
                 placeholder="Digite a placa do veículo..."
                 autoComplete="off"
-                className="input-uppercase"
+                className={styles.inputUppercase}
               />
               {loadingVeiculo && (
-                <small className="form-hint">Buscando...</small>
+                <small className={styles.formHint}>Buscando...</small>
               )}
 
               {/* Lista de resultados da busca de veiculo */}
               {mostrarResultadosVeiculo && resultadosVeiculo.length > 0 && (
-                <div className="search-results-dropdown">
+                <div className={styles.searchResultsDropdown}>
                   {resultadosVeiculo.map((veiculo, index) => (
                     <div
                       key={`veiculo-${veiculo.id}-${index}`}
-                      className="search-result-card"
+                      className={styles.searchResultCard}
                       onClick={() => handleSelecionarVeiculo(veiculo)}
                     >
-                      <div className="result-title">
+                      <div className={styles.resultTitle}>
                         {veiculo.placa}
                       </div>
-                      <div className="result-subtitle">
+                      <div className={styles.resultSubtitle}>
                         {veiculo.tipo_carroceria || veiculo.tipo_rodado || 'Tipo N/I'}
                       </div>
                       {veiculo.proprietario_nome && (
-                        <div className="result-meta">
+                        <div className={styles.resultMeta}>
                           Proprietario: {veiculo.proprietario_nome}
                         </div>
                       )}
@@ -595,33 +596,33 @@ function PagamentoAgregadoForm() {
               )}
 
               {mostrarResultadosVeiculo && resultadosVeiculo.length === 0 && buscaVeiculo.length >= 2 && !loadingVeiculo && (
-                <small className="form-hint text-danger">
+                <small className={`${styles.formHint} ${styles.textDanger}`}>
                   Nenhum veiculo encontrado com essa placa
                 </small>
               )}
             </div>
           ) : (
             /* Veículo selecionado - exibe card com detalhes */
-            <div className="selected-card veiculo-selected">
+            <div className={`${styles.selectedCard} ${styles.veiculoSelected}`}>
               <button
                 type="button"
                 onClick={handleRemoverVeiculo}
-                className="btn-remove-circle btn-sm"
+                className={`${styles.btnRemoveCircle} ${styles.btnSm}`}
                 title="Remover veículo"
               >
                 ×
               </button>
-              <span className="selected-badge">
+              <span className={styles.selectedBadge}>
                 VEICULO VINCULADO
               </span>
-              <div className="selected-title">
+              <div className={styles.selectedTitle}>
                 {veiculoSelecionado.placa}
               </div>
-              <div className="selected-subtitle">
+              <div className={styles.selectedSubtitle}>
                 {veiculoSelecionado.modelo || 'Modelo N/I'} {veiculoSelecionado.marca ? `- ${veiculoSelecionado.marca}` : ''}
               </div>
               {veiculoSelecionado.proprietario_nome && (
-                <div className="selected-meta">
+                <div className={styles.selectedMeta}>
                   Proprietario: {veiculoSelecionado.proprietario_nome}
                 </div>
               )}
@@ -629,7 +630,7 @@ function PagamentoAgregadoForm() {
           )}
 
           {/* Campo CPF oculto mas editavel se necessario */}
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>CPF do Condutor</label>
             <input
               type="text"
@@ -642,11 +643,11 @@ function PagamentoAgregadoForm() {
           </div>
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Valores</h3>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Valor do Frete Total (R$) *</label>
               <input
                 type="number"
@@ -660,7 +661,7 @@ function PagamentoAgregadoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Percentual de Repasse (%) *</label>
               <input
                 type="number"
@@ -675,7 +676,7 @@ function PagamentoAgregadoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Desconto (R$)</label>
               <input
                 type="number"
@@ -686,27 +687,27 @@ function PagamentoAgregadoForm() {
                 min="0"
                 placeholder="0.00"
               />
-              <small className="form-hint">Desconto sobre o valor a repassar</small>
+              <small className={styles.formHint}>Desconto sobre o valor a repassar</small>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Valor a Repassar (R$)</label>
               <input
                 type="text"
                 value={`R$ ${valorRepassado}`}
                 disabled
-                className="input-calculated"
+                className={styles.inputCalculated}
               />
-              <small className="form-hint">Calculado: (Frete × %) − Desconto</small>
+              <small className={styles.formHint}>Calculado: (Frete × %) − Desconto</small>
             </div>
           </div>
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Datas e Status</h3>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Data Prevista *</label>
               <input
                 type="date"
@@ -717,7 +718,7 @@ function PagamentoAgregadoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Data Pagamento</label>
               <input
                 type="date"
@@ -727,7 +728,7 @@ function PagamentoAgregadoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Status *</label>
               <select
                 name="status"
@@ -741,7 +742,7 @@ function PagamentoAgregadoForm() {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Observações</label>
             <textarea
               name="obs"
@@ -754,16 +755,16 @@ function PagamentoAgregadoForm() {
 
           {/* Campo de comprovante apenas na criacao */}
           {!isEditing && (
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Comprovante de Pagamento (opcional)</label>
               <input
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
                 onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
-                className="file-input"
+                className={styles.fileInput}
               />
               {comprovanteFile && (
-                <small className="form-hint text-muted">
+                <small className={`${styles.formHint} ${styles.textMuted}`}>
                   Arquivo selecionado: {comprovanteFile.name}
                 </small>
               )}
@@ -771,21 +772,20 @@ function PagamentoAgregadoForm() {
           )}
         </div>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="outline"
             onClick={() => navigate('/pagamentos')}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="btn-primary"
             disabled={saving}
           >
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Pagamento')}
-          </button>
+          </Button>
         </div>
       </form>
 

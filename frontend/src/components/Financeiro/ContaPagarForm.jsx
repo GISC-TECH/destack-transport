@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { contasPagarAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import './Financeiro.css';
+import Button from '../Common/Button';
+import styles from './Financeiro.module.css';
 
 function ContaPagarForm() {
   const navigate = useNavigate();
@@ -118,9 +119,9 @@ function ContaPagarForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="financeiro-page">
-      <div className="page-header">
-        <div className="header-title">
+    <div className={styles.financeiroPage}>
+      <div className={styles.pageHeader}>
+        <div className={styles.headerTitle}>
           <h1>{isEditing ? 'Editar Conta a Pagar' : 'Nova Conta a Pagar'}</h1>
           <p>{isEditing ? 'Atualize os dados da despesa' : 'Cadastre uma nova despesa a pagar'}</p>
         </div>
@@ -133,12 +134,12 @@ function ContaPagarForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-container">
-        <div className="form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Informações Básicas</h3>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Descrição *</label>
               <input
                 type="text"
@@ -151,7 +152,7 @@ function ContaPagarForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Categoria *</label>
               <select
                 name="categoria"
@@ -168,8 +169,8 @@ function ContaPagarForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Fornecedor</label>
               <input
                 type="text"
@@ -181,7 +182,7 @@ function ContaPagarForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Valor (R$) *</label>
               <input
                 type="number"
@@ -196,11 +197,11 @@ function ContaPagarForm() {
           </div>
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Vencimento e Pagamento</h3>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Data de Vencimento *</label>
               <input
                 type="date"
@@ -211,7 +212,7 @@ function ContaPagarForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Data de Pagamento</label>
               <input
                 type="date"
@@ -221,7 +222,7 @@ function ContaPagarForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Status *</label>
               <select
                 name="status"
@@ -238,11 +239,11 @@ function ContaPagarForm() {
           </div>
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Vínculos</h3>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Veículo (opcional)</label>
               <select
                 name="veiculo"
@@ -258,7 +259,7 @@ function ContaPagarForm() {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Comprovante (opcional)</label>
               <input
                 type="file"
@@ -274,7 +275,7 @@ function ContaPagarForm() {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Observação</label>
             <textarea
               name="observacao"
@@ -286,21 +287,21 @@ function ContaPagarForm() {
           </div>
         </div>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
             onClick={() => navigate('/financeiro/contas-a-pagar')}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="btn-primary"
+            variant="primary"
             disabled={saving}
           >
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Conta')}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

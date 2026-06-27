@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import './Navbar.css';
+import styles from './Navbar.module.css';
 
 function Navbar() {
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -27,8 +27,8 @@ function Navbar() {
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">
+    <nav className={styles.navbar}>
+      <div className={styles.brand}>
         <Link to="/">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="1" y="3" width="15" height="13"></rect>
@@ -40,9 +40,9 @@ function Navbar() {
         </Link>
       </div>
 
-      <ul className="navbar-menu">
+      <ul className={styles.menu}>
         <li>
-          <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
+          <Link to="/" className={location.pathname === '/' ? styles.active : ''}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
               <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -53,35 +53,35 @@ function Navbar() {
 
         {/* Documentos Fiscais */}
         <li
-          className={`dropdown ${openDropdown === 'documentos' ? 'open' : ''}`}
+          className={`${styles.dropdown} ${openDropdown === 'documentos' ? styles.open : ''}`}
           onMouseEnter={() => handleDropdown('documentos')}
           onMouseLeave={closeDropdown}
         >
-          <span className={`dropdown-toggle ${isActive('/ctes') || isActive('/mdfes') || isActive('/upload') ? 'active' : ''}`}>
+          <span className={`${styles.dropdownToggle} ${isActive('/ctes') || isActive('/mdfes') || isActive('/upload') ? styles.active : ''}`}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
             Documentos
-            <svg className="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className={styles.dropdownArrow} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </span>
-          <ul className="dropdown-menu">
+          <ul className={styles.dropdownMenu}>
             <li><Link to="/ctes" onClick={closeDropdown}>CT-e</Link></li>
             <li><Link to="/mdfes" onClick={closeDropdown}>MDF-e</Link></li>
-            <li className="divider"></li>
+            <li className={styles.divider}></li>
             <li><Link to="/upload" onClick={closeDropdown}>Upload XML</Link></li>
           </ul>
         </li>
 
         {/* Cadastros */}
         <li
-          className={`dropdown ${openDropdown === 'cadastros' ? 'open' : ''}`}
+          className={`${styles.dropdown} ${openDropdown === 'cadastros' ? styles.open : ''}`}
           onMouseEnter={() => handleDropdown('cadastros')}
           onMouseLeave={closeDropdown}
         >
-          <span className={`dropdown-toggle ${isActive('/clientes') || isActive('/motoristas') || isActive('/veiculos') ? 'active' : ''}`}>
+          <span className={`${styles.dropdownToggle} ${isActive('/clientes') || isActive('/motoristas') || isActive('/veiculos') ? styles.active : ''}`}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
@@ -89,11 +89,11 @@ function Navbar() {
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
             Cadastros
-            <svg className="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className={styles.dropdownArrow} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </span>
-          <ul className="dropdown-menu">
+          <ul className={styles.dropdownMenu}>
             <li><Link to="/clientes" onClick={closeDropdown}>Clientes</Link></li>
             <li><Link to="/motoristas" onClick={closeDropdown}>Motoristas</Link></li>
             <li><Link to="/veiculos" onClick={closeDropdown}>Veículos</Link></li>
@@ -102,31 +102,31 @@ function Navbar() {
 
         {/* Financeiro */}
         <li
-          className={`dropdown ${openDropdown === 'financeiro' ? 'open' : ''}`}
+          className={`${styles.dropdown} ${openDropdown === 'financeiro' ? styles.open : ''}`}
           onMouseEnter={() => handleDropdown('financeiro')}
           onMouseLeave={closeDropdown}
         >
-          <span className={`dropdown-toggle ${isActive('/financeiro') || isActive('/pagamentos') || isActive('/faixas-km') ? 'active' : ''}`}>
+          <span className={`${styles.dropdownToggle} ${isActive('/financeiro') || isActive('/pagamentos') || isActive('/faixas-km') ? styles.active : ''}`}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
             Financeiro
-            <svg className="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className={styles.dropdownArrow} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </span>
-          <ul className="dropdown-menu">
+          <ul className={styles.dropdownMenu}>
             <li><Link to="/financeiro" onClick={closeDropdown}>Painel Financeiro</Link></li>
             <li><Link to="/pagamentos" onClick={closeDropdown}>Pagamentos</Link></li>
-            <li className="divider"></li>
+            <li className={styles.divider}></li>
             <li><Link to="/faixas-km" onClick={closeDropdown}>Faixas de KM</Link></li>
           </ul>
         </li>
 
         {/* Operacional */}
         <li>
-          <Link to="/manutencoes" className={isActive('/manutencoes') ? 'active' : ''}>
+          <Link to="/manutencoes" className={isActive('/manutencoes') ? styles.active : ''}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
             </svg>
@@ -136,22 +136,22 @@ function Navbar() {
 
         {/* Relatórios */}
         <li
-          className={`dropdown ${openDropdown === 'relatorios' ? 'open' : ''}`}
+          className={`${styles.dropdown} ${openDropdown === 'relatorios' ? styles.open : ''}`}
           onMouseEnter={() => handleDropdown('relatorios')}
           onMouseLeave={closeDropdown}
         >
-          <span className={`dropdown-toggle ${isActive('/relatorios') || isActive('/geografico') ? 'active' : ''}`}>
+          <span className={`${styles.dropdownToggle} ${isActive('/relatorios') || isActive('/geografico') ? styles.active : ''}`}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="20" x2="18" y2="10"></line>
               <line x1="12" y1="20" x2="12" y2="4"></line>
               <line x1="6" y1="20" x2="6" y2="14"></line>
             </svg>
             Relatorios
-            <svg className="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className={styles.dropdownArrow} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </span>
-          <ul className="dropdown-menu">
+          <ul className={styles.dropdownMenu}>
             <li><Link to="/relatorios" onClick={closeDropdown}>Relatórios Gerais</Link></li>
             <li><Link to="/geografico" onClick={closeDropdown}>Painel Geográfico</Link></li>
           </ul>
@@ -159,46 +159,46 @@ function Navbar() {
 
         {/* Sistema */}
         <li
-          className={`dropdown ${openDropdown === 'sistema' ? 'open' : ''}`}
+          className={`${styles.dropdown} ${openDropdown === 'sistema' ? styles.open : ''}`}
           onMouseEnter={() => handleDropdown('sistema')}
           onMouseLeave={closeDropdown}
         >
-          <span className={`dropdown-toggle ${isActive('/backup') || isActive('/alertas') || isActive('/vencimentos') ? 'active' : ''}`}>
+          <span className={`${styles.dropdownToggle} ${isActive('/backup') || isActive('/alertas') || isActive('/vencimentos') ? styles.active : ''}`}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
             Sistema
-            <svg className="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className={styles.dropdownArrow} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </span>
-          <ul className="dropdown-menu">
+          <ul className={styles.dropdownMenu}>
             <li><Link to="/alertas" onClick={closeDropdown}>Alertas</Link></li>
             <li><Link to="/vencimentos" onClick={closeDropdown}>Vencimentos</Link></li>
-            <li className="divider"></li>
+            <li className={styles.divider}></li>
             <li><Link to="/backup" onClick={closeDropdown}>Backup</Link></li>
           </ul>
         </li>
       </ul>
 
-      <div className="navbar-right">
-        <Link to="/configuracoes" className={`config-btn ${isActive('/configuracoes') ? 'active' : ''}`}>
+      <div className={styles.right}>
+        <Link to="/configuracoes" className={`${styles.configBtn} ${isActive('/configuracoes') ? styles.active : ''}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
         </Link>
 
-        <div className="user-menu">
-          <span className="user-name">
+        <div className={styles.userMenu}>
+          <span className={styles.userName}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
             {user?.username || 'Usuario'}
           </span>
-          <button className="logout-btn" onClick={handleLogout}>
+          <button className={styles.logoutBtn} onClick={handleLogout}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>

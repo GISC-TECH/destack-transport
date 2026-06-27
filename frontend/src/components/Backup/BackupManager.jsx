@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { backupAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
-import './Backup.css';
+import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import styles from './Backup.module.css';
 
 // Mock data para backups (usa mesmos campos do backend: RegistroBackupSerializer)
 const mockBackups = [
@@ -182,7 +185,7 @@ function BackupManager() {
   );
 
   return (
-    <div className="backup-page">
+    <div className={styles.page}>
       <PageHeader
         title="Gerenciamento de Backup"
         subtitle={usingMockData ? "Crie e restaure backups do sistema (Modo Demonstração)" : "Crie e restaure backups do sistema"}
@@ -191,16 +194,16 @@ function BackupManager() {
       />
 
       {message && (
-        <div className={`alert alert-${message.type}`}>
+        <div className={`${styles.alert} ${styles[`alert${message.type.charAt(0).toUpperCase() + message.type.slice(1)}`]}`}>
           {message.text}
-          <button className="alert-close" onClick={() => setMessage(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setMessage(null)}>&times;</button>
         </div>
       )}
 
       {/* Ações */}
-      <div className="backup-actions">
-        <div className="action-card">
-          <div className="action-icon gerar">
+      <div className={styles.actions}>
+        <div className={styles.actionCard}>
+          <div className={`${styles.actionIcon} ${styles.actionGerar}`}>
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="17 8 12 3 7 8"></polyline>
@@ -209,24 +212,17 @@ function BackupManager() {
           </div>
           <h3>Gerar Backup</h3>
           <p>Criar um novo backup completo do banco de dados</p>
-          <button
-            className="btn-primary"
+          <Button
             onClick={handleGerarBackup}
+            loading={gerando}
             disabled={gerando}
           >
-            {gerando ? (
-              <>
-                <span className="spinner"></span>
-                Gerando...
-              </>
-            ) : (
-              'Gerar Novo Backup'
-            )}
-          </button>
+            Gerar Novo Backup
+          </Button>
         </div>
 
-        <div className="action-card">
-          <div className="action-icon restaurar">
+        <div className={styles.actionCard}>
+          <div className={`${styles.actionIcon} ${styles.actionRestaurar}`}>
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
@@ -235,18 +231,11 @@ function BackupManager() {
           </div>
           <h3>Restaurar Backup</h3>
           <p>Restaurar sistema a partir de um arquivo de backup</p>
-          <label className={`btn-warning ${restaurando ? 'disabled' : ''}`}>
-            {restaurando ? (
-              <>
-                <span className="spinner"></span>
-                Restaurando...
-              </>
-            ) : (
-              'Selecionar Arquivo'
-            )}
+          <label className={styles.downloadButton} style={{ cursor: restaurando ? 'not-allowed' : 'pointer', opacity: restaurando ? 0.6 : 1 }}>
+            {restaurando ? 'Restaurando...' : 'Selecionar Arquivo'}
             <input
               type="file"
-              className="file-input-hidden"
+              className={styles.fileInputHidden}
               accept=".zip,.sql,.json"
               onChange={handleRestaurar}
               disabled={restaurando}
@@ -256,99 +245,101 @@ function BackupManager() {
       </div>
 
       {/* Lista de Backups */}
-      <div className="backups-section">
+      <div className={styles.section}>
         <h2>Backups Disponíveis</h2>
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Arquivo</th>
-                <th>Tamanho</th>
-                <th>Data de Criação</th>
-                <th>Status</th>
-                <th>Usuário</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {backups.length === 0 ? (
+        <div className={styles.tableContainer}>
+          <TableContainer mobileCards={false}>
+            <table className={styles.table}>
+              <thead>
                 <tr>
-                  <td colSpan="6" className="text-center">
-                    Nenhum backup encontrado
-                  </td>
+                  <th>Arquivo</th>
+                  <th>Tamanho</th>
+                  <th>Data de Criação</th>
+                  <th>Status</th>
+                  <th>Usuário</th>
+                  <th>Ações</th>
                 </tr>
-              ) : (
-                backups.map((backup) => (
-                  <tr key={backup.id}>
-                    <td>
-                      <strong>{backup.nome_arquivo}</strong>
-                    </td>
-                    <td>{formatBytes(backup.tamanho_bytes)}</td>
-                    <td>{formatDate(backup.data_hora)}</td>
-                    <td>
-                      <span className={`badge badge-${backup.status === 'completo' ? 'success' : backup.status === 'erro' ? 'danger' : 'warning'}`}>
-                        {backup.status || 'Completo'}
-                      </span>
-                    </td>
-                    <td>{backup.usuario || '-'}</td>
-                    <td>
-                      <button
-                        className="btn-action btn-download"
-                        onClick={() => handleDownload(backup)}
-                        title="Baixar backup"
-                        disabled={backup.status === 'erro'}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="7 10 12 15 17 10"></polyline>
-                          <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        Baixar
-                      </button>
+              </thead>
+              <tbody>
+                {backups.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className={styles.textCenter}>
+                      Nenhum backup encontrado
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  backups.map((backup) => (
+                    <tr key={backup.id}>
+                      <td>
+                        <strong>{backup.nome_arquivo}</strong>
+                      </td>
+                      <td>{formatBytes(backup.tamanho_bytes)}</td>
+                      <td>{formatDate(backup.data_hora)}</td>
+                      <td>
+                        <StatusPill status={backup.status === 'completo' ? 'success' : backup.status === 'erro' ? 'danger' : 'warning'}>
+                          {backup.status || 'Completo'}
+                        </StatusPill>
+                      </td>
+                      <td>{backup.usuario || '-'}</td>
+                      <td>
+                        <button
+                          className={styles.downloadButton}
+                          onClick={() => handleDownload(backup)}
+                          title="Baixar backup"
+                          disabled={backup.status === 'erro'}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                          Baixar
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </TableContainer>
 
-          <div className="mobile-cards">
+          <div className={styles.mobileCards}>
             {backups.length === 0 ? (
-              <div className="mobile-empty">
-                <div className="mobile-empty-icon">
+              <div className={styles.mobileEmpty}>
+                <div className={styles.mobileEmptyIcon}>
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                     <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                     <line x1="12" y1="22.08" x2="12" y2="12"></line>
                   </svg>
                 </div>
-                <p className="mobile-empty-text">Nenhum backup encontrado</p>
+                <p className={styles.mobileEmptyText}>Nenhum backup encontrado</p>
               </div>
             ) : (
               backups.map((backup) => (
-                <div key={backup.id} className="mobile-card">
-                  <div className="mobile-card-header">
-                    <div className="mobile-card-title">
-                      <span className="mobile-card-number">{backup.nome_arquivo}</span>
-                      <span className="mobile-card-date">{formatDate(backup.data_hora)}</span>
+                <div key={backup.id} className={styles.mobileCard}>
+                  <div className={styles.mobileCardHeader}>
+                    <div className={styles.mobileCardTitle}>
+                      <span className={styles.mobileCardNumber}>{backup.nome_arquivo}</span>
+                      <span className={styles.mobileCardDate}>{formatDate(backup.data_hora)}</span>
                     </div>
-                    <span className={`badge badge-${backup.status === 'completo' ? 'success' : backup.status === 'erro' ? 'danger' : 'warning'}`}>
+                    <StatusPill status={backup.status === 'completo' ? 'success' : backup.status === 'erro' ? 'danger' : 'warning'}>
                       {backup.status || 'Completo'}
-                    </span>
+                    </StatusPill>
                   </div>
-                  <div className="mobile-card-body">
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">Tamanho</span>
-                      <span className="mobile-card-value">{formatBytes(backup.tamanho_bytes)}</span>
+                  <div className={styles.mobileCardBody}>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Tamanho</span>
+                      <span className={styles.mobileCardValue}>{formatBytes(backup.tamanho_bytes)}</span>
                     </div>
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">Usuário</span>
-                      <span className="mobile-card-value">{backup.usuario || '-'}</span>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Usuário</span>
+                      <span className={styles.mobileCardValue}>{backup.usuario || '-'}</span>
                     </div>
                   </div>
-                  <div className="mobile-card-footer">
+                  <div className={styles.mobileCardFooter}>
                     <button
-                      className="btn-action btn-download"
+                      className={styles.downloadButton}
                       onClick={() => handleDownload(backup)}
                       title="Baixar backup"
                       disabled={backup.status === 'erro'}
@@ -369,7 +360,7 @@ function BackupManager() {
       </div>
 
       {/* Informações */}
-      <div className="backup-info">
+      <div className={styles.info}>
         <h3>Informações Importantes</h3>
         <ul>
           <li>Os backups são armazenados em formato compactado (ZIP)</li>

@@ -3,7 +3,8 @@ import { configAPI, comunicacaoAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
-import './Configuracoes.css';
+import Button from '../Common/Button';
+import styles from './Configuracoes.module.css';
 
 function Configuracoes() {
   const [activeTab, setActiveTab] = useState('empresa');
@@ -142,7 +143,7 @@ function Configuracoes() {
   );
 
   return (
-    <div className="configuracoes-page">
+    <div className={styles.page}>
       <PageHeader
         title="Configurações"
         subtitle="Gerencie os dados da empresa e parâmetros do sistema"
@@ -151,9 +152,9 @@ function Configuracoes() {
       />
 
       {/* Tabs */}
-      <div className="config-tabs">
+      <div className={styles.tabs}>
         <button
-          className={`config-tab ${activeTab === 'empresa' ? 'active' : ''}`}
+          className={`${styles.tab} ${activeTab === 'empresa' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('empresa')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -163,7 +164,7 @@ function Configuracoes() {
           Dados da Empresa
         </button>
         <button
-          className={`config-tab ${activeTab === 'parametros' ? 'active' : ''}`}
+          className={`${styles.tab} ${activeTab === 'parametros' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('parametros')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -173,7 +174,7 @@ function Configuracoes() {
           Parâmetros do Sistema
         </button>
         <button
-          className={`config-tab ${activeTab === 'whatsapp' ? 'active' : ''}`}
+          className={`${styles.tab} ${activeTab === 'whatsapp' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('whatsapp')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -184,17 +185,17 @@ function Configuracoes() {
       </div>
 
       {message && (
-        <div className={`message-box ${message.type}`}>
+        <div className={`${styles.messageBox} ${message.type === 'success' ? styles.messageSuccess : styles.messageError}`}>
           {message.text}
         </div>
       )}
 
       {/* Conteúdo */}
-      <div className="config-content">
+      <div className={styles.content}>
         {activeTab === 'empresa' && empresa && (
-          <div className="config-section">
-            <div className="form-grid">
-              <div className="form-group full">
+          <div className={styles.section}>
+            <div className={styles.formGrid}>
+              <div className={`${styles.formGroup} ${styles.full}`}>
                 <label>Razão Social</label>
                 <input
                   type="text"
@@ -203,7 +204,7 @@ function Configuracoes() {
                   placeholder="Razão Social da Empresa"
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Nome Fantasia</label>
                 <input
                   type="text"
@@ -212,7 +213,7 @@ function Configuracoes() {
                   placeholder="Nome Fantasia"
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>CNPJ</label>
                 <input
                   type="text"
@@ -221,7 +222,7 @@ function Configuracoes() {
                   placeholder="00.000.000/0000-00"
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Inscrição Estadual</label>
                 <input
                   type="text"
@@ -230,7 +231,7 @@ function Configuracoes() {
                   placeholder="IE"
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Telefone</label>
                 <input
                   type="text"
@@ -239,7 +240,7 @@ function Configuracoes() {
                   placeholder="(00) 00000-0000"
                 />
               </div>
-              <div className="form-group full">
+              <div className={`${styles.formGroup} ${styles.full}`}>
                 <label>E-mail</label>
                 <input
                   type="email"
@@ -249,11 +250,11 @@ function Configuracoes() {
                 />
               </div>
 
-              <div className="form-divider">
+              <div className={styles.divider}>
                 <span>Telefones para Notificações</span>
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Telefone do Gestor</label>
                 <input
                   type="text"
@@ -263,7 +264,7 @@ function Configuracoes() {
                 />
                 <small>Recebe alertas de pagamentos e situações críticas</small>
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Telefone do Financeiro</label>
                 <input
                   type="text"
@@ -273,7 +274,7 @@ function Configuracoes() {
                 />
                 <small>Recebe alertas de cobranças e faturamentos</small>
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Telefone do Operacional</label>
                 <input
                   type="text"
@@ -284,11 +285,11 @@ function Configuracoes() {
                 <small>Recebe alertas de manutenções e vencimentos</small>
               </div>
 
-              <div className="form-divider">
+              <div className={styles.divider}>
                 <span>Endereço</span>
               </div>
 
-              <div className="form-group span-2">
+              <div className={`${styles.formGroup} ${styles.span2}`}>
                 <label>Logradouro</label>
                 <input
                   type="text"
@@ -297,7 +298,7 @@ function Configuracoes() {
                   placeholder="Rua, Avenida..."
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Número</label>
                 <input
                   type="text"
@@ -306,7 +307,7 @@ function Configuracoes() {
                   placeholder="Nº"
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Bairro</label>
                 <input
                   type="text"
@@ -315,7 +316,7 @@ function Configuracoes() {
                   placeholder="Bairro"
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Cidade/Município</label>
                 <input
                   type="text"
@@ -324,7 +325,7 @@ function Configuracoes() {
                   placeholder="Município"
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>UF</label>
                 <input
                   type="text"
@@ -334,7 +335,7 @@ function Configuracoes() {
                   maxLength={2}
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>CEP</label>
                 <input
                   type="text"
@@ -345,35 +346,35 @@ function Configuracoes() {
               </div>
             </div>
 
-            <div className="form-actions">
-              <button className="btn-primary" onClick={saveEmpresa} disabled={saving}>
-                {saving ? 'Salvando...' : 'Salvar Dados'}
-              </button>
+            <div className={styles.actions}>
+              <Button onClick={saveEmpresa} loading={saving} disabled={saving}>
+                Salvar Dados
+              </Button>
             </div>
           </div>
         )}
 
         {activeTab === 'parametros' && (
-          <div className="config-section">
-            <div className="parametros-list">
+          <div className={styles.section}>
+            <div className={styles.parametrosList}>
               {parametros.length === 0 ? (
-                <p className="no-data">Nenhum parâmetro configurado</p>
+                <p className={styles.noData}>Nenhum parâmetro configurado</p>
               ) : (
                 parametros.map((param) => (
-                  <div key={param.id} className="parametro-item">
-                    <div className="parametro-info">
-                      <span className="parametro-nome">{param.nome}</span>
-                      <span className="parametro-desc">{param.descricao || ''}</span>
+                  <div key={param.id} className={styles.parametroItem}>
+                    <div className={styles.parametroInfo}>
+                      <span className={styles.parametroNome}>{param.nome}</span>
+                      <span className={styles.parametroDesc}>{param.descricao || ''}</span>
                     </div>
-                    <div className="parametro-valor">
+                    <div className={styles.parametroValor}>
                       {param.tipo_dado === 'bool' ? (
-                        <label className="switch">
+                        <label className={styles.switch}>
                           <input
                             type="checkbox"
                             checked={param.valor === 'true' || param.valor === true}
                             onChange={(e) => handleParametroChange(param.id, e.target.checked.toString())}
                           />
-                          <span className="slider"></span>
+                          <span className={styles.slider}></span>
                         </label>
                       ) : (
                         <input
@@ -390,18 +391,18 @@ function Configuracoes() {
             </div>
 
             {parametros.length > 0 && (
-              <div className="form-actions">
-                <button className="btn-primary" onClick={saveParametros} disabled={saving}>
-                  {saving ? 'Salvando...' : 'Salvar Parâmetros'}
-                </button>
+              <div className={styles.actions}>
+                <Button onClick={saveParametros} loading={saving} disabled={saving}>
+                  Salvar Parâmetros
+                </Button>
               </div>
             )}
           </div>
         )}
 
         {activeTab === 'whatsapp' && (
-          <div className="config-section">
-            <div className="whatsapp-config-header">
+          <div className={styles.section}>
+            <div className={styles.whatsappHeader}>
               <h3>Integração WhatsApp (Evolution API)</h3>
               <p>
                 O envio de mensagens utiliza a Evolution API hospedada no próprio servidor.
@@ -409,8 +410,8 @@ function Configuracoes() {
               </p>
             </div>
 
-            <div className="whatsapp-config-info">
-              <div className="info-item">
+            <div className={styles.whatsappInfo}>
+              <div className={styles.infoItem}>
                 <strong>Para ativar:</strong>
                 <ol>
                   <li>Configure <code>EVOLUTION_API_URL</code>, <code>EVOLUTION_API_KEY</code> e <code>EVOLUTION_INSTANCE_NAME</code> no <code>.env</code></li>
@@ -421,18 +422,14 @@ function Configuracoes() {
               </div>
             </div>
 
-            <div className="form-actions">
-              <button
-                className="btn-primary"
-                onClick={testarWhatsapp}
-                disabled={testingWhatsapp}
-              >
-                {testingWhatsapp ? 'Testando...' : 'Testar Conexão WhatsApp'}
-              </button>
+            <div className={styles.actions}>
+              <Button onClick={testarWhatsapp} loading={testingWhatsapp} disabled={testingWhatsapp}>
+                Testar Conexão WhatsApp
+              </Button>
             </div>
 
             {whatsappStatus && (
-              <div className={`message-box ${whatsappStatus.type}`}>
+              <div className={`${styles.messageBox} ${whatsappStatus.type === 'success' ? styles.messageSuccess : styles.messageError}`}>
                 {whatsappStatus.type === 'success' ? (
                   <>
                     <strong>Conectado!</strong>

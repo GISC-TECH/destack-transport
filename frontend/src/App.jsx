@@ -12,6 +12,7 @@ import LandingPage from './components/Landing/LandingPage';
 // Dashboard (carregado imediatamente por ser a tela principal)
 import Dashboard from './components/Dashboard/Dashboard';
 
+import './styles/tokens.module.css';
 import './App.css';
 
 // Componente de loading para code-splitting

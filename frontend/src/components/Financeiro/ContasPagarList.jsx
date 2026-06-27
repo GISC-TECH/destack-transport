@@ -5,7 +5,11 @@ import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
-import './Financeiro.css';
+import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import tokens from '../../styles/tokens.module.css';
+import styles from './Financeiro.module.css';
 
 function ContasPagarList() {
   const toast = useToast();
@@ -93,15 +97,24 @@ function ContasPagarList() {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const getStatusBadge = (status) => {
-    const statusMap = {
-      'pendente': { class: 'warning', text: 'Pendente' },
-      'paga': { class: 'success', text: 'Paga' },
-      'atrasada': { class: 'danger', text: 'Atrasada' },
-      'cancelada': { class: 'secondary', text: 'Cancelada' }
+  const getStatusVariant = (status) => {
+    const map = {
+      'pendente': 'warning',
+      'paga': 'success',
+      'atrasada': 'danger',
+      'cancelada': 'danger'
     };
-    const s = statusMap[status] || { class: 'secondary', text: status };
-    return <span className={`badge badge-${s.class}`}>{s.text}</span>;
+    return map[status] || 'default';
+  };
+
+  const getStatusLabel = (status) => {
+    const map = {
+      'pendente': 'Pendente',
+      'paga': 'Paga',
+      'atrasada': 'Atrasada',
+      'cancelada': 'Cancelada'
+    };
+    return map[status] || status;
   };
 
   const getCategoriaLabel = (categoria) => {
@@ -126,21 +139,21 @@ function ContasPagarList() {
   if (error) return <ErrorMessage message={error} onRetry={loadContas} />;
 
   return (
-    <div className="financeiro-page">
+    <div className={styles.financeiroPage}>
       <PageHeader
         title="Contas a Pagar"
         subtitle="Gerencie despesas, fornecedores e pagamentos"
         breadcrumbs={[{ label: 'Financeiro' }, { label: 'Contas a Pagar' }]}
         actions={
           <>
-            <button className="btn-secondary" onClick={handleExport}>
+            <Button variant="secondary" onClick={handleExport}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
               Exportar CSV
-            </button>
+            </Button>
             <Link to="/financeiro/contas-a-pagar/nova" className="btn-primary">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -152,9 +165,9 @@ function ContasPagarList() {
         }
       />
 
-      <div className="fin-kpi-grid">
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon">
+      <div className={styles.finKpiGrid}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -162,54 +175,54 @@ function ContasPagarList() {
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
           </div>
-          <div className="fin-kpi-info">
-            <span className="fin-kpi-value">{contagens.pendente}</span>
-            <span className="fin-kpi-label">Pendentes</span>
+          <div className={styles.finKpiInfo}>
+            <span className={styles.finKpiValue}>{contagens.pendente}</span>
+            <span className={styles.finKpiLabel}>Pendentes</span>
           </div>
         </div>
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ color: '#e74c3c', background: 'rgba(231, 76, 60, 0.10)' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ color: tokens.dangerColor, background: tokens.dangerLight }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
           </div>
-          <div className="fin-kpi-info">
-            <span className="fin-kpi-value">{contagens.atrasada}</span>
-            <span className="fin-kpi-label">Atrasadas</span>
+          <div className={styles.finKpiInfo}>
+            <span className={styles.finKpiValue}>{contagens.atrasada}</span>
+            <span className={styles.finKpiLabel}>Atrasadas</span>
           </div>
         </div>
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ color: '#27ae60', background: 'rgba(39, 174, 96, 0.10)' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ color: tokens.successColor, background: tokens.successLight }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          <div className="fin-kpi-info">
-            <span className="fin-kpi-value">{contagens.paga}</span>
-            <span className="fin-kpi-label">Pagas</span>
+          <div className={styles.finKpiInfo}>
+            <span className={styles.finKpiValue}>{contagens.paga}</span>
+            <span className={styles.finKpiLabel}>Pagas</span>
           </div>
         </div>
-        <div className="fin-kpi-card principal">
-          <div className="fin-kpi-icon">
+        <div className={`${styles.finKpiCard} ${styles.principal}`}>
+          <div className={styles.finKpiIcon}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
           </div>
-          <div className="fin-kpi-info">
-            <span className="fin-kpi-value">{formatCurrency(contagens.total)}</span>
-            <span className="fin-kpi-label">Total em Contas</span>
+          <div className={styles.finKpiInfo}>
+            <span className={styles.finKpiValue}>{formatCurrency(contagens.total)}</span>
+            <span className={styles.finKpiLabel}>Total em Contas</span>
           </div>
         </div>
       </div>
 
-      <div className="filtros-section">
-        <form onSubmit={handleFiltrar} className="filtros-form">
+      <div className={styles.filtrosSection}>
+        <form onSubmit={handleFiltrar} className={styles.filtrosForm}>
           <select
             value={filtros.status}
             onChange={(e) => setFiltros({ ...filtros, status: e.target.value })}
-            className="select-filter"
+            className={styles.selectFilter}
           >
             <option value="">Todos os Status</option>
             <option value="pendente">Pendente</option>
@@ -220,7 +233,7 @@ function ContasPagarList() {
           <select
             value={filtros.categoria}
             onChange={(e) => setFiltros({ ...filtros, categoria: e.target.value })}
-            className="select-filter"
+            className={styles.selectFilter}
           >
             <option value="">Todas as Categorias</option>
             <option value="combustivel">Combustível</option>
@@ -232,7 +245,7 @@ function ContasPagarList() {
           <select
             value={filtros.veiculo}
             onChange={(e) => setFiltros({ ...filtros, veiculo: e.target.value })}
-            className="select-filter"
+            className={styles.selectFilter}
           >
             <option value="">Todos os Veículos</option>
             {veiculos.map(v => (
@@ -243,14 +256,14 @@ function ContasPagarList() {
             type="date"
             value={filtros.data_inicio}
             onChange={(e) => setFiltros({ ...filtros, data_inicio: e.target.value })}
-            className="input-filter"
+            className={styles.inputFilter}
             placeholder="Vencimento inicial"
           />
           <input
             type="date"
             value={filtros.data_fim}
             onChange={(e) => setFiltros({ ...filtros, data_fim: e.target.value })}
-            className="input-filter"
+            className={styles.inputFilter}
             placeholder="Vencimento final"
           />
           <input
@@ -258,18 +271,18 @@ function ContasPagarList() {
             placeholder="Buscar descrição, fornecedor..."
             value={filtros.q}
             onChange={(e) => setFiltros({ ...filtros, q: e.target.value })}
-            className="input-filter"
+            className={styles.inputFilter}
           />
-          <button type="submit" className="btn-primary">Filtrar</button>
+          <Button type="submit" variant="primary">Filtrar</Button>
         </form>
       </div>
 
-      <div className="results-info">
+      <div className={styles.resultsInfo}>
         <p>Total de {contas.length} conta{contas.length !== 1 ? 's' : ''}</p>
       </div>
 
-      <div className="table-container">
-        <table className="data-table">
+      <TableContainer>
+        <table>
           <thead>
             <tr>
               <th>Descrição</th>
@@ -301,16 +314,20 @@ function ContasPagarList() {
                   <td className="text-right">
                     <strong>{formatCurrency(conta.valor)}</strong>
                   </td>
-                  <td>{getStatusBadge(conta.status)}</td>
-                  <td className="actions-cell">
-                    <Link to={`/financeiro/contas-a-pagar/${conta.id}/editar`} className="btn-action btn-view" title="Editar">
+                  <td>
+                    <StatusPill status={getStatusVariant(conta.status)}>
+                      {getStatusLabel(conta.status)}
+                    </StatusPill>
+                  </td>
+                  <td className={styles.actionsCell}>
+                    <Link to={`/financeiro/contas-a-pagar/${conta.id}/editar`} className={`${styles.actionBtn} ${styles.view}`} title="Editar">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                       </svg>
                     </Link>
                     <button
-                      className="btn-action btn-delete"
+                      className={`${styles.actionBtn} ${styles.delete}`}
                       title="Excluir"
                       onClick={() => handleDelete(conta.id)}
                     >
@@ -325,7 +342,7 @@ function ContasPagarList() {
             )}
           </tbody>
         </table>
-      </div>
+      </TableContainer>
     </div>
   );
 }

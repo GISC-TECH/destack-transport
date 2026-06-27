@@ -8,12 +8,13 @@ import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
-import './Financeiro.css';
+import tokens from '../../styles/tokens.module.css';
+import styles from './Financeiro.module.css';
 
 const COLORS = {
-  receitas: '#27ae60',
-  despesas: '#e74c3c',
-  saldo: '#3498db',
+  receitas: tokens.successColor,
+  despesas: tokens.dangerColor,
+  saldo: tokens.infoColor,
   acumulado: '#9b59b6'
 };
 
@@ -107,8 +108,8 @@ function FluxoCaixa() {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="custom-tooltip">
-          <p className="tooltip-label">{label}</p>
+        <div className={styles.customTooltip}>
+          <p className={styles.tooltipLabel}>{label}</p>
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
@@ -131,7 +132,7 @@ function FluxoCaixa() {
   );
 
   return (
-    <div className="financeiro-page">
+    <div className={styles.financeiroPage}>
       <PageHeader
         title="Fluxo de Caixa"
         subtitle="Projeção de receitas e despesas"
@@ -160,67 +161,67 @@ function FluxoCaixa() {
       />
 
       {/* KPIs */}
-      <div className="fin-kpi-grid">
-        <div className="fin-kpi-card principal">
-          <div className="fin-kpi-icon">
+      <div className={styles.finKpiGrid}>
+        <div className={`${styles.finKpiCard} ${styles.principal}`}>
+          <div className={styles.finKpiIcon}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Saldo Projetado</span>
-            <span className="fin-kpi-value">{formatCurrency(dados?.totais?.saldo_projetado)}</span>
-            <span className="fin-kpi-subtext">
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Saldo Projetado</span>
+            <span className={styles.finKpiValue}>{formatCurrency(dados?.totais?.saldo_projetado)}</span>
+            <span className={styles.finKpiSubtext}>
               Período: {dados?.filtros?.data_inicio} a {dados?.filtros?.data_fim}
             </span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(39, 174, 96, 0.12)', color: '#27ae60' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.successLight, color: tokens.successColor }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
               <polyline points="17 6 23 6 23 12"></polyline>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Receitas Projetadas</span>
-            <span className="fin-kpi-value">{formatCurrency(dados?.totais?.receitas)}</span>
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Receitas Projetadas</span>
+            <span className={styles.finKpiValue}>{formatCurrency(dados?.totais?.receitas)}</span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(231, 76, 60, 0.12)', color: '#e74c3c' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.dangerLight, color: tokens.dangerColor }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
               <polyline points="17 18 23 18 23 12"></polyline>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Despesas Projetadas</span>
-            <span className="fin-kpi-value">{formatCurrency(dados?.totais?.despesas)}</span>
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Despesas Projetadas</span>
+            <span className={styles.finKpiValue}>{formatCurrency(dados?.totais?.despesas)}</span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(155, 89, 182, 0.12)', color: '#9b59b6' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.infoLight, color: tokens.infoColor }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="20" x2="12" y2="10"></line>
               <line x1="18" y1="20" x2="18" y2="4"></line>
               <line x1="6" y1="20" x2="6" y2="16"></line>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Períodos</span>
-            <span className="fin-kpi-value">{dados?.serie?.length || 0}</span>
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Períodos</span>
+            <span className={styles.finKpiValue}>{dados?.serie?.length || 0}</span>
           </div>
         </div>
       </div>
 
-      <div className="fin-charts-grid">
+      <div className={styles.finChartsGrid}>
         {/* Gráfico de receitas vs despesas */}
-        <div className="fin-chart-card">
+        <div className={styles.finChartCard}>
           <h3>Receitas vs Despesas</h3>
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={dados?.serie || []}>
@@ -237,7 +238,7 @@ function FluxoCaixa() {
         </div>
 
         {/* Saldo acumulado */}
-        <div className="fin-chart-card">
+        <div className={styles.finChartCard}>
           <h3>Saldo Acumulado Projetado</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={dados?.serie || []}>
@@ -266,27 +267,27 @@ function FluxoCaixa() {
       </div>
 
       {/* Tabela resumo */}
-      <div className="fin-chart-card" style={{ marginTop: '30px' }}>
+      <div className={styles.finChartCard} style={{ marginTop: '30px' }}>
         <h3>Resumo por Período</h3>
-        <div className="clientes-list">
+        <div className={styles.clientesList}>
           {(dados?.serie || []).map((item, index) => (
-            <div key={index} className="cliente-item">
-              <div className="cliente-rank" style={{ fontSize: '10px', width: 'auto', padding: '0 8px' }}>
+            <div key={index} className={styles.clienteItem}>
+              <div className={styles.clienteRank} style={{ fontSize: '10px', width: 'auto', padding: '0 8px' }}>
                 {item.periodo}
               </div>
-              <div className="cliente-info">
-                <span className="cliente-nome">Receitas: {formatCurrency(item.receitas)} | Despesas: {formatCurrency(item.despesas)}</span>
-                <div className="cliente-bar-container">
+              <div className={styles.clienteInfo}>
+                <span className={styles.clienteNome}>Receitas: {formatCurrency(item.receitas)} | Despesas: {formatCurrency(item.despesas)}</span>
+                <div className={styles.clienteBarContainer}>
                   <div
-                    className="cliente-bar"
+                    className={styles.clienteBar}
                     style={{
                       width: `${Math.min((Math.abs(item.saldo_periodo) / (Math.max(...(dados?.serie?.map(s => Math.abs(s.saldo_periodo)) || [1]))) * 100), 100)}%`,
-                      background: item.saldo_periodo >= 0 ? '#27ae60' : '#e74c3c'
+                      background: item.saldo_periodo >= 0 ? tokens.successColor : tokens.dangerColor
                     }}
                   ></div>
                 </div>
               </div>
-              <span className="cliente-valor" style={{ color: item.saldo_periodo >= 0 ? '#27ae60' : '#e74c3c' }}>
+              <span className={styles.clienteValor} style={{ color: item.saldo_periodo >= 0 ? tokens.successColor : tokens.dangerColor }}>
                 {formatCurrency(item.saldo_periodo)}
               </span>
             </div>

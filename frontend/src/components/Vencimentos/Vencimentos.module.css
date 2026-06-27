@@ -1,0 +1,421 @@
+.page {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: transparent;
+  min-height: auto;
+}
+
+/* Header Filters */
+.headerFilters {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 8px 12px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.toggleLabel:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.toggleLabel input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+.toggleLabel input[type="checkbox"]:checked + span {
+  color: var(--primary-color);
+}
+
+.selectFilter {
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  min-width: 140px;
+  transition: all 0.2s;
+}
+
+.selectFilter:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Summary Cards */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.summaryCard {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.summaryCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.summaryAlerta {
+  border-left: 4px solid var(--danger-color);
+  background: var(--danger-light);
+}
+
+.summaryWarning {
+  border-left: 4px solid var(--warning-color);
+  background: var(--warning-light);
+}
+
+.summaryIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.summaryVencidos {
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.summaryUrgentes {
+  background: rgba(200, 169, 81, 0.16);
+  color: var(--gold-600);
+}
+
+.summaryMotoristas {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.summaryVeiculos {
+  background: rgba(45, 106, 79, 0.10);
+  color: var(--green-700);
+}
+
+.summaryInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summaryNumber {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.summaryLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Tabs */
+.tabsContainer {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.tabButton {
+  padding: 10px 18px;
+  border: none;
+  background: var(--card-bg);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: var(--shadow-sm);
+}
+
+.tabButton:hover {
+  background: var(--content-bg);
+  color: var(--text-primary);
+}
+
+.tabActive {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: #fff;
+}
+
+.tabButtonDanger.tabActive {
+  background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-dark) 100%);
+}
+
+/* Vencimentos Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: var(--shadow-md);
+  border-left: 4px solid var(--text-muted);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.cardVencido {
+  border-left-color: var(--danger-color);
+  background: var(--danger-light);
+}
+
+.cardUrgente {
+  border-left-color: var(--warning-color);
+  background: var(--warning-light);
+}
+
+.cardAtencao {
+  border-left-color: var(--primary-color);
+}
+
+.cardNormal {
+  border-left-color: var(--success-color);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.cardTipo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cardContent {
+  margin-bottom: 14px;
+}
+
+.cardContent h3 {
+  margin: 0 0 5px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.detalhe {
+  margin: 0 0 12px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.documentoInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--content-bg);
+  border-radius: 8px;
+}
+
+.docNome {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.docValidade {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.cardActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 6px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.actionButton:hover {
+  background: var(--content-bg);
+  border-color: var(--text-muted);
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 50px 20px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+}
+
+.emptyStateSuccess {
+  border-top: 4px solid var(--success-color);
+}
+
+.emptyState svg {
+  color: var(--success-color);
+  margin-bottom: 18px;
+}
+
+.emptyState h3 {
+  margin: 0 0 10px 0;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.emptyState p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* Responsivo */
+@media (max-width: 1200px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .page {
+    max-width: 100%;
+  }
+
+  .summary {
+    gap: 16px;
+  }
+
+  .summaryCard {
+    padding: 16px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerFilters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .summary {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .summaryCard {
+    padding: 14px;
+  }
+
+  .summaryNumber {
+    font-size: 20px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tabsContainer {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 10px;
+  }
+
+  .tabButton {
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .cardContent h3 {
+    font-size: 15px;
+  }
+
+  .documentoInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

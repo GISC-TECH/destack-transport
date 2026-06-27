@@ -2,7 +2,8 @@ import { useState, useCallback } from 'react';
 import { relatoriosAPI } from '../../services/api';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
-import './Relatorios.css';
+import Button from '../Common/Button';
+import styles from './Relatorios.module.css';
 
 function Relatorios() {
   const [tipoRelatorio, setTipoRelatorio] = useState('');
@@ -210,7 +211,7 @@ function Relatorios() {
   );
 
   return (
-    <div className="relatorios-page">
+    <div className={styles.page}>
       <PageHeader
         title="Relatórios"
         subtitle="Gere relatórios personalizados do sistema"
@@ -218,24 +219,24 @@ function Relatorios() {
         breadcrumbs={[{ label: 'Relatórios' }]}
       />
 
-      <div className="relatorios-container">
+      <div className={styles.container}>
         {/* Seleção de Relatório */}
-        <div className="relatorios-grid">
+        <div className={styles.grid}>
           {relatoriosDisponiveis.map((rel) => (
             <div
               key={rel.id}
-              className={`relatorio-card ${tipoRelatorio === rel.id ? 'selected' : ''}`}
+              className={`${styles.card} ${tipoRelatorio === rel.id ? styles.cardSelected : ''}`}
               onClick={() => setTipoRelatorio(rel.id)}
             >
-              <div className="relatorio-icon">
+              <div className={styles.icon}>
                 {getIcon(rel.icon)}
               </div>
-              <div className="relatorio-info">
+              <div className={styles.info}>
                 <h3>{rel.nome}</h3>
                 <p>{rel.descricao}</p>
               </div>
               {tipoRelatorio === rel.id && (
-                <div className="selected-check">✓</div>
+                <div className={styles.selectedCheck}>✓</div>
               )}
             </div>
           ))}
@@ -243,17 +244,17 @@ function Relatorios() {
 
         {/* Filtros */}
         {tipoRelatorio && (
-          <div className="filtros-relatorio">
+          <div className={styles.filtros}>
             <h3>Filtros do Relatório</h3>
-            <div className="filtros-grid">
-              <div className="form-group form-group-full">
+            <div className={styles.filtrosGrid}>
+              <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                 <label>Período</label>
                 <DateFilter
                   onFilterChange={handleDateFilterChange}
                   defaultPeriodo="mes"
                 />
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Formato</label>
                 <select
                   value={formato}
@@ -267,35 +268,29 @@ function Relatorios() {
             </div>
 
             {error && (
-              <div className="error-message">{error}</div>
+              <div className={styles.errorMessage}>{error}</div>
             )}
 
             {sucesso && (
-              <div className="success-message">{sucesso}</div>
+              <div className={styles.successMessage}>{sucesso}</div>
             )}
 
-            <div className="relatorio-actions">
-              <button
-                className="btn-primary btn-large"
-                onClick={handleGerarRelatorio}
+            <div className={styles.actions}>
+              <Button
+                size="lg"
+                loading={gerando}
                 disabled={gerando}
+                onClick={handleGerarRelatorio}
               >
-                {gerando ? (
-                  <>
-                    <span className="spinner"></span>
-                    Gerando...
-                  </>
-                ) : (
-                  <>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="7 10 12 15 17 10"></polyline>
-                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Gerar Relatório
-                  </>
+                {!gerando && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
                 )}
-              </button>
+                Gerar Relatório
+              </Button>
             </div>
           </div>
         )}

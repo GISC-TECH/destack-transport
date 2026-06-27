@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext, useCallback } from 'react';
-import './Toast.css';
+import styles from './Toast.module.css';
 
 // Toast Context
 const ToastContext = createContext(null);
@@ -69,27 +69,35 @@ function ToastItem({ toast, onClose }) {
     }
   }, [duration, handleClose]);
 
+  const toastClass = [
+    styles.toast,
+    styles[type],
+    isExiting && styles.exit,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div
-      className={`toast toast-${type} ${isExiting ? 'toast-exit' : ''}`}
+      className={toastClass}
       role="alert"
       aria-live={type === 'error' ? 'assertive' : 'polite'}
       aria-atomic="true"
     >
-      <div className="toast-icon" aria-hidden="true">{toastConfig.icon}</div>
-      <div className="toast-content">
-        <h4 className="toast-title">{title || toastConfig.title}</h4>
-        <p className="toast-message">{message}</p>
+      <div className={styles.icon} aria-hidden="true">{toastConfig.icon}</div>
+      <div className={styles.content}>
+        <h4 className={styles.title}>{title || toastConfig.title}</h4>
+        <p className={styles.message}>{message}</p>
       </div>
-      <button className="toast-close" onClick={handleClose} aria-label="Fechar notificacao">
+      <button className={styles.close} onClick={handleClose} aria-label="Fechar notificacao">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
-      <div className="toast-progress" aria-hidden="true">
+      <div className={styles.progress} aria-hidden="true">
         <div
-          className="toast-progress-bar"
+          className={styles.progressBar}
           style={{ animationDuration: `${duration}ms` }}
         ></div>
       </div>
@@ -102,7 +110,7 @@ function ToastContainer({ toasts, removeToast }) {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="toast-container" role="region" aria-label="Notificacoes" aria-live="polite">
+    <div className={styles.container} role="region" aria-label="Notificacoes" aria-live="polite">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onClose={removeToast} />
       ))}
@@ -167,5 +175,3 @@ export function useToast() {
   }
   return context;
 }
-
-export default ToastProvider;

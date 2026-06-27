@@ -8,18 +8,19 @@ import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
-import './Financeiro.css';
+import tokens from '../../styles/tokens.module.css';
+import styles from './Financeiro.module.css';
 
-// Cores para graficos — paleta da marca (verde + dourado)
+// Cores para graficos — tokens de marca
 const COLORS = {
-  cif: '#40916C',
-  fob: '#C8A951',
-  faturamento: '#2D6A4F',
-  custos: '#E5484D',
-  lucro: '#B8941F'
+  cif: tokens.primaryColor,
+  fob: tokens.goldColor,
+  faturamento: tokens.primaryDark,
+  custos: tokens.dangerColor,
+  lucro: tokens.goldColor
 };
 
-const PIE_COLORS = ['#40916C', '#C8A951', '#2D6A4F', '#95D5B2', '#B8941F'];
+const PIE_COLORS = [tokens.primaryColor, tokens.goldColor, tokens.primaryDark, '#95D5B2', tokens.goldColor];
 
 function FinanceiroPainel() {
   const [dados, setDados] = useState(null);
@@ -113,8 +114,8 @@ function FinanceiroPainel() {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="custom-tooltip">
-          <p className="tooltip-label">{label}</p>
+        <div className={styles.customTooltip}>
+          <p className={styles.tooltipLabel}>{label}</p>
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
@@ -137,7 +138,7 @@ function FinanceiroPainel() {
   );
 
   return (
-    <div className="financeiro-page">
+    <div className={styles.financeiroPage}>
       <PageHeader
         title="Painel Financeiro"
         subtitle="Visão geral do faturamento e indicadores"
@@ -154,27 +155,27 @@ function FinanceiroPainel() {
       />
 
       {/* KPIs */}
-      <div className="fin-kpi-grid">
-        <div className="fin-kpi-card principal">
-          <div className="fin-kpi-icon">
+      <div className={styles.finKpiGrid}>
+        <div className={`${styles.finKpiCard} ${styles.principal}`}>
+          <div className={styles.finKpiIcon}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Faturamento Total</span>
-            <span className="fin-kpi-value">
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Faturamento Total</span>
+            <span className={styles.finKpiValue}>
               {formatCurrency(dados?.cards?.faturamento_total)}
             </span>
-            <span className="fin-kpi-subtext">
+            <span className={styles.finKpiSubtext}>
               Período: {dados?.filtros?.data_inicio} a {dados?.filtros?.data_fim}
             </span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon cif">
+        <div className={styles.finKpiCard}>
+          <div className={`${styles.finKpiIcon} ${styles.cif}`}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="1" y="3" width="15" height="13"></rect>
               <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
@@ -182,38 +183,38 @@ function FinanceiroPainel() {
               <circle cx="18.5" cy="18.5" r="2.5"></circle>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Valor CIF</span>
-            <span className="fin-kpi-value">
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Valor CIF</span>
+            <span className={styles.finKpiValue}>
               {formatCurrency(dados?.cards?.valor_cif)}
             </span>
-            <span className="fin-kpi-percent cif">
+            <span className={`${styles.finKpiPercent} ${styles.cif}`}>
               {formatPercent(dados?.cards?.percentual_cif)} do total
             </span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon fob">
+        <div className={styles.finKpiCard}>
+          <div className={`${styles.finKpiIcon} ${styles.fob}`}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="2" y1="12" x2="22" y2="12"></line>
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Valor FOB</span>
-            <span className="fin-kpi-value">
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Valor FOB</span>
+            <span className={styles.finKpiValue}>
               {formatCurrency(dados?.cards?.valor_fob)}
             </span>
-            <span className="fin-kpi-percent fob">
+            <span className={`${styles.finKpiPercent} ${styles.fob}`}>
               {formatPercent(dados?.cards?.percentual_fob)} do total
             </span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon ticket">
+        <div className={styles.finKpiCard}>
+          <div className={`${styles.finKpiIcon} ${styles.ticket}`}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
@@ -221,12 +222,12 @@ function FinanceiroPainel() {
               <line x1="16" y1="17" x2="8" y2="17"></line>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Ticket Médio</span>
-            <span className="fin-kpi-value">
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Ticket Médio</span>
+            <span className={styles.finKpiValue}>
               {formatCurrency(dados?.cards?.ticket_medio)}
             </span>
-            <span className="fin-kpi-subtext">
+            <span className={styles.finKpiSubtext}>
               {dados?.cards?.total_ctes || 0} CT-es emitidos
             </span>
           </div>
@@ -234,9 +235,9 @@ function FinanceiroPainel() {
       </div>
 
       {/* Graficos Principais */}
-      <div className="fin-charts-grid">
+      <div className={styles.finChartsGrid}>
         {/* Grafico CIF vs FOB por mes */}
-        <div className="fin-chart-card">
+        <div className={styles.finChartCard}>
           <h3>Faturamento CIF vs FOB por Mes</h3>
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={dados?.grafico_cif_fob || []}>
@@ -248,13 +249,13 @@ function FinanceiroPainel() {
               <Legend />
               <Bar yAxisId="left" dataKey="cif" name="CIF" fill={COLORS.cif} radius={[4, 4, 0, 0]} />
               <Bar yAxisId="left" dataKey="fob" name="FOB" fill={COLORS.fob} radius={[4, 4, 0, 0]} />
-              <Line yAxisId="right" type="monotone" dataKey="entregas" name="Entregas" stroke="#C8A951" strokeWidth={2} dot={{ fill: '#C8A951' }} />
+              <Line yAxisId="right" type="monotone" dataKey="entregas" name="Entregas" stroke={tokens.goldColor} strokeWidth={2} dot={{ fill: tokens.goldColor }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
 
         {/* Grafico de Evolucao do Faturamento */}
-        <div className="fin-chart-card">
+        <div className={styles.finChartCard}>
           <h3>Evolucao do Faturamento</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={dados?.grafico_cif_fob || []}>
@@ -284,9 +285,9 @@ function FinanceiroPainel() {
       </div>
 
       {/* Segunda Linha de Graficos */}
-      <div className="fin-charts-grid-3">
+      <div className={styles.finChartsGrid3}>
         {/* Distribuicao CIF/FOB - Pie Chart */}
-        <div className="fin-chart-card">
+        <div className={styles.finChartCard}>
           <h3>Distribuicao por Modalidade</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
@@ -309,63 +310,63 @@ function FinanceiroPainel() {
               <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="fin-pie-legend">
-            <div className="legend-item">
-              <span className="legend-dot" style={{ background: COLORS.cif }}></span>
+          <div className={styles.finPieLegend}>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{ background: COLORS.cif }}></span>
               CIF - {formatPercent(dados?.cards?.percentual_cif)}
             </div>
-            <div className="legend-item">
-              <span className="legend-dot" style={{ background: COLORS.fob }}></span>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{ background: COLORS.fob }}></span>
               FOB - {formatPercent(dados?.cards?.percentual_fob)}
             </div>
           </div>
         </div>
 
         {/* Histórico Mensal */}
-        <div className="fin-chart-card top-clientes">
+        <div className={`${styles.finChartCard} ${styles.topClientes}`}>
           <h3>Histórico por Mes</h3>
-          <div className="clientes-list">
+          <div className={styles.clientesList}>
             {(dados?.grafico_cif_fob || []).slice(-5).reverse().map((item, index) => (
-              <div key={index} className="cliente-item">
-                <div className="cliente-rank">{item.mes}</div>
-                <div className="cliente-info">
-                  <span className="cliente-nome">{item.entregas} entregas</span>
-                  <div className="cliente-bar-container">
+              <div key={index} className={styles.clienteItem}>
+                <div className={styles.clienteRank}>{item.mes}</div>
+                <div className={styles.clienteInfo}>
+                  <span className={styles.clienteNome}>{item.entregas} entregas</span>
+                  <div className={styles.clienteBarContainer}>
                     <div
-                      className="cliente-bar"
+                      className={styles.clienteBar}
                       style={{
                         width: `${(item.faturamento / (dados?.grafico_cif_fob?.[0]?.faturamento || 1)) * 100}%`
                       }}
                     ></div>
                   </div>
                 </div>
-                <span className="cliente-valor">{formatCurrencyShort(item.faturamento)}</span>
+                <span className={styles.clienteValor}>{formatCurrencyShort(item.faturamento)}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Resumo Rapido */}
-        <div className="fin-chart-card resumo">
+        <div className={`${styles.finChartCard} ${styles.resumo}`}>
           <h3>Resumo do Período</h3>
-          <div className="resumo-grid">
-            <div className="resumo-item">
-              <span className="resumo-label">Total de CT-es</span>
-              <span className="resumo-value">{dados?.cards?.total_ctes || 0}</span>
+          <div className={styles.resumoGrid}>
+            <div className={styles.resumoItem}>
+              <span className={styles.resumoLabel}>Total de CT-es</span>
+              <span className={styles.resumoValue}>{dados?.cards?.total_ctes || 0}</span>
             </div>
-            <div className="resumo-item">
-              <span className="resumo-label">Ticket Medio</span>
-              <span className="resumo-value">{formatCurrency(dados?.cards?.ticket_medio)}</span>
+            <div className={styles.resumoItem}>
+              <span className={styles.resumoLabel}>Ticket Medio</span>
+              <span className={styles.resumoValue}>{formatCurrency(dados?.cards?.ticket_medio)}</span>
             </div>
-            <div className="resumo-item">
-              <span className="resumo-label">Maior Faturamento</span>
-              <span className="resumo-value">
+            <div className={styles.resumoItem}>
+              <span className={styles.resumoLabel}>Maior Faturamento</span>
+              <span className={styles.resumoValue}>
                 {formatCurrency(Math.max(...(dados?.grafico_cif_fob?.map(m => m.faturamento) || [0])))}
               </span>
             </div>
-            <div className="resumo-item">
-              <span className="resumo-label">Media Mensal</span>
-              <span className="resumo-value">
+            <div className={styles.resumoItem}>
+              <span className={styles.resumoLabel}>Media Mensal</span>
+              <span className={styles.resumoValue}>
                 {formatCurrency(
                   dados?.grafico_cif_fob?.length > 0
                     ? (dados?.cards?.faturamento_total || 0) / dados.grafico_cif_fob.length
@@ -374,9 +375,9 @@ function FinanceiroPainel() {
               </span>
             </div>
           </div>
-          <div className="resumo-growth">
-            <div className="growth-indicator positive">
-              <span className="growth-text">
+          <div className={styles.resumoGrowth}>
+            <div className={`${styles.growthIndicator} ${styles.positive}`}>
+              <span className={styles.growthText}>
                 CIF: {formatCurrency(dados?.cards?.valor_cif)} | FOB: {formatCurrency(dados?.cards?.valor_fob)}
               </span>
             </div>

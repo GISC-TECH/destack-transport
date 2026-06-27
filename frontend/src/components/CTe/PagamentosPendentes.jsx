@@ -6,27 +6,19 @@ import { SkeletonTable, SkeletonMobileCards } from '../Common/Skeleton';
 import EmptyState from '../Common/EmptyState';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
+import Button from '../Common/Button';
+import Modal from '../Common/Modal';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import './CTe.css';
+import sharedStyles from './CTeShared.module.css';
+import styles from './PagamentosPendentes.module.css';
 
 const COLORS = ['#0d9488', '#f39c12', '#27ae60', '#e74c3c', '#C8A951'];
-
-function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
-  );
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= breakpoint);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [breakpoint]);
-
-  return isMobile;
-}
 
 function PagamentosPendentes() {
   const toast = useToast();
@@ -168,11 +160,15 @@ function PagamentosPendentes() {
     setModalBaixa({ show: true, cteId, cteNumero });
   };
 
+  const closeModalBaixa = () => {
+    setModalBaixa({ show: false, cteId: null, cteNumero: null });
+  };
+
   // Confirma a baixa com a data selecionada
   const handleConfirmarBaixa = async () => {
     const { cteId } = modalBaixa;
     setAtualizandoPagamento(cteId);
-    setModalBaixa({ show: false, cteId: null, cteNumero: null });
+    closeModalBaixa();
     try {
       await cteAPI.marcarPagamento(cteId, true, null, dataBaixa, comprovanteFile);
       toast.success('CT-e marcado como pago!');
@@ -230,22 +226,27 @@ function PagamentosPendentes() {
     ? ((resumo.total_pagos / (resumo.total_pagos + resumo.total_pendentes)) * 100).toFixed(1)
     : 0;
 
+  const getModalidadePill = (modalidade) => ({
+    status: modalidade === 'CIF' ? 'info' : 'warning',
+    text: modalidade || '-'
+  });
+
   return (
-    <div className="cte-list">
+    <div className={sharedStyles.cteList}>
       <PageHeader
         title="Pagamentos Pendentes"
         subtitle={`${resumo.total_pendentes || 0} CT-es aguardando pagamento`}
         icon={pendentesIcon}
         breadcrumbs={[{ label: 'Documentos' }, { label: 'CT-e' }, { label: 'Pendentes' }]}
         actions={
-          <div className="header-buttons">
+          <div className={sharedStyles.headerButtons}>
             <DateFilter
               onFilterChange={handleDateFilterChange}
               defaultPeriodo="mes"
               initialDataInicio={filtros.data_inicio}
               initialDataFim={filtros.data_fim}
             />
-            <Link to="/ctes" className="btn btn-outline">
+            <Link to="/ctes" className={sharedStyles.btnOutline}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
@@ -257,216 +258,179 @@ function PagamentosPendentes() {
 
       {loading ? (
         <>
-          <div className="skeleton-desktop">
+          <div className={styles.skeletonDesktop}>
             <SkeletonTable rows={6} columns={7} />
           </div>
-          <div className="skeleton-mobile">
+          <div className={styles.skeletonMobile}>
             <SkeletonMobileCards count={4} />
           </div>
         </>
       ) : (
       <>
       {/* Filtros Avançados */}
-      <div className="filtros-avancados-container" style={{ marginBottom: '20px' }}>
-        <button
-          className={`btn ${mostrarFiltros ? 'btn-primary' : 'btn-outline'}`}
+      <div className={styles.filtrosAvancadosContainer}>
+        <Button
+          variant={mostrarFiltros ? 'primary' : 'outline'}
           onClick={() => setMostrarFiltros(!mostrarFiltros)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
           </svg>
-          Filtros {totalFiltrosAtivos > 0 && <span className="badge badge-info" style={{ marginLeft: '5px' }}>{totalFiltrosAtivos}</span>}
-        </button>
+          Filtros {totalFiltrosAtivos > 0 && <StatusPill status="info" className="ml-2">{totalFiltrosAtivos}</StatusPill>}
+        </Button>
 
         {mostrarFiltros && (
-          <div className="filtros-avancados-panel" style={{
-            marginTop: '15px',
-            padding: '20px',
-            background: '#fff',
-            borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <div className="filtros-avancados-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+          <div className={styles.filtrosAvancadosPanel}>
+            <div className={styles.filtrosAvancadosGrid}>
 
               {/* Filtro Modalidade */}
-              <div className="filtro-grupo">
-                <label style={{ fontWeight: '600', marginBottom: '10px', display: 'block', color: '#333' }}>
-                  Modalidade
-                </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div className={styles.filtroGrupo}>
+                <label>Modalidade</label>
+                <div className={styles.filterTagList}>
                   {(filtrosDisponiveis.modalidades || []).map(modalidade => (
-                    <button
+                    <Button
                       key={modalidade}
-                      className={`btn btn-sm ${filtrosAvancados.modalidades.includes(modalidade) ? 'btn-primary' : 'btn-outline'}`}
+                      variant={filtrosAvancados.modalidades.includes(modalidade) ? 'primary' : 'outline'}
+                      size="sm"
                       onClick={() => toggleFiltro('modalidades', modalidade)}
-                      style={{ padding: '6px 12px', fontSize: '13px' }}
                     >
                       {modalidade}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
 
               {/* Filtro Remetente */}
-              <div className="filtro-grupo">
-                <label style={{ fontWeight: '600', marginBottom: '10px', display: 'block', color: '#333' }}>
+              <div className={styles.filtroGrupo}>
+                <label>
                   Remetente ({filtrosAvancados.remetentes.length} selecionado{filtrosAvancados.remetentes.length !== 1 ? 's' : ''})
                 </label>
-                <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '8px' }}>
+                <div className={styles.checkboxList}>
                   {(filtrosDisponiveis.remetentes || []).map(remetente => (
                     <label
                       key={remetente}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '6px 8px',
-                        cursor: 'pointer',
-                        borderRadius: '4px',
-                        transition: 'background 0.2s',
-                        fontSize: '13px'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      className={styles.checkboxLabel}
                     >
                       <input
                         type="checkbox"
                         checked={filtrosAvancados.remetentes.includes(remetente)}
                         onChange={() => toggleFiltro('remetentes', remetente)}
-                        style={{ width: '16px', height: '16px' }}
                       />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {remetente}
-                      </span>
+                      <span>{remetente}</span>
                     </label>
                   ))}
                   {(filtrosDisponiveis.remetentes || []).length === 0 && (
-                    <span style={{ color: '#999', fontSize: '13px' }}>Nenhum remetente disponível</span>
+                    <span className={styles.emptyFilterMessage}>Nenhum remetente disponível</span>
                   )}
                 </div>
               </div>
 
               {/* Filtro Destinatário */}
-              <div className="filtro-grupo">
-                <label style={{ fontWeight: '600', marginBottom: '10px', display: 'block', color: '#333' }}>
+              <div className={styles.filtroGrupo}>
+                <label>
                   Destinatário ({filtrosAvancados.destinatarios.length} selecionado{filtrosAvancados.destinatarios.length !== 1 ? 's' : ''})
                 </label>
-                <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '8px' }}>
+                <div className={styles.checkboxList}>
                   {(filtrosDisponiveis.destinatarios || []).map(destinatario => (
                     <label
                       key={destinatario}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '6px 8px',
-                        cursor: 'pointer',
-                        borderRadius: '4px',
-                        transition: 'background 0.2s',
-                        fontSize: '13px'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      className={styles.checkboxLabel}
                     >
                       <input
                         type="checkbox"
                         checked={filtrosAvancados.destinatarios.includes(destinatario)}
                         onChange={() => toggleFiltro('destinatarios', destinatario)}
-                        style={{ width: '16px', height: '16px' }}
                       />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {destinatario}
-                      </span>
+                      <span>{destinatario}</span>
                     </label>
                   ))}
                   {(filtrosDisponiveis.destinatarios || []).length === 0 && (
-                    <span style={{ color: '#999', fontSize: '13px' }}>Nenhum destinatário disponível</span>
+                    <span className={styles.emptyFilterMessage}>Nenhum destinatário disponível</span>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Botões de ação dos filtros */}
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button
-                className="btn btn-outline"
+            <div className={styles.filtroActions}>
+              <Button
+                variant="outline"
                 onClick={limparFiltros}
                 disabled={totalFiltrosAtivos === 0}
               >
                 Limpar Filtros
-              </button>
-              <button
-                className="btn btn-primary"
+              </Button>
+              <Button
+                variant="primary"
                 onClick={aplicarFiltros}
               >
                 Aplicar Filtros
-              </button>
+              </Button>
             </div>
           </div>
         )}
       </div>
 
       {/* KPI Cards */}
-      <div className="cte-kpi-grid">
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon orange">
+      <div className={sharedStyles.kpiGrid}>
+        <div className={sharedStyles.kpiCard}>
+          <div className={`${sharedStyles.kpiIcon} ${sharedStyles.orange}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">CT-es Pendentes</span>
-            <span className="cte-kpi-value">{resumo.total_pendentes || 0}</span>
+          <div className={sharedStyles.kpiContent}>
+            <span className={sharedStyles.kpiLabel}>CT-es Pendentes</span>
+            <span className={sharedStyles.kpiValue}>{resumo.total_pendentes || 0}</span>
           </div>
         </div>
 
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon red">
+        <div className={sharedStyles.kpiCard}>
+          <div className={`${sharedStyles.kpiIcon} ${sharedStyles.red}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">Valor Pendente</span>
-            <span className="cte-kpi-value">{formatCurrency(resumo.valor_total_pendente)}</span>
+          <div className={sharedStyles.kpiContent}>
+            <span className={sharedStyles.kpiLabel}>Valor Pendente</span>
+            <span className={sharedStyles.kpiValue}>{formatCurrency(resumo.valor_total_pendente)}</span>
           </div>
         </div>
 
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon green">
+        <div className={sharedStyles.kpiCard}>
+          <div className={`${sharedStyles.kpiIcon} ${sharedStyles.green}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">CT-es Pagos</span>
-            <span className="cte-kpi-value">{resumo.total_pagos || 0}</span>
+          <div className={sharedStyles.kpiContent}>
+            <span className={sharedStyles.kpiLabel}>CT-es Pagos</span>
+            <span className={sharedStyles.kpiValue}>{resumo.total_pagos || 0}</span>
           </div>
         </div>
 
-        <div className="cte-kpi-card">
-          <div className="cte-kpi-icon purple">
+        <div className={sharedStyles.kpiCard}>
+          <div className={`${sharedStyles.kpiIcon} ${sharedStyles.purple}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 20V10"></path>
               <path d="M12 20V4"></path>
               <path d="M6 20v-6"></path>
             </svg>
           </div>
-          <div className="cte-kpi-content">
-            <span className="cte-kpi-label">Taxa de Pagamento</span>
-            <span className="cte-kpi-value">{percentualPago}%</span>
+          <div className={sharedStyles.kpiContent}>
+            <span className={sharedStyles.kpiLabel}>Taxa de Pagamento</span>
+            <span className={sharedStyles.kpiValue}>{percentualPago}%</span>
           </div>
         </div>
       </div>
 
       {/* Graficos */}
-      <div className="cte-charts-grid">
+      <div className={sharedStyles.chartsGrid}>
         {/* Top Clientes com Pendências */}
-        <div className="cte-chart-card">
+        <div className={sharedStyles.chartCard}>
           <h3>Top Clientes com Pendências</h3>
           {barData.length > 0 ? (
             <ResponsiveContainer width="100%" height={isMobile ? 200 : 250}>
@@ -487,7 +451,7 @@ function PagamentosPendentes() {
         </div>
 
         {/* Distribuicao por Modalidade */}
-        <div className="cte-chart-card cte-chart-small">
+        <div className={`${sharedStyles.chartCard} ${sharedStyles.chartSmall}`}>
           <h3>Pendências por Modalidade</h3>
           {pieData.length > 0 ? (
             <>
@@ -512,11 +476,11 @@ function PagamentosPendentes() {
                 </PieChart>
               </ResponsiveContainer>
               {isMobile && (
-                <div className="chart-legend-mobile">
+                <div className={styles.chartLegendMobile}>
                   {pieData.map((entry, index) => (
-                    <div key={index} className="chart-legend-item">
-                      <span className="chart-legend-dot" style={{ background: entry.fill }} />
-                      <span className="chart-legend-text">{entry.name} ({(entry.value / pieData.reduce((a, b) => a + b.value, 0) * 100).toFixed(0)}%)</span>
+                    <div key={index} className={styles.chartLegendItem}>
+                      <span className={styles.chartLegendDot} style={{ background: entry.fill }} />
+                      <span className={styles.chartLegendText}>{entry.name} ({(entry.value / pieData.reduce((a, b) => a + b.value, 0) * 100).toFixed(0)}%)</span>
                     </div>
                   ))}
                 </div>
@@ -532,20 +496,20 @@ function PagamentosPendentes() {
       </div>
 
       {/* Tabela de CT-es Pendentes Recentes */}
-      <div className="section-header">
+      <div className={sharedStyles.sectionHeader}>
         <h3>CT-es Pendentes Mais Recentes</h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <span className="text-muted" style={{ fontSize: '13px' }}>
+        <div className={styles.dataTableHeaderActions}>
+          <span className={sharedStyles.textMuted}>
             {totalItens > 0 ? `${indiceInicial + 1}-${Math.min(indiceFinal, totalItens)} de ${totalItens}` : '0 itens'}
           </span>
-          <Link to="/ctes?pago=false" className="btn btn-outline btn-sm">
+          <Link to="/ctes?pago=false" className={`${sharedStyles.btnOutline} ${sharedStyles.btnSm}`}>
             Ver Todos
           </Link>
         </div>
       </div>
 
-      <div className="table-container">
-        <table className="data-table">
+      <TableContainer mobileCards={false}>
+        <table>
           <thead>
             <tr>
               <th>Número</th>
@@ -560,7 +524,7 @@ function PagamentosPendentes() {
           <tbody>
             {ctesPaginados.length === 0 ? (
               <tr>
-                <td colSpan="7" className="text-center">
+                <td colSpan="7" className={sharedStyles.textCenter}>
                   <EmptyState
                     title="Nenhum CT-e pendente no período"
                     description="Tente ajustar os filtros de data ou limpar os filtros avançados."
@@ -568,144 +532,147 @@ function PagamentosPendentes() {
                 </td>
               </tr>
             ) : (
-              ctesPaginados.map((cte) => (
-                <tr key={cte.id}>
-                  <td>
-                    <strong>{cte.numero || '-'}</strong>
-                    <br />
-                    <small className="text-muted">{cte.chave?.slice(-10)}</small>
-                  </td>
-                  <td>{cte.data_emissao || '-'}</td>
-                  <td>{cte.remetente || '-'}</td>
-                  <td>{cte.destinatario || '-'}</td>
-                  <td className="text-right">
-                    <strong>{formatCurrency(cte.valor)}</strong>
-                  </td>
-                  <td>
-                    <span className={`badge badge-${cte.modalidade === 'CIF' ? 'info' : 'warning'}`}>
-                      {cte.modalidade || '-'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        className="btn-action btn-download"
-                        onClick={() => handleAbrirModalBaixa(cte.id, cte.numero)}
-                        disabled={atualizandoPagamento === cte.id}
-                        title="Baixar Pagamento"
-                      >
-                        {atualizandoPagamento === cte.id ? (
-                          <span className="loading-spinner-small"></span>
-                        ) : (
+              ctesPaginados.map((cte) => {
+                const modalidadePill = getModalidadePill(cte.modalidade);
+                return (
+                  <tr key={cte.id}>
+                    <td>
+                      <strong>{cte.numero || '-'}</strong>
+                      <br />
+                      <small className={sharedStyles.textMuted}>{cte.chave?.slice(-10)}</small>
+                    </td>
+                    <td>{cte.data_emissao || '-'}</td>
+                    <td>{cte.remetente || '-'}</td>
+                    <td>{cte.destinatario || '-'}</td>
+                    <td className={sharedStyles.textRight}>
+                      <strong>{formatCurrency(cte.valor)}</strong>
+                    </td>
+                    <td>
+                      <StatusPill status={modalidadePill.status}>{modalidadePill.text}</StatusPill>
+                    </td>
+                    <td>
+                      <div className={sharedStyles.actionButtons}>
+                        <button
+                          className={`${sharedStyles.btnAction} ${sharedStyles.btnDownload}`}
+                          onClick={() => handleAbrirModalBaixa(cte.id, cte.numero)}
+                          disabled={atualizandoPagamento === cte.id}
+                          title="Baixar Pagamento"
+                        >
+                          {atualizandoPagamento === cte.id ? (
+                            <span className={sharedStyles.loadingSpinnerSmall}></span>
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                          )}
+                        </button>
+                        <Link
+                          to={`/ctes/${cte.id}`}
+                          className={`${sharedStyles.btnAction} ${sharedStyles.btnView}`}
+                          title="Ver Detalhes"
+                        >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
                           </svg>
-                        )}
-                      </button>
-                      <Link
-                        to={`/ctes/${cte.id}`}
-                        className="btn-action btn-view"
-                        title="Ver Detalhes"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
 
         {/* Mobile Cards View */}
-        <div className="mobile-cards">
+        <div className={sharedStyles.mobileCards}>
           {ctesPaginados.length === 0 ? (
             <EmptyState
               title="Nenhum CT-e pendente no período"
               description="Tente ajustar os filtros de data ou limpar os filtros avançados."
             />
           ) : (
-            ctesPaginados.map((cte) => (
-              <div key={cte.id} className="mobile-card">
-                <div className="mobile-card-header">
-                  <div className="mobile-card-title">
-                    <span className="mobile-card-number">{cte.numero || '-'}</span>
-                    <span className="mobile-card-date">{cte.data_emissao || '-'}</span>
-                  </div>
-                  <div className="mobile-card-status">
-                    <span className={`badge badge-${cte.modalidade === 'CIF' ? 'info' : 'warning'}`}>
-                      {cte.modalidade || '-'}
-                    </span>
-                  </div>
-                </div>
-                <div className="mobile-card-body">
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Remetente</span>
-                    <span className="mobile-card-value">{cte.remetente || '-'}</span>
-                  </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Destinatário</span>
-                    <span className="mobile-card-value">{cte.destinatario || '-'}</span>
-                  </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Valor</span>
-                    <span className="mobile-card-value valor">{formatCurrency(cte.valor)}</span>
-                  </div>
-                  {cte.chave && (
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">Chave</span>
-                      <span className="mobile-card-value">{cte.chave.slice(-10)}</span>
+            ctesPaginados.map((cte) => {
+              const modalidadePill = getModalidadePill(cte.modalidade);
+              return (
+                <div key={cte.id} className={sharedStyles.mobileCard}>
+                  <div className={sharedStyles.mobileCardHeader}>
+                    <div className={sharedStyles.mobileCardTitle}>
+                      <span className={sharedStyles.mobileCardNumber}>{cte.numero || '-'}</span>
+                      <span className={sharedStyles.mobileCardDate}>{cte.data_emissao || '-'}</span>
                     </div>
-                  )}
-                </div>
-                <div className="mobile-card-footer">
-                  <div className="mobile-card-actions">
-                    <button
-                      className="btn-action btn-download"
-                      onClick={() => handleAbrirModalBaixa(cte.id, cte.numero)}
-                      disabled={atualizandoPagamento === cte.id}
-                      title="Baixar Pagamento"
-                    >
-                      {atualizandoPagamento === cte.id ? (
-                        <span className="loading-spinner-small"></span>
-                      ) : (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                          </svg>
-                          Baixar
-                        </>
-                      )}
-                    </button>
-                    <Link
-                      to={`/ctes/${cte.id}`}
-                      className="btn-action btn-view"
-                      title="Ver Detalhes"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      Ver
-                    </Link>
+                    <div className={sharedStyles.mobileCardStatus}>
+                      <StatusPill status={modalidadePill.status}>{modalidadePill.text}</StatusPill>
+                    </div>
+                  </div>
+                  <div className={sharedStyles.mobileCardBody}>
+                    <div className={sharedStyles.mobileCardRow}>
+                      <span className={sharedStyles.mobileCardLabel}>Remetente</span>
+                      <span className={sharedStyles.mobileCardValue}>{cte.remetente || '-'}</span>
+                    </div>
+                    <div className={sharedStyles.mobileCardRow}>
+                      <span className={sharedStyles.mobileCardLabel}>Destinatário</span>
+                      <span className={sharedStyles.mobileCardValue}>{cte.destinatario || '-'}</span>
+                    </div>
+                    <div className={sharedStyles.mobileCardRow}>
+                      <span className={sharedStyles.mobileCardLabel}>Valor</span>
+                      <span className={`${sharedStyles.mobileCardValue} ${sharedStyles.valor}`}>{formatCurrency(cte.valor)}</span>
+                    </div>
+                    {cte.chave && (
+                      <div className={sharedStyles.mobileCardRow}>
+                        <span className={sharedStyles.mobileCardLabel}>Chave</span>
+                        <span className={sharedStyles.mobileCardValue}>{cte.chave.slice(-10)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className={sharedStyles.mobileCardFooter}>
+                    <div className={sharedStyles.mobileCardActions}>
+                      <button
+                        className={`${sharedStyles.btnAction} ${sharedStyles.btnDownload}`}
+                        onClick={() => handleAbrirModalBaixa(cte.id, cte.numero)}
+                        disabled={atualizandoPagamento === cte.id}
+                        title="Baixar Pagamento"
+                      >
+                        {atualizandoPagamento === cte.id ? (
+                          <span className={sharedStyles.loadingSpinnerSmall}></span>
+                        ) : (
+                          <>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            Baixar
+                          </>
+                        )}
+                      </button>
+                      <Link
+                        to={`/ctes/${cte.id}`}
+                        className={`${sharedStyles.btnAction} ${sharedStyles.btnView}`}
+                        title="Ver Detalhes"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        Ver
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
-      </div>
+      </TableContainer>
 
       {/* Paginacao */}
       {totalPaginas > 1 && (
-        <div className="pagination" style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
-          <button
-            className="btn btn-outline btn-sm"
+        <div className={sharedStyles.pagination}>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handlePaginaAnterior}
             disabled={paginaAtual === 1}
           >
@@ -713,12 +680,13 @@ function PagamentosPendentes() {
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
             Anterior
-          </button>
-          <span style={{ padding: '0 15px', fontSize: '14px' }}>
+          </Button>
+          <span className={sharedStyles.textMuted}>
             Pagina <strong>{paginaAtual}</strong> de <strong>{totalPaginas}</strong>
           </span>
-          <button
-            className="btn btn-outline btn-sm"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleProximaPagina}
             disabled={paginaAtual === totalPaginas}
           >
@@ -726,28 +694,28 @@ function PagamentosPendentes() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Resumo por Modalidade */}
-      <div className="section-header" style={{ marginTop: '30px' }}>
+      <div className={sharedStyles.sectionHeader} style={{ marginTop: '30px' }}>
         <h3>Resumo por Modalidade</h3>
       </div>
 
-      <div className="cte-kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <div className={sharedStyles.kpiGrid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         {(dados?.por_modalidade || []).map((item, index) => (
-          <div key={index} className="cte-kpi-card">
-            <div className="cte-kpi-icon" style={{ background: COLORS[index % COLORS.length] }}>
+          <div key={index} className={sharedStyles.kpiCard}>
+            <div className={sharedStyles.kpiIcon} style={{ background: COLORS[index % COLORS.length] }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                 <rect x="1" y="3" width="15" height="13"></rect>
                 <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
               </svg>
             </div>
-            <div className="cte-kpi-content">
-              <span className="cte-kpi-label">{item.modalidade || 'N/I'}</span>
-              <span className="cte-kpi-value">{item.quantidade} CT-es</span>
-              <small className="text-muted">{formatCurrency(item.valor)}</small>
+            <div className={sharedStyles.kpiContent}>
+              <span className={sharedStyles.kpiLabel}>{item.modalidade || 'N/I'}</span>
+              <span className={sharedStyles.kpiValue}>{item.quantidade} CT-es</span>
+              <small className={sharedStyles.textMuted}>{formatCurrency(item.valor)}</small>
             </div>
           </div>
         ))}
@@ -756,69 +724,50 @@ function PagamentosPendentes() {
       )}
 
       {/* Modal de Baixa de Pagamento */}
-      {modalBaixa.show && (
-        <div className="modal-overlay" onClick={() => setModalBaixa({ show: false, cteId: null, cteNumero: null })}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-            <div className="modal-header">
-              <h3>Baixar Pagamento</h3>
-              <button
-                className="modal-close"
-                onClick={() => setModalBaixa({ show: false, cteId: null, cteNumero: null })}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div className="modal-body">
-              <p style={{ marginBottom: '20px' }}>
-                Confirmar baixa do CT-e <strong>#{modalBaixa.cteNumero}</strong>?
-              </p>
-              <div className="form-group">
-                <label>Data do Pagamento</label>
-                <input
-                  type="date"
-                  value={dataBaixa}
-                  onChange={(e) => setDataBaixa(e.target.value)}
-                  className="input-filter"
-                  style={{ width: '100%', padding: '10px' }}
-                />
-              </div>
-
-              <div className="form-group" style={{ marginTop: '15px' }}>
-                <label>Comprovante (opcional)</label>
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
-                  className="input-filter"
-                  style={{ width: '100%', padding: '8px' }}
-                />
-                {comprovanteFile && (
-                  <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
-                    Arquivo: {comprovanteFile.name}
-                  </small>
-                )}
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn-cancel"
-                onClick={() => setModalBaixa({ show: false, cteId: null, cteNumero: null })}
-              >
-                Cancelar
-              </button>
-              <button
-                className="btn-primary"
-                onClick={handleConfirmarBaixa}
-              >
-                Confirmar Baixa
-              </button>
-            </div>
-          </div>
+      <Modal
+        isOpen={modalBaixa.show}
+        onClose={closeModalBaixa}
+        title="Baixar Pagamento"
+        size="sm"
+        footer={
+          <>
+            <button className={styles.btnCancel} onClick={closeModalBaixa}>
+              Cancelar
+            </button>
+            <Button variant="primary" onClick={handleConfirmarBaixa}>
+              Confirmar Baixa
+            </Button>
+          </>
+        }
+      >
+        <p style={{ marginBottom: '20px' }}>
+          Confirmar baixa do CT-e <strong>#{modalBaixa.cteNumero}</strong>?
+        </p>
+        <div className={styles.formGroup}>
+          <label>Data do Pagamento</label>
+          <input
+            type="date"
+            value={dataBaixa}
+            onChange={(e) => setDataBaixa(e.target.value)}
+            className={styles.inputDate}
+          />
         </div>
-      )}
+
+        <div className={styles.formGroup}>
+          <label>Comprovante (opcional)</label>
+          <input
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+            className={styles.inputFile}
+          />
+          {comprovanteFile && (
+            <small className={styles.fileName}>
+              Arquivo: {comprovanteFile.name}
+            </small>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

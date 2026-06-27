@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { documentosAPI } from '../../services/api';
-import './DocumentosAnexos.css';
+import Button from './Button';
+import Modal from './Modal';
+import StatusPill from './StatusPill';
+import TableContainer from './TableContainer';
+import styles from './DocumentosAnexos.module.css';
 
 // Tipos de documentos por entidade - Transportadora de Cargas
 const TIPOS_DOCUMENTO = {
@@ -286,11 +290,23 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
     return validadeDate > new Date() && validadeDate <= thirtyDaysFromNow;
   };
 
+  const getValidadeStatus = (validade) => {
+    if (isExpired(validade)) return 'danger';
+    if (isExpiringSoon(validade)) return 'warning';
+    return null;
+  };
+
   const tiposDisponiveis = TIPOS_DOCUMENTO[entidadeTipo] || [];
 
+  const handleCancelUpload = () => {
+    setShowUploadForm(false);
+    setSelectedFile(null);
+    setUploadData({ tipo: 'outro', nome: '', validade: '', observacoes: '' });
+  };
+
   return (
-    <div className="documentos-anexos">
-      <div className="documentos-header">
+    <div className={styles.documentosAnexos}>
+      <div className={styles.documentosHeader}>
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -299,17 +315,18 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
           Documentos Anexos
         </h3>
         {tipoValido && !readOnly && (
-          <button
-            className="btn btn-primary btn-sm"
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => setShowUploadForm(!showUploadForm)}
           >
             {showUploadForm ? 'Cancelar' : '+ Novo Documento'}
-          </button>
+          </Button>
         )}
       </div>
 
       {!tipoValido && (
-        <div className="no-docs" style={{ padding: '20px', textAlign: 'center' }}>
+        <div className={styles.noDocs} style={{ padding: '20px', textAlign: 'center' }}>
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
@@ -319,22 +336,22 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
       )}
 
       {tipoValido && error && (
-        <div className="error-message">
+        <div className={styles.errorMessage}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
           {error}
-          <button onClick={() => setError(null)} className="close-btn">&times;</button>
+          <button onClick={() => setError(null)} className={styles.closeBtn} aria-label="Fechar">&times;</button>
         </div>
       )}
 
       {/* Formulario de Upload */}
       {tipoValido && showUploadForm && !readOnly && (
-        <div className="upload-form">
-          <div className="form-row">
-            <div className="form-group">
+        <div className={styles.uploadForm}>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Tipo de Documento</label>
               <select
                 value={uploadData.tipo}
@@ -345,7 +362,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
                 ))}
               </select>
             </div>
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Nome do Documento</label>
               <input
                 type="text"
@@ -355,8 +372,8 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
               />
             </div>
           </div>
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Data de Validade (opcional)</label>
               <input
                 type="date"
@@ -364,7 +381,7 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
                 onChange={(e) => setUploadData(prev => ({ ...prev, validade: e.target.value }))}
               />
             </div>
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Observações</label>
               <input
                 type="text"
@@ -374,10 +391,10 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
               />
             </div>
           </div>
-          <div className="form-row">
-            <div className="form-group file-input-group">
+          <div className={styles.formRow}>
+            <div className={`${styles.formGroup} ${styles.fileInputGroup}`}>
               <label>Arquivo</label>
-              <div className="file-input-wrapper">
+              <div className={styles.fileInputWrapper}>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -385,278 +402,222 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
                   accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt"
                 />
                 {selectedFile && (
-                  <span className="selected-file">
+                  <span className={styles.selectedFile}>
                     {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                   </span>
                 )}
               </div>
             </div>
           </div>
-          <div className="form-actions">
-            <button
-              className="btn btn-success"
+          <div className={styles.formActions}>
+            <Button
+              variant="success"
               onClick={handleUpload}
               disabled={uploading || !selectedFile}
+              loading={uploading}
             >
               {uploading ? 'Enviando...' : 'Enviar Documento'}
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={() => {
-                setShowUploadForm(false);
-                setSelectedFile(null);
-                setUploadData({ tipo: 'outro', nome: '', validade: '', observacoes: '' });
-              }}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleCancelUpload}
             >
               Cancelar
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {/* Modal de Edicao */}
-      {tipoValido && editingDoc && (
-        <div className="edit-modal-overlay" onClick={handleCancelEdit}>
-          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="edit-modal-header">
-              <h4>Editar Documento</h4>
-              <button className="close-btn" onClick={handleCancelEdit}>&times;</button>
-            </div>
-            <div className="edit-modal-body">
-              <div className="form-group">
-                <label>Tipo de Documento</label>
-                <select
-                  value={editData.tipo}
-                  onChange={(e) => setEditData(prev => ({ ...prev, tipo: e.target.value }))}
-                >
-                  {tiposDisponiveis.map(tipo => (
-                    <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Nome do Documento</label>
-                <input
-                  type="text"
-                  value={editData.nome}
-                  onChange={(e) => setEditData(prev => ({ ...prev, nome: e.target.value }))}
-                  placeholder="Nome do documento"
-                />
-              </div>
-              <div className="form-group">
-                <label>Data de Validade</label>
-                <input
-                  type="date"
-                  value={editData.validade}
-                  onChange={(e) => setEditData(prev => ({ ...prev, validade: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label>Observações</label>
-                <input
-                  type="text"
-                  value={editData.observacoes}
-                  onChange={(e) => setEditData(prev => ({ ...prev, observacoes: e.target.value }))}
-                  placeholder="Observações (opcional)"
-                />
-              </div>
-            </div>
-            <div className="edit-modal-footer">
-              <button
-                className="btn btn-success"
-                onClick={handleSaveEdit}
-                disabled={saving}
-              >
-                {saving ? 'Salvando...' : 'Salvar'}
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={handleCancelEdit}
-                disabled={saving}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
+      <Modal
+        isOpen={!!editingDoc}
+        onClose={handleCancelEdit}
+        title="Editar Documento"
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="success"
+              onClick={handleSaveEdit}
+              disabled={saving}
+              loading={saving}
+            >
+              {saving ? 'Salvando...' : 'Salvar'}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleCancelEdit}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+          </>
+        }
+      >
+        <div className={styles.formGroup}>
+          <label>Tipo de Documento</label>
+          <select
+            value={editData.tipo}
+            onChange={(e) => setEditData(prev => ({ ...prev, tipo: e.target.value }))}
+          >
+            {tiposDisponiveis.map(tipo => (
+              <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
+            ))}
+          </select>
         </div>
-      )}
+        <div className={styles.formGroup}>
+          <label>Nome do Documento</label>
+          <input
+            type="text"
+            value={editData.nome}
+            onChange={(e) => setEditData(prev => ({ ...prev, nome: e.target.value }))}
+            placeholder="Nome do documento"
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Data de Validade</label>
+          <input
+            type="date"
+            value={editData.validade}
+            onChange={(e) => setEditData(prev => ({ ...prev, validade: e.target.value }))}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Observações</label>
+          <input
+            type="text"
+            value={editData.observacoes}
+            onChange={(e) => setEditData(prev => ({ ...prev, observacoes: e.target.value }))}
+            placeholder="Observações (opcional)"
+          />
+        </div>
+      </Modal>
 
       {/* Lista de Documentos */}
       {tipoValido && (
-      <div className="documentos-list">
-        {loading ? (
-          <div className="loading-docs">Carregando documentos...</div>
-        ) : documentos.length === 0 ? (
-          <div className="no-docs">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-            </svg>
-            <p>Nenhum documento anexado</p>
-          </div>
-        ) : (
-          <>
-            <table className="documentos-table">
-              <thead>
-                <tr>
-                  <th>Tipo</th>
-                  <th>Nome</th>
-                  <th>Tamanho</th>
-                  <th>Validade</th>
-                  <th>Data Upload</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {documentos.map((doc) => (
-                  <tr key={doc.id} className={isExpired(doc.validade) ? 'expired' : isExpiringSoon(doc.validade) ? 'expiring-soon' : ''}>
-                    <td>
-                      <span className="doc-tipo">{doc.tipo_display || doc.tipo}</span>
-                    </td>
-                    <td className="doc-nome">{doc.nome}</td>
-                    <td>{doc.tamanho_formatado || '-'}</td>
-                    <td>
-                      {doc.validade ? (
-                        <span className={`validade ${isExpired(doc.validade) ? 'vencido' : isExpiringSoon(doc.validade) ? 'vencendo' : ''}`}>
-                          {formatDate(doc.validade)}
-                          {isExpired(doc.validade) && <span className="badge-vencido">Vencido</span>}
-                          {isExpiringSoon(doc.validade) && <span className="badge-vencendo">Vencendo</span>}
-                        </span>
-                      ) : '-'}
-                    </td>
-                    <td>{formatDate(doc.criado_em)}</td>
-                    <td className="doc-acoes">
-                      <button
-                        className="btn-icon btn-view"
-                        onClick={() => handleView(doc)}
-                        title="Visualizar"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                      </button>
-                      <button
-                        className="btn-icon btn-download"
-                        onClick={() => handleDownload(doc)}
-                        title="Baixar"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="7 10 12 15 17 10"></polyline>
-                          <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                      </button>
-                      {!readOnly && (
-                        <>
-                          <button
-                            className="btn-icon btn-edit"
-                            onClick={() => handleEdit(doc)}
-                            title="Editar"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                          </button>
-                          <button
-                            className="btn-icon btn-delete"
-                            onClick={() => handleDelete(doc.id)}
-                            title="Excluir"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6"></polyline>
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className="mobile-cards">
-              {documentos.map((doc) => (
-                <div
-                  key={doc.id}
-                  className={`mobile-card ${isExpired(doc.validade) ? 'expired' : isExpiringSoon(doc.validade) ? 'expiring-soon' : ''}`}
-                >
-                  <div className="mobile-card-header">
-                    <div className="mobile-card-title">
-                      <span className="mobile-card-number">{doc.nome}</span>
-                      <span className="mobile-card-date">{formatDate(doc.criado_em)}</span>
-                    </div>
-                    <span className="doc-tipo">{doc.tipo_display || doc.tipo}</span>
-                  </div>
-                  <div className="mobile-card-body">
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">Tamanho</span>
-                      <span className="mobile-card-value">{doc.tamanho_formatado || '-'}</span>
-                    </div>
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">Validade</span>
-                      <span className={`mobile-card-value validade ${isExpired(doc.validade) ? 'vencido' : isExpiringSoon(doc.validade) ? 'vencendo' : ''}`}>
-                        {doc.validade ? formatDate(doc.validade) : '-'}
-                        {isExpired(doc.validade) && <span className="badge-vencido">Vencido</span>}
-                        {isExpiringSoon(doc.validade) && <span className="badge-vencendo">Vencendo</span>}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mobile-card-footer">
-                    <button
-                      className="btn-icon btn-view"
-                      onClick={() => handleView(doc)}
-                      title="Visualizar"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    </button>
-                    <button
-                      className="btn-icon btn-download"
-                      onClick={() => handleDownload(doc)}
-                      title="Baixar"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                      </svg>
-                    </button>
-                    {!readOnly && (
-                      <>
-                        <button
-                          className="btn-icon btn-edit"
-                          onClick={() => handleEdit(doc)}
-                          title="Editar"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                          </svg>
-                        </button>
-                        <button
-                          className="btn-icon btn-delete"
-                          onClick={() => handleDelete(doc.id)}
-                          title="Excluir"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          </svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
+        <div className={styles.documentosList}>
+          {loading ? (
+            <div className={styles.loadingDocs}>Carregando documentos...</div>
+          ) : documentos.length === 0 ? (
+            <div className={styles.noDocs}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <p>Nenhum documento anexado</p>
             </div>
-          </>
-        )}
-      </div>
+          ) : (
+            <TableContainer mobileCards>
+              <table className={styles.documentosTable}>
+                <thead>
+                  <tr>
+                    <th>Tipo</th>
+                    <th>Nome</th>
+                    <th>Tamanho</th>
+                    <th>Validade</th>
+                    <th>Data Upload</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documentos.map((doc) => {
+                    const validadeStatus = getValidadeStatus(doc.validade);
+                    return (
+                      <tr
+                        key={doc.id}
+                        className={
+                          isExpired(doc.validade)
+                            ? styles.expired
+                            : isExpiringSoon(doc.validade)
+                              ? styles.expiringSoon
+                              : ''
+                        }
+                      >
+                        <td data-label="Tipo">
+                          <span className={styles.docTipo}>{doc.tipo_display || doc.tipo}</span>
+                        </td>
+                        <td data-label="Nome" className={styles.docNome}>{doc.nome}</td>
+                        <td data-label="Tamanho">{doc.tamanho_formatado || '-'}</td>
+                        <td data-label="Validade">
+                          {doc.validade ? (
+                            <span className={styles.validade}>
+                              {formatDate(doc.validade)}
+                              {validadeStatus && (
+                                <StatusPill status={validadeStatus}>
+                                  {isExpired(doc.validade) ? 'Vencido' : 'Vencendo'}
+                                </StatusPill>
+                              )}
+                            </span>
+                          ) : '-'}
+                        </td>
+                        <td data-label="Data Upload">{formatDate(doc.criado_em)}</td>
+                        <td data-label="Ações" className={styles.docAcoes}>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            iconOnly
+                            onClick={() => handleView(doc)}
+                            aria-label="Visualizar"
+                            title="Visualizar"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                          </Button>
+                          <Button
+                            variant="success"
+                            size="sm"
+                            iconOnly
+                            onClick={() => handleDownload(doc)}
+                            aria-label="Baixar"
+                            title="Baixar"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                              <polyline points="7 10 12 15 17 10"></polyline>
+                              <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                          </Button>
+                          {!readOnly && (
+                            <>
+                              <Button
+                                variant="warning"
+                                size="sm"
+                                iconOnly
+                                onClick={() => handleEdit(doc)}
+                                aria-label="Editar"
+                                title="Editar"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                iconOnly
+                                onClick={() => handleDelete(doc.id)}
+                                aria-label="Excluir"
+                                title="Excluir"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <polyline points="3 6 5 6 21 6"></polyline>
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                              </Button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </TableContainer>
+          )}
+        </div>
       )}
     </div>
   );

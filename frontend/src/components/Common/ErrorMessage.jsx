@@ -1,12 +1,12 @@
-import './ErrorMessage.css';
+import styles from './ErrorMessage.module.css';
 
 function ErrorMessage({ message, onRetry }) {
   return (
-    <div className="error-message">
-      <div className="error-icon">⚠️</div>
-      <p className="error-text">{message}</p>
+    <div className={styles.container}>
+      <div className={styles.icon}>⚠️</div>
+      <p className={styles.text}>{message}</p>
       {onRetry && (
-        <button className="error-retry-btn" onClick={onRetry}>
+        <button className={styles.retryBtn} onClick={onRetry}>
           Tentar Novamente
         </button>
       )}

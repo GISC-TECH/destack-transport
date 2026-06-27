@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { motoristasAPI, veiculosAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
-import './Vencimentos.css';
+import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
+import styles from './Vencimentos.module.css';
 
 // Mock data para motoristas
 const mockMotoristasVencendo = [
@@ -164,6 +166,17 @@ function VencimentosPainel() {
     return 'normal';
   };
 
+  const getStatusVariant = (doc) => {
+    const statusClass = getStatusClass(doc);
+    const map = {
+      vencido: 'danger',
+      urgente: 'warning',
+      atencao: 'info',
+      normal: 'success'
+    };
+    return map[statusClass] || 'default';
+  };
+
   const getStatusText = (doc) => {
     if (doc.vencido) return `Vencido há ${Math.abs(doc.dias_restantes)} dia${Math.abs(doc.dias_restantes) !== 1 ? 's' : ''}`;
     if (doc.dias_restantes === 0) return 'Vence hoje';
@@ -183,15 +196,15 @@ function VencimentosPainel() {
   );
 
   return (
-    <div className="vencimentos-page">
+    <div className={styles.page}>
       <PageHeader
         title="Painel de Vencimentos"
         subtitle={usingMockData ? "Acompanhe documentos de motoristas e veículos (Modo Demonstração)" : "Acompanhe documentos de motoristas e veículos"}
         icon={vencimentoIcon}
         breadcrumbs={[{ label: 'Sistema' }, { label: 'Vencimentos' }]}
         actions={
-          <div className="header-filters">
-            <label className="toggle-label">
+          <div className={styles.headerFilters}>
+            <label className={styles.toggleLabel}>
               <input
                 type="checkbox"
                 checked={mostrarTodos}
@@ -200,7 +213,7 @@ function VencimentosPainel() {
               <span>Mostrar todos</span>
             </label>
             <select
-              className="select-filter"
+              className={styles.selectFilter}
               value={diasFiltro}
               onChange={(e) => setDiasFiltro(Number(e.target.value))}
             >
@@ -215,50 +228,50 @@ function VencimentosPainel() {
       />
 
       {/* Cards de resumo */}
-      <div className="vencimentos-summary">
-        <div className={`summary-card ${contagens.vencidos > 0 ? 'alerta' : ''}`}>
-          <div className="summary-icon vencidos">
+      <div className={styles.summary}>
+        <div className={`${styles.summaryCard} ${contagens.vencidos > 0 ? styles.summaryAlerta : ''}`}>
+          <div className={`${styles.summaryIcon} ${styles.summaryVencidos}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="15" y1="9" x2="9" y2="15"></line>
               <line x1="9" y1="9" x2="15" y2="15"></line>
             </svg>
           </div>
-          <div className="summary-info">
-            <span className="summary-number">{contagens.vencidos}</span>
-            <span className="summary-label">Vencidos</span>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryNumber}>{contagens.vencidos}</span>
+            <span className={styles.summaryLabel}>Vencidos</span>
           </div>
         </div>
 
-        <div className={`summary-card ${contagens.urgentes > 0 ? 'warning' : ''}`}>
-          <div className="summary-icon urgentes">
+        <div className={`${styles.summaryCard} ${contagens.urgentes > 0 ? styles.summaryWarning : ''}`}>
+          <div className={`${styles.summaryIcon} ${styles.summaryUrgentes}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
               <line x1="12" y1="8" x2="12" y2="12"></line>
               <line x1="12" y1="16" x2="12.01" y2="16"></line>
             </svg>
           </div>
-          <div className="summary-info">
-            <span className="summary-number">{contagens.urgentes}</span>
-            <span className="summary-label">Urgentes (7 dias)</span>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryNumber}>{contagens.urgentes}</span>
+            <span className={styles.summaryLabel}>Urgentes (7 dias)</span>
           </div>
         </div>
 
-        <div className="summary-card">
-          <div className="summary-icon motoristas">
+        <div className={styles.summaryCard}>
+          <div className={`${styles.summaryIcon} ${styles.summaryMotoristas}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
           </div>
-          <div className="summary-info">
-            <span className="summary-number">{contagens.motoristas}</span>
-            <span className="summary-label">Motoristas</span>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryNumber}>{contagens.motoristas}</span>
+            <span className={styles.summaryLabel}>Motoristas</span>
           </div>
         </div>
 
-        <div className="summary-card">
-          <div className="summary-icon veiculos">
+        <div className={styles.summaryCard}>
+          <div className={`${styles.summaryIcon} ${styles.summaryVeiculos}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="1" y="3" width="15" height="13"></rect>
               <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
@@ -266,35 +279,35 @@ function VencimentosPainel() {
               <circle cx="18.5" cy="18.5" r="2.5"></circle>
             </svg>
           </div>
-          <div className="summary-info">
-            <span className="summary-number">{contagens.veiculos}</span>
-            <span className="summary-label">Veículos</span>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryNumber}>{contagens.veiculos}</span>
+            <span className={styles.summaryLabel}>Veículos</span>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="tabs-container">
+      <div className={styles.tabsContainer}>
         <button
-          className={`tab-button ${activeTab === 'todos' ? 'active' : ''}`}
+          className={`${styles.tabButton} ${activeTab === 'todos' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('todos')}
         >
           Todos ({contagens.total})
         </button>
         <button
-          className={`tab-button danger ${activeTab === 'vencidos' ? 'active' : ''}`}
+          className={`${styles.tabButton} ${styles.tabButtonDanger} ${activeTab === 'vencidos' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('vencidos')}
         >
           Vencidos ({contagens.vencidos})
         </button>
         <button
-          className={`tab-button ${activeTab === 'motoristas' ? 'active' : ''}`}
+          className={`${styles.tabButton} ${activeTab === 'motoristas' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('motoristas')}
         >
           Motoristas ({contagens.motoristas})
         </button>
         <button
-          className={`tab-button ${activeTab === 'veiculos' ? 'active' : ''}`}
+          className={`${styles.tabButton} ${activeTab === 'veiculos' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('veiculos')}
         >
           Veículos ({contagens.veiculos})
@@ -302,9 +315,9 @@ function VencimentosPainel() {
       </div>
 
       {/* Lista de vencimentos */}
-      <div className="vencimentos-list">
+      <div className={styles.list}>
         {documentosFiltrados.length === 0 ? (
-          <div className="empty-state success">
+          <div className={`${styles.emptyState} ${styles.emptyStateSuccess}`}>
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -313,52 +326,53 @@ function VencimentosPainel() {
             <p>Nenhum documento vencendo no período selecionado.</p>
           </div>
         ) : (
-          <div className="vencimentos-grid">
-            {documentosFiltrados.map((doc, index) => (
-              <div key={`${doc.tipo}-${doc.entidadeId}-${doc.documento}-${index}`} className={`vencimento-card ${getStatusClass(doc)}`}>
-                <div className="vencimento-header">
-                  <div className="vencimento-tipo">
-                    {doc.tipo === 'motorista' ? (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                      </svg>
-                    ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="1" y="3" width="15" height="13"></rect>
-                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                      </svg>
-                    )}
-                    <span>{doc.tipo === 'motorista' ? 'Motorista' : 'Veículo'}</span>
+          <div className={styles.grid}>
+            {documentosFiltrados.map((doc, index) => {
+              const statusClass = getStatusClass(doc);
+              return (
+                <div key={`${doc.tipo}-${doc.entidadeId}-${doc.documento}-${index}`} className={`${styles.card} ${styles[`card${statusClass.charAt(0).toUpperCase() + statusClass.slice(1)}`]}`}>
+                  <div className={styles.cardHeader}>
+                    <div className={styles.cardTipo}>
+                      {doc.tipo === 'motorista' ? (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                      ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="1" y="3" width="15" height="13"></rect>
+                          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                          <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                          <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                        </svg>
+                      )}
+                      <span>{doc.tipo === 'motorista' ? 'Motorista' : 'Veículo'}</span>
+                    </div>
+                    <StatusPill status={getStatusVariant(doc)}>{getStatusText(doc)}</StatusPill>
                   </div>
-                  <span className={`status-badge ${getStatusClass(doc)}`}>
-                    {getStatusText(doc)}
-                  </span>
-                </div>
 
-                <div className="vencimento-content">
-                  <h3>{doc.entidade}</h3>
-                  <p className="detalhe">{doc.detalhe}</p>
-                  <div className="documento-info">
-                    <span className="doc-nome">{doc.documento}</span>
-                    <span className="doc-validade">
-                      Validade: {new Date(doc.validade).toLocaleDateString('pt-BR')}
-                    </span>
+                  <div className={styles.cardContent}>
+                    <h3>{doc.entidade}</h3>
+                    <p className={styles.detalhe}>{doc.detalhe}</p>
+                    <div className={styles.documentoInfo}>
+                      <span className={styles.docNome}>{doc.documento}</span>
+                      <span className={styles.docValidade}>
+                        Validade: {new Date(doc.validade).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.cardActions}>
+                    <Link
+                      className={styles.actionButton}
+                      to={doc.tipo === 'motorista' ? `/motoristas/editar/${doc.entidadeId}` : `/veiculos/editar/${doc.entidadeId}`}
+                    >
+                      Atualizar
+                    </Link>
                   </div>
                 </div>
-
-                <div className="vencimento-actions">
-                  <Link
-                    to={doc.tipo === 'motorista' ? `/motoristas/editar/${doc.entidadeId}` : `/veiculos/editar/${doc.entidadeId}`}
-                    className="btn-action btn-view"
-                  >
-                    Atualizar
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

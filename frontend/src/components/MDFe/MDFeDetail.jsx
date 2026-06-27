@@ -4,7 +4,10 @@ import { mdfeAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
-import '../CTe/CTe.css';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import Button from '../Common/Button';
+import styles from './MDFe.module.css';
 
 function MDFeDetail() {
   const { id } = useParams();
@@ -127,177 +130,176 @@ function MDFeDetail() {
 
   const getStatusInfo = () => {
     if (mdfe.cancelamento) {
-      return { class: 'danger', text: 'Cancelado', icon: '✕' };
+      return { variant: 'danger', text: 'Cancelado', icon: '✕' };
     }
     if (mdfe.encerrado) {
-      return { class: 'info', text: 'Encerrado', icon: '✓' };
+      return { variant: 'info', text: 'Encerrado', icon: '✓' };
     }
     if (mdfe.processado && mdfe.protocolo?.codigo_status === 100) {
-      return { class: 'success', text: 'Autorizado', icon: '✓' };
+      return { variant: 'success', text: 'Autorizado', icon: '✓' };
     }
     if (mdfe.protocolo && mdfe.protocolo.codigo_status !== 100) {
-      return { class: 'warning', text: 'Rejeitado', icon: '!' };
+      return { variant: 'warning', text: 'Rejeitado', icon: '!' };
     }
-    return { class: 'secondary', text: 'Pendente', icon: '?' };
+    return { variant: 'muted', text: 'Pendente', icon: '?' };
   };
 
   const status = getStatusInfo();
 
   return (
-    <div className="mdfe-detail">
-      <div className="page-header">
+    <div className={styles.mdfeDetail}>
+      <div className={styles.pageHeader}>
         <div>
-          <Link to="/mdfes" className="back-link">← Voltar para lista</Link>
+          <Link to="/mdfes" className={styles.backLink}>← Voltar para lista</Link>
           <h1>MDF-e #{mdfe.identificacao?.n_mdf}</h1>
-          <p className="chave-cte">{mdfe.chave}</p>
+          <p className={styles.chaveCte}>{mdfe.chave}</p>
         </div>
-        <div className="header-actions">
-          <div className={`status-badge status-${status.class}`}>
-            <span className="status-icon">{status.icon}</span>
-            {status.text}
-          </div>
-          <div className="action-buttons">
-            <button
-              className="btn-action btn-pdf"
+        <div className={styles.headerActions}>
+          <StatusPill status={status.variant}>
+            {status.icon} {status.text}
+          </StatusPill>
+          <div className={styles.actionButtons}>
+            <Button
+              variant="danger"
               onClick={handleDownloadPDF}
               disabled={actionLoading === 'pdf'}
             >
               {actionLoading === 'pdf' ? 'Baixando...' : 'DAMDFE (PDF)'}
-            </button>
-            <button
-              className="btn-action btn-xml"
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleDownloadXML}
               disabled={actionLoading === 'xml'}
             >
               {actionLoading === 'xml' ? 'Baixando...' : 'XML'}
-            </button>
-            <button
-              className="btn-action btn-reprocessar"
+            </Button>
+            <Button
+              variant="outline"
               onClick={handleReprocessar}
               disabled={actionLoading === 'reprocessar'}
             >
               {actionLoading === 'reprocessar' ? 'Processando...' : 'Reprocessar'}
-            </button>
+            </Button>
             {!mdfe.encerrado && !mdfe.cancelamento && (
-              <button
-                className="btn-action btn-success"
+              <Button
+                variant="success"
                 onClick={handleEncerrar}
                 disabled={actionLoading === 'encerrar'}
               >
                 {actionLoading === 'encerrar' ? 'Encerrando...' : 'Encerrar'}
-              </button>
+              </Button>
             )}
             {!mdfe.cancelamento && (
-              <button
-                className="btn-action btn-danger"
+              <Button
+                variant="danger"
                 onClick={handleCancelar}
                 disabled={actionLoading === 'cancelar'}
               >
                 {actionLoading === 'cancelar' ? 'Cancelando...' : 'Cancelar'}
-              </button>
+              </Button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="detail-grid">
+      <div className={styles.detailGrid}>
         {/* Identificação */}
-        <div className="detail-card">
+        <div className={styles.detailCard}>
           <h3>Identificação</h3>
-          <div className="detail-content">
-            <div className="detail-row">
-              <span className="label">Número:</span>
-              <span className="value">{mdfe.identificacao?.n_mdf}</span>
+          <div className={styles.detailContent}>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Número:</span>
+              <span className={styles.value}>{mdfe.identificacao?.n_mdf}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Série:</span>
-              <span className="value">{mdfe.identificacao?.serie}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Série:</span>
+              <span className={styles.value}>{mdfe.identificacao?.serie}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Data Emissão:</span>
-              <span className="value">{formatDate(mdfe.identificacao?.dh_emi)}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Data Emissão:</span>
+              <span className={styles.value}>{formatDate(mdfe.identificacao?.dh_emi)}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Tipo Emitente:</span>
-              <span className="value">{mdfe.identificacao?.tp_emit}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Tipo Emitente:</span>
+              <span className={styles.value}>{mdfe.identificacao?.tp_emit}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Modelo:</span>
-              <span className="value">{mdfe.identificacao?.mod || '58'}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Modelo:</span>
+              <span className={styles.value}>{mdfe.identificacao?.mod || '58'}</span>
             </div>
           </div>
         </div>
 
         {/* Rota */}
-        <div className="detail-card">
+        <div className={styles.detailCard}>
           <h3>Rota</h3>
-          <div className="detail-content">
-            <div className="detail-row">
-              <span className="label">UF Início:</span>
-              <span className="value">
-                <span className="badge badge-info">{mdfe.identificacao?.uf_ini}</span>
+          <div className={styles.detailContent}>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>UF Início:</span>
+              <span className={styles.value}>
+                <span className={styles.badgeInfo}>{mdfe.identificacao?.uf_ini}</span>
               </span>
             </div>
-            <div className="detail-row">
-              <span className="label">UF Fim:</span>
-              <span className="value">
-                <span className="badge badge-success">{mdfe.identificacao?.uf_fim}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>UF Fim:</span>
+              <span className={styles.value}>
+                <span className={styles.badgeSuccess}>{mdfe.identificacao?.uf_fim}</span>
               </span>
             </div>
-            <div className="detail-row">
-              <span className="label">Percurso:</span>
-              <span className="value">{mdfe.identificacao?.percurso?.map(p => p.uf_per).join(' → ') || '-'}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Percurso:</span>
+              <span className={styles.value}>{mdfe.identificacao?.percurso?.map(p => p.uf_per).join(' → ') || '-'}</span>
             </div>
           </div>
         </div>
 
         {/* Veículo de Tração */}
-        <div className="detail-card highlight">
+        <div className={`${styles.detailCard} ${styles.detailCardHighlight}`}>
           <h3>Veículo de Tração</h3>
-          <div className="detail-content">
-            <div className="detail-row">
-              <span className="label">Placa:</span>
-              <span className="value valor-destaque valor-destaque-sm">
+          <div className={styles.detailContent}>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Placa:</span>
+              <span className={`${styles.value} ${styles.valorDestaqueSm}`}>
                 {mdfe.modal_rodoviario?.veiculo_tracao?.placa || '-'}
               </span>
             </div>
-            <div className="detail-row">
-              <span className="label">RENAVAM:</span>
-              <span className="value">{mdfe.modal_rodoviario?.veiculo_tracao?.renavam || '-'}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>RENAVAM:</span>
+              <span className={styles.value}>{mdfe.modal_rodoviario?.veiculo_tracao?.renavam || '-'}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Tara:</span>
-              <span className="value">{mdfe.modal_rodoviario?.veiculo_tracao?.tara || 0} kg</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Tara:</span>
+              <span className={styles.value}>{mdfe.modal_rodoviario?.veiculo_tracao?.tara || 0} kg</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Capacidade KG:</span>
-              <span className="value">{mdfe.modal_rodoviario?.veiculo_tracao?.cap_kg || 0} kg</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Capacidade KG:</span>
+              <span className={styles.value}>{mdfe.modal_rodoviario?.veiculo_tracao?.cap_kg || 0} kg</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Tipo Rodado:</span>
-              <span className="value">{mdfe.modal_rodoviario?.veiculo_tracao?.tp_rod || '-'}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Tipo Rodado:</span>
+              <span className={styles.value}>{mdfe.modal_rodoviario?.veiculo_tracao?.tp_rod || '-'}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Tipo Carroceria:</span>
-              <span className="value">{mdfe.modal_rodoviario?.veiculo_tracao?.tp_car || '-'}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Tipo Carroceria:</span>
+              <span className={styles.value}>{mdfe.modal_rodoviario?.veiculo_tracao?.tp_car || '-'}</span>
             </div>
           </div>
         </div>
 
         {/* Condutor */}
         {mdfe.condutores && mdfe.condutores.length > 0 && (
-          <div className="detail-card">
+          <div className={styles.detailCard}>
             <h3>Condutor</h3>
-            <div className="detail-content">
+            <div className={styles.detailContent}>
               {mdfe.condutores.map((condutor, index) => (
                 <div key={index}>
-                  <div className="detail-row">
-                    <span className="label">Nome:</span>
-                    <span className="value">{condutor.nome}</span>
+                  <div className={styles.detailRow}>
+                    <span className={styles.label}>Nome:</span>
+                    <span className={styles.value}>{condutor.nome}</span>
                   </div>
-                  <div className="detail-row">
-                    <span className="label">CPF:</span>
-                    <span className="value">{condutor.cpf}</span>
+                  <div className={styles.detailRow}>
+                    <span className={styles.label}>CPF:</span>
+                    <span className={styles.value}>{condutor.cpf}</span>
                   </div>
                 </div>
               ))}
@@ -307,24 +309,24 @@ function MDFeDetail() {
 
         {/* Protocolo */}
         {mdfe.protocolo && (
-          <div className="detail-card">
+          <div className={styles.detailCard}>
             <h3>Protocolo de Autorização</h3>
-            <div className="detail-content">
-              <div className="detail-row">
-                <span className="label">Número Protocolo:</span>
-                <span className="value">{mdfe.protocolo.numero_protocolo}</span>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Número Protocolo:</span>
+                <span className={styles.value}>{mdfe.protocolo.numero_protocolo}</span>
               </div>
-              <div className="detail-row">
-                <span className="label">Data Autorização:</span>
-                <span className="value">{formatDate(mdfe.protocolo.data_recebimento)}</span>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Data Autorização:</span>
+                <span className={styles.value}>{formatDate(mdfe.protocolo.data_recebimento)}</span>
               </div>
-              <div className="detail-row">
-                <span className="label">Código Status:</span>
-                <span className="value">{mdfe.protocolo.codigo_status}</span>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Código Status:</span>
+                <span className={styles.value}>{mdfe.protocolo.codigo_status}</span>
               </div>
-              <div className="detail-row">
-                <span className="label">Descrição:</span>
-                <span className="value">{mdfe.protocolo.motivo_status}</span>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Descrição:</span>
+                <span className={styles.value}>{mdfe.protocolo.motivo_status}</span>
               </div>
             </div>
           </div>
@@ -334,11 +336,11 @@ function MDFeDetail() {
         {(() => {
           const docsVinculados = mdfe.municipios_descarga?.flatMap(m => m.docs_vinculados || []) || [];
           return (
-            <div className="detail-card detail-card-full">
+            <div className={`${styles.detailCard} ${styles.detailCardFull}`}>
               <h3>Documentos Vinculados ({docsVinculados.length})</h3>
               {docsVinculados.length > 0 ? (
-                <div className="table-container table-container-clean">
-                  <table className="data-table">
+                <TableContainer mobileCards={false} className={styles.tableClean}>
+                  <table className={styles.dataTable}>
                     <thead>
                       <tr>
                         <th>Chave</th>
@@ -348,67 +350,67 @@ function MDFeDetail() {
                     <tbody>
                       {docsVinculados.map((doc, index) => (
                         <tr key={index}>
-                          <td className="chave-doc">
+                          <td className={styles.chaveDoc}>
                             {doc.chave_documento || doc.cte_info?.chave || '-'}
                           </td>
                           <td>
-                            <span className="badge badge-info">{doc.tipo_doc || 'CT-e'}</span>
+                            <span className={styles.badgeInfo}>{doc.tipo_doc || 'CT-e'}</span>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </TableContainer>
               ) : (
-            <p className="empty-state-muted">
-              Nenhum documento vinculado
-            </p>
-          )}
+                <p className={styles.emptyStateMuted}>
+                  Nenhum documento vinculado
+                </p>
+              )}
             </div>
           );
         })()}
 
         {/* Modais não-rodoviários */}
         {mdfe.modal_aereo && (
-          <div className="detail-card">
+          <div className={styles.detailCard}>
             <h3>Modal Aéreo</h3>
-            <div className="detail-content">
-              <div className="detail-row"><span className="label">Matrícula:</span><span className="value">{mdfe.modal_aereo.matricula || '-'}</span></div>
-              <div className="detail-row"><span className="label">Voo:</span><span className="value">{mdfe.modal_aereo.numero_voo || '-'}</span></div>
-              <div className="detail-row"><span className="label">Emb./Dest.:</span><span className="value">{mdfe.modal_aereo.aerodromo_embarque || '-'} → {mdfe.modal_aereo.aerodromo_destino || '-'}</span></div>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}><span className={styles.label}>Matrícula:</span><span className={styles.value}>{mdfe.modal_aereo.matricula || '-'}</span></div>
+              <div className={styles.detailRow}><span className={styles.label}>Voo:</span><span className={styles.value}>{mdfe.modal_aereo.numero_voo || '-'}</span></div>
+              <div className={styles.detailRow}><span className={styles.label}>Emb./Dest.:</span><span className={styles.value}>{mdfe.modal_aereo.aerodromo_embarque || '-'} → {mdfe.modal_aereo.aerodromo_destino || '-'}</span></div>
             </div>
           </div>
         )}
         {mdfe.modal_aquaviario && (
-          <div className="detail-card">
+          <div className={styles.detailCard}>
             <h3>Modal Aquaviário</h3>
-            <div className="detail-content">
-              <div className="detail-row"><span className="label">Embarcação:</span><span className="value">{mdfe.modal_aquaviario.nome_embarcacao || '-'}</span></div>
-              <div className="detail-row"><span className="label">Viagem:</span><span className="value">{mdfe.modal_aquaviario.numero_viagem || '-'}</span></div>
-              <div className="detail-row"><span className="label">Porto Emb./Dest.:</span><span className="value">{mdfe.modal_aquaviario.porto_embarque || '-'} → {mdfe.modal_aquaviario.porto_destino || '-'}</span></div>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}><span className={styles.label}>Embarcação:</span><span className={styles.value}>{mdfe.modal_aquaviario.nome_embarcacao || '-'}</span></div>
+              <div className={styles.detailRow}><span className={styles.label}>Viagem:</span><span className={styles.value}>{mdfe.modal_aquaviario.numero_viagem || '-'}</span></div>
+              <div className={styles.detailRow}><span className={styles.label}>Porto Emb./Dest.:</span><span className={styles.value}>{mdfe.modal_aquaviario.porto_embarque || '-'} → {mdfe.modal_aquaviario.porto_destino || '-'}</span></div>
             </div>
           </div>
         )}
         {mdfe.modal_ferroviario && (
-          <div className="detail-card">
+          <div className={styles.detailCard}>
             <h3>Modal Ferroviário</h3>
-            <div className="detail-content">
-              <div className="detail-row"><span className="label">Prefixo Trem:</span><span className="value">{mdfe.modal_ferroviario.prefixo_trem || '-'}</span></div>
-              <div className="detail-row"><span className="label">Origem/Destino:</span><span className="value">{mdfe.modal_ferroviario.origem_trem || '-'} → {mdfe.modal_ferroviario.destino_trem || '-'}</span></div>
-              {mdfe.modal_ferroviario.qtd_vagoes != null && <div className="detail-row"><span className="label">Vagões:</span><span className="value">{mdfe.modal_ferroviario.qtd_vagoes}</span></div>}
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}><span className={styles.label}>Prefixo Trem:</span><span className={styles.value}>{mdfe.modal_ferroviario.prefixo_trem || '-'}</span></div>
+              <div className={styles.detailRow}><span className={styles.label}>Origem/Destino:</span><span className={styles.value}>{mdfe.modal_ferroviario.origem_trem || '-'} → {mdfe.modal_ferroviario.destino_trem || '-'}</span></div>
+              {mdfe.modal_ferroviario.qtd_vagoes != null && <div className={styles.detailRow}><span className={styles.label}>Vagões:</span><span className={styles.value}>{mdfe.modal_ferroviario.qtd_vagoes}</span></div>}
             </div>
           </div>
         )}
 
         {/* Linha do tempo de eventos */}
         {mdfe.eventos?.length > 0 && (
-          <div className="detail-card detail-card-full">
+          <div className={`${styles.detailCard} ${styles.detailCardFull}`}>
             <h3>Eventos</h3>
-            <div className="detail-content">
+            <div className={styles.detailContent}>
               {mdfe.eventos.map((e, i) => (
-                <div className="detail-row" key={i}>
-                  <span className="label">{e.descricao_evento || e.tipo_evento} {e.sequencia_evento ? `#${e.sequencia_evento}` : ''}:</span>
-                  <span className="value">
+                <div className={styles.detailRow} key={i}>
+                  <span className={styles.label}>{e.descricao_evento || e.tipo_evento} {e.sequencia_evento ? `#${e.sequencia_evento}` : ''}:</span>
+                  <span className={styles.value}>
                     {formatDate(e.data_evento)} · {e.confirmado ? '✓ confirmado' : 'pendente'}
                     {e.protocolo ? ` · prot. ${e.protocolo}` : ''}
                   </span>

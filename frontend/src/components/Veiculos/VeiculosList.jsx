@@ -5,7 +5,10 @@ import { useToast } from '../Common/Toast';
 import { SkeletonTable, SkeletonMobileCards } from '../Common/Skeleton';
 import EmptyState from '../Common/EmptyState';
 import PageHeader from '../Common/PageHeader';
-import './VeiculosList.css';
+import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import styles from './VeiculosList.module.css';
 
 const veiculosIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -154,19 +157,30 @@ function VeiculosList() {
     return tipos[tipo] || tipo;
   };
 
+  const getTipoStatus = (tipo) => {
+    switch (tipo) {
+      case '00': return 'success';
+      case '01': return 'info';
+      case '02': return 'warning';
+      default: return 'default';
+    }
+  };
+
   if (loading) {
     return (
-      <div className="veiculos-list">
+      <div className={styles.veiculosList}>
         <PageHeader
           title="Veículos"
           subtitle="Carregando..."
           icon={veiculosIcon}
           breadcrumbs={[{ label: 'Cadastros' }, { label: 'Veículos' }]}
         />
-        <div className="table-container desktop-only">
-          <SkeletonTable rows={5} columns={9} />
+        <div className={styles.desktopOnly}>
+          <TableContainer mobileCards={false}>
+            <SkeletonTable rows={5} columns={9} />
+          </TableContainer>
         </div>
-        <div className="mobile-only">
+        <div className={styles.mobileOnly}>
           <SkeletonMobileCards count={4} />
         </div>
       </div>
@@ -176,32 +190,32 @@ function VeiculosList() {
   // Se mostrando alertas
   if (showAlerts) {
     return (
-      <div className="veiculos-list">
-        <div className="veiculos-header">
+      <div className={styles.veiculosList}>
+        <div className={styles.veiculosHeader}>
           <h2>Alertas de Vencimento - Documentos de Veículos (30 dias)</h2>
-          <button className="btn-secondary" onClick={() => setShowAlerts(false)}>
+          <Button variant="secondary" onClick={() => setShowAlerts(false)}>
             Voltar para Lista
-          </button>
+          </Button>
         </div>
 
         {vencimentos.length > 0 ? (
-          <div className="alertas-container">
+          <div className={styles.alertasContainer}>
             {vencimentos.map((veiculo) => (
-              <div key={veiculo.id} className="alerta-card">
+              <div key={veiculo.id} className={styles.alertaCard}>
                 <h3>{veiculo.placa}</h3>
                 <p><strong>Proprietário:</strong> {veiculo.proprietario_nome || '-'}</p>
                 <p><strong>Tipo:</strong> {getTipoProprietario(veiculo.tipo_proprietario)}</p>
 
-                <div className="documentos-vencendo">
+                <div className={styles.documentosVencendo}>
                   <h4>Documentos:</h4>
                   {veiculo.documentos_vencendo?.map((doc, idx) => (
                     <div
                       key={idx}
-                      className={`doc-item ${doc.vencido ? 'vencido' : 'vencendo'}`}
+                      className={`${styles.docItem} ${doc.vencido ? styles.vencido : styles.vencendo}`}
                     >
-                      <span className="doc-nome">{doc.documento}</span>
-                      <span className="doc-validade">{doc.validade}</span>
-                      <span className="doc-dias">
+                      <span className={styles.docNome}>{doc.documento}</span>
+                      <span className={styles.docValidade}>{doc.validade}</span>
+                      <span className={styles.docDias}>
                         {doc.vencido ? 'VENCIDO' : `${doc.dias_restantes} dias`}
                       </span>
                     </div>
@@ -211,44 +225,45 @@ function VeiculosList() {
             ))}
           </div>
         ) : (
-          <div className="empty-state success">
-            <p>Nenhum documento vencendo nos próximos 30 dias!</p>
-          </div>
+          <EmptyState
+            title="Nenhum documento vencendo"
+            description="Não há documentos de veículos vencendo nos próximos 30 dias."
+          />
         )}
       </div>
     );
   }
 
   const headerActions = (
-    <div className="header-buttons">
-      <button className="btn btn-warning" onClick={loadVencimentos}>
+    <div className={styles.headerButtons}>
+      <Button variant="warning" onClick={loadVencimentos}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10"></circle>
           <polyline points="12 6 12 12 16 14"></polyline>
         </svg>
         Vencimentos
-      </button>
-      <button className="btn btn-outline" onClick={handleExport}>
+      </Button>
+      <Button variant="outline" onClick={handleExport}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
         Exportar
-      </button>
-      <button className="btn btn-primary" onClick={() => navigate('/veiculos/novo')}>
+      </Button>
+      <Button variant="primary" onClick={() => navigate('/veiculos/novo')}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
         Novo Veículo
-      </button>
+      </Button>
     </div>
   );
 
   // Lista normal
   return (
-    <div className="veiculos-list">
+    <div className={styles.veiculosList}>
       <PageHeader
         title="Veículos"
         subtitle={`${pagination.count} registros`}
@@ -258,17 +273,17 @@ function VeiculosList() {
       />
 
       {/* Filtros */}
-      <div className="filtros-container">
+      <div className={styles.filtrosContainer}>
         <input
           type="text"
-          className="input-filter"
+          className={styles.inputFilter}
           placeholder="Buscar por placa..."
           value={filtros.placa}
           onChange={(e) => handleFiltroChange('placa', e.target.value.toUpperCase())}
         />
 
         <select
-          className="select-filter"
+          className={styles.selectFilter}
           value={filtros.tipo_proprietario}
           onChange={(e) => handleFiltroChange('tipo_proprietario', e.target.value)}
         >
@@ -279,7 +294,7 @@ function VeiculosList() {
         </select>
 
         <select
-          className="select-filter"
+          className={styles.selectFilter}
           value={filtros.ativo}
           onChange={(e) => handleFiltroChange('ativo', e.target.value)}
         >
@@ -292,127 +307,134 @@ function VeiculosList() {
       {/* Tabela Desktop */}
       {veiculos.length > 0 ? (
         <>
-          <div className="table-container desktop-only">
-            <table className="veiculos-table">
-              <thead>
-                <tr>
-                  <th>Placa</th>
-                  <th>RENAVAM</th>
-                  <th>Tipo</th>
-                  <th>Proprietário</th>
-                  <th>Capacidade (kg)</th>
-                  <th>Capacidade (m3)</th>
-                  <th>Compartimentos</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {veiculos.map((veiculo) => (
-                  <tr key={veiculo.id}>
-                    <td><strong>{veiculo.placa}</strong></td>
-                    <td>{veiculo.renavam || '-'}</td>
-                    <td>
-                      <span className={`badge badge-tipo-${veiculo.tipo_proprietario}`}>
-                        {getTipoProprietario(veiculo.tipo_proprietario)}
-                      </span>
-                    </td>
-                    <td>{veiculo.proprietario_nome || '-'}</td>
-                    <td>{veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}</td>
-                    <td>{veiculo.capacidade_m3 ? `${veiculo.capacidade_m3} m3` : '-'}</td>
-                    <td>
-                      {veiculo.compartimentos && veiculo.compartimentos.length > 0 ? (
-                        <span className="badge badge-compartimentos">
-                          {veiculo.compartimentos.length} boca{veiculo.compartimentos.length !== 1 ? 's' : ''}
-                        </span>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td>
-                      <span className={`status ${veiculo.ativo ? 'ativo' : 'inativo'}`}>
-                        {veiculo.ativo ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </td>
-                    <td className="actions-cell">
-                      <button
-                        className="btn-action btn-edit"
-                        onClick={() => navigate(`/veiculos/editar/${veiculo.id}`)}
-                        title="Editar"
-                        aria-label={`Editar veículo ${veiculo.placa}`}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                      </button>
-                    </td>
+          <div className={styles.desktopOnly}>
+            <TableContainer mobileCards={false}>
+              <table className={styles.veiculosTable}>
+                <thead>
+                  <tr>
+                    <th>Placa</th>
+                    <th>RENAVAM</th>
+                    <th>Tipo</th>
+                    <th>Proprietário</th>
+                    <th>Capacidade (kg)</th>
+                    <th>Capacidade (m3)</th>
+                    <th>Compartimentos</th>
+                    <th>Status</th>
+                    <th>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {veiculos.map((veiculo) => (
+                    <tr key={veiculo.id}>
+                      <td><strong>{veiculo.placa}</strong></td>
+                      <td>{veiculo.renavam || '-'}</td>
+                      <td>
+                        <StatusPill status={getTipoStatus(veiculo.tipo_proprietario)}>
+                          {getTipoProprietario(veiculo.tipo_proprietario)}
+                        </StatusPill>
+                      </td>
+                      <td>{veiculo.proprietario_nome || '-'}</td>
+                      <td>{veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}</td>
+                      <td>{veiculo.capacidade_m3 ? `${veiculo.capacidade_m3} m3` : '-'}</td>
+                      <td>
+                        {veiculo.compartimentos && veiculo.compartimentos.length > 0 ? (
+                          <StatusPill status="info">
+                            {veiculo.compartimentos.length} boca{veiculo.compartimentos.length !== 1 ? 's' : ''}
+                          </StatusPill>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                      <td>
+                        <StatusPill status={veiculo.ativo ? 'ativo' : 'inativo'}>
+                          {veiculo.ativo ? 'Ativo' : 'Inativo'}
+                        </StatusPill>
+                      </td>
+                      <td className={styles.actionsCell}>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          iconOnly
+                          onClick={() => navigate(`/veiculos/editar/${veiculo.id}`)}
+                          title="Editar"
+                          aria-label={`Editar veículo ${veiculo.placa}`}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableContainer>
           </div>
 
           {/* Cards Mobile */}
-          <div className="mobile-cards mobile-only">
+          <div className={`${styles.mobileCards} ${styles.mobileOnly}`}>
             {veiculos.map((veiculo) => (
-              <div key={veiculo.id} className="mobile-card" onClick={() => navigate(`/veiculos/editar/${veiculo.id}`)}>
-                <div className="mobile-card-header">
+              <div key={veiculo.id} className={styles.mobileCard} onClick={() => navigate(`/veiculos/editar/${veiculo.id}`)}>
+                <div className={styles.mobileCardHeader}>
                   <h4>{veiculo.placa}</h4>
-                  <span className={`status ${veiculo.ativo ? 'ativo' : 'inativo'}`}>
+                  <StatusPill status={veiculo.ativo ? 'ativo' : 'inativo'}>
                     {veiculo.ativo ? 'Ativo' : 'Inativo'}
-                  </span>
+                  </StatusPill>
                 </div>
-                <div className="mobile-card-body">
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Tipo</span>
-                    <span className={`badge badge-tipo-${veiculo.tipo_proprietario}`}>
+                <div className={styles.mobileCardBody}>
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>Tipo</span>
+                    <StatusPill status={getTipoStatus(veiculo.tipo_proprietario)}>
                       {getTipoProprietario(veiculo.tipo_proprietario)}
-                    </span>
+                    </StatusPill>
                   </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">RENAVAM</span>
-                    <span className="mobile-card-value">{veiculo.renavam || '-'}</span>
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>RENAVAM</span>
+                    <span className={styles.mobileCardValue}>{veiculo.renavam || '-'}</span>
                   </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Proprietário</span>
-                    <span className="mobile-card-value">{veiculo.proprietario_nome || '-'}</span>
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>Proprietário</span>
+                    <span className={styles.mobileCardValue}>{veiculo.proprietario_nome || '-'}</span>
                   </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Capacidade</span>
-                    <span className="mobile-card-value">
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>Capacidade</span>
+                    <span className={styles.mobileCardValue}>
                       {veiculo.capacidade_kg ? `${veiculo.capacidade_kg.toLocaleString()} kg` : '-'}
                       {' / '}
                       {veiculo.capacidade_m3 ? `${veiculo.capacidade_m3} m³` : '-'}
                     </span>
                   </div>
-                  <div className="mobile-card-row">
-                    <span className="mobile-card-label">Compartimentos</span>
-                    <span className="mobile-card-value">
+                  <div className={styles.mobileCardRow}>
+                    <span className={styles.mobileCardLabel}>Compartimentos</span>
+                    <span className={styles.mobileCardValue}>
                       {veiculo.compartimentos && veiculo.compartimentos.length > 0 ? (
-                        <span className="badge badge-compartimentos">
+                        <StatusPill status="info">
                           {veiculo.compartimentos.length} boca{veiculo.compartimentos.length !== 1 ? 's' : ''}
-                        </span>
+                        </StatusPill>
                       ) : (
                         '-'
                       )}
                     </span>
                   </div>
                 </div>
-                <div className="mobile-card-footer">
-                  <button
-                    className="btn-action btn-edit"
+                <div className={styles.mobileCardFooter}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    iconOnly
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/veiculos/editar/${veiculo.id}`);
                     }}
                     aria-label={`Editar veículo ${veiculo.placa}`}
+                    title="Editar"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -423,30 +445,30 @@ function VeiculosList() {
           title="Nenhum veículo encontrado"
           description="Não há veículos com os filtros selecionados."
           action={
-            <button className="btn btn-primary" onClick={() => navigate('/veiculos/novo')}>
+            <Button variant="primary" onClick={() => navigate('/veiculos/novo')}>
               Novo Veículo
-            </button>
+            </Button>
           }
         />
       )}
 
       {/* Botões de paginação */}
       {(pagination.previous || pagination.next) && (
-        <div className="pagination-buttons">
-          <button
-            className="btn-page"
+        <div className={styles.paginationButtons}>
+          <Button
+            variant="outline"
             disabled={!pagination.previous}
             onClick={handlePreviousPage}
           >
             Anterior
-          </button>
-          <button
-            className="btn-page"
+          </Button>
+          <Button
+            variant="outline"
             disabled={!pagination.next}
             onClick={handleNextPage}
           >
             Próxima
-          </button>
+          </Button>
         </div>
       )}
     </div>

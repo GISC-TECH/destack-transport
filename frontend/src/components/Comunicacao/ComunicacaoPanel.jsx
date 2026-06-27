@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { comunicacaoAPI, clientesAPI, motoristasAPI, ordemViagemAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import './ComunicacaoPanel.css';
+import Button from '../Common/Button';
+import styles from './ComunicacaoPanel.module.css';
 
 function ComunicacaoPanel() {
   const toast = useToast();
@@ -113,27 +114,27 @@ function ComunicacaoPanel() {
   };
 
   return (
-    <div className="comunicacao-page">
-      <div className="page-header">
-        <div className="header-title">
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <div className={styles.headerTitle}>
           <h1>Comunicação</h1>
           <p>Envie e-mails e registre mensagens para clientes e motoristas</p>
         </div>
       </div>
 
-      <div className="comunicacao-grid">
-        <div className="comunicacao-card">
+      <div className={styles.grid}>
+        <div className={styles.card}>
           <h3>Nova Mensagem</h3>
           <form onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
                 <label>Canal</label>
                 <select name="canal" value={form.canal} onChange={handleChange}>
                   <option value="email">E-mail</option>
                   <option value="whatsapp">WhatsApp</option>
                 </select>
               </div>
-              <div className="form-group" style={{ flex: 2 }}>
+              <div className={styles.formGroup} style={{ flex: 2 }}>
                 <label>Destinatário</label>
                 <input
                   type="text"
@@ -146,8 +147,8 @@ function ComunicacaoPanel() {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
                 <label>Cliente</label>
                 <select name="cliente_id" value={form.cliente_id} onChange={handleChange}>
                   <option value="">Selecione</option>
@@ -178,7 +179,7 @@ function ComunicacaoPanel() {
 
             {form.canal === 'email' && (
               <div className="form-row">
-                <div className="form-group" style={{ flex: 1 }}>
+                <div className={styles.formGroup} style={{ flex: 1 }}>
                   <label>Assunto</label>
                   <input
                     type="text"
@@ -192,7 +193,7 @@ function ComunicacaoPanel() {
             )}
 
             <div className="form-row">
-              <div className="form-group" style={{ flex: 1 }}>
+              <div className={styles.formGroup} style={{ flex: 1 }}>
                 <label>Mensagem</label>
                 <textarea
                   name="conteudo"
@@ -204,38 +205,38 @@ function ComunicacaoPanel() {
               </div>
             </div>
 
-            <div className="form-actions">
-              <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? 'Enviando...' : 'Enviar'}
-              </button>
+            <div className={styles.actions}>
+              <Button type="submit" loading={loading} disabled={loading}>
+                Enviar
+              </Button>
             </div>
           </form>
         </div>
 
-        <div className="comunicacao-card">
+        <div className={styles.card}>
           <h3>Histórico</h3>
           {loading && historico.length === 0 ? (
             <Loading message="Carregando..." />
           ) : historico.length === 0 ? (
-            <p className="empty-text">Nenhuma comunicação registrada.</p>
+            <p className={styles.emptyText}>Nenhuma comunicação registrada.</p>
           ) : (
-            <div className="historico-list">
+            <div className={styles.historicoList}>
               {historico.map(item => (
-                <div key={item.id} className={`historico-item status-${item.status}`}>
-                  <div className="historico-header">
-                    <span className="historico-canal">{item.canal.toUpperCase()}</span>
-                    <span className="historico-status">{item.status}</span>
+                <div key={item.id} className={`${styles.historicoItem} ${item.status === 'enviado' ? styles.historicoEnviado : item.status === 'falha' ? styles.historicoFalha : ''}`}>
+                  <div className={styles.historicoHeader}>
+                    <span className={styles.historicoCanal}>{item.canal.toUpperCase()}</span>
+                    <span className={styles.historicoStatus}>{item.status}</span>
                   </div>
-                  <div className="historico-destinatario">{item.destinatario}</div>
-                  {item.assunto && <div className="historico-assunto">{item.assunto}</div>}
-                  <div className="historico-conteudo">{item.conteudo}</div>
-                  <div className="historico-meta">
+                  <div className={styles.historicoDestinatario}>{item.destinatario}</div>
+                  {item.assunto && <div className={styles.historicoAssunto}>{item.assunto}</div>}
+                  <div className={styles.historicoConteudo}>{item.conteudo}</div>
+                  <div className={styles.historicoMeta}>
                     {item.cliente_nome && <span>Cliente: {item.cliente_nome}</span>}
                     {item.motorista_nome && <span>Motorista: {item.motorista_nome}</span>}
                     {item.ordem_numero && <span>OS: {item.ordem_numero}</span>}
                     <span>{new Date(item.criado_em).toLocaleString('pt-BR')}</span>
                   </div>
-                  {item.erro && <div className="historico-erro">{item.erro}</div>}
+                  {item.erro && <div className={styles.historicoErro}>{item.erro}</div>}
                 </div>
               ))}
             </div>

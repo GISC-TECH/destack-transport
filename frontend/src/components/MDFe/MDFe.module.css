@@ -1,0 +1,1054 @@
+/* MDFe module styles — extracted from legacy CTe.css and aligned with design tokens */
+
+.mdfeList {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: transparent;
+  min-height: auto;
+}
+
+.mdfeDetail {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header actions inside PageHeader */
+.headerButtons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.uploadLink {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.3s, box-shadow 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uploadLink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 164, 106, 0.4);
+}
+
+.uploadLink svg,
+.headerButtons svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 768px) {
+  .headerButtons {
+    width: 100%;
+  }
+
+  .headerButtons > *,
+  .uploadLink {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+/* KPI Grid */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.kpiCard {
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--border-light);
+  box-shadow: none;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+
+.kpiCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-color);
+  box-shadow: 0 10px 24px -14px rgba(16, 51, 31, 0.22);
+}
+
+.kpiIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpiIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.kpiIconBlue {
+  composes: kpiIcon;
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.kpiIconGreen {
+  composes: kpiIcon;
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.kpiIconOrange {
+  composes: kpiIcon;
+  background: rgba(200, 169, 81, 0.16);
+  color: var(--gold-600);
+}
+
+.kpiIconPurple {
+  composes: kpiIcon;
+  background: rgba(45, 106, 79, 0.10);
+  color: var(--green-700);
+}
+
+.kpiIconRed {
+  composes: kpiIcon;
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.kpiContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kpiLabel {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.kpiValue {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+/* Charts Grid */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.chartCard {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.chartCard h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.chartSmall {
+  grid-column: span 1;
+}
+
+.emptyChart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  background: var(--content-bg);
+  border-radius: 8px;
+}
+
+/* Eficiência */
+.eficienciaDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  text-align: center;
+}
+
+.eficienciaValue {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--success-color);
+  line-height: 1;
+}
+
+.eficienciaLabel {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 10px;
+}
+
+.eficienciaDetail {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+/* Section Header */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 25px 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border-light);
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Filtros */
+.filtrosSection {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filtrosForm {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.inputFilter,
+.selectFilter {
+  flex: 1;
+  min-width: 150px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.inputFilter:first-child {
+  flex: 2;
+  min-width: 250px;
+}
+
+.inputFilter:focus,
+.selectFilter:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Results info */
+.resultsInfo {
+  margin-bottom: 15px;
+}
+
+.tableWrapper {
+  /* wrapper handled by TableContainer; extra styles when needed */
+}
+
+@media (max-width: 768px) {
+  .tableWrapper > table {
+    display: none;
+  }
+}
+
+.resultsInfo p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Data Table (used inside TableContainer) */
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dataTable thead {
+  background: var(--content-bg);
+}
+
+.dataTable th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dataTable td {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+
+.dataTable tbody tr:hover {
+  background-color: var(--content-bg);
+}
+
+.textCenter {
+  text-align: center;
+}
+
+.textMuted {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Badges (non-status) */
+.badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badgeInfo {
+  composes: badge;
+  background-color: var(--info-light);
+  color: var(--info-dark);
+}
+
+.badgeSuccess {
+  composes: badge;
+  background-color: var(--success-light);
+  color: var(--success-dark);
+}
+
+.badgeSecondary {
+  composes: badge;
+  background-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+/* Action Buttons */
+.actionButtons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  padding: 6px 14px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.actionBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actionBtnView {
+  composes: actionBtn;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.actionBtnView:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+}
+
+.actionBtnDownload {
+  composes: actionBtn;
+  background-color: var(--green-600);
+  color: white;
+}
+
+.actionBtnDownload:hover:not(:disabled) {
+  background-color: var(--green-700);
+}
+
+/* Mobile Cards */
+.mobileCards {
+  display: none;
+}
+
+.mobileCard {
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mobileCard:active {
+  transform: scale(0.99);
+}
+
+.mobileCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--content-bg) 0%, var(--card-bg) 100%);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.mobileCardTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobileCardNumber {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mobileCardDate {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.mobileCardStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobileCardBody {
+  padding: 14px 16px;
+}
+
+.mobileCardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.mobileCardRow:last-child {
+  border-bottom: none;
+}
+
+.mobileCardLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.mobileCardValue {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: right;
+  max-width: 65%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.mobileCardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--content-bg);
+  border-top: 1px solid var(--border-light);
+  gap: 10px;
+}
+
+.mobileCardActions {
+  display: flex;
+  gap: 8px;
+}
+
+.mobileCardActions .actionBtn {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.mobileEmpty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mobileEmptyIcon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.mobileEmptyText {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 25px;
+  padding: 20px;
+}
+
+.btnPage {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-primary);
+}
+
+.btnPage:hover:not(:disabled) {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.btnPage:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationNumbers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btnPageNum {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  min-width: 40px;
+  color: var(--text-primary);
+}
+
+.btnPageNum:hover {
+  background: var(--content-bg);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btnPageNum.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.paginationEllipsis {
+  color: var(--text-secondary);
+  padding: 0 6px;
+  font-size: 14px;
+}
+
+/* Detail Page */
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.pageHeader h1 {
+  color: var(--text-primary);
+  font-size: 28px;
+  margin: 0 0 5px 0;
+}
+
+.pageHeader p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.backLink {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-size: 14px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.chaveCte {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.headerActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.statusIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.statusSuccess {
+  composes: statusBadge;
+  background: var(--green-600);
+  color: white;
+}
+
+.statusDanger {
+  composes: statusBadge;
+  background: linear-gradient(135deg, var(--danger-dark) 0%, var(--danger-color) 100%);
+  color: white;
+}
+
+.statusWarning {
+  composes: statusBadge;
+  background: linear-gradient(135deg, var(--warning-dark) 0%, var(--warning-color) 100%);
+  color: white;
+}
+
+.statusInfo {
+  composes: statusBadge;
+  background: linear-gradient(135deg, var(--info-color) 0%, var(--info-dark) 100%);
+  color: white;
+}
+
+.statusSecondary {
+  composes: statusBadge;
+  background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-muted) 100%);
+  color: white;
+}
+
+/* Detail Grid */
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 25px;
+}
+
+.detailCard {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.detailCardHighlight {
+  border-left: 5px solid var(--success-color);
+}
+
+.detailCardFull {
+  grid-column: 1 / -1;
+}
+
+.detailCard h3 {
+  color: var(--text-primary);
+  font-size: 18px;
+  margin: 0 0 20px 0;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.detailContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.label {
+  color: var(--text-secondary);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.value {
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: right;
+}
+
+.valorDestaque {
+  font-size: 24px;
+  color: var(--success-color) !important;
+  font-weight: 700 !important;
+}
+
+.valorDestaqueSm {
+  composes: valorDestaque;
+  font-size: 20px;
+}
+
+.chaveDoc {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.emptyStateMuted {
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 20px;
+  margin: 0;
+}
+
+.tableClean {
+  box-shadow: none;
+}
+
+/* Modal info grid (used inside Common Modal body) */
+.modalInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.modalInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modalInfoItemFull {
+  composes: modalInfoItem;
+  grid-column: span 2;
+}
+
+.modalInfoLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.modalInfoValue {
+  font-size: 15px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .headerActions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .actionButtons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .mdfeList,
+  .mdfeDetail {
+    padding: 0;
+  }
+
+  .kpiGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .kpiCard {
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .kpiValue {
+    font-size: 20px;
+  }
+
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .chartCard {
+    padding: 14px;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 20px 0 12px 0;
+  }
+
+  .sectionHeader h3 {
+    font-size: 16px;
+  }
+
+  .filtrosSection {
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+
+  .filtrosForm {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .inputFilter,
+  .selectFilter {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .dataTable th,
+  .dataTable td {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .mobileCards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .detailCard {
+    padding: 18px;
+  }
+
+  .detailRow {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .detailRow .value {
+    text-align: left;
+  }
+
+  .statusBadge {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 15px;
+  }
+
+  .paginationNumbers {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .btnPage {
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
+    padding: 12px 16px;
+  }
+
+  .btnPageNum {
+    min-width: 36px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .modalInfoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .modalInfoItemFull {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .kpiCard {
+    flex-direction: row;
+    align-items: center;
+    padding: 14px;
+  }
+
+  .kpiIcon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .kpiValue {
+    font-size: 18px;
+  }
+
+  .kpiLabel {
+    font-size: 11px;
+  }
+
+  .chartCard {
+    padding: 14px;
+    margin: 0 -10px;
+    border-radius: 0;
+  }
+
+  .detailCard {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .detailCard h3 {
+    font-size: 16px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+  }
+
+  .valorDestaque {
+    font-size: 20px !important;
+  }
+
+  .chaveCte {
+    font-size: 10px;
+  }
+
+  .actionButtons {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .mobileCardRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .mobileCardValue {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .mobileCardFooter {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobileCardActions {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, Fragment } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/images/logo.svg';
-import './Sidebar.css';
+import styles from './Sidebar.module.css';
 
 function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -19,11 +19,8 @@ function Sidebar() {
   useEffect(() => {
     if (prevPathnameRef.current !== location.pathname) {
       prevPathnameRef.current = location.pathname;
-       
       setIsMobileOpen(false);
-       
       setOpenBottomSheet(null);
-       
       setOpenMoreMenu(false);
     }
   }, [location.pathname]);
@@ -200,12 +197,18 @@ function Sidebar() {
     return submenu?.some(item => isActive(item.path));
   };
 
+  const sidebarClasses = [
+    styles.sidebar,
+    isCollapsed && styles.collapsed,
+    isMobileOpen && styles.mobileOpen,
+  ].filter(Boolean).join(' ');
+
   return (
     <>
       {/* Mobile Header */}
-      <header className="mobile-header" role="banner">
+      <header className={styles.mobileHeader} role="banner">
         <button
-          className="menu-toggle"
+          className={styles.menuToggle}
           onClick={() => setIsMobileOpen(!isMobileOpen)}
           aria-label={isMobileOpen ? 'Fechar menu de navegacao' : 'Abrir menu de navegacao'}
           aria-expanded={isMobileOpen}
@@ -226,11 +229,11 @@ function Sidebar() {
             )}
           </svg>
         </button>
-        <div className="mobile-brand">
-          <img src={logo} alt="Destack Transporte" className="mobile-logo" />
+        <div className={styles.mobileBrand}>
+          <img src={logo} alt="Destack Transporte" className={styles.mobileLogo} />
         </div>
-        <div className="mobile-user">
-          <button className="mobile-logout" onClick={handleLogout} aria-label="Sair do sistema">
+        <div className={styles.mobileUser}>
+          <button className={styles.mobileLogout} onClick={handleLogout} aria-label="Sair do sistema">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
@@ -242,23 +245,23 @@ function Sidebar() {
 
       {/* Overlay para mobile */}
       <div
-        className={`sidebar-overlay ${isMobileOpen ? 'active' : ''}`}
+        className={`${styles.sidebarOverlay} ${isMobileOpen ? styles.sidebarOverlayActive : ''}`}
         onClick={() => setIsMobileOpen(false)}
         aria-hidden="true"
       />
 
       {/* Sidebar */}
       <aside
-        className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}
+        className={sidebarClasses}
         aria-label="Menu principal"
       >
         {/* Brand */}
-        <div className="sidebar-brand">
+        <div className={styles.sidebarBrand}>
           <Link to="/dashboard" aria-label="Destack Transporte">
-            <img src={logo} alt="Destack Transporte" className="sidebar-logo" />
+            <img src={logo} alt="Destack Transporte" className={styles.sidebarLogo} />
           </Link>
           <button
-            className="collapse-btn"
+            className={styles.collapseBtn}
             onClick={() => setIsCollapsed(!isCollapsed)}
             aria-label={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
           >
@@ -269,84 +272,88 @@ function Sidebar() {
         </div>
 
         {/* Menu */}
-        <nav className="sidebar-nav" id="sidebar-nav" role="navigation" aria-label="Navegacao principal">
-          <ul className="sidebar-menu" role="menubar">
+        <nav className={styles.sidebarNav} id="sidebar-nav" role="navigation" aria-label="Navegacao principal">
+          <ul className={styles.sidebarMenu} role="menubar">
             {menuItems.map((item, idx) => (
               <Fragment key={item.id}>
                 {item.section && item.section !== menuItems[idx - 1]?.section && (
-                  <li className="menu-section" role="presentation" aria-hidden="true">
+                  <li className={styles.menuSection} role="presentation" aria-hidden="true">
                     {item.section}
                   </li>
                 )}
-              <li
-                className={`menu-item ${item.submenu ? 'has-submenu' : ''} ${openMenus[item.id] || isSubmenuActive(item.submenu) ? 'open' : ''}`}
-                role="none"
-              >
-                {item.path ? (
-                  <Link
-                    to={item.path}
-                    className={`menu-link ${isActive(item.path) ? 'active' : ''}`}
-                    title={isCollapsed ? item.label : ''}
-                    role="menuitem"
-                    aria-current={isActive(item.path) ? 'page' : undefined}
-                  >
-                    <span className="menu-icon" aria-hidden="true">{item.icon}</span>
-                    <span className="menu-label">{item.label}</span>
-                  </Link>
-                ) : (
-                  <>
-                    <button
-                      className={`menu-link ${isSubmenuActive(item.submenu) ? 'active' : ''}`}
-                      onClick={() => toggleSubmenu(item.id)}
+                <li
+                  className={[
+                    styles.menuItem,
+                    item.submenu && styles.hasSubmenu,
+                    (openMenus[item.id] || isSubmenuActive(item.submenu)) && styles.open,
+                  ].filter(Boolean).join(' ')}
+                  role="none"
+                >
+                  {item.path ? (
+                    <Link
+                      to={item.path}
+                      className={[styles.menuLink, isActive(item.path) && styles.menuLinkActive].filter(Boolean).join(' ')}
                       title={isCollapsed ? item.label : ''}
                       role="menuitem"
-                      aria-expanded={openMenus[item.id] || isSubmenuActive(item.submenu)}
-                      aria-haspopup="menu"
-                      aria-controls={`submenu-${item.id}`}
+                      aria-current={isActive(item.path) ? 'page' : undefined}
                     >
-                      <span className="menu-icon" aria-hidden="true">{item.icon}</span>
-                      <span className="menu-label">{item.label}</span>
-                      <svg className="submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </button>
-                    <ul className="submenu" id={`submenu-${item.id}`} role="menu" aria-label={item.label}>
-                      {item.submenu.map((subItem) => (
-                        <li key={subItem.path} role="none">
-                          <Link
-                            to={subItem.path}
-                            className={isActive(subItem.path) ? 'active' : ''}
-                            role="menuitem"
-                            aria-current={isActive(subItem.path) ? 'page' : undefined}
-                          >
-                            {subItem.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </li>
+                      <span className={styles.menuIcon} aria-hidden="true">{item.icon}</span>
+                      <span className={styles.menuLabel}>{item.label}</span>
+                    </Link>
+                  ) : (
+                    <>
+                      <button
+                        className={[styles.menuLink, isSubmenuActive(item.submenu) && styles.menuLinkActive].filter(Boolean).join(' ')}
+                        onClick={() => toggleSubmenu(item.id)}
+                        title={isCollapsed ? item.label : ''}
+                        role="menuitem"
+                        aria-expanded={openMenus[item.id] || isSubmenuActive(item.submenu)}
+                        aria-haspopup="menu"
+                        aria-controls={`submenu-${item.id}`}
+                      >
+                        <span className={styles.menuIcon} aria-hidden="true">{item.icon}</span>
+                        <span className={styles.menuLabel}>{item.label}</span>
+                        <svg className={styles.submenuArrow} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </button>
+                      <ul className={styles.submenu} id={`submenu-${item.id}`} role="menu" aria-label={item.label}>
+                        {item.submenu.map((subItem) => (
+                          <li key={subItem.path} role="none">
+                            <Link
+                              to={subItem.path}
+                              className={isActive(subItem.path) ? styles.submenuLinkActive : ''}
+                              role="menuitem"
+                              aria-current={isActive(subItem.path) ? 'page' : undefined}
+                            >
+                              {subItem.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </li>
               </Fragment>
             ))}
           </ul>
         </nav>
 
         {/* User Section */}
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">
+        <div className={styles.sidebarFooter}>
+          <div className={styles.userInfo}>
+            <div className={styles.userAvatar}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
             </div>
-            <div className="user-details">
-              <span className="user-name">{user?.username || 'Usuário'}</span>
-              <span className="user-role">{user?.is_staff ? 'Administrador' : 'Usuário'}</span>
+            <div className={styles.userDetails}>
+              <span className={styles.userName}>{user?.username || 'Usuário'}</span>
+              <span className={styles.userRole}>{user?.is_staff ? 'Administrador' : 'Usuário'}</span>
             </div>
           </div>
-          <button className="logout-btn" onClick={handleLogout} title="Sair" aria-label="Sair do sistema">
+          <button className={styles.logoutBtn} onClick={handleLogout} title="Sair" aria-label="Sair do sistema">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
@@ -365,11 +372,16 @@ function Sidebar() {
 
         return (
           <>
-            <nav className="bottom-nav" aria-label="Navegacao inferior">
+            <nav className={styles.bottomNav} aria-label="Navegacao inferior">
               {mainItems.map((item) => (
                 <button
                   key={item.id}
-                  className={`bottom-nav-item ${item.submenu ? (isSubmenuActive(item.submenu) || openBottomSheet === item.id ? 'active' : '') : (isActive(item.path) ? 'active' : '')}`}
+                  className={[
+                    styles.bottomNavItem,
+                    item.submenu
+                      ? (isSubmenuActive(item.submenu) || openBottomSheet === item.id) && styles.bottomNavItemActive
+                      : isActive(item.path) && styles.bottomNavItemActive,
+                  ].filter(Boolean).join(' ')}
                   onClick={() => {
                     setOpenMoreMenu(false);
                     if (item.submenu) {
@@ -380,12 +392,16 @@ function Sidebar() {
                   }}
                   aria-label={item.label}
                 >
-                  <span className="bottom-nav-icon" aria-hidden="true">{item.icon}</span>
-                  <span className="bottom-nav-label">{item.label}</span>
+                  <span className={styles.bottomNavIcon} aria-hidden="true">{item.icon}</span>
+                  <span className={styles.bottomNavLabel}>{item.label}</span>
                 </button>
               ))}
               <button
-                className={`bottom-nav-item more-item ${moreActive || openMoreMenu ? 'active' : ''}`}
+                className={[
+                  styles.bottomNavItem,
+                  styles.moreItem,
+                  (moreActive || openMoreMenu) && styles.bottomNavItemActive,
+                ].filter(Boolean).join(' ')}
                 onClick={() => {
                   setOpenBottomSheet(null);
                   setOpenMoreMenu(!openMoreMenu);
@@ -393,14 +409,14 @@ function Sidebar() {
                 aria-label="Mais opcoes"
                 aria-expanded={openMoreMenu}
               >
-                <span className="bottom-nav-icon" aria-hidden="true">
+                <span className={styles.bottomNavIcon} aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="1"></circle>
                     <circle cx="19" cy="12" r="1"></circle>
                     <circle cx="5" cy="12" r="1"></circle>
                   </svg>
                 </span>
-                <span className="bottom-nav-label">Mais</span>
+                <span className={styles.bottomNavLabel}>Mais</span>
               </button>
             </nav>
 
@@ -408,17 +424,17 @@ function Sidebar() {
             {openBottomSheet && (
               <>
                 <div
-                  className="bottom-sheet-overlay active"
+                  className={`${styles.bottomSheetOverlay} ${styles.bottomSheetOverlayActive}`}
                   onClick={() => setOpenBottomSheet(null)}
                   aria-hidden="true"
                 />
-                <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label={`Menu ${menuItems.find(i => i.id === openBottomSheet)?.label}`}>
-                  <div className="bottom-sheet-header">
-                    <span className="bottom-sheet-title">
+                <div className={`${styles.bottomSheet} ${styles.bottomSheetOpen}`} role="dialog" aria-modal="true" aria-label={`Menu ${menuItems.find(i => i.id === openBottomSheet)?.label}`}>
+                  <div className={styles.bottomSheetHeader}>
+                    <span className={styles.bottomSheetTitle}>
                       {menuItems.find(i => i.id === openBottomSheet)?.label}
                     </span>
                     <button
-                      className="bottom-sheet-close"
+                      className={styles.bottomSheetClose}
                       onClick={() => setOpenBottomSheet(null)}
                       aria-label="Fechar menu"
                     >
@@ -428,7 +444,7 @@ function Sidebar() {
                       </svg>
                     </button>
                   </div>
-                  <ul className="bottom-sheet-menu">
+                  <ul className={styles.bottomSheetMenu}>
                     {menuItems.find(i => i.id === openBottomSheet)?.submenu?.map((subItem) => (
                       <li key={subItem.path}>
                         <Link
@@ -449,15 +465,15 @@ function Sidebar() {
             {openMoreMenu && (
               <>
                 <div
-                  className="bottom-sheet-overlay active"
+                  className={`${styles.bottomSheetOverlay} ${styles.bottomSheetOverlayActive}`}
                   onClick={() => setOpenMoreMenu(false)}
                   aria-hidden="true"
                 />
-                <div className="bottom-sheet more-sheet" role="dialog" aria-modal="true" aria-label="Mais opcoes">
-                  <div className="bottom-sheet-header">
-                    <span className="bottom-sheet-title">Mais</span>
+                <div className={`${styles.bottomSheet} ${styles.bottomSheetOpen} ${styles.moreSheet}`} role="dialog" aria-modal="true" aria-label="Mais opcoes">
+                  <div className={styles.bottomSheetHeader}>
+                    <span className={styles.bottomSheetTitle}>Mais</span>
                     <button
-                      className="bottom-sheet-close"
+                      className={styles.bottomSheetClose}
                       onClick={() => setOpenMoreMenu(false)}
                       aria-label="Fechar menu"
                     >
@@ -467,11 +483,16 @@ function Sidebar() {
                       </svg>
                     </button>
                   </div>
-                  <div className="bottom-sheet-grid">
+                  <div className={styles.bottomSheetGrid}>
                     {moreItems.map((item) => (
                       <button
                         key={item.id}
-                        className={`bottom-sheet-grid-item ${item.submenu ? (isSubmenuActive(item.submenu) ? 'active' : '') : (isActive(item.path) ? 'active' : '')}`}
+                        className={[
+                          styles.bottomSheetGridItem,
+                          item.submenu
+                            ? isSubmenuActive(item.submenu) && styles.bottomSheetGridItemActive
+                            : isActive(item.path) && styles.bottomSheetGridItemActive,
+                        ].filter(Boolean).join(' ')}
                         onClick={() => {
                           if (item.submenu) {
                             setOpenMoreMenu(false);
@@ -481,8 +502,8 @@ function Sidebar() {
                           }
                         }}
                       >
-                        <span className="bottom-sheet-grid-icon" aria-hidden="true">{item.icon}</span>
-                        <span className="bottom-sheet-grid-label">{item.label}</span>
+                        <span className={styles.bottomSheetGridIcon} aria-hidden="true">{item.icon}</span>
+                        <span className={styles.bottomSheetGridLabel}>{item.label}</span>
                       </button>
                     ))}
                   </div>

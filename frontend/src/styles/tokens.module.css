@@ -1,0 +1,163 @@
+/* ========================================
+   DESIGN TOKENS — Destack Transport v2
+   ========================================
+
+   Arquivo-fonte único de tokens visuais.
+   As variáveis em :root são globais e podem ser usadas em qualquer CSS.
+   Os valores exportados via :export podem ser importados no JS (breakpoints, etc.).
+
+   Não adicione regras de componente aqui — apenas tokens.
+   ======================================== */
+
+/* -------------------------------------------------
+   Variáveis CSS globais
+   ------------------------------------------------- */
+:root {
+  /* Layout */
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 70px;
+  --mobile-header-height: 60px;
+  --bottom-nav-height: 64px;
+
+  /* Escala verde (Emerald) — assinatura Destack */
+  --green-900: #10331F;
+  --green-800: #1B4332;
+  --green-700: #2D6A4F;
+  --green-600: #40916C;
+  --green-500: #52B788;
+  --green-400: #74C69D;
+  --green-300: #95D5B2;
+  --green-200: #D8F3DC;
+  --green-100: #F0FFF4;
+  --green-50: #F6FFF8;
+
+  /* Acento dourado */
+  --gold-700: #9A7A18;
+  --gold-600: #B8941F;
+  --gold-500: #C8A951;
+  --gold-400: #D4BC6A;
+  --gold-300: #E0D08A;
+  --gold-200: #EFE3B8;
+  --gold-100: #FAF5E3;
+
+  /* Neutros */
+  --content-bg: #F1F5F3;
+  --card-bg: #FFFFFF;
+  --text-primary: #15211B;
+  --text-secondary: #6B7B73;
+  --text-muted: #9AA8A0;
+  --text-placeholder: #ADB5BD;
+  --border-color: #E4EAE6;
+  --border-light: #EEF3F0;
+  --border-strong: #D1D9D4;
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+
+  /* Cores semânticas */
+  --primary-color: #40916C;
+  --primary-dark: #2D6A4F;
+  --primary-light: rgba(64, 145, 108, 0.1);
+  --success-color: #15A66B;
+  --success-dark: #117A4F;
+  --success-light: rgba(21, 166, 107, 0.12);
+  --warning-color: #F59E0B;
+  --warning-dark: #B45309;
+  --warning-light: rgba(245, 158, 11, 0.12);
+  --danger-color: #E5484D;
+  --danger-dark: #BE2F34;
+  --danger-light: rgba(229, 72, 77, 0.12);
+  --info-color: #3B82F6;
+  --info-dark: #1D4ED8;
+  --info-light: rgba(59, 130, 246, 0.12);
+
+  /* Tipografia */
+  --font-display: 'Bricolage Grotesque', 'Sora', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-body: 'Manrope', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Tamanhos de fonte */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.8125rem;  /* 13px */
+  --text-base: 0.875rem; /* 14px */
+  --text-md: 0.9375rem;  /* 15px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.75rem;   /* 28px */
+
+  /* Espaçamentos */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px rgba(16, 51, 31, 0.06), 0 1px 3px rgba(16, 51, 31, 0.05);
+  --shadow-md: 0 4px 14px rgba(16, 51, 31, 0.08), 0 2px 6px rgba(16, 51, 31, 0.05);
+  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.18), 0 10px 30px rgba(16, 51, 31, 0.12);
+  --shadow-card: 0 10px 24px -16px rgba(16, 51, 31, 0.2);
+  --shadow-button: 0 2px 6px -1px rgba(45, 106, 79, 0.25);
+  --shadow-button-hover: 0 6px 14px -4px rgba(45, 106, 79, 0.35);
+
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* Transições */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.4s ease;
+
+  /* Z-index scale */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-sidebar: 800;
+  --z-overlay: 900;
+  --z-modal: 1000;
+  --z-toast: 1100;
+
+  /* Scrollbar */
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a8a8a8;
+}
+
+/* -------------------------------------------------
+   Exportação de valores para JavaScript (ICSS)
+   -------------------------------------------------
+   Exemplo de uso:
+     import tokens from '../styles/tokens.module.css';
+     const isMobile = useMediaQuery(tokens.breakpointMd);
+   ------------------------------------------------- */
+:export {
+  /* Breakpoints em px */
+  breakpointXs: 480;
+  breakpointSm: 640;
+  breakpointMd: 768;
+  breakpointLg: 1024;
+  breakpointXl: 1200;
+  breakpointXxl: 1400;
+
+  /* Cores principais */
+  primaryColor: #40916C;
+  primaryDark: #2D6A4F;
+  successColor: #15A66B;
+  warningColor: #F59E0B;
+  dangerColor: #E5484D;
+  infoColor: #3B82F6;
+  goldColor: #C8A951;
+
+  /* Layout */
+  sidebarWidth: 250;
+  sidebarCollapsedWidth: 70;
+  mobileHeaderHeight: 60;
+  bottomNavHeight: 64;
+}

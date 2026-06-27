@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { usuariosAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
-import './Usuarios.css';
+import Button from '../Common/Button';
+import styles from './UsuarioForm.module.css';
 
 function UsuarioForm() {
   const navigate = useNavigate();
@@ -149,26 +150,26 @@ function UsuarioForm() {
   );
 
   return (
-    <div className="usuario-form-container">
-      <div className="form-header">
-        <div className="form-title">
-          <span className="form-icon">{formIcon}</span>
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <div className={styles.title}>
+          <span className={styles.icon}>{formIcon}</span>
           <h2>{isEdit ? 'Editar Usuário' : 'Novo Usuário'}</h2>
         </div>
-        <button type="button" className="btn-back" onClick={() => navigate('/usuarios')}>
+        <Button type="button" variant="outline" onClick={() => navigate('/usuarios')}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
           Voltar
-        </button>
+        </Button>
       </div>
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
 
-      <form onSubmit={handleSubmit} className="usuario-form">
-        <fieldset>
-          <legend>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
@@ -176,9 +177,9 @@ function UsuarioForm() {
             Dados de Acesso
           </legend>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="username">Nome de Usuário <span className="required">*</span></label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="username">Nome de Usuário <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 id="username"
@@ -190,11 +191,11 @@ function UsuarioForm() {
                 placeholder="Digite o nome de usuário"
                 autoComplete="username"
               />
-              <small className="field-hint">Usado para fazer login no sistema</small>
+              <small className={styles.fieldHint}>Usado para fazer login no sistema</small>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="email">E-mail <span className="required">*</span></label>
+            <div className={styles.formGroup}>
+              <label htmlFor="email">E-mail <span className={styles.required}>*</span></label>
               <input
                 type="email"
                 id="email"
@@ -209,12 +210,12 @@ function UsuarioForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="password">
-                Senha {!isEdit && <span className="required">*</span>}
+                Senha {!isEdit && <span className={styles.required}>*</span>}
               </label>
-              <div className="password-input-wrapper">
+              <div className={styles.passwordWrapper}>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
@@ -227,7 +228,7 @@ function UsuarioForm() {
                 />
                 <button
                   type="button"
-                  className="btn-toggle-password"
+                  className={styles.btnTogglePassword}
                   onClick={() => setShowPassword(!showPassword)}
                   title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 >
@@ -244,12 +245,12 @@ function UsuarioForm() {
                   )}
                 </button>
               </div>
-              {isEdit && <small className="field-hint">Deixe em branco para manter a senha atual</small>}
+              {isEdit && <small className={styles.fieldHint}>Deixe em branco para manter a senha atual</small>}
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="password_confirm">
-                Confirmar Senha {!isEdit && formData.password && <span className="required">*</span>}
+                Confirmar Senha {!isEdit && formData.password && <span className={styles.required}>*</span>}
               </label>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -264,8 +265,8 @@ function UsuarioForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -275,8 +276,8 @@ function UsuarioForm() {
             Informações Pessoais
           </legend>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="first_name">Nome</label>
               <input
                 type="text"
@@ -290,7 +291,7 @@ function UsuarioForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="last_name">Sobrenome</label>
               <input
                 type="text"
@@ -306,69 +307,69 @@ function UsuarioForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
             Permissões
           </legend>
 
-          <div className="permissions-grid">
-            <div className="permission-card">
-              <label className="checkbox-container">
+          <div className={styles.permissionsGrid}>
+            <div className={styles.permissionCard}>
+              <label className={styles.checkboxContainer}>
                 <input
                   type="checkbox"
                   name="is_active"
                   checked={formData.is_active}
                   onChange={handleChange}
                 />
-                <span className="checkmark"></span>
-                <div className="permission-info">
-                  <span className="permission-title">Usuário Ativo</span>
-                  <span className="permission-description">Permite acesso ao sistema</span>
+                <span className={styles.checkmark}></span>
+                <div className={styles.permissionInfo}>
+                  <span className={styles.permissionTitle}>Usuário Ativo</span>
+                  <span className={styles.permissionDescription}>Permite acesso ao sistema</span>
                 </div>
               </label>
             </div>
 
-            <div className="permission-card">
-              <label className="checkbox-container">
+            <div className={styles.permissionCard}>
+              <label className={styles.checkboxContainer}>
                 <input
                   type="checkbox"
                   name="is_staff"
                   checked={formData.is_staff}
                   onChange={handleChange}
                 />
-                <span className="checkmark"></span>
-                <div className="permission-info">
-                  <span className="permission-title">Staff</span>
-                  <span className="permission-description">Acesso ao painel administrativo Django</span>
+                <span className={styles.checkmark}></span>
+                <div className={styles.permissionInfo}>
+                  <span className={styles.permissionTitle}>Staff</span>
+                  <span className={styles.permissionDescription}>Acesso ao painel administrativo Django</span>
                 </div>
               </label>
             </div>
 
-            <div className="permission-card">
-              <label className="checkbox-container">
+            <div className={styles.permissionCard}>
+              <label className={styles.checkboxContainer}>
                 <input
                   type="checkbox"
                   name="is_superuser"
                   checked={formData.is_superuser}
                   onChange={handleChange}
                 />
-                <span className="checkmark"></span>
-                <div className="permission-info">
-                  <span className="permission-title">Superusuário</span>
-                  <span className="permission-description">Todas as permissões do sistema</span>
+                <span className={styles.checkmark}></span>
+                <div className={styles.permissionInfo}>
+                  <span className={styles.permissionTitle}>Superusuário</span>
+                  <span className={styles.permissionDescription}>Todas as permissões do sistema</span>
                 </div>
               </label>
             </div>
           </div>
         </fieldset>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-cancel"
+            variant="outline"
             onClick={() => navigate('/usuarios')}
             disabled={loading}
           >
@@ -377,14 +378,9 @@ function UsuarioForm() {
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
             Cancelar
-          </button>
-          <button type="submit" className="btn-submit" disabled={loading}>
-            {loading ? (
-              <>
-                <span className="spinner"></span>
-                Salvando...
-              </>
-            ) : (
+          </Button>
+          <Button type="submit" loading={loading} disabled={loading}>
+            {loading ? 'Salvando...' : (
               <>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -394,7 +390,7 @@ function UsuarioForm() {
                 {isEdit ? 'Atualizar' : 'Cadastrar'}
               </>
             )}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

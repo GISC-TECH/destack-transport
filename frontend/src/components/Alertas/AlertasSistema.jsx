@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { alertasAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import PageHeader from '../Common/PageHeader';
-import './Alertas.css';
+import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
+import styles from './Alertas.module.css';
 
 // Função para gerar título baseado no tipo
 const getTituloFromTipo = (tipo) => {
@@ -110,12 +112,12 @@ function AlertasSistema() {
 
   const getPrioridadeBadge = (prioridade) => {
     const map = {
-      alta: { class: 'danger', text: 'Alta' },
-      media: { class: 'warning', text: 'Média' },
-      baixa: { class: 'info', text: 'Baixa' }
+      alta: { status: 'danger', text: 'Alta' },
+      media: { status: 'warning', text: 'Média' },
+      baixa: { status: 'info', text: 'Baixa' }
     };
-    const p = map[prioridade] || { class: 'secondary', text: prioridade };
-    return <span className={`badge badge-${p.class}`}>{p.text}</span>;
+    const p = map[prioridade] || { status: 'default', text: prioridade };
+    return <StatusPill status={p.status}>{p.text}</StatusPill>;
   };
 
   // Filtrar alertas
@@ -142,7 +144,7 @@ function AlertasSistema() {
   );
 
   return (
-    <div className="alertas-page">
+    <div className={styles.page}>
       <PageHeader
         title="Alertas do Sistema"
         subtitle="Acompanhe notificações importantes"
@@ -150,75 +152,75 @@ function AlertasSistema() {
         breadcrumbs={[{ label: 'Sistema' }, { label: 'Alertas' }]}
         actions={
           contagens.total > 0 && (
-            <button className="btn-secondary" onClick={handleLimparTodos}>
+            <Button variant="secondary" onClick={handleLimparTodos}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
               Limpar Todos
-            </button>
+            </Button>
           )
         }
       />
 
       {/* Cards de resumo */}
-      <div className="alertas-summary">
-        <div className="summary-card">
-          <div className="summary-icon total">
+      <div className={styles.summary}>
+        <div className={styles.summaryCard}>
+          <div className={`${styles.summaryIcon} ${styles.summaryTotal}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
           </div>
-          <div className="summary-info">
-            <span className="summary-number">{contagens.total}</span>
-            <span className="summary-label">Total</span>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryNumber}>{contagens.total}</span>
+            <span className={styles.summaryLabel}>Total</span>
           </div>
         </div>
-        <div className="summary-card">
-          <div className="summary-icon urgentes">
+        <div className={styles.summaryCard}>
+          <div className={`${styles.summaryIcon} ${styles.summaryUrgentes}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
               <line x1="12" y1="8" x2="12" y2="12"></line>
               <line x1="12" y1="16" x2="12.01" y2="16"></line>
             </svg>
           </div>
-          <div className="summary-info">
-            <span className="summary-number">{contagens.urgentes}</span>
-            <span className="summary-label">Urgentes</span>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryNumber}>{contagens.urgentes}</span>
+            <span className={styles.summaryLabel}>Urgentes</span>
           </div>
         </div>
       </div>
 
       {/* Filtros */}
-      <div className="filtros-section">
-        <div className="filtros-tabs">
+      <div className={styles.filtrosSection}>
+        <div className={styles.filtrosTabs}>
           <button
-            className={`tab-btn ${filtro === 'todos' ? 'active' : ''}`}
+            className={`${styles.tabBtn} ${filtro === 'todos' ? styles.tabActive : ''}`}
             onClick={() => setFiltro('todos')}
           >
             Todos ({contagens.total})
           </button>
           <button
-            className={`tab-btn ${filtro === 'urgentes' ? 'active' : ''}`}
+            className={`${styles.tabBtn} ${filtro === 'urgentes' ? styles.tabActive : ''}`}
             onClick={() => setFiltro('urgentes')}
           >
             Urgentes ({contagens.urgentes})
           </button>
           <button
-            className={`tab-btn ${filtro === 'vencimento' ? 'active' : ''}`}
+            className={`${styles.tabBtn} ${filtro === 'vencimento' ? styles.tabActive : ''}`}
             onClick={() => setFiltro('vencimento')}
           >
             Vencimentos
           </button>
           <button
-            className={`tab-btn ${filtro === 'pagamento' ? 'active' : ''}`}
+            className={`${styles.tabBtn} ${filtro === 'pagamento' ? styles.tabActive : ''}`}
             onClick={() => setFiltro('pagamento')}
           >
             Pagamentos
           </button>
           <button
-            className={`tab-btn ${filtro === 'manutencao' ? 'active' : ''}`}
+            className={`${styles.tabBtn} ${filtro === 'manutencao' ? styles.tabActive : ''}`}
             onClick={() => setFiltro('manutencao')}
           >
             Manutenção
@@ -227,9 +229,9 @@ function AlertasSistema() {
       </div>
 
       {/* Lista de Alertas */}
-      <div className="alertas-list">
+      <div className={styles.list}>
         {alertasFiltrados.length === 0 ? (
-          <div className="empty-state">
+          <div className={styles.emptyState}>
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -240,22 +242,22 @@ function AlertasSistema() {
           alertasFiltrados.map(alerta => (
             <div
               key={alerta.id}
-              className={`alerta-card prioridade-${alerta.prioridade}`}
+              className={`${styles.card} ${styles[`prioridade${alerta.prioridade.charAt(0).toUpperCase() + alerta.prioridade.slice(1)}`]}`}
             >
-              <div className={`alerta-icon tipo-${alerta.tipo}`}>
+              <div className={`${styles.icon} ${styles[`tipo${alerta.tipo.charAt(0).toUpperCase() + alerta.tipo.slice(1)}`]}`}>
                 {getTipoIcon(alerta.tipo)}
               </div>
-              <div className="alerta-content">
-                <div className="alerta-header">
+              <div className={styles.content}>
+                <div className={styles.header}>
                   <h3>{getTituloFromTipo(alerta.tipo)}</h3>
                   {getPrioridadeBadge(alerta.prioridade)}
                 </div>
                 <p>{alerta.mensagem}</p>
-                <span className="alerta-time">{formatDate(alerta.data_hora)}</span>
+                <span className={styles.time}>{formatDate(alerta.data_hora)}</span>
               </div>
-              <div className="alerta-actions">
+              <div className={styles.actions}>
                 <button
-                  className="btn-mark-read"
+                  className={styles.markReadButton}
                   onClick={() => handleRemoverAlerta(alerta.id)}
                   title="Remover alerta"
                 >

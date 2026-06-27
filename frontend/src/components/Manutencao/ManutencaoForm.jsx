@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { manutencaoAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import './Manutencao.css';
+import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
+import styles from './Manutencao.module.css';
 
 function ManutencaoForm() {
   const navigate = useNavigate();
@@ -143,27 +145,25 @@ function ManutencaoForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="manutencao-form-page">
-      <div className="page-header">
-        <div className="header-title">
-          <h1>{isEditing ? 'Editar Manutenção' : 'Nova Manutenção'}</h1>
-          <p>{isEditing ? 'Atualize os dados da manutenção' : 'Agende uma nova manutenção para o veículo'}</p>
-        </div>
-      </div>
+    <div className={styles.formPage}>
+      <PageHeader
+        title={isEditing ? 'Editar Manutenção' : 'Nova Manutenção'}
+        subtitle={isEditing ? 'Atualize os dados da manutenção' : 'Agende uma nova manutenção para o veículo'}
+      />
 
       {error && (
-        <div className="alert alert-error">
+        <div className={`${styles.alert} ${styles.alertError}`}>
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-container">
-        <div className="form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Informações Básicas</h3>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Veículo *</label>
               <select
                 name="veiculo"
@@ -180,7 +180,7 @@ function ManutencaoForm() {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Tipo de Manutenção *</label>
               <select
                 name="tipo"
@@ -195,7 +195,7 @@ function ManutencaoForm() {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Descrição *</label>
             <textarea
               name="descricao"
@@ -208,11 +208,11 @@ function ManutencaoForm() {
           </div>
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Agendamento</h3>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Data Agendada *</label>
               <input
                 type="date"
@@ -223,7 +223,7 @@ function ManutencaoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Data Realizada</label>
               <input
                 type="date"
@@ -233,7 +233,7 @@ function ManutencaoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Status *</label>
               <select
                 name="status"
@@ -250,11 +250,11 @@ function ManutencaoForm() {
           </div>
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Custos e Detalhes</h3>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>KM Atual</label>
               <input
                 type="number"
@@ -265,7 +265,7 @@ function ManutencaoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Custo (R$)</label>
               <input
                 type="number"
@@ -278,8 +278,8 @@ function ManutencaoForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Fornecedor/Oficina</label>
               <input
                 type="text"
@@ -291,7 +291,7 @@ function ManutencaoForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Número da Nota Fiscal</label>
               <input
                 type="text"
@@ -304,22 +304,22 @@ function ManutencaoForm() {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Arquivo da Nota Fiscal (opcional)</label>
             <input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => setArquivoNota(e.target.files[0] || null)}
-              style={{ padding: '8px' }}
+              className={styles.fileInput}
             />
             {arquivoNota && (
-              <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+              <small className={styles.fileHint}>
                 Arquivo selecionado: {arquivoNota.name}
               </small>
             )}
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Observações</label>
             <textarea
               name="observacoes"
@@ -331,21 +331,21 @@ function ManutencaoForm() {
           </div>
         </div>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
             onClick={() => navigate('/manutencoes')}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="btn-primary"
+            variant="primary"
             disabled={saving}
           >
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Manutenção')}
-          </button>
+          </Button>
         </div>
       </form>
 

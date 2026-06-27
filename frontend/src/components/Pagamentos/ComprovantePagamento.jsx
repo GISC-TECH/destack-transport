@@ -1,5 +1,7 @@
 import { useRef } from 'react';
-import './ComprovantePagamento.css';
+import Modal from '../Common/Modal';
+import Button from '../Common/Button';
+import styles from './ComprovantePagamento.module.css';
 
 function ComprovantePagamento({ pagamento, tipo, onClose }) {
   const comprovanteRef = useRef(null);
@@ -161,18 +163,18 @@ function ComprovantePagamento({ pagamento, tipo, onClose }) {
   const kmTotal = !isAgregado ? pagamento.km_total_periodo : null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="comprovante-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="comprovante-actions">
-          <button className="btn-print" onClick={handlePrint}>
+    <Modal isOpen={true} onClose={onClose} title="Comprovante de Pagamento" size="sm">
+      <div className={styles.comprovanteModalBody}>
+        <div className={styles.comprovanteActions}>
+          <Button className={styles.btnPrint} onClick={handlePrint}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 6 2 18 2 18 9"></polyline>
               <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
               <rect x="6" y="14" width="12" height="8"></rect>
             </svg>
             Imprimir
-          </button>
-          <button className="btn-close-comprovante" onClick={onClose}>
+          </Button>
+          <button className={styles.btnCloseComprovante} onClick={onClose} aria-label="Fechar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -180,108 +182,108 @@ function ComprovantePagamento({ pagamento, tipo, onClose }) {
           </button>
         </div>
 
-        <div className="comprovante-cupom" ref={comprovanteRef}>
+        <div className={styles.comprovanteCupom} ref={comprovanteRef}>
           {/* Cabecalho */}
-          <div className="cupom-header">
-            <div className="cupom-logo">DESTACK TRANSPORT</div>
-            <div className="cupom-subtitulo">Sistema de Gestao de Transporte</div>
-            <div className={`cupom-tipo ${isAgregado ? 'agregado' : 'proprio'}`}>
+          <div className={styles.cupomHeader}>
+            <div className={styles.cupomLogo}>DESTACK TRANSPORT</div>
+            <div className={styles.cupomSubtitulo}>Sistema de Gestao de Transporte</div>
+            <div className={`${styles.cupomTipo} ${isAgregado ? styles.agregado : styles.proprio}`}>
               {isAgregado ? 'AGREGADO' : 'PROPRIO'}
             </div>
           </div>
 
-          <hr className="cupom-divider" />
+          <hr className={styles.cupomDivider} />
 
           {/* Informações do Documento */}
-          <div className="cupom-section-title">Dados do Pagamento</div>
+          <div className={styles.cupomSectionTitle}>Dados do Pagamento</div>
 
-          <div className="cupom-linha">
-            <span className="cupom-label">CT-e:</span>
-            <span className="cupom-valor">#{pagamento.cte_numero || '-'}</span>
+          <div className={styles.cupomLinha}>
+            <span className={styles.cupomLabel}>CT-e:</span>
+            <span className={styles.cupomValor}>#{pagamento.cte_numero || '-'}</span>
           </div>
 
-          <div className="cupom-linha">
-            <span className="cupom-label">Condutor:</span>
-            <span className="cupom-valor">{condutor}</span>
+          <div className={styles.cupomLinha}>
+            <span className={styles.cupomLabel}>Condutor:</span>
+            <span className={styles.cupomValor}>{condutor}</span>
           </div>
 
-          <div className="cupom-linha">
-            <span className="cupom-label">Placa:</span>
-            <span className="cupom-valor">{placa}</span>
+          <div className={styles.cupomLinha}>
+            <span className={styles.cupomLabel}>Placa:</span>
+            <span className={styles.cupomValor}>{placa}</span>
           </div>
 
           {!isAgregado && kmTotal && (
-            <div className="cupom-linha">
-              <span className="cupom-label">KM Total:</span>
-              <span className="cupom-valor">{kmTotal} km</span>
+            <div className={styles.cupomLinha}>
+              <span className={styles.cupomLabel}>KM Total:</span>
+              <span className={styles.cupomValor}>{kmTotal} km</span>
             </div>
           )}
 
-          <hr className="cupom-divider" />
+          <hr className={styles.cupomDivider} />
 
           {/* Datas */}
-          <div className="cupom-section-title">Datas</div>
+          <div className={styles.cupomSectionTitle}>Datas</div>
 
-          <div className="cupom-linha">
-            <span className="cupom-label">Data Prevista:</span>
-            <span className="cupom-valor">{formatDate(pagamento.data_prevista)}</span>
+          <div className={styles.cupomLinha}>
+            <span className={styles.cupomLabel}>Data Prevista:</span>
+            <span className={styles.cupomValor}>{formatDate(pagamento.data_prevista)}</span>
           </div>
 
           {pagamento.data_pagamento && (
-            <div className="cupom-linha">
-              <span className="cupom-label">Data Pagamento:</span>
-              <span className="cupom-valor">{formatDate(pagamento.data_pagamento)}</span>
+            <div className={styles.cupomLinha}>
+              <span className={styles.cupomLabel}>Data Pagamento:</span>
+              <span className={styles.cupomValor}>{formatDate(pagamento.data_pagamento)}</span>
             </div>
           )}
 
-          <hr className="cupom-divider" />
+          <hr className={styles.cupomDivider} />
 
           {/* Valores */}
-          <div className="cupom-section-title">Valores</div>
+          <div className={styles.cupomSectionTitle}>Valores</div>
 
           {isAgregado && valorFrete && (
-            <div className="cupom-linha">
-              <span className="cupom-label">Valor Frete:</span>
-              <span className="cupom-valor">{formatCurrency(valorFrete)}</span>
+            <div className={styles.cupomLinha}>
+              <span className={styles.cupomLabel}>Valor Frete:</span>
+              <span className={styles.cupomValor}>{formatCurrency(valorFrete)}</span>
             </div>
           )}
 
           {isAgregado && percentual && (
-            <div className="cupom-linha">
-              <span className="cupom-label">Percentual:</span>
-              <span className="cupom-valor">{percentual}%</span>
+            <div className={styles.cupomLinha}>
+              <span className={styles.cupomLabel}>Percentual:</span>
+              <span className={styles.cupomValor}>{percentual}%</span>
             </div>
           )}
 
           {!isAgregado && pagamento.valor_base_faixa && (
-            <div className="cupom-linha">
-              <span className="cupom-label">Valor Base:</span>
-              <span className="cupom-valor">{formatCurrency(pagamento.valor_base_faixa)}</span>
+            <div className={styles.cupomLinha}>
+              <span className={styles.cupomLabel}>Valor Base:</span>
+              <span className={styles.cupomValor}>{formatCurrency(pagamento.valor_base_faixa)}</span>
             </div>
           )}
 
           {desconto > 0 && (
-            <div className="cupom-linha" style={{ color: '#dc3545' }}>
-              <span className="cupom-label">{isAgregado ? 'Desconto:' : 'Ajustes:'}</span>
-              <span className="cupom-valor">-{formatCurrency(Math.abs(desconto))}</span>
+            <div className={styles.cupomLinha} style={{ color: '#dc3545' }}>
+              <span className={styles.cupomLabel}>{isAgregado ? 'Desconto:' : 'Ajustes:'}</span>
+              <span className={styles.cupomValor}>-{formatCurrency(Math.abs(desconto))}</span>
             </div>
           )}
 
           {desconto < 0 && (
-            <div className="cupom-linha" style={{ color: '#28a745' }}>
-              <span className="cupom-label">Ajustes:</span>
-              <span className="cupom-valor">+{formatCurrency(Math.abs(desconto))}</span>
+            <div className={styles.cupomLinha} style={{ color: '#28a745' }}>
+              <span className={styles.cupomLabel}>Ajustes:</span>
+              <span className={styles.cupomValor}>+{formatCurrency(Math.abs(desconto))}</span>
             </div>
           )}
 
           {/* Total */}
-          <div className="cupom-total">
-            <div className="cupom-total-label">VALOR A RECEBER</div>
+          <div className={styles.cupomTotal}>
+            <div className={styles.cupomTotalLabel}>VALOR A RECEBER</div>
             <div>{formatCurrency(valorFinal)}</div>
           </div>
 
           {/* Status */}
-          <div className={`cupom-status ${pagamento.status}`}>
+          <div className={`${styles.cupomStatus} ${styles[pagamento.status] || ''}`}>
             {pagamento.status === 'pago' ? 'PAGO' :
              pagamento.status === 'pendente' ? 'PENDENTE' :
              pagamento.status === 'atrasado' ? 'ATRASADO' : pagamento.status?.toUpperCase()}
@@ -290,24 +292,24 @@ function ComprovantePagamento({ pagamento, tipo, onClose }) {
           {/* Observações */}
           {pagamento.obs && (
             <>
-              <hr className="cupom-divider" />
-              <div className="cupom-section-title">Observações</div>
-              <div className="cupom-obs">{pagamento.obs}</div>
+              <hr className={styles.cupomDivider} />
+              <div className={styles.cupomSectionTitle}>Observações</div>
+              <div className={styles.cupomObs}>{pagamento.obs}</div>
             </>
           )}
 
           {/* Rodape */}
-          <div className="cupom-footer">
+          <div className={styles.cupomFooter}>
             <div>Emitido em: {new Date().toLocaleString('pt-BR')}</div>
             <div style={{ marginTop: '5px' }}>ID: {pagamento.id}</div>
           </div>
 
-          <div className="cupom-corte">
+          <div className={styles.cupomCorte}>
             ✂ - - - - - - - - - - - - - - - - - - - - - - - - ✂
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 

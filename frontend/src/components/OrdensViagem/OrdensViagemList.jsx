@@ -5,8 +5,11 @@ import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
-import './OrdensViagem.css';
-import '../Financeiro/Financeiro.css';
+import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import tokens from '../../styles/tokens.module.css';
+import styles from './OrdensViagemList.module.css';
 
 function OrdensViagemList() {
   const toast = useToast();
@@ -87,8 +90,19 @@ function OrdensViagemList() {
     return new Date(dateString).toLocaleString('pt-BR');
   };
 
-  const getStatusBadge = (status) => {
-    return <span className={`status-badge status-${status}`}>{status.replace('_', ' ')}</span>;
+  const getStatusVariant = (status) => {
+    const map = {
+      'rascunho': 'default',
+      'agendada': 'warning',
+      'em_andamento': 'info',
+      'concluida': 'success',
+      'cancelada': 'danger'
+    };
+    return map[status] || 'default';
+  };
+
+  const getStatusLabel = (status) => {
+    return status.replace('_', ' ');
   };
 
   const contagens = {
@@ -102,7 +116,7 @@ function OrdensViagemList() {
   if (error) return <ErrorMessage message={error} onRetry={loadOrdens} />;
 
   return (
-    <div className="ordens-viagem-page">
+    <div className={styles.ordensViagemPage}>
       <PageHeader
         title="Ordens de Viagem"
         subtitle="Gerencie viagens, motoristas e CT-es vinculados"
@@ -118,21 +132,21 @@ function OrdensViagemList() {
         }
       />
 
-      <div className="fin-kpi-grid">
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(0, 123, 255, 0.1)', color: '#007bff' }}>
+      <div className={styles.finKpiGrid}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.infoLight, color: tokens.infoColor }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <div className="fin-kpi-label">Em Andamento</div>
-            <div className="fin-kpi-value">{contagens.em_andamento}</div>
+          <div className={styles.finKpiContent}>
+            <div className={styles.finKpiLabel}>Em Andamento</div>
+            <div className={styles.finKpiValue}>{contagens.em_andamento}</div>
           </div>
         </div>
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(255, 193, 7, 0.1)', color: '#ffc107' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.warningLight, color: tokens.warningColor }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -140,32 +154,32 @@ function OrdensViagemList() {
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <div className="fin-kpi-label">Agendadas</div>
-            <div className="fin-kpi-value">{contagens.agendada}</div>
+          <div className={styles.finKpiContent}>
+            <div className={styles.finKpiLabel}>Agendadas</div>
+            <div className={styles.finKpiValue}>{contagens.agendada}</div>
           </div>
         </div>
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(40, 167, 69, 0.1)', color: '#28a745' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.successLight, color: tokens.successColor }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <div className="fin-kpi-label">Concluídas</div>
-            <div className="fin-kpi-value">{contagens.concluida}</div>
+          <div className={styles.finKpiContent}>
+            <div className={styles.finKpiLabel}>Concluídas</div>
+            <div className={styles.finKpiValue}>{contagens.concluida}</div>
           </div>
         </div>
-        <div className="fin-kpi-card principal">
-          <div className="fin-kpi-icon">
+        <div className={`${styles.finKpiCard} ${styles.principal}`}>
+          <div className={styles.finKpiIcon}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <div className="fin-kpi-label">Total de OS</div>
-            <div className="fin-kpi-value">{contagens.total}</div>
+          <div className={styles.finKpiContent}>
+            <div className={styles.finKpiLabel}>Total de OS</div>
+            <div className={styles.finKpiValue}>{contagens.total}</div>
           </div>
         </div>
       </div>
@@ -174,8 +188,8 @@ function OrdensViagemList() {
         <div className="card-header">
           <h3 className="card-title">Filtros</h3>
         </div>
-        <form onSubmit={handleFiltrar} className="filtros-form">
-          <div className="filtros-row">
+        <form onSubmit={handleFiltrar} className={styles.filtrosForm}>
+          <div className={styles.filtrosRow}>
             <select
               value={filtros.status}
               onChange={(e) => setFiltros({ ...filtros, status: e.target.value })}
@@ -211,114 +225,120 @@ function OrdensViagemList() {
               value={filtros.q}
               onChange={(e) => setFiltros({ ...filtros, q: e.target.value })}
             />
-            <button type="submit" className="btn-primary">Filtrar</button>
+            <Button type="submit" variant="primary">Filtrar</Button>
           </div>
         </form>
       </div>
 
-      <div className="os-list-card">
-        <table className="os-table">
-          <thead>
-            <tr>
-              <th>OS</th>
-              <th>Status</th>
-              <th>Veículo</th>
-              <th>Motorista</th>
-              <th>Saída</th>
-              <th>Previsão</th>
-              <th>Rota</th>
-              <th>CT-es</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ordens.length === 0 ? (
+      <div className={styles.osListCard}>
+        <TableContainer mobileCards={false}>
+          <table className={styles.osTable}>
+            <thead>
               <tr>
-                <td colSpan="9" className="text-center">
-                  <div className="os-empty-state">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                    </svg>
-                    <p>Nenhuma ordem de viagem encontrada.</p>
-                  </div>
-                </td>
+                <th>OS</th>
+                <th>Status</th>
+                <th>Veículo</th>
+                <th>Motorista</th>
+                <th>Saída</th>
+                <th>Previsão</th>
+                <th>Rota</th>
+                <th>CT-es</th>
+                <th>Ações</th>
               </tr>
-            ) : (
-              ordens.map(ordem => (
-                <tr key={ordem.id}>
-                  <td><strong>{ordem.numero}</strong></td>
-                  <td>{getStatusBadge(ordem.status)}</td>
-                  <td>{ordem.veiculo_placa || '-'}</td>
-                  <td>{ordem.motorista_nome || '-'}</td>
-                  <td>{formatDateTime(ordem.data_saida)}</td>
-                  <td>{formatDateTime(ordem.data_previsao_chegada)}</td>
-                  <td>
-                    {ordem.origem_cidade && ordem.destino_cidade
-                      ? `${ordem.origem_cidade}/${ordem.origem_uf} → ${ordem.destino_cidade}/${ordem.destino_uf}`
-                      : '-'}
-                  </td>
-                  <td>{ordem.ctes_count || 0}</td>
-                  <td>
-                    <div className="os-actions">
-                      <Link to={`/ordens-viagem/${ordem.id}`} className="btn-icon" title="Editar">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                      </Link>
-                      <button
-                        className="btn-icon"
-                        onClick={() => handleDelete(ordem.id)}
-                        title="Excluir"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                      </button>
+            </thead>
+            <tbody>
+              {ordens.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="text-center">
+                    <div className={styles.osEmptyState}>
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                      </svg>
+                      <p>Nenhuma ordem de viagem encontrada.</p>
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                ordens.map(ordem => (
+                  <tr key={ordem.id}>
+                    <td><strong>{ordem.numero}</strong></td>
+                    <td>
+                      <StatusPill status={getStatusVariant(ordem.status)}>
+                        {getStatusLabel(ordem.status)}
+                      </StatusPill>
+                    </td>
+                    <td>{ordem.veiculo_placa || '-'}</td>
+                    <td>{ordem.motorista_nome || '-'}</td>
+                    <td>{formatDateTime(ordem.data_saida)}</td>
+                    <td>{formatDateTime(ordem.data_previsao_chegada)}</td>
+                    <td>
+                      {ordem.origem_cidade && ordem.destino_cidade
+                        ? `${ordem.origem_cidade}/${ordem.origem_uf} → ${ordem.destino_cidade}/${ordem.destino_uf}`
+                        : '-'}
+                    </td>
+                    <td>{ordem.ctes_count || 0}</td>
+                    <td>
+                      <div className={styles.osActions}>
+                        <Link to={`/ordens-viagem/${ordem.id}`} className={styles.btnIcon} title="Editar">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          iconOnly
+                          className={styles.btnIcon}
+                          onClick={() => handleDelete(ordem.id)}
+                          aria-label="Excluir"
+                          title="Excluir"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </TableContainer>
 
         {ordens.map(ordem => (
-          <div key={ordem.id} className="os-mobile-card">
-            <div className="os-mobile-row">
+          <div key={ordem.id} className={styles.osMobileCard}>
+            <div className={styles.osMobileRow}>
               <span><strong>{ordem.numero}</strong></span>
-              {getStatusBadge(ordem.status)}
+              <StatusPill status={getStatusVariant(ordem.status)}>{getStatusLabel(ordem.status)}</StatusPill>
             </div>
-            <div className="os-mobile-row">
-              <span className="os-mobile-label">Veículo</span>
+            <div className={styles.osMobileRow}>
+              <span className={styles.osMobileLabel}>Veículo</span>
               <span>{ordem.veiculo_placa || '-'}</span>
             </div>
-            <div className="os-mobile-row">
-              <span className="os-mobile-label">Motorista</span>
+            <div className={styles.osMobileRow}>
+              <span className={styles.osMobileLabel}>Motorista</span>
               <span>{ordem.motorista_nome || '-'}</span>
             </div>
-            <div className="os-mobile-row">
-              <span className="os-mobile-label">Saída</span>
+            <div className={styles.osMobileRow}>
+              <span className={styles.osMobileLabel}>Saída</span>
               <span>{formatDateTime(ordem.data_saida)}</span>
             </div>
-            <div className="os-mobile-row">
-              <span className="os-mobile-label">Rota</span>
+            <div className={styles.osMobileRow}>
+              <span className={styles.osMobileLabel}>Rota</span>
               <span>
                 {ordem.origem_cidade && ordem.destino_cidade
                   ? `${ordem.origem_cidade} → ${ordem.destino_cidade}`
                   : '-'}
               </span>
             </div>
-            <div className="os-mobile-row" style={{ marginTop: 12 }}>
+            <div className={styles.osMobileRow} style={{ marginTop: 12 }}>
               <Link to={`/ordens-viagem/${ordem.id}`} className="btn-primary btn-sm">Editar</Link>
-              <button
-                className="btn-secondary btn-sm"
-                onClick={() => handleDelete(ordem.id)}
-              >
+              <Button variant="secondary" size="sm" onClick={() => handleDelete(ordem.id)}>
                 Excluir
-              </button>
+              </Button>
             </div>
           </div>
         ))}

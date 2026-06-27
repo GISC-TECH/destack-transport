@@ -1,0 +1,280 @@
+/* ========================================
+   CTeDetail Specific Styles
+   ======================================== */
+
+.cteDetail {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.pageHeader h1 {
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  margin: 0 0 5px 0;
+}
+
+.pageHeader p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.backLink {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-size: 14px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.chaveCte {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.headerActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.statusIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.statusSuccess {
+  background: var(--success-color);
+  color: white;
+}
+
+.statusDanger {
+  background: linear-gradient(135deg, var(--danger-dark) 0%, var(--danger-color) 100%);
+  color: white;
+}
+
+.statusWarning {
+  background: linear-gradient(135deg, var(--warning-dark) 0%, var(--warning-color) 100%);
+  color: white;
+}
+
+.statusSecondary {
+  background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-muted) 100%);
+  color: white;
+}
+
+/* Detail Grid */
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 25px;
+}
+
+.detailCard {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 25px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.detailCard.highlight {
+  border-left: 5px solid var(--success-color);
+}
+
+.detailCard.cancelamentoCard {
+  border-left: 5px solid var(--danger-color);
+  background: #fdf5f5;
+}
+
+.detailCard.cancelamentoCard h3 {
+  color: var(--danger-dark);
+}
+
+.detailCard h3 {
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  margin: 0 0 20px 0;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.detailContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.detailRow .label {
+  color: var(--text-secondary);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.detailRow .value {
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: right;
+}
+
+.valorDestaque {
+  font-size: 24px;
+  color: var(--success-color) !important;
+  font-weight: 700 !important;
+}
+
+.detailCardFull {
+  grid-column: 1 / -1;
+}
+
+.cartasCorrecaoItem {
+  margin-bottom: 8px;
+}
+
+/* Action buttons detail */
+.btnPdf {
+  background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-dark) 100%);
+  color: white;
+}
+
+.btnPdf:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(229, 72, 77, 0.4);
+  transform: translateY(-2px);
+}
+
+.btnXml {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+}
+
+.btnXml:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(45, 106, 79, 0.4);
+  transform: translateY(-2px);
+}
+
+.btnReprocessar {
+  background: linear-gradient(135deg, var(--info-color) 0%, var(--info-dark) 100%);
+  color: white;
+}
+
+.btnReprocessar:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .cteDetail {
+    padding: 0;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .headerActions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .actionButtons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .statusBadge {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .detailCard {
+    padding: 18px;
+  }
+
+  .detailRow {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .detailRow .value {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .detailCard {
+    padding: 14px;
+    border-radius: var(--radius-md);
+  }
+
+  .detailCard h3 {
+    font-size: var(--text-base);
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+  }
+
+  .valorDestaque {
+    font-size: 20px !important;
+  }
+
+  .chaveCte {
+    font-size: 10px;
+  }
+
+  .actionButtons {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .actionButtons .btnAction {
+    flex: 1;
+    min-width: calc(50% - 4px);
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import './DateFilter.css';
+import styles from './DateFilter.module.css';
 
 // Funcao para calcular datas baseadas no periodo (fora do componente)
 const getDateRange = (periodo) => {
@@ -129,33 +129,33 @@ function DateFilter({
   };
 
   return (
-    <div className="date-filter">
+    <div className={styles.dateFilter}>
       {showPeriodButtons && (
-        <div className="period-buttons">
+        <div className={styles.periodButtons}>
           <button
             type="button"
-            className={`period-btn ${periodo === 'hoje' ? 'active' : ''}`}
+            className={`${styles.periodBtn} ${periodo === 'hoje' ? styles.periodBtnActive : ''}`}
             onClick={() => handlePeriodoChange('hoje')}
           >
             Hoje
           </button>
           <button
             type="button"
-            className={`period-btn ${periodo === '7dias' ? 'active' : ''}`}
+            className={`${styles.periodBtn} ${periodo === '7dias' ? styles.periodBtnActive : ''}`}
             onClick={() => handlePeriodoChange('7dias')}
           >
             7 Dias
           </button>
           <button
             type="button"
-            className={`period-btn ${periodo === 'mes' ? 'active' : ''}`}
+            className={`${styles.periodBtn} ${periodo === 'mes' ? styles.periodBtnActive : ''}`}
             onClick={() => handlePeriodoChange('mes')}
           >
             Mes
           </button>
           <button
             type="button"
-            className={`period-btn ${periodo === 'ano' ? 'active' : ''}`}
+            className={`${styles.periodBtn} ${periodo === 'ano' ? styles.periodBtnActive : ''}`}
             onClick={() => handlePeriodoChange('ano')}
           >
             Ano
@@ -163,25 +163,25 @@ function DateFilter({
         </div>
       )}
 
-      <div className="date-inputs">
-        <div className="date-input-group">
+      <div className={styles.dateInputs}>
+        <div className={styles.dateInputGroup}>
           <label htmlFor="date-inicio">De:</label>
           <input
             id="date-inicio"
             type="date"
             value={dataInicio}
             onChange={(e) => handleDataChange('inicio', e.target.value)}
-            className="date-input"
+            className={styles.dateInput}
           />
         </div>
-        <div className="date-input-group">
+        <div className={styles.dateInputGroup}>
           <label htmlFor="date-fim">Ate:</label>
           <input
             id="date-fim"
             type="date"
             value={dataFim}
             onChange={(e) => handleDataChange('fim', e.target.value)}
-            className="date-input"
+            className={styles.dateInput}
           />
         </div>
       </div>

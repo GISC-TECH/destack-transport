@@ -7,9 +7,10 @@ import { financeiroAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
-import './Financeiro.css';
+import tokens from '../../styles/tokens.module.css';
+import styles from './Financeiro.module.css';
 
-const COLORS = ['#e74c3c', '#e67e22', '#f1c40f', '#3498db', '#2ecc71'];
+const COLORS = [tokens.dangerColor, tokens.warningColor, tokens.goldColor, tokens.infoColor, tokens.successColor];
 
 function Inadimplencia() {
   const [dados, setDados] = useState(null);
@@ -47,8 +48,8 @@ function Inadimplencia() {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="custom-tooltip">
-          <p className="tooltip-label">{label}</p>
+        <div className={styles.customTooltip}>
+          <p className={styles.tooltipLabel}>{label}</p>
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }}>
               {entry.name}: {entry.name.includes('R$') || entry.dataKey.includes('valor') ? formatCurrency(entry.value) : entry.value}
@@ -79,7 +80,7 @@ function Inadimplencia() {
   ].filter(f => f.valor > 0);
 
   return (
-    <div className="financeiro-page">
+    <div className={styles.financeiroPage}>
       <PageHeader
         title="Inadimplência"
         subtitle="Faturas atrasadas por cliente e total em aberto"
@@ -102,58 +103,58 @@ function Inadimplencia() {
       />
 
       {/* KPIs */}
-      <div className="fin-kpi-grid">
-        <div className="fin-kpi-card principal">
-          <div className="fin-kpi-icon">
+      <div className={styles.finKpiGrid}>
+        <div className={`${styles.finKpiCard} ${styles.principal}`}>
+          <div className={styles.finKpiIcon}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Total em Aberto</span>
-            <span className="fin-kpi-value">{formatCurrency(dados?.total_em_aberto)}</span>
-            <span className="fin-kpi-subtext">Data de corte: {dados?.data_corte}</span>
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Total em Aberto</span>
+            <span className={styles.finKpiValue}>{formatCurrency(dados?.total_em_aberto)}</span>
+            <span className={styles.finKpiSubtext}>Data de corte: {dados?.data_corte}</span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(231, 76, 60, 0.12)', color: '#e74c3c' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.dangerLight, color: tokens.dangerColor }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
               <line x1="8" y1="21" x2="16" y2="21"></line>
               <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Faturas Atrasadas</span>
-            <span className="fin-kpi-value">{dados?.quantidade_faturas || 0}</span>
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Faturas Atrasadas</span>
+            <span className={styles.finKpiValue}>{dados?.quantidade_faturas || 0}</span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(230, 126, 34, 0.12)', color: '#e67e22' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.warningLight, color: tokens.warningColor }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Clientes Inadimplentes</span>
-            <span className="fin-kpi-value">{dados?.quantidade_clientes || 0}</span>
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Clientes Inadimplentes</span>
+            <span className={styles.finKpiValue}>{dados?.quantidade_clientes || 0}</span>
           </div>
         </div>
 
-        <div className="fin-kpi-card">
-          <div className="fin-kpi-icon" style={{ background: 'rgba(52, 152, 219, 0.12)', color: '#3498db' }}>
+        <div className={styles.finKpiCard}>
+          <div className={styles.finKpiIcon} style={{ background: tokens.infoLight, color: tokens.infoColor }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
             </svg>
           </div>
-          <div className="fin-kpi-content">
-            <span className="fin-kpi-label">Maior Atraso</span>
-            <span className="fin-kpi-value">
+          <div className={styles.finKpiContent}>
+            <span className={styles.finKpiLabel}>Maior Atraso</span>
+            <span className={styles.finKpiValue}>
               {dados?.clientes?.length > 0
                 ? `${Math.max(...dados.clientes.map(c => c.maior_atraso))} dias`
                 : '0 dias'}
@@ -162,9 +163,9 @@ function Inadimplencia() {
         </div>
       </div>
 
-      <div className="fin-charts-grid">
+      <div className={styles.finChartsGrid}>
         {/* Top clientes inadimplentes */}
-        <div className="fin-chart-card">
+        <div className={styles.finChartCard}>
           <h3>Top Clientes Inadimplentes</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dados?.clientes?.slice(0, 10) || []} layout="vertical">
@@ -172,13 +173,13 @@ function Inadimplencia() {
               <XAxis type="number" tickFormatter={formatCurrency} tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="nome" width={150} tick={{ fontSize: 11 }} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="total_aberto" name="Total em aberto (R$)" fill="#e74c3c" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="total_aberto" name="Total em aberto (R$)" fill={tokens.dangerColor} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Distribuição por faixa de atraso */}
-        <div className="fin-chart-card">
+        <div className={styles.finChartCard}>
           <h3>Distribuição por Faixa de Atraso</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -204,27 +205,27 @@ function Inadimplencia() {
       </div>
 
       {/* Tabela de faturas */}
-      <div className="fin-chart-card" style={{ marginTop: '30px' }}>
+      <div className={styles.finChartCard} style={{ marginTop: '30px' }}>
         <h3>Faturas em Atraso</h3>
-        <div className="clientes-list">
+        <div className={styles.clientesList}>
           {(dados?.faturas || []).slice(0, 50).map((fatura, index) => (
-            <div key={index} className="cliente-item">
-              <div className="cliente-rank">{index + 1}</div>
-              <div className="cliente-info">
-                <span className="cliente-nome">{fatura.cliente_nome}</span>
-                <div className="cliente-bar-container">
+            <div key={index} className={styles.clienteItem}>
+              <div className={styles.clienteRank}>{index + 1}</div>
+              <div className={styles.clienteInfo}>
+                <span className={styles.clienteNome}>{fatura.cliente_nome}</span>
+                <div className={styles.clienteBarContainer}>
                   <div
-                    className="cliente-bar"
+                    className={styles.clienteBar}
                     style={{
                       width: `${Math.min((fatura.valor / (dados?.total_em_aberto || 1)) * 100, 100)}%`,
-                      background: '#e74c3c'
+                      background: tokens.dangerColor
                     }}
                   ></div>
                 </div>
               </div>
               <div style={{ textAlign: 'right', minWidth: '140px' }}>
                 <div style={{ fontWeight: 600 }}>{formatCurrency(fatura.valor)}</div>
-                <div style={{ fontSize: '12px', color: '#e74c3c' }}>{fatura.dias_atraso} dias atraso</div>
+                <div style={{ fontSize: '12px', color: tokens.dangerColor }}>{fatura.dias_atraso} dias atraso</div>
               </div>
             </div>
           ))}

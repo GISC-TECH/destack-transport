@@ -1,12 +1,12 @@
-import './Skeleton.css';
+import styles from './Skeleton.module.css';
 
 export function SkeletonText({ lines = 1, width, className = '' }) {
   return (
-    <div className={`skeleton-text-group ${className}`}>
+    <div className={`${styles.textGroup} ${className}`}>
       {Array.from({ length: lines }).map((_, i) => (
         <div
           key={i}
-          className="skeleton skeleton-text"
+          className={`${styles.skeleton} ${styles.text}`}
           style={{ width: Array.isArray(width) ? width[i] : width }}
         />
       ))}
@@ -16,12 +16,12 @@ export function SkeletonText({ lines = 1, width, className = '' }) {
 
 export function SkeletonCard({ count = 1, className = '' }) {
   return (
-    <div className={`skeleton-card-list ${className}`}>
+    <div className={`${styles.cardList} ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="skeleton-card">
-          <div className="skeleton skeleton-title" />
-          <div className="skeleton skeleton-text" />
-          <div className="skeleton skeleton-text" style={{ width: '70%' }} />
+        <div key={i} className={styles.card}>
+          <div className={`${styles.skeleton} ${styles.title}`} />
+          <div className={`${styles.skeleton} ${styles.text}`} />
+          <div className={`${styles.skeleton} ${styles.text}`} style={{ width: '70%' }} />
         </div>
       ))}
     </div>
@@ -30,13 +30,13 @@ export function SkeletonCard({ count = 1, className = '' }) {
 
 export function SkeletonKPI({ count = 4, className = '' }) {
   return (
-    <div className={`skeleton-kpi-grid ${className}`}>
+    <div className={`${styles.kpiGrid} ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="skeleton-kpi">
-          <div className="skeleton skeleton-icon" />
+        <div key={i} className={styles.kpi}>
+          <div className={`${styles.skeleton} ${styles.icon}`} />
           <div>
-            <div className="skeleton skeleton-value" />
-            <div className="skeleton skeleton-label" />
+            <div className={`${styles.skeleton} ${styles.value}`} />
+            <div className={`${styles.skeleton} ${styles.label}`} />
           </div>
         </div>
       ))}
@@ -46,16 +46,16 @@ export function SkeletonKPI({ count = 4, className = '' }) {
 
 export function SkeletonTable({ rows = 5, columns = 4, className = '' }) {
   return (
-    <div className={`skeleton-table ${className}`}>
-      <div className="skeleton-table-header">
+    <div className={`${styles.table} ${className}`}>
+      <div className={styles.tableHeader}>
         {Array.from({ length: columns }).map((_, i) => (
-          <div key={i} className="skeleton skeleton-th" />
+          <div key={i} className={`${styles.skeleton} ${styles.th}`} />
         ))}
       </div>
       {Array.from({ length: rows }).map((_, r) => (
-        <div key={r} className="skeleton-table-row">
+        <div key={r} className={styles.tableRow}>
           {Array.from({ length: columns }).map((_, c) => (
-            <div key={c} className="skeleton skeleton-td" />
+            <div key={c} className={`${styles.skeleton} ${styles.td}`} />
           ))}
         </div>
       ))}
@@ -65,20 +65,20 @@ export function SkeletonTable({ rows = 5, columns = 4, className = '' }) {
 
 export function SkeletonMobileCards({ count = 4, className = '' }) {
   return (
-    <div className={`skeleton-mobile-cards ${className}`}>
+    <div className={`${styles.mobileCards} ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="skeleton-mobile-card">
-          <div className="skeleton-mobile-card-header">
-            <div className="skeleton skeleton-title" />
-            <div className="skeleton skeleton-badge" />
+        <div key={i} className={styles.mobileCard}>
+          <div className={styles.mobileCardHeader}>
+            <div className={`${styles.skeleton} ${styles.title}`} />
+            <div className={`${styles.skeleton} ${styles.badge}`} />
           </div>
-          <div className="skeleton-mobile-card-body">
-            <div className="skeleton skeleton-text" />
-            <div className="skeleton skeleton-text" style={{ width: '60%' }} />
+          <div className={styles.mobileCardBody}>
+            <div className={`${styles.skeleton} ${styles.text}`} />
+            <div className={`${styles.skeleton} ${styles.text}`} style={{ width: '60%' }} />
           </div>
-          <div className="skeleton-mobile-card-footer">
-            <div className="skeleton skeleton-button" />
-            <div className="skeleton skeleton-button" />
+          <div className={styles.mobileCardFooter}>
+            <div className={`${styles.skeleton} ${styles.button}`} />
+            <div className={`${styles.skeleton} ${styles.button}`} />
           </div>
         </div>
       ))}
