@@ -4,6 +4,37 @@ from datetime import date
 from decimal import Decimal
 
 from transport.models import CTeDocumento, PagamentoAgregado, PagamentoProprio, Veiculo
+
+
+class DashboardGeralEndpointTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="tester",
+            email="tester@example.com",
+            password="test-password-123",
+        )
+        self.client.force_login(self.user)
+
+    def test_dashboard_rejects_invalid_date_format(self):
+        response = self.client.get("/api/dashboard/?data_inicio=01-06-2026&data_fim=30-06-2026")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Formato de data", response.json()["detail"])
+
+    def test_dashboard_accepts_large_date_range_without_overflow(self):
+        """Períodos muito grandes não devem causar OverflowError no cálculo do período anterior."""
+        response = self.client.get("/api/dashboard/?data_inicio=0001-01-01&data_fim=9999-12-31")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("cards", data)
+        self.assertIn("grafico_metas", data)
+
+    def test_dashboard_rejects_final_date_before_start_date(self):
+        response = self.client.get("/api/dashboard/?data_inicio=2026-06-30&data_fim=2026-06-01")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("data final", response.json()["detail"].lower())
 from transport.serializers.payment_serializers import (
     PagamentoAgregadoSerializer,
     PagamentoProprioSerializer,

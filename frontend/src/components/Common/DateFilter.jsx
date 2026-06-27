@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './DateFilter.css';
 
 // Funcao para calcular datas baseadas no periodo (fora do componente)
@@ -55,10 +55,9 @@ function DateFilter({
   const [periodo, setPeriodo] = useState(defaultPeriodo);
   const [dataInicio, setDataInicio] = useState(initialDataInicio || defaultDates.data_inicio);
   const [dataFim, setDataFim] = useState(initialDataFim || defaultDates.data_fim);
+  const debounceTimer = useRef(null);
 
   // Sincroniza com valores externos se fornecidos
-  // Nota: Usamos refs para comparar valores anteriores sem adicionar
-  // dataInicio/dataFim como dependencias, evitando loops infinitos
   useEffect(() => {
     if (initialDataInicio) {
       setDataInicio(initialDataInicio);
@@ -71,9 +70,31 @@ function DateFilter({
     }
   }, [initialDataFim]);
 
-  // Nota: Nao propaga datas iniciais automaticamente na montagem
-  // Os componentes pais devem usar seu proprio useEffect para carregar dados iniciais
-  // Isso evita requisicoes duplicadas
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
+
+  const isValidDate = useCallback((value) => {
+    if (!value) return false;
+    const parsed = Date.parse(value);
+    return !isNaN(parsed);
+  }, []);
+
+  const emitFilterChange = useCallback((inicio, fim, novoPeriodo) => {
+    if (!onFilterChange) return;
+    if (!isValidDate(inicio) || !isValidDate(fim)) return;
+    if (inicio > fim) return;
+
+    onFilterChange({
+      periodo: novoPeriodo,
+      data_inicio: inicio,
+      data_fim: fim
+    });
+  }, [onFilterChange, isValidDate]);
 
   const handlePeriodoChange = (novoPeriodo) => {
     setPeriodo(novoPeriodo);
@@ -81,19 +102,12 @@ function DateFilter({
     setDataInicio(dates.data_inicio);
     setDataFim(dates.data_fim);
 
-    if (onFilterChange) {
-      onFilterChange({
-        periodo: novoPeriodo,
-        data_inicio: dates.data_inicio,
-        data_fim: dates.data_fim
-      });
-    }
+    emitFilterChange(dates.data_inicio, dates.data_fim, novoPeriodo);
   };
 
   const handleDataChange = (campo, valor) => {
     setPeriodo('custom');
 
-    // Atualiza o estado local
     let novaDataInicio = dataInicio;
     let novaDataFim = dataFim;
 
@@ -105,14 +119,13 @@ function DateFilter({
       setDataFim(valor);
     }
 
-    // Chama o callback com os valores atualizados
-    if (onFilterChange) {
-      onFilterChange({
-        periodo: 'custom',
-        data_inicio: novaDataInicio,
-        data_fim: novaDataFim
-      });
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
     }
+
+    debounceTimer.current = setTimeout(() => {
+      emitFilterChange(novaDataInicio, novaDataFim, 'custom');
+    }, 300);
   };
 
   return (
@@ -158,7 +171,6 @@ function DateFilter({
             type="date"
             value={dataInicio}
             onChange={(e) => handleDataChange('inicio', e.target.value)}
-            onInput={(e) => handleDataChange('inicio', e.target.value)}
             className="date-input"
           />
         </div>
@@ -169,7 +181,6 @@ function DateFilter({
             type="date"
             value={dataFim}
             onChange={(e) => handleDataChange('fim', e.target.value)}
-            onInput={(e) => handleDataChange('fim', e.target.value)}
             className="date-input"
           />
         </div>

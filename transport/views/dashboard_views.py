@@ -102,37 +102,24 @@ class DashboardGeralAPIView(APIView):
     """
     permission_classes = [IsAuthenticated, ReadOnlyPermission]
 
-    def get(self, request, format=None):
-        """Retorna dados consolidados para o dashboard geral (com cache)."""
-        params = request.query_params
-        data = _get_or_set_dashboard_cache(
-            'geral', request.user.id, params,
-            lambda: self._build_data(request)
-        )
-        return Response(data)
-
-    def _build_data(self, request):
-        """Constrói o payload do dashboard geral."""
-        params = request.query_params
-        periodo = params.get('periodo', 'mes')  # mes, trimestre, ano
+    def _parse_periodo(self, params):
+        """Extrai e valida data_inicio/data_fim. Retorna (periodo, data_inicio, data_fim) ou Response de erro."""
+        periodo = params.get('periodo', 'mes')
         data_inicio_str = params.get('data_inicio')
         data_fim_str = params.get('data_fim')
 
-        # Definir período padrão se não informado
         if not data_inicio_str or not data_fim_str:
             hoje = date.today()
             if periodo == 'mes':
                 data_inicio = date(hoje.year, hoje.month, 1)
                 data_fim = date(hoje.year, hoje.month + 1, 1) - timedelta(days=1) if hoje.month != 12 else date(hoje.year, 12, 31)
             elif periodo == 'trimestre':
-                trimestre = (hoje.month - 1) // 3  # 0=Q1, 1=Q2, 2=Q3, 3=Q4
-                mes_inicio_trimestre = trimestre * 3 + 1  # 1, 4, 7, 10
+                trimestre = (hoje.month - 1) // 3
+                mes_inicio_trimestre = trimestre * 3 + 1
                 data_inicio = date(hoje.year, mes_inicio_trimestre, 1)
-                # Calcula o próximo trimestre corretamente
                 if trimestre < 3:
                     prox_trimestre_inicio = date(hoje.year, (trimestre + 1) * 3 + 1, 1)
                 else:
-                    # Q4: próximo trimestre é Q1 do próximo ano
                     prox_trimestre_inicio = date(hoje.year + 1, 1, 1)
                 data_fim = prox_trimestre_inicio - timedelta(days=1)
             else:  # ano
@@ -143,14 +130,34 @@ class DashboardGeralAPIView(APIView):
                 data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
                 data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
             except ValueError:
-                return Response({"detail": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+                return None, Response({"detail": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Validar que data_fim >= data_inicio
             if data_fim < data_inicio:
-                return Response({"detail": "A data final deve ser maior ou igual à data inicial."}, status=status.HTTP_400_BAD_REQUEST)
+                return None, Response({"detail": "A data final deve ser maior ou igual à data inicial."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ajusta data_fim para incluir o dia inteiro
-        data_fim_query = data_fim + timedelta(days=1)
+        return (periodo, data_inicio, data_fim), None
+
+    def get(self, request, format=None):
+        """Retorna dados consolidados para o dashboard geral (com cache)."""
+        params = request.query_params
+        parsed, error = self._parse_periodo(params)
+        if error is not None:
+            return error
+
+        periodo, data_inicio, data_fim = parsed
+        data = _get_or_set_dashboard_cache(
+            'geral', request.user.id, params,
+            lambda: self._build_data(periodo, data_inicio, data_fim)
+        )
+        return Response(data)
+
+    def _build_data(self, periodo, data_inicio, data_fim):
+        """Constrói o payload do dashboard geral."""
+        # Ajusta data_fim para incluir o dia inteiro, com limite seguro
+        try:
+            data_fim_query = data_fim + timedelta(days=1)
+        except OverflowError:
+            data_fim_query = date.max
 
         # Construir filtros para consultas
         filtro_periodo_cte = Q(identificacao__data_emissao__date__gte=data_inicio, identificacao__data_emissao__date__lt=data_fim_query)
@@ -220,24 +227,32 @@ class DashboardGeralAPIView(APIView):
         # === Dados para metas (comparação com período anterior) ===
         try:
             delta = data_fim - data_inicio
-            data_inicio_anterior = data_inicio - (delta + timedelta(days=1))
-            data_fim_anterior = data_fim - (delta + timedelta(days=1))
-        except TypeError: # Caso data_inicio ou data_fim sejam None inicialmente
-            data_inicio_anterior = data_inicio - timedelta(days=30) # Exemplo fallback
-            data_fim_anterior = data_fim - timedelta(days=30)
-
-        data_fim_anterior_query = data_fim_anterior + timedelta(days=1)
-        filtro_anterior_cte = Q(identificacao__data_emissao__date__gte=data_inicio_anterior, identificacao__data_emissao__date__lt=data_fim_anterior_query)
-
-        valor_total_fretes_anterior = CTeDocumento.objects.filter(
-            filtro_anterior_cte & filtro_cte_valido
-        ).aggregate(total=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0')))['total']
+            intervalo_anterior = delta + timedelta(days=1)
+            data_inicio_anterior = data_inicio - intervalo_anterior
+            data_fim_anterior = data_fim - intervalo_anterior
+        except (TypeError, OverflowError):
+            # Período inválido ou muito grande para calcular período anterior
+            data_inicio_anterior = None
+            data_fim_anterior = None
 
         crescimento_percentual = 0.0
-        if valor_total_fretes_anterior > 0:
-            crescimento_percentual = float(((valor_total_fretes / valor_total_fretes_anterior) - 1) * 100)
-        elif valor_total_fretes > 0:
-            crescimento_percentual = 100.0
+        if data_inicio_anterior is not None and data_fim_anterior is not None:
+            data_fim_anterior_query = data_fim_anterior + timedelta(days=1)
+            filtro_anterior_cte = Q(
+                identificacao__data_emissao__date__gte=data_inicio_anterior,
+                identificacao__data_emissao__date__lt=data_fim_anterior_query
+            )
+
+            valor_total_fretes_anterior = CTeDocumento.objects.filter(
+                filtro_anterior_cte & filtro_cte_valido
+            ).aggregate(total=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0')))['total']
+
+            if valor_total_fretes_anterior > 0:
+                crescimento_percentual = float(((valor_total_fretes / valor_total_fretes_anterior) - 1) * 100)
+            elif valor_total_fretes > 0:
+                crescimento_percentual = 100.0
+        else:
+            valor_total_fretes_anterior = Decimal('0')
 
         # Compilar resposta final
         response_data = {
