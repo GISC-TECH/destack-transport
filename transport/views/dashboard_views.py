@@ -991,6 +991,8 @@ class AlertasPagamentoAPIView(APIView):
 
     def _build_data(self, request):
         params = request.query_params
+        data_inicio_str = params.get('data_inicio')
+        data_fim_str = params.get('data_fim')
         dias_limite = parse_positive_int_query_param(params, 'dias', 7, max_value=365)
         limite = (
             parse_positive_int_query_param(params, 'limite', 1000, max_value=1000)
@@ -999,22 +1001,45 @@ class AlertasPagamentoAPIView(APIView):
         )
 
         hoje = date.today()
-        data_limite = hoje + timedelta(days=dias_limite)
 
-        # Pagamentos agregados pendentes próximos do vencimento
+        if data_inicio_str and data_fim_str:
+            try:
+                data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+                data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+            except ValueError:
+                raise ValueError("Formato de data inválido. Use YYYY-MM-DD.")
+
+            if data_fim < data_inicio:
+                raise ValueError("A data final deve ser maior ou igual à data inicial.")
+
+            data_limite = data_fim
+            filtro_agregados = Q(status='pendente', data_prevista__gte=data_inicio, data_prevista__lte=data_limite)
+        else:
+            data_limite = hoje + timedelta(days=dias_limite)
+            data_inicio = None
+            data_fim = None
+            filtro_agregados = Q(status='pendente', data_prevista__lte=data_limite)
+
+        # Pagamentos agregados pendentes no período (ou próximos do vencimento)
         pagamentos_agregados_qs = PagamentoAgregado.objects.filter(
-            status='pendente',
-            data_prevista__lte=data_limite # Inclui até a data limite
-        ).order_by('data_prevista').select_related( # Ordena pelos mais próximos
-            'cte', 'cte__identificacao' # Otimiza consulta
+            filtro_agregados
+        ).order_by('data_prevista').select_related(
+            'cte', 'cte__identificacao'
         )
         total_agregados = pagamentos_agregados_qs.count()
 
-        # Pagamentos próprios pendentes (todos, não apenas os próximos)
-        # A lógica de "próximo do vencimento" é mais complexa para período (ex: AAAA-MM-1Q)
+        # Pagamentos próprios pendentes no período (ou todos, se não houver filtro de data)
+        filtro_proprios = Q(status='pendente')
+        if data_inicio and data_fim:
+            # Período do pagamento próprio: início/fim do mês do período informado
+            filtro_proprios &= Q(
+                periodo__gte=data_inicio.strftime('%Y-%m'),
+                periodo__lte=data_fim.strftime('%Y-%m')
+            )
+
         pagamentos_proprios_qs = PagamentoProprio.objects.filter(
-            status='pendente'
-        ).order_by('periodo').select_related('veiculo') # Ordena por período
+            filtro_proprios
+        ).order_by('periodo').select_related('veiculo')
         total_proprios = pagamentos_proprios_qs.count()
 
         pagamentos_agregados = (

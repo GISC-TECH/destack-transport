@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from transport.models import CTeDocumento, PagamentoAgregado, PagamentoProprio, Veiculo
@@ -100,6 +100,50 @@ class AlertasPagamentoEndpointTests(TestCase):
         self.assertEqual(data["total_proprios_pendentes"], 0)
         self.assertEqual(data["total_pendentes"], 0)
         self.assertFalse(data["resultado_limitado"])
+
+    def test_alertas_pagamentos_respects_date_filter(self):
+        cte = CTeDocumento.objects.create(
+            chave="A" * 44,
+            versao="4.00",
+            processado=True,
+        )
+        PagamentoAgregado.objects.create(
+            cte=cte,
+            placa="ABC1234",
+            condutor_nome="Motorista",
+            valor_frete_total=Decimal("1000.00"),
+            percentual_repasse=Decimal("25.00"),
+            data_prevista=date(2026, 6, 15),
+            status="pendente",
+        )
+
+        response = self.client.get("/api/alertas/pagamentos/?data_inicio=2026-06-01&data_fim=2026-06-30")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["total_agregados_pendentes"], 1)
+
+    def test_alertas_pagamentos_date_filter_excludes_outside_range(self):
+        cte = CTeDocumento.objects.create(
+            chave="B" * 44,
+            versao="4.00",
+            processado=True,
+        )
+        PagamentoAgregado.objects.create(
+            cte=cte,
+            placa="ABC1234",
+            condutor_nome="Motorista",
+            valor_frete_total=Decimal("1000.00"),
+            percentual_repasse=Decimal("25.00"),
+            data_prevista=date(2026, 5, 15),
+            status="pendente",
+        )
+
+        response = self.client.get("/api/alertas/pagamentos/?data_inicio=2026-06-01&data_fim=2026-06-30")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["total_agregados_pendentes"], 0)
 
 
 class PagamentoSerializerIntegrityTests(TestCase):

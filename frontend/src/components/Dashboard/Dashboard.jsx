@@ -39,7 +39,7 @@ function Dashboard() {
   const { data, error, isLoading, mutate } = useApi(`/dashboard/?${queryString}`);
   const { data: frotaData } = useApi(`/painel/frota/?${queryString}`);
   const { data: performanceData } = useApi(`/painel/performance/?${queryString}`);
-  const { data: alertasData } = useApi(`/alertas/pagamentos/?dias=30`, { revalidateOnFocus: false });
+  const { data: alertasData } = useApi(`/alertas/pagamentos/?${queryString}`, { revalidateOnFocus: false });
   const { data: manutencaoData } = useApi(`/manutencao/painel/?${queryString}`, { shouldRetryOnError: false });
 
   const handleFilterChange = useCallback((newFilters) => {
