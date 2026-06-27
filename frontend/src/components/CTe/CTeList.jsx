@@ -108,6 +108,7 @@ function CTeList() {
       data_inicio: dateFilters.data_inicio,
       data_fim: dateFilters.data_fim
     }));
+    setFiltrosGraficos(dateFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
     loadCTes({
       q: '',
@@ -116,7 +117,8 @@ function CTeList() {
       data_inicio: dateFilters.data_inicio,
       data_fim: dateFilters.data_fim
     }, 1);
-  }, [loadCTes]);
+    loadPainelCTe(dateFilters);
+  }, [loadCTes, loadPainelCTe]);
 
   const handleFiltrar = (e) => {
     e.preventDefault();
