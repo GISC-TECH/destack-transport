@@ -166,17 +166,17 @@ urlpatterns = [
         name="alertas-sistema-limpar-todos",
     ),
     path(
-        "alertas/sistema/<uuid:pk>/marcar_lido/",
+        "alertas/sistema/<int:pk>/marcar_lido/",
         AlertaSistemaViewSet.as_view({"patch": "marcar_lido"}),
         name="alertas-sistema-marcar-lido",
     ),
     path(
-        "alertas/sistema/<uuid:pk>/marcar_resolvido/",
+        "alertas/sistema/<int:pk>/marcar_resolvido/",
         AlertaSistemaViewSet.as_view({"patch": "marcar_resolvido"}),
         name="alertas-sistema-marcar-resolvido",
     ),
     path(
-        "alertas/sistema/<uuid:pk>/",
+        "alertas/sistema/<int:pk>/",
         AlertaSistemaViewSet.as_view({"delete": "destroy"}),
         name="alertas-sistema-detalhe",
     ),
@@ -198,7 +198,7 @@ urlpatterns = [
 
     # --- Integração GPS ---
     path("gps/webhook/", webhook_posicao_gps, name="gps-webhook"),
-    path("gps/veiculos/<uuid:veiculo_id>/ultima-posicao/", ultima_posicao_veiculo, name="gps-ultima-posicao"),
+    path("gps/veiculos/<int:veiculo_id>/ultima-posicao/", ultima_posicao_veiculo, name="gps-ultima-posicao"),
 
     # --- Comunicação ---
     path("comunicacoes/enviar/", enviar_comunicacao, name="comunicacao-enviar"),
