@@ -11,7 +11,14 @@ from typing import Optional
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 
-from transport.models import CTeDocumento, PagamentoAgregado, PagamentoProprio
+from transport.models import (
+    CTeDocumento,
+    ConfiguracaoEmpresa,
+    Motorista,
+    PagamentoAgregado,
+    PagamentoProprio,
+)
+from .comunicacao_service import enviar_whatsapp
 
 
 class ExclusividadePagamentoError(Exception):
@@ -140,3 +147,114 @@ def sincronizar_status_pagamento_proprio(pagamento):
         cte.pago = novo_pago
         cte.data_pagamento = pagamento.data_pagamento if novo_pago else None
         cte.save(update_fields=['pago', 'data_pagamento'])
+
+
+def _formatar_moeda(valor):
+    """Formata Decimal/float para string de moeda brasileira."""
+    if valor is None:
+        return 'R$ 0,00'
+    return f"R$ {float(valor):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+
+
+def _formatar_data(data):
+    """Formata date/datetime para string dd/mm/aaaa."""
+    if not data:
+        return '-'
+    if hasattr(data, 'strftime'):
+        return data.strftime('%d/%m/%Y')
+    return str(data)
+
+
+def _buscar_motorista_do_pagamento(pagamento, tipo='agregado'):
+    """Busca motorista vinculado ao pagamento, se houver."""
+    if tipo == 'agregado':
+        cpf = pagamento.condutor_cpf
+        if cpf:
+            return Motorista.objects.filter(cpf=cpf).first()
+        return None
+
+    # Próprio: tenta pelo CPF salvo, depois pelo veículo
+    cpf = getattr(pagamento, 'motorista_cpf', None)
+    if cpf:
+        motorista = Motorista.objects.filter(cpf=cpf).first()
+        if motorista:
+            return motorista
+
+    veiculo = pagamento.veiculo
+    if veiculo:
+        # Veiculo não tem FK para motorista; fallback para nome/cpf se houver
+        pass
+
+    return None
+
+
+def montar_mensagem_pagamento(pagamento, tipo='agregado'):
+    """Monta mensagem de notificação de pagamento para o gestor."""
+    motorista = _buscar_motorista_do_pagamento(pagamento, tipo)
+
+    if tipo == 'agregado':
+        nome_motorista = pagamento.condutor_nome or (motorista.nome if motorista else 'Não identificado')
+        cpf_motorista = pagamento.condutor_cpf or (motorista.cpf if motorista else '-')
+        valor = pagamento.valor_repassado
+        referencia = f"CT-e #{pagamento.cte.identificacao.numero}" if pagamento.cte else '-'
+    else:
+        nome_motorista = pagamento.motorista_nome or (motorista.nome if motorista else 'Não identificado')
+        cpf_motorista = pagamento.motorista_cpf or (motorista.cpf if motorista else '-')
+        valor = pagamento.valor_total_pagar
+        referencia = f"Veículo {pagamento.veiculo.placa} - Período {pagamento.periodo}" if pagamento.veiculo else '-'
+
+    chave_pix = motorista.chave_pix if motorista else None
+    banco = motorista.banco if motorista else None
+    conta = motorista.conta if motorista else None
+    agencia = motorista.agencia if motorista else None
+    favorecido = motorista.favorecido if motorista else None
+
+    mensagem = (
+        f"📢 *Novo pagamento a realizar*\n\n"
+        f"*Tipo:* {'Agregado' if tipo == 'agregado' else 'Próprio'}\n"
+        f"*Motorista:* {nome_motorista}\n"
+        f"*CPF:* {cpf_motorista}\n"
+        f"*Referência:* {referencia}\n"
+        f"*Valor:* {_formatar_moeda(valor)}\n"
+        f"*Data prevista:* {_formatar_data(pagamento.data_prevista)}\n\n"
+    )
+
+    if chave_pix:
+        mensagem += f"💠 *Chave Pix:* `{chave_pix}`\n"
+    if favorecido:
+        mensagem += f"👤 *Favorecido:* {favorecido}\n"
+    if banco:
+        mensagem += f"🏦 *Banco:* {banco}\n"
+    if agencia:
+        mensagem += f"🔢 *Agência:* {agencia}\n"
+    if conta:
+        mensagem += f"💳 *Conta:* {conta}\n"
+
+    if not chave_pix and not banco:
+        mensagem += "\n⚠️ *Atenção:* motorista sem dados bancários/Pix cadastrados."
+
+    mensagem += "\n_Favor realizar o repasse._"
+    return mensagem
+
+
+def notificar_gestor_pagamento(pagamento, tipo='agregado'):
+    """
+    Envia notificação WhatsApp para o gestor sobre um pagamento pendente.
+
+    Args:
+        pagamento: instância de PagamentoAgregado ou PagamentoProprio
+        tipo: 'agregado' ou 'proprio'
+
+    Returns:
+        dict com 'status' e 'erro'
+    """
+    config = ConfiguracaoEmpresa.objects.first()
+    if not config or not config.telefone_gestor:
+        return {
+            'status': 'falha',
+            'erro': 'Telefone do gestor não configurado em Configurações > Dados da Empresa.',
+        }
+
+    mensagem = montar_mensagem_pagamento(pagamento, tipo)
+    motorista = _buscar_motorista_do_pagamento(pagamento, tipo)
+    return enviar_whatsapp(config.telefone_gestor, mensagem, motorista=motorista)

@@ -8,6 +8,7 @@ from ..models import Cliente, MensagemComunicacao, Motorista, OrdemViagem
 from ..permissions import TransportModelPermission
 from ..serializers.comunicacao_serializers import MensagemComunicacaoSerializer
 from ..services.comunicacao_service import enviar_email, enviar_whatsapp
+from ..services.whatsapp_service import testar_conexao
 
 
 @api_view(['POST'])
@@ -58,6 +59,15 @@ def enviar_comunicacao(request):
         resultado = enviar_whatsapp(destinatario, conteudo, cliente=cliente, motorista=motorista, ordem=ordem)
 
     http_status = status.HTTP_200_OK if resultado['status'] == 'enviado' else status.HTTP_502_BAD_GATEWAY
+    return Response(resultado, status=http_status)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def testar_whatsapp(request):
+    """Endpoint para testar conexão com a Evolution API."""
+    resultado = testar_conexao()
+    http_status = status.HTTP_200_OK if resultado['status'] == 'ok' else status.HTTP_502_BAD_GATEWAY
     return Response(resultado, status=http_status)
 
 

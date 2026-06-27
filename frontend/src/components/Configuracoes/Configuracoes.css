@@ -353,3 +353,50 @@ input:checked + .slider:before {
     font-size: 12px;
   }
 }
+
+/* WhatsApp Config Tab */
+.whatsapp-config-header {
+  margin-bottom: 24px;
+}
+
+.whatsapp-config-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.whatsapp-config-header p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.whatsapp-config-info {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.whatsapp-config-info ol {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.whatsapp-config-info code {
+  background: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #334155;
+}
+
+.form-group small {
+  font-size: 12px;
+  color: var(--text-secondary);
+}

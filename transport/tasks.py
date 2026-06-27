@@ -269,6 +269,32 @@ def sincronizar_gps(self):
     return {"status": "ok", "veiculos_verificados": sincronizados}
 
 
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def notificar_gestor_pagamento_async(self, pagamento_id, tipo='agregado'):
+    """
+    Envia notificação WhatsApp para o gestor sobre pagamento pendente.
+    Executada de forma assíncrona para não bloquear a geração de pagamentos.
+    """
+    from .models import PagamentoAgregado, PagamentoProprio
+    from .services.pagamento_service import notificar_gestor_pagamento
+
+    try:
+        if tipo == 'agregado':
+            pagamento = PagamentoAgregado.objects.get(pk=pagamento_id)
+        else:
+            pagamento = PagamentoProprio.objects.get(pk=pagamento_id)
+    except (PagamentoAgregado.DoesNotExist, PagamentoProprio.DoesNotExist):
+        logger.warning("Pagamento %s do tipo %s não encontrado para notificação", pagamento_id, tipo)
+        return {"status": "falha", "erro": "Pagamento não encontrado"}
+
+    try:
+        resultado = notificar_gestor_pagamento(pagamento, tipo)
+        return resultado
+    except Exception as exc:
+        logger.exception("Erro ao notificar gestor sobre pagamento %s", pagamento_id)
+        raise self.retry(exc=exc)
+
+
 def _send_notification(subject, message):
     """Envia e-mail de notificacao se BACKUP_NOTIFICATION_EMAIL estiver configurado."""
     recipient = getattr(settings, "BACKUP_NOTIFICATION_EMAIL", None)

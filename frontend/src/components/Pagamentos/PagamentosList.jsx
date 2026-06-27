@@ -467,6 +467,25 @@ function PagamentosList() {
     setModalComprovante({ show: true, pagamento });
   };
 
+  // Reenvia notificação WhatsApp para o gestor
+  const [notificando, setNotificando] = useState({});
+
+  const handleNotificarGestor = async (pagamento) => {
+    try {
+      setNotificando(prev => ({ ...prev, [pagamento.id]: true }));
+      if (activeTab === 'agregados') {
+        await pagamentosAPI.agregados.notificarGestor(pagamento.id);
+      } else {
+        await pagamentosAPI.proprios.notificarGestor(pagamento.id);
+      }
+      toast.success('Notificação enviada para o gestor!');
+    } catch (err) {
+      toast.error('Erro ao notificar: ' + err.message);
+    } finally {
+      setNotificando(prev => ({ ...prev, [pagamento.id]: false }));
+    }
+  };
+
   // Botoes de acao desktop (todos visiveis)
   const renderActionButtons = (pagamento) => (
     <div className="action-buttons">
@@ -504,6 +523,18 @@ function PagamentosList() {
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
         </svg>
       </button>
+      {pagamento.status !== 'pago' && (
+        <button
+          className="btn-action btn-whatsapp"
+          onClick={() => handleNotificarGestor(pagamento)}
+          disabled={notificando[pagamento.id]}
+          title="Notificar gestor via WhatsApp"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+        </button>
+      )}
       <button
         className="btn-action btn-convert"
         onClick={() => handleAbrirConverter(pagamento)}
@@ -569,6 +600,19 @@ function PagamentosList() {
         </svg>
         <span>Editar</span>
       </button>
+      {pagamento.status !== 'pago' && (
+        <button
+          className="mobile-action-btn whatsapp"
+          onClick={() => handleNotificarGestor(pagamento)}
+          disabled={notificando[pagamento.id]}
+          title="Notificar gestor via WhatsApp"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+          <span>Whats</span>
+        </button>
+      )}
       <button
         className="mobile-action-btn convert"
         onClick={() => handleAbrirConverter(pagamento)}

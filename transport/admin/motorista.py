@@ -36,6 +36,13 @@ class MotoristaAdmin(admin.ModelAdmin):
             ),
             'classes': ('collapse',)
         }),
+        ('Dados Bancários / Pix', {
+            'fields': (
+                'tipo_chave_pix', 'chave_pix', 'banco',
+                'agencia', 'conta', 'tipo_conta', 'favorecido'
+            ),
+            'classes': ('collapse',)
+        }),
         ('Status', {
             'fields': ('ativo', 'observacoes')
         }),

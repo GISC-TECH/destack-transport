@@ -52,9 +52,10 @@ def enviar_email(destinatario, assunto, conteudo, cliente=None, motorista=None, 
 
 def enviar_whatsapp(numero, conteudo, cliente=None, motorista=None, ordem=None):
     """
-    Registra mensagem de WhatsApp e retorna status.
-    A implementação real depende de gateway externo.
+    Envia mensagem de WhatsApp via Evolution API e registra no histórico.
     """
+    from .whatsapp_service import enviar_mensagem_texto
+
     mensagem = MensagemComunicacao.objects.create(
         canal='whatsapp',
         destinatario=numero,
@@ -65,12 +66,16 @@ def enviar_whatsapp(numero, conteudo, cliente=None, motorista=None, ordem=None):
         status='pendente',
     )
 
-    # Placeholder: gateway de WhatsApp não configurado.
-    erro = (
-        "Gateway de WhatsApp não configurado. "
-        "Configure TWILIO/WhatsApp Business API para envio real."
-    )
-    logger.warning(erro)
+    resultado = enviar_mensagem_texto(numero, conteudo)
+
+    if resultado['status'] == 'enviado':
+        mensagem.status = 'enviado'
+        mensagem.enviado_em = timezone.now()
+        mensagem.save(update_fields=['status', 'enviado_em'])
+        return {'status': 'enviado', 'id': str(mensagem.id)}
+
+    erro = resultado.get('erro', 'Erro desconhecido ao enviar WhatsApp')
+    logger.warning("Falha ao enviar WhatsApp para %s: %s", numero, erro)
     mensagem.status = 'falha'
     mensagem.erro = erro
     mensagem.save(update_fields=['status', 'erro'])

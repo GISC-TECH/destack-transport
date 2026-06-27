@@ -41,6 +41,7 @@ class ConfiguracaoEmpresaSerializer(serializers.ModelSerializer):
             'id', 'razao_social', 'nome_fantasia', 'cnpj', 'ie', 'rntrc',
             'email', 'telefone', 'cep', 'logradouro', 'numero', 'complemento',
             'bairro', 'municipio', 'uf', 'logo', 'certificado_digital',
+            'telefone_gestor', 'telefone_financeiro', 'telefone_operacional',
             'responsavel_tecnico_cnpj', 'responsavel_tecnico_contato',
             'responsavel_tecnico_email', 'responsavel_tecnico_fone',
             'criado_em', 'atualizado_em'

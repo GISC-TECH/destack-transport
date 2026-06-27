@@ -28,6 +28,13 @@ function MotoristaForm() {
     aso_validade: '',
     telefone: '',
     email: '',
+    tipo_chave_pix: '',
+    chave_pix: '',
+    banco: '',
+    agencia: '',
+    conta: '',
+    tipo_conta: '',
+    favorecido: '',
     ativo: true
   });
 
@@ -45,7 +52,14 @@ function MotoristaForm() {
         toxicologico_validade: data.toxicologico_validade || '',
         aso_validade: data.aso_validade || '',
         telefone: data.telefone || '',
-        email: data.email || ''
+        email: data.email || '',
+        tipo_chave_pix: data.tipo_chave_pix || '',
+        chave_pix: data.chave_pix || '',
+        banco: data.banco || '',
+        agencia: data.agencia || '',
+        conta: data.conta || '',
+        tipo_conta: data.tipo_conta || '',
+        favorecido: data.favorecido || ''
       });
     } catch (err) {
       setError(err.message);
@@ -97,7 +111,14 @@ function MotoristaForm() {
         nr35_validade: formData.nr35_validade || null,
         mopp_validade: formData.mopp_validade || null,
         toxicologico_validade: formData.toxicologico_validade || null,
-        aso_validade: formData.aso_validade || null
+        aso_validade: formData.aso_validade || null,
+        tipo_chave_pix: formData.tipo_chave_pix || null,
+        chave_pix: formData.chave_pix || null,
+        banco: formData.banco || null,
+        agencia: formData.agencia || null,
+        conta: formData.conta || null,
+        tipo_conta: formData.tipo_conta || null,
+        favorecido: formData.favorecido || null
       };
 
       if (isEdit) {
@@ -306,6 +327,108 @@ function MotoristaForm() {
                 />
                 Motorista Ativo
               </label>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Dados Bancários / Pix</legend>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="tipo_chave_pix">Tipo de Chave Pix</label>
+              <select
+                id="tipo_chave_pix"
+                name="tipo_chave_pix"
+                value={formData.tipo_chave_pix || ''}
+                onChange={handleChange}
+              >
+                <option value="">Selecione...</option>
+                <option value="cpf">CPF</option>
+                <option value="cnpj">CNPJ</option>
+                <option value="celular">Celular</option>
+                <option value="email">E-mail</option>
+                <option value="aleatoria">Chave Aleatória</option>
+              </select>
+            </div>
+
+            <div className="form-group span-2">
+              <label htmlFor="chave_pix">Chave Pix</label>
+              <input
+                type="text"
+                id="chave_pix"
+                name="chave_pix"
+                value={formData.chave_pix || ''}
+                onChange={handleChange}
+                placeholder="Digite a chave Pix"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="banco">Banco</label>
+              <input
+                type="text"
+                id="banco"
+                name="banco"
+                value={formData.banco || ''}
+                onChange={handleChange}
+                placeholder="Nome do banco"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="agencia">Agência</label>
+              <input
+                type="text"
+                id="agencia"
+                name="agencia"
+                value={formData.agencia || ''}
+                onChange={handleChange}
+                placeholder="Agência"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="conta">Conta</label>
+              <input
+                type="text"
+                id="conta"
+                name="conta"
+                value={formData.conta || ''}
+                onChange={handleChange}
+                placeholder="Conta"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="tipo_conta">Tipo de Conta</label>
+              <select
+                id="tipo_conta"
+                name="tipo_conta"
+                value={formData.tipo_conta || ''}
+                onChange={handleChange}
+              >
+                <option value="">Selecione...</option>
+                <option value="corrente">Corrente</option>
+                <option value="poupanca">Poupança</option>
+                <option value="salario">Salário</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group full">
+              <label htmlFor="favorecido">Favorecido</label>
+              <input
+                type="text"
+                id="favorecido"
+                name="favorecido"
+                value={formData.favorecido || ''}
+                onChange={handleChange}
+                placeholder="Nome do titular da conta, se diferente do motorista"
+              />
             </div>
           </div>
         </fieldset>

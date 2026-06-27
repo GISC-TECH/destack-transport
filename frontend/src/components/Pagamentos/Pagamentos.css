@@ -714,6 +714,41 @@
   color: white;
 }
 
+.btn-action.btn-view {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.btn-action.btn-view:hover {
+  background: #4338ca;
+  color: white;
+}
+
+.btn-action.btn-download {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.btn-action.btn-download:hover {
+  background: #059669;
+  color: white;
+}
+
+.btn-action.btn-whatsapp {
+  background: #d1fae5;
+  color: #16a34a;
+}
+
+.btn-action.btn-whatsapp:hover:not(:disabled) {
+  background: #16a34a;
+  color: white;
+}
+
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Filtros Section */
 .filtros-section {
   margin-bottom: 20px;
@@ -1220,6 +1255,21 @@
 .mobile-action-btn.delete:hover {
   background: #dc2626;
   color: white;
+}
+
+.mobile-action-btn.whatsapp {
+  background: #d1fae5;
+  color: #16a34a;
+}
+
+.mobile-action-btn.whatsapp:hover:not(:disabled) {
+  background: #16a34a;
+  color: white;
+}
+
+.mobile-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {

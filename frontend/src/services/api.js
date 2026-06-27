@@ -795,6 +795,16 @@ export const pagamentosAPI = {
         throw new Error(error.error || 'Erro ao converter pagamento');
       }
       return response.json();
+    },
+
+    // Reenvia notificação WhatsApp para o gestor
+    notificarGestor: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/agregados/${id}/notificar-gestor/`, mutationOptions('POST', {}));
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(error, 'Erro ao notificar gestor'));
+      }
+      return response.json();
     }
   },
 
@@ -871,6 +881,16 @@ export const pagamentosAPI = {
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Erro ao converter pagamento');
+      }
+      return response.json();
+    },
+
+    // Reenvia notificação WhatsApp para o gestor
+    notificarGestor: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/${id}/notificar-gestor/`, mutationOptions('POST', {}));
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(error, 'Erro ao notificar gestor'));
       }
       return response.json();
     }
@@ -2365,6 +2385,14 @@ export const comunicacaoAPI = {
     const params = new URLSearchParams(filters);
     const response = await fetchWithTimeout(`${API_BASE}/comunicacoes/?${params}`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar histórico');
+    return response.json();
+  },
+  testarWhatsapp: async () => {
+    const response = await fetchWithTimeout(`${API_BASE}/comunicacoes/whatsapp/testar/`, defaultOptions);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(error, 'Erro ao testar conexão WhatsApp'));
+    }
     return response.json();
   }
 };

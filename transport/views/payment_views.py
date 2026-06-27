@@ -54,7 +54,9 @@ from ..validators import normalizar_placa
 from ..services.pagamento_service import (
     ExclusividadePagamentoError,
     _verificar_exclusividade_mutua,
+    notificar_gestor_pagamento,
 )
+from ..tasks import notificar_gestor_pagamento_async
 
 
 def _validar_exclusividade_pagamento_cte(cte):
@@ -381,6 +383,14 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                 )
                 if created:
                     contador['criados'] += 1
+                    # Notifica gestor de forma assíncrona sobre novo pagamento
+                    try:
+                        notificar_gestor_pagamento_async.delay(str(pagamento.id), 'agregado')
+                    except Exception as exc:
+                        logger.warning(
+                            "Falha ao enfileirar notificação de pagamento agregado %s: %s",
+                            pagamento.id, exc
+                        )
                 else:
                     # Pagamento já existia (criado por outro request concorrente)
                     contador['avisos'] += 1
@@ -505,6 +515,14 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
             "motorista": pagamento_proprio.motorista_nome,
             "valor_total": float(pagamento_proprio.valor_total_pagar)
         }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='notificar-gestor')
+    def notificar_gestor(self, request, pk=None):
+        """Reenvia notificação WhatsApp para o gestor sobre o pagamento agregado."""
+        pagamento = self.get_object()
+        resultado = notificar_gestor_pagamento(pagamento, 'agregado')
+        http_status = status.HTTP_200_OK if resultado['status'] == 'enviado' else status.HTTP_502_BAD_GATEWAY
+        return Response(resultado, status=http_status)
 
 
 class PagamentoProprioViewSet(viewsets.ModelViewSet):
@@ -835,7 +853,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                     else:
                         data_prevista = date(ano_prev, 12, 31)
 
-                    PagamentoProprio.objects.create(
+                    pagamento_proprio = PagamentoProprio.objects.create(
                         veiculo=veiculo,
                         periodo=periodo_atual,
                         km_total_periodo=km_total,
@@ -846,6 +864,14 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                         # valor_total_pagar é calculado no save()
                     )
                     resultados['criados'] += 1
+                    # Notifica gestor de forma assíncrona sobre novo pagamento
+                    try:
+                        notificar_gestor_pagamento_async.delay(str(pagamento_proprio.id), 'proprio')
+                    except Exception as exc:
+                        logger.warning(
+                            "Falha ao enfileirar notificação de pagamento próprio %s: %s",
+                            pagamento_proprio.id, exc
+                        )
                     resultados['detalhes'].append({
                         'veiculo': veiculo.placa,
                         'periodo': periodo_atual,
@@ -998,3 +1024,11 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             "cte_chave": cte.chave if cte else None,
             "valor_repassado": float(pagamento_agregado.valor_repassado)
         }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='notificar-gestor')
+    def notificar_gestor(self, request, pk=None):
+        """Reenvia notificação WhatsApp para o gestor sobre o pagamento próprio."""
+        pagamento = self.get_object()
+        resultado = notificar_gestor_pagamento(pagamento, 'proprio')
+        http_status = status.HTTP_200_OK if resultado['status'] == 'enviado' else status.HTTP_502_BAD_GATEWAY
+        return Response(resultado, status=http_status)

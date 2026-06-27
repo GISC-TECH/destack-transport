@@ -50,7 +50,7 @@ from .views.config_views import (
     BackupAPIView, RelatorioAPIView
 )
 from .views.gps_views import webhook_posicao_gps, ultima_posicao_veiculo
-from .views.comunicacao_views import enviar_comunicacao, MensagemComunicacaoViewSet
+from .views.comunicacao_views import enviar_comunicacao, testar_whatsapp, MensagemComunicacaoViewSet
 from .views.ciot_views import CIOTViewSet
 
 # --- Configuração Swagger (Schema View) ---
@@ -202,6 +202,7 @@ urlpatterns = [
 
     # --- Comunicação ---
     path("comunicacoes/enviar/", enviar_comunicacao, name="comunicacao-enviar"),
+    path("comunicacoes/whatsapp/testar/", testar_whatsapp, name="comunicacao-whatsapp-testar"),
 
     # --- Documentação da API (Swagger/ReDoc) ---
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),

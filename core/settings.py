@@ -593,3 +593,10 @@ NOMINATIM_BASE_URL = os.getenv('NOMINATIM_BASE_URL', 'https://nominatim.openstre
 NOMINATIM_USER_AGENT = os.getenv('NOMINATIM_USER_AGENT', 'DestackTransport/1.0')
 NOMINATIM_TIMEOUT = int(os.getenv('NOMINATIM_TIMEOUT', '15'))
 NOMINATIM_DELAY_SECONDS = float(os.getenv('NOMINATIM_DELAY_SECONDS', '1.1'))
+
+# =============================================================================
+# EVOLUTION API — Gateway de WhatsApp self-hosted
+# =============================================================================
+EVOLUTION_API_URL = os.getenv('EVOLUTION_API_URL', '')
+EVOLUTION_API_KEY = os.getenv('EVOLUTION_API_KEY', '')
+EVOLUTION_INSTANCE_NAME = os.getenv('EVOLUTION_INSTANCE_NAME', 'destack')

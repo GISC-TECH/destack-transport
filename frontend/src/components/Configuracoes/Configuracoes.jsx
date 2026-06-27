@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { configAPI } from '../../services/api';
+import { configAPI, comunicacaoAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
@@ -13,6 +13,8 @@ function Configuracoes() {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const [whatsappStatus, setWhatsappStatus] = useState(null);
+  const [testingWhatsapp, setTestingWhatsapp] = useState(false);
 
   const getEmpresaVazia = useCallback(() => ({
     razao_social: '',
@@ -22,6 +24,9 @@ function Configuracoes() {
     rntrc: '',
     email: '',
     telefone: '',
+    telefone_gestor: '',
+    telefone_financeiro: '',
+    telefone_operacional: '',
     cep: '',
     logradouro: '',
     numero: '',
@@ -113,6 +118,19 @@ function Configuracoes() {
     }
   };
 
+  const testarWhatsapp = async () => {
+    try {
+      setTestingWhatsapp(true);
+      setWhatsappStatus(null);
+      const resultado = await comunicacaoAPI.testarWhatsapp();
+      setWhatsappStatus({ type: 'success', ...resultado });
+    } catch (err) {
+      setWhatsappStatus({ type: 'error', erro: err.message });
+    } finally {
+      setTestingWhatsapp(false);
+    }
+  };
+
   if (loading) return <Loading message="Carregando configurações..." />;
   if (error) return <ErrorMessage message={error} onRetry={activeTab === 'empresa' ? loadEmpresa : loadParametros} />;
 
@@ -150,9 +168,18 @@ function Configuracoes() {
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
           Parâmetros do Sistema
+        </button>
+        <button
+          className={`config-tab ${activeTab === 'whatsapp' ? 'active' : ''}`}
+          onClick={() => setActiveTab('whatsapp')}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+          WhatsApp
         </button>
       </div>
 
@@ -220,6 +247,41 @@ function Configuracoes() {
                   onChange={(e) => handleEmpresaChange('email', e.target.value)}
                   placeholder="email@empresa.com"
                 />
+              </div>
+
+              <div className="form-divider">
+                <span>Telefones para Notificações</span>
+              </div>
+
+              <div className="form-group">
+                <label>Telefone do Gestor</label>
+                <input
+                  type="text"
+                  value={empresa.telefone_gestor || ''}
+                  onChange={(e) => handleEmpresaChange('telefone_gestor', e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+                <small>Recebe alertas de pagamentos e situações críticas</small>
+              </div>
+              <div className="form-group">
+                <label>Telefone do Financeiro</label>
+                <input
+                  type="text"
+                  value={empresa.telefone_financeiro || ''}
+                  onChange={(e) => handleEmpresaChange('telefone_financeiro', e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+                <small>Recebe alertas de cobranças e faturamentos</small>
+              </div>
+              <div className="form-group">
+                <label>Telefone do Operacional</label>
+                <input
+                  type="text"
+                  value={empresa.telefone_operacional || ''}
+                  onChange={(e) => handleEmpresaChange('telefone_operacional', e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+                <small>Recebe alertas de manutenções e vencimentos</small>
               </div>
 
               <div className="form-divider">
@@ -332,6 +394,58 @@ function Configuracoes() {
                 <button className="btn-primary" onClick={saveParametros} disabled={saving}>
                   {saving ? 'Salvando...' : 'Salvar Parâmetros'}
                 </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'whatsapp' && (
+          <div className="config-section">
+            <div className="whatsapp-config-header">
+              <h3>Integração WhatsApp (Evolution API)</h3>
+              <p>
+                O envio de mensagens utiliza a Evolution API hospedada no próprio servidor.
+                As credenciais (URL, API Key e nome da instância) são configuradas via variáveis de ambiente no arquivo <code>.env</code>.
+              </p>
+            </div>
+
+            <div className="whatsapp-config-info">
+              <div className="info-item">
+                <strong>Para ativar:</strong>
+                <ol>
+                  <li>Configure <code>EVOLUTION_API_URL</code>, <code>EVOLUTION_API_KEY</code> e <code>EVOLUTION_INSTANCE_NAME</code> no <code>.env</code></li>
+                  <li>Reinicie os containers</li>
+                  <li>Pareie o celular/WhatsApp acessando o painel da Evolution API</li>
+                  <li>Cadastre o <strong>Telefone do Gestor</strong> na aba "Dados da Empresa"</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button
+                className="btn-primary"
+                onClick={testarWhatsapp}
+                disabled={testingWhatsapp}
+              >
+                {testingWhatsapp ? 'Testando...' : 'Testar Conexão WhatsApp'}
+              </button>
+            </div>
+
+            {whatsappStatus && (
+              <div className={`message-box ${whatsappStatus.type}`}>
+                {whatsappStatus.type === 'success' ? (
+                  <>
+                    <strong>Conectado!</strong>
+                    <p>Instância: {whatsappStatus.instancia || '-'}</p>
+                    <p>Estado: {whatsappStatus.estado || '-'}</p>
+                    <p>{whatsappStatus.mensagem}</p>
+                  </>
+                ) : (
+                  <>
+                    <strong>Falha na conexão</strong>
+                    <p>{whatsappStatus.erro}</p>
+                  </>
+                )}
               </div>
             )}
           </div>

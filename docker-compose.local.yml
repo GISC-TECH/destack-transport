@@ -100,6 +100,34 @@ services:
     networks:
       - destack_local
 
+  # Evolution API - Gateway de WhatsApp self-hosted
+  evolution_api:
+    image: atendai/evolution-api:v2.2.2
+    container_name: destack_evolution_api_local
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_URL=${EVOLUTION_SERVER_URL:-http://localhost:8080}
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-destack-local-key-change-in-production}
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=${EVOLUTION_DATABASE_PROVIDER:-sqlite}
+      - DATABASE_CONNECTION_URI=${EVOLUTION_DATABASE_URI:-file:./evolution-api.db}
+      - DATABASE_SAVE_DATA_INSTANCE=true
+      - DATABASE_SAVE_LOGS=true
+      - WEBHOOK_GLOBAL_ENABLED=false
+    volumes:
+      - evolution_api_data_local:/evolution/instances
+      - evolution_api_db_local:/evolution/db
+    networks:
+      - destack_local
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+
   # Celery Worker
   celery_worker:
     build:
@@ -116,6 +144,7 @@ services:
     depends_on:
       - redis
       - postgres
+      - evolution_api
     networks:
       - destack_local
 
@@ -197,6 +226,10 @@ volumes:
   scraper_data_local:
     driver: local
   scraper_logs_local:
+    driver: local
+  evolution_api_data_local:
+    driver: local
+  evolution_api_db_local:
     driver: local
 
 networks:

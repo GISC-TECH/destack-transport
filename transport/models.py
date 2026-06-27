@@ -1864,13 +1864,21 @@ class ConfiguracaoEmpresa(models.Model):
    # Logotipo
    logo = models.ImageField("Logotipo", upload_to='logos/', null=True, blank=True)
    
+   # Telefones de destinatários para notificações
+   telefone_gestor = models.CharField("Telefone do Gestor", max_length=20, null=True, blank=True,
+                                      help_text="Recebe notificações de pagamentos e alertas críticos")
+   telefone_financeiro = models.CharField("Telefone do Financeiro", max_length=20, null=True, blank=True,
+                                          help_text="Recebe notificações de cobranças e faturamentos")
+   telefone_operacional = models.CharField("Telefone do Operacional", max_length=20, null=True, blank=True,
+                                           help_text="Recebe notificações de manutenções e vencimentos")
+
    # Dados adicionais
    certificado_digital = models.CharField("Certificado A1 (Nome)", max_length=255, null=True, blank=True)
    responsavel_tecnico_cnpj = models.CharField("CNPJ Responsável Técnico", max_length=14, null=True, blank=True)
    responsavel_tecnico_contato = models.CharField("Nome Responsável Técnico", max_length=60, null=True, blank=True)
    responsavel_tecnico_email = models.EmailField("Email Responsável Técnico", null=True, blank=True)
    responsavel_tecnico_fone = models.CharField("Telefone Responsável Técnico", max_length=15, null=True, blank=True)
-   
+
    criado_em = models.DateTimeField(auto_now_add=True)
    atualizado_em = models.DateTimeField(auto_now=True)
 
@@ -2213,6 +2221,45 @@ class Motorista(models.Model):
     cidade = models.CharField("Cidade", max_length=100, blank=True, null=True)
     estado = models.CharField("Estado (UF)", max_length=2, blank=True, null=True)
     cep = models.CharField("CEP", max_length=10, blank=True, null=True)
+
+    # Dados Bancários / Pix
+    TIPO_CHAVE_PIX_CHOICES = [
+        ('cpf', 'CPF'),
+        ('cnpj', 'CNPJ'),
+        ('celular', 'Celular'),
+        ('email', 'E-mail'),
+        ('aleatoria', 'Chave Aleatória'),
+    ]
+    TIPO_CONTA_CHOICES = [
+        ('corrente', 'Corrente'),
+        ('poupanca', 'Poupança'),
+        ('salario', 'Salário'),
+    ]
+    tipo_chave_pix = models.CharField(
+        "Tipo de Chave Pix",
+        max_length=10,
+        choices=TIPO_CHAVE_PIX_CHOICES,
+        blank=True,
+        null=True
+    )
+    chave_pix = models.CharField("Chave Pix", max_length=140, blank=True, null=True)
+    banco = models.CharField("Banco", max_length=100, blank=True, null=True)
+    agencia = models.CharField("Agência", max_length=10, blank=True, null=True)
+    conta = models.CharField("Conta", max_length=20, blank=True, null=True)
+    tipo_conta = models.CharField(
+        "Tipo de Conta",
+        max_length=10,
+        choices=TIPO_CONTA_CHOICES,
+        blank=True,
+        null=True
+    )
+    favorecido = models.CharField(
+        "Favorecido",
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Nome do titular da conta, se diferente do motorista"
+    )
 
     # Metadados
     ativo = models.BooleanField("Ativo", default=True)
