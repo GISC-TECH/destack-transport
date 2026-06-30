@@ -2,13 +2,18 @@
 
 ## Último Deploy Realizado
 - **Data:** 2026-06-29
-- **Versão:** v1.1.5
-- **Commit:** b55d9c7
+- **Versão:** v1.1.6
+- **Commit:** 63d3868
 - **Branch:** feat/reskin-verde-prototipo
 - **Servidor:** destack-prod (31.97.247.165)
 - **Health check:** https://destacktransporte.site/api/health/ -> healthy
-- **Backup pré-deploy:** /tmp/prod_destack_db_pre_v1.1.5_20260629_214314.dump
+- **Backup pré-deploy:** /tmp/prod_destack_db_pre_v1.1.5_20260629_214314.dump (último backup completo)
 - **Stash local no servidor:** pre-deploy-v1.1.5-local-changes
+
+### Deploy Anterior
+- **Versão:** v1.1.5
+- **Commit:** b55d9c7
+- Melhorias nos relatórios: filtros específicos, campos completos, responsividade mobile
 
 ## Melhorias Aplicadas (v1.1.5)
 
@@ -20,6 +25,12 @@
   - MDF-e: chave, série, dh_ini_viagem, qtd NF-e, peso carga, unidade, modal, renavam, status
   - Pagamentos: coluna valor_total_pagar padronizada, cte_chave, desconto, dados do condutor
   - Motoristas: telefone, email, cidade/UF, dados bancários/pix, validades NR20/NR35/MOPP/Toxicológico/ASO
+
+### Ajustes Finos de Responsividade (v1.1.6)
+- Reduzido espaçamento entre campos do DateFilter flat
+- Inputs e selects dos filtros agora ocupam 100% da largura no mobile
+- Padding do card de filtros otimizado para telas pequenas
+- Font-size dos inputs ajustada para evitar zoom automático no iOS
 
 ### Testes Aprovados
 - `npm run lint` e `npm run build` (frontend)
