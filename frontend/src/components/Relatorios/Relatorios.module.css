@@ -110,13 +110,14 @@
 .filtrosGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 18px;
+  gap: 14px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
 }
 
 .formGroup label {
@@ -127,11 +128,13 @@
 
 .formGroup input,
 .formGroup select {
-  padding: 11px 14px;
+  width: 100%;
+  padding: 12px 14px;
   border: 2px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
   transition: border-color 0.3s, box-shadow 0.3s;
+  box-sizing: border-box;
 }
 
 .formGroup input:focus,
@@ -214,11 +217,21 @@
   }
 
   .filtros {
-    padding: 18px;
+    padding: 16px;
+  }
+
+  .filtros h3 {
+    margin-bottom: 14px;
   }
 
   .filtrosGrid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .formGroup input,
+  .formGroup select {
+    padding: 12px 12px;
   }
 }
 
@@ -243,11 +256,27 @@
   }
 
   .filtros {
-    padding: 14px;
+    padding: 12px;
+    border-radius: 10px;
   }
 
   .filtros h3 {
     font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .filtrosGrid {
+    gap: 10px;
+  }
+
+  .formGroup label {
+    font-size: 13px;
+  }
+
+  .formGroup input,
+  .formGroup select {
+    padding: 11px 12px;
+    font-size: 16px; /* Evita zoom no iOS */
   }
 
   .actions > * {

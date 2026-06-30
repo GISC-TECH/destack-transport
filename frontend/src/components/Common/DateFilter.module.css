@@ -178,6 +178,10 @@
     gap: var(--space-3);
   }
 
+  .dateFilterFlat {
+    gap: var(--space-2);
+  }
+
   .periodButtons {
     width: 100%;
     justify-content: space-between;
@@ -204,6 +208,7 @@
   .dateInput {
     max-width: none;
     flex: 1;
+    width: 100%;
   }
 
   .applyBtn {
@@ -213,9 +218,18 @@
 }
 
 @media (max-width: 480px) {
+  .dateFilter {
+    gap: var(--space-2);
+  }
+
+  .dateFilterFlat {
+    gap: var(--space-2);
+  }
+
   .periodButtons {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
   }
 
   .periodBtn {
@@ -226,9 +240,21 @@
   .dateInputs {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--space-2);
   }
 
   .dateInputGroup {
     width: 100%;
+  }
+
+  .dateInput {
+    width: 100%;
+    min-width: unset;
+    padding: 11px 12px;
+    font-size: 16px; /* Evita zoom no iOS */
+  }
+
+  .applyBtn {
+    padding: 11px;
   }
 }
