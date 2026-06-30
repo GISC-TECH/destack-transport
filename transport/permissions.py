@@ -81,12 +81,21 @@ class TransportModelPermission(BasePermission):
         return None
 
     def _get_model_class(self, view):
-        """Obtém a classe do modelo a partir do queryset do ViewSet."""
+        """Obtém a classe do modelo a partir do queryset ou serializer do ViewSet."""
         queryset = getattr(view, 'queryset', None)
         if queryset is not None:
             return queryset.model
+
         # Fallback para serializers baseados em ModelSerializer
         serializer_class = getattr(view, 'serializer_class', None)
+
+        # Se o ViewSet define get_serializer_class dinamicamente, usa-o
+        if serializer_class is None and hasattr(view, 'get_serializer_class'):
+            try:
+                serializer_class = view.get_serializer_class()
+            except Exception:
+                serializer_class = None
+
         if serializer_class is not None:
             return getattr(serializer_class.Meta, 'model', None)
         return None

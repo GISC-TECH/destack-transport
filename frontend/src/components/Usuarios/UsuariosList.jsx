@@ -90,10 +90,14 @@ function UsuariosList() {
     if (usuario.is_superuser) {
       return <StatusPill status="warning">Super Admin</StatusPill>;
     }
-    if (usuario.is_staff) {
-      return <StatusPill status="info">Administrador</StatusPill>;
+    const perfil = (usuario.groups || [])[0];
+    if (perfil) {
+      return <StatusPill status="info">{perfil}</StatusPill>;
     }
-    return <StatusPill status="muted">Operador</StatusPill>;
+    if (usuario.is_staff) {
+      return <StatusPill status="info">Staff</StatusPill>;
+    }
+    return <StatusPill status="muted">Sem perfil</StatusPill>;
   };
 
   // Filtrar usuarios

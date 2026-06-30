@@ -145,6 +145,10 @@
   grid-column: 1 / -1;
 }
 
+.formGroupFull > div:first-child {
+  width: 100%;
+}
+
 /* Messages */
 .errorMessage {
   background: var(--danger-light);
@@ -175,6 +179,10 @@
   border-top: 1px solid var(--border-light);
   display: flex;
   justify-content: center;
+}
+
+.actions > * {
+  min-width: 200px;
 }
 
 /* Responsivo */
@@ -240,5 +248,10 @@
 
   .filtros h3 {
     font-size: 15px;
+  }
+
+  .actions > * {
+    width: 100%;
+    min-width: unset;
   }
 }

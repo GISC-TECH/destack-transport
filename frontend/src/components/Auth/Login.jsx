@@ -14,6 +14,7 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || '/dashboard';
+  const sessionExpired = new URLSearchParams(location.search).get('expired') === '1';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,6 +79,17 @@ function Login() {
         <form onSubmit={handleSubmit} className={styles.card} aria-label="Formulario de login">
           <span className={styles.eyebrow}>Bem-vindo de volta</span>
           <h1 className={styles.title}>Acessar o sistema</h1>
+
+          {sessionExpired && (
+            <div className={styles.warning} role="alert" aria-live="polite">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>Sua sessão expirou. Faça login novamente para continuar.</span>
+            </div>
+          )}
 
           {error && (
             <div className={styles.error} role="alert" aria-live="assertive">

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { usuariosAPI } from '../../services/api';
+import { usuariosAPI, perfisAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import Button from '../Common/Button';
@@ -15,6 +15,8 @@ function UsuarioForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [perfis, setPerfis] = useState([]);
+  const [perfisLoading, setPerfisLoading] = useState(true);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -23,9 +25,16 @@ function UsuarioForm() {
     password: '',
     password_confirm: '',
     is_active: true,
-    is_staff: false,
-    is_superuser: false
+    perfil: 'Operacional'
   });
+
+  const detectarPerfil = (data) => {
+    if (data.is_superuser) return 'Super Admin';
+    const grupoPerfil = (data.groups || []).find(g =>
+      ['Leitura', 'Operacional', 'Financeiro', 'Administrativo'].includes(g)
+    );
+    return grupoPerfil || 'Operacional';
+  };
 
   const loadUsuario = useCallback(async () => {
     try {
@@ -34,7 +43,8 @@ function UsuarioForm() {
       setFormData({
         ...data,
         password: '',
-        password_confirm: ''
+        password_confirm: '',
+        perfil: detectarPerfil(data)
       });
     } catch (err) {
       setError(err.message || 'Erro ao carregar usuário');
@@ -43,11 +53,25 @@ function UsuarioForm() {
     }
   }, [id]);
 
+  const loadPerfis = useCallback(async () => {
+    try {
+      setPerfisLoading(true);
+      const data = await perfisAPI.list();
+      setPerfis(data.perfis || []);
+    } catch (err) {
+      console.error('Erro ao carregar perfis:', err);
+      setPerfis([]);
+    } finally {
+      setPerfisLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
+    loadPerfis();
     if (isEdit) {
       loadUsuario();
     }
-  }, [isEdit, loadUsuario]);
+  }, [isEdit, loadUsuario, loadPerfis]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -115,8 +139,7 @@ function UsuarioForm() {
         first_name: formData.first_name,
         last_name: formData.last_name,
         is_active: formData.is_active,
-        is_staff: formData.is_staff,
-        is_superuser: formData.is_superuser
+        perfil: formData.perfil
       };
 
       // Só envia senha se foi preenchida
@@ -313,11 +336,11 @@ function UsuarioForm() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
-            Permissões
+            Status e Perfil de Acesso
           </legend>
 
-          <div className={styles.permissionsGrid}>
-            <div className={styles.permissionCard}>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label className={styles.checkboxContainer}>
                 <input
                   type="checkbox"
@@ -332,37 +355,30 @@ function UsuarioForm() {
                 </div>
               </label>
             </div>
+          </div>
 
-            <div className={styles.permissionCard}>
-              <label className={styles.checkboxContainer}>
-                <input
-                  type="checkbox"
-                  name="is_staff"
-                  checked={formData.is_staff}
-                  onChange={handleChange}
-                />
-                <span className={styles.checkmark}></span>
-                <div className={styles.permissionInfo}>
-                  <span className={styles.permissionTitle}>Staff</span>
-                  <span className={styles.permissionDescription}>Acesso ao painel administrativo Django</span>
-                </div>
-              </label>
-            </div>
-
-            <div className={styles.permissionCard}>
-              <label className={styles.checkboxContainer}>
-                <input
-                  type="checkbox"
-                  name="is_superuser"
-                  checked={formData.is_superuser}
-                  onChange={handleChange}
-                />
-                <span className={styles.checkmark}></span>
-                <div className={styles.permissionInfo}>
-                  <span className={styles.permissionTitle}>Superusuário</span>
-                  <span className={styles.permissionDescription}>Todas as permissões do sistema</span>
-                </div>
-              </label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="perfil">Perfil de Permissões <span className={styles.required}>*</span></label>
+              <select
+                id="perfil"
+                name="perfil"
+                value={formData.perfil}
+                onChange={handleChange}
+                disabled={perfisLoading}
+                required
+              >
+                {perfisLoading && <option value="">Carregando perfis...</option>}
+                {!perfisLoading && perfis.map(perfil => (
+                  <option key={perfil.nome} value={perfil.nome}>
+                    {perfil.nome} — {perfil.descricao}
+                  </option>
+                ))}
+                <option value="Super Admin">Super Admin — Acesso total ao sistema</option>
+              </select>
+              <small className={styles.fieldHint}>
+                Define o que o usuário pode ver e fazer no sistema
+              </small>
             </div>
           </div>
         </fieldset>

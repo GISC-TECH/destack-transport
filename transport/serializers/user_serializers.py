@@ -1,7 +1,12 @@
 # transport/serializers/user_serializers.py
 
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
+from transport.services.permissao_service import (
+    aplicar_perfil_usuario,
+    get_permissoes_flat,
+    PERFIS,
+)
 
 # =======================================
 # === Serializers para Usuários (User) ===
@@ -62,20 +67,43 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer para CRUD completo de Usuários (usado pelo UserViewSet - Admin)."""
-    password = serializers.CharField(write_only=True, required=False, style={'input_type': 'password'}, help_text="Obrigatório na criação. Opcional na atualização.")
+    password = serializers.CharField(
+        write_only=True,
+        required=False,
+        style={'input_type': 'password'},
+        help_text="Obrigatório na criação. Opcional na atualização."
+    )
+    groups = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='name'
+    )
+    perfil = serializers.ChoiceField(
+        choices=[(p, p) for p in list(PERFIS.keys()) + ["Super Admin"]],
+        write_only=True,
+        required=False,
+        allow_blank=True,
+        help_text="Perfil de permissões do usuário (Leitura, Operacional, Financeiro, Administrativo, Super Admin)"
+    )
+    permissoes = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
         # Define os campos a serem expostos/editados pela API de admin
         fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email',
                   'is_staff', 'is_active', 'is_superuser',
+                  'groups', 'perfil', 'permissoes',
                   'date_joined', 'last_login']
-        read_only_fields = ['id', 'date_joined', 'last_login']
+        read_only_fields = ['id', 'date_joined', 'last_login', 'permissoes']
         extra_kwargs = {
             'password': {'write_only': True, 'required': False}, # Não obrigatório em GET/PATCH
             'username': {'required': True}, # Username sempre obrigatório
             'email': {'required': False}, # Email não é obrigatório por padrão no Django User
         }
+
+    def get_permissoes(self, obj):
+        """Retorna as permissões efetivas do usuário como lista simples."""
+        return get_permissoes_flat(obj)
 
     def validate_email(self, value):
         """Validação extra para garantir unicidade de email na criação/atualização via admin."""
@@ -92,6 +120,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Cria um novo usuário."""
+        perfil = validated_data.pop('perfil', None)
+
         # Garante que a senha seja obrigatória na criação
         if 'password' not in validated_data or not validated_data['password']:
             raise serializers.ValidationError({'password': 'Este campo é obrigatório na criação.'})
@@ -103,21 +133,35 @@ class UserSerializer(serializers.ModelSerializer):
             email=validated_data.get('email', ''),
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
-            is_staff=validated_data.get('is_staff', False),
+            is_staff=False,
             is_active=validated_data.get('is_active', True),
-            # Cuidado ao expor/permitir 'is_superuser' via API
-            is_superuser=validated_data.get('is_superuser', False)
+            is_superuser=False
         )
+
+        if perfil:
+            aplicar_perfil_usuario(user, perfil)
+
         return user
 
     def update(self, instance, validated_data):
         """Atualiza um usuário existente."""
+        perfil = validated_data.pop('perfil', None)
+
         # Atualiza a senha SE ela for fornecida e não estiver vazia
         password = validated_data.pop('password', None)
         if password:
             instance.set_password(password)
 
+        # Impede alteração de is_superuser/is_staff diretamente pelo serializer;
+        # isso é controlado pelo perfil.
+        validated_data.pop('is_superuser', None)
+        validated_data.pop('is_staff', None)
+
         # Atualiza outros campos (chama o método padrão para o resto)
         instance = super().update(instance, validated_data)
         instance.save()
+
+        if perfil:
+            aplicar_perfil_usuario(instance, perfil)
+
         return instance

@@ -9,6 +9,7 @@ import Button from '../Common/Button';
 import Modal from '../Common/Modal';
 import StatusPill from '../Common/StatusPill';
 import TableContainer from '../Common/TableContainer';
+import PermissionGuard from '../Common/PermissionGuard';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -322,18 +323,15 @@ function CTeList() {
         </div>
       </div>
 
-      {/* Filtro unico de periodo */}
-      <div className={sharedStyles.sectionHeader}>
-        <h3>Analise de CT-es</h3>
-        <DateFilter
-          onFilterChange={handleDateFilterChange}
-          defaultPeriodo="mes"
-          initialDataInicio={filtros.data_inicio}
-          initialDataFim={filtros.data_fim}
-        />
-      </div>
+      <DateFilter
+        onFilterChange={handleDateFilterChange}
+        defaultPeriodo="mes"
+        initialDataInicio={filtros.data_inicio}
+        initialDataFim={filtros.data_fim}
+      />
 
       {/* Graficos */}
+      <h3 className={sharedStyles.sectionTitle}>Analise de CT-es</h3>
       <div className={sharedStyles.chartsGrid}>
         {/* Grafico de Top Clientes */}
         <div className={sharedStyles.chartCard}>

@@ -114,6 +114,22 @@
   opacity: 0.5;
 }
 
+.mobileEmptyState {
+  display: none;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  background: var(--card-bg);
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  margin-bottom: 20px;
+}
+
+.mobileEmptyState svg {
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
 .osActions {
   display: flex;
   gap: 8px;
@@ -231,6 +247,10 @@
   }
 
   .pedagioMobileCard {
+    display: block;
+  }
+
+  .mobileEmptyState {
     display: block;
   }
 

@@ -161,21 +161,20 @@ function DRE() {
         icon={dreIcon}
         breadcrumbs={[{ label: 'Financeiro' }, { label: 'DRE' }]}
         actions={
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <Button
-              onClick={handleExport}
-              variant="primary"
-            >
-              Exportar CSV
-            </Button>
-            <DateFilter
-              onFilterChange={handleDateFilterChange}
-              defaultPeriodo="ano"
-              initialDataInicio={filtros.data_inicio}
-              initialDataFim={filtros.data_fim}
-            />
-          </div>
+          <Button
+            onClick={handleExport}
+            variant="primary"
+          >
+            Exportar CSV
+          </Button>
         }
+      />
+
+      <DateFilter
+        onFilterChange={handleDateFilterChange}
+        defaultPeriodo="ano"
+        initialDataInicio={filtros.data_inicio}
+        initialDataFim={filtros.data_fim}
       />
 
       {/* KPIs */}

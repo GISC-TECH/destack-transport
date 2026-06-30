@@ -126,6 +126,9 @@ const CIOTManager = lazy(() => import('./components/CIOT/CIOTManager'));
 const UsuariosList = lazy(() => import('./components/Usuarios/UsuariosList'));
 const UsuarioForm = lazy(() => import('./components/Usuarios/UsuarioForm'));
 
+// Perfis
+const Perfis = lazy(() => import('./components/Perfis/Perfis'));
+
 function App() {
   return (
     <AuthProvider>
@@ -265,6 +268,9 @@ function App() {
                           <Route path="/usuarios" element={<UsuariosList />} />
                           <Route path="/usuarios/novo" element={<UsuarioForm />} />
                           <Route path="/usuarios/editar/:id" element={<UsuarioForm />} />
+
+                          {/* Perfis */}
+                          <Route path="/perfis" element={<Perfis />} />
 
                           {/* Rota padrão - redireciona para Dashboard */}
                           <Route path="*" element={<Navigate to="/dashboard" replace />} />

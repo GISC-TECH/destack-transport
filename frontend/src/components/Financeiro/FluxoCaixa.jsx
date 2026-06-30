@@ -138,27 +138,25 @@ function FluxoCaixa() {
         subtitle="Projeção de receitas e despesas"
         icon={fluxoIcon}
         breadcrumbs={[{ label: 'Financeiro' }, { label: 'Fluxo de Caixa' }]}
-        actions={
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <select
-              value={agrupamento}
-              onChange={(e) => setAgrupamento(e.target.value)}
-              className="date-input"
-              style={{ minWidth: '120px' }}
-            >
-              <option value="dia">Por Dia</option>
-              <option value="semana">Por Semana</option>
-              <option value="mes">Por Mês</option>
-            </select>
-            <DateFilter
-              onFilterChange={handleDateFilterChange}
-              defaultPeriodo="mes"
-              initialDataInicio={filtros.data_inicio}
-              initialDataFim={filtros.data_fim}
-            />
-          </div>
-        }
       />
+
+      <div className={styles.filterBar}>
+        <select
+          value={agrupamento}
+          onChange={(e) => setAgrupamento(e.target.value)}
+          className={styles.agrupamentoSelect}
+        >
+          <option value="dia">Por Dia</option>
+          <option value="semana">Por Semana</option>
+          <option value="mes">Por Mês</option>
+        </select>
+        <DateFilter
+          onFilterChange={handleDateFilterChange}
+          defaultPeriodo="mes"
+          initialDataInicio={filtros.data_inicio}
+          initialDataFim={filtros.data_fim}
+        />
+      </div>
 
       {/* KPIs */}
       <div className={styles.finKpiGrid}>

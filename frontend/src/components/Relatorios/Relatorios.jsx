@@ -12,10 +12,18 @@ function Relatorios() {
     data_inicio: '',
     data_fim: '',
     status: '',
-    cliente: ''
+    modalidade: '',
+    placa: '',
+    condutor: '',
+    tipo: '',
+    ativo: '',
+    pendentes: '',
+    incluir_cancelados: '',
+    encerrado: ''
   });
   const [gerando, setGerando] = useState(false);
   const [error, setError] = useState(null);
+  const [sucesso, setSucesso] = useState(null);
 
   const handleDateFilterChange = useCallback((newFiltros) => {
     setFiltros(prev => ({
@@ -23,6 +31,10 @@ function Relatorios() {
       data_inicio: newFiltros.data_inicio,
       data_fim: newFiltros.data_fim
     }));
+  }, []);
+
+  const handleFiltroChange = useCallback((campo, valor) => {
+    setFiltros(prev => ({ ...prev, [campo]: valor }));
   }, []);
 
   // Tipos de relatorios suportados pelo backend (RelatorioAPIView)
@@ -77,7 +89,99 @@ function Relatorios() {
     }
   ];
 
-  const [sucesso, setSucesso] = useState(null);
+  // Configuração de filtros específicos por tipo de relatório
+  const filtrosPorTipo = {
+    ctes: [
+      { campo: 'status', label: 'Status', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'autorizado', label: 'Autorizado' },
+        { value: 'cancelado', label: 'Cancelado' },
+        { value: 'encerrado', label: 'Encerrado' },
+        { value: 'denegado', label: 'Denegado' },
+        { value: 'inutilizado', label: 'Inutilizado' }
+      ]},
+      { campo: 'modalidade', label: 'Modalidade', tipo: 'select', opcoes: [
+        { value: '', label: 'Todas' },
+        { value: 'CIF', label: 'CIF' },
+        { value: 'FOB', label: 'FOB' }
+      ]},
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' },
+      { campo: 'condutor', label: 'Condutor', tipo: 'text', placeholder: 'Nome do condutor' },
+      { campo: 'incluir_cancelados', label: 'Incluir cancelados', tipo: 'select', opcoes: [
+        { value: '', label: 'Não' },
+        { value: '1', label: 'Sim' }
+      ]}
+    ],
+    mdfes: [
+      { campo: 'status', label: 'Status', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'autorizado', label: 'Autorizado' },
+        { value: 'cancelado', label: 'Cancelado' },
+        { value: 'encerrado', label: 'Encerrado' },
+        { value: 'denegado', label: 'Denegado' },
+        { value: 'inutilizado', label: 'Inutilizado' }
+      ]},
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' },
+      { campo: 'condutor', label: 'Condutor', tipo: 'text', placeholder: 'Nome do condutor' },
+      { campo: 'encerrado', label: 'Encerrado', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'true', label: 'Sim' },
+        { value: 'false', label: 'Não' }
+      ]}
+    ],
+    pagamentos: [
+      { campo: 'tipo', label: 'Tipo', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'agregado', label: 'Agregado' },
+        { value: 'proprio', label: 'Próprio' }
+      ]},
+      { campo: 'status', label: 'Status', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'pendente', label: 'Pendente' },
+        { value: 'pago', label: 'Pago' }
+      ]},
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' },
+      { campo: 'condutor', label: 'Condutor', tipo: 'text', placeholder: 'Nome do condutor' }
+    ],
+    veiculos: [
+      { campo: 'ativo', label: 'Ativo', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'true', label: 'Sim' },
+        { value: 'false', label: 'Não' }
+      ]},
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' }
+    ],
+    manutencoes: [
+      { campo: 'status', label: 'Status', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'agendada', label: 'Agendada' },
+        { value: 'em_andamento', label: 'Em Andamento' },
+        { value: 'concluida', label: 'Concluída' },
+        { value: 'cancelada', label: 'Cancelada' }
+      ]},
+      { campo: 'tipo', label: 'Tipo', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'preventiva', label: 'Preventiva' },
+        { value: 'corretiva', label: 'Corretiva' },
+        { value: 'preditiva', label: 'Preditiva' }
+      ]},
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' }
+    ],
+    km_rodado: [
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' }
+    ],
+    motoristas: [
+      { campo: 'ativo', label: 'Ativo', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'true', label: 'Sim' },
+        { value: 'false', label: 'Não' }
+      ]},
+      { campo: 'pendentes', label: 'Somente pendentes', tipo: 'select', opcoes: [
+        { value: '', label: 'Não' },
+        { value: '1', label: 'Sim' }
+      ]}
+    ]
+  };
 
   const handleGerarRelatorio = async () => {
     if (!tipoRelatorio) {
@@ -210,6 +314,38 @@ function Relatorios() {
     </svg>
   );
 
+  const renderFiltro = (config) => {
+    const { campo, label, tipo, opcoes, placeholder } = config;
+
+    if (tipo === 'select') {
+      return (
+        <div key={campo} className={styles.formGroup}>
+          <label>{label}</label>
+          <select
+            value={filtros[campo] || ''}
+            onChange={(e) => handleFiltroChange(campo, e.target.value)}
+          >
+            {opcoes.map(op => (
+              <option key={op.value} value={op.value}>{op.label}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    return (
+      <div key={campo} className={styles.formGroup}>
+        <label>{label}</label>
+        <input
+          type="text"
+          value={filtros[campo] || ''}
+          placeholder={placeholder || ''}
+          onChange={(e) => handleFiltroChange(campo, e.target.value)}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className={styles.page}>
       <PageHeader
@@ -248,12 +384,13 @@ function Relatorios() {
             <h3>Filtros do Relatório</h3>
             <div className={styles.filtrosGrid}>
               <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                <label>Período</label>
                 <DateFilter
                   onFilterChange={handleDateFilterChange}
                   defaultPeriodo="mes"
+                  variant="flat"
                 />
               </div>
+              {filtrosPorTipo[tipoRelatorio]?.map(renderFiltro)}
               <div className={styles.formGroup}>
                 <label>Formato</label>
                 <select

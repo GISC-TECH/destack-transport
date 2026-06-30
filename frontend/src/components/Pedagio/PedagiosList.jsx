@@ -177,6 +177,17 @@ function PedagiosList() {
         </form>
       </div>
 
+      {pedagios.length === 0 && (
+        <div className={styles.mobileEmptyState}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+            <line x1="6" y1="10" x2="6.01" y2="10"></line>
+            <line x1="6" y1="14" x2="6.01" y2="14"></line>
+          </svg>
+          <p>Nenhum pedágio encontrado.</p>
+        </div>
+      )}
+
       <div className={styles.pedagioListCard}>
         <TableContainer>
           <table className={styles.pedagioTable}>

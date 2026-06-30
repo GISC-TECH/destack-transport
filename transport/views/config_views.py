@@ -642,6 +642,8 @@ class RelatorioAPIView(APIView):
             qs = qs.filter(ativo=bool(filtros['ativo']))
         if 'placa' in filtros:
             qs = qs.filter(placa__icontains=filtros['placa'])
+        if filtros.get('tipo_proprietario'):
+            qs = qs.filter(tipo_proprietario=filtros['tipo_proprietario'])
         serializer = VeiculoSerializer(qs, many=True)
         return serializer.data
 
@@ -675,6 +677,8 @@ class RelatorioAPIView(APIView):
             qs = qs.filter(emitente__razao_social__icontains=filtros['emitente'])
         if 'modalidade' in filtros and filtros['modalidade']:
             qs = qs.filter(modalidade=filtros['modalidade'])
+        if 'status' in filtros and filtros['status']:
+            qs = qs.filter(status=filtros['status'])
         if 'processado' in filtros:
             qs = qs.filter(processado=bool(filtros['processado']))
         # Filtro por condutor/motorista (nome ou CPF do vínculo automático)
@@ -683,6 +687,8 @@ class RelatorioAPIView(APIView):
         if filtros.get('motorista_cpf'):
             cpf_digits = ''.join(ch for ch in str(filtros['motorista_cpf']) if ch.isdigit())
             qs = qs.filter(modal_rodoviario__motoristas__cpf=cpf_digits)
+        if filtros.get('placa'):
+            qs = qs.filter(modal_rodoviario__veiculos__placa__icontains=filtros['placa'])
         # Exclui cancelados por padrão, salvo se incluir_cancelados=1
         if not filtros.get('incluir_cancelados'):
             qs = qs.exclude(cancelamento__c_stat=135)
@@ -690,51 +696,64 @@ class RelatorioAPIView(APIView):
         # Limita quantidade para performance
         qs = qs.distinct().order_by('-identificacao__data_emissao')[:1000]
 
+        TIPO_CTE = {0: 'Normal', 1: 'Complementar', 2: 'Anulação', 3: 'Substituto'}
+
         dados = []
         for cte in qs:
+            ide = cte.identificacao
+            prest = cte.prestacao
+
             # Dados do CT-e
-            try:
-                numero = cte.identificacao.numero
-                data_emissao = cte.identificacao.data_emissao.strftime('%d/%m/%Y %H:%M')
-            except Exception:
-                numero = None
-                data_emissao = None
+            numero = getattr(ide, 'numero', None)
+            data_emissao = ide.data_emissao.strftime('%d/%m/%Y %H:%M') if getattr(ide, 'data_emissao', None) else None
+            remetente = getattr(cte.remetente, 'razao_social', None) if cte.remetente else None
+            destinatario = getattr(cte.destinatario, 'razao_social', None) if cte.destinatario else None
 
-            try:
-                remetente = cte.remetente.razao_social
-            except Exception:
-                remetente = None
-
-            try:
-                destinatario = cte.destinatario.razao_social
-            except Exception:
-                destinatario = None
-
-            try:
-                valor_total = float(cte.prestacao.valor_total_prestado) if cte.prestacao.valor_total_prestado else 0
-            except Exception:
-                valor_total = 0
+            valor_total = float(prest.valor_total_prestado) if prest and prest.valor_total_prestado else 0
+            valor_recebido = float(prest.valor_recebido) if prest and prest.valor_recebido else 0
+            valor_cif = float(prest.valor_cif) if prest and prest.valor_cif else 0
+            valor_fob = float(prest.valor_fob) if prest and prest.valor_fob else 0
 
             # Condutor (vínculo automático do XML)
             condutor = None
+            placa_tracao = None
             try:
                 if cte.modal_rodoviario:
-                    primeiro = cte.modal_rodoviario.motoristas.all()[0] if cte.modal_rodoviario.motoristas.all() else None
-                    condutor = primeiro.nome if primeiro else None
+                    primeiro_moto = cte.modal_rodoviario.motoristas.first()
+                    condutor = primeiro_moto.nome if primeiro_moto else None
+                    tracao = cte.modal_rodoviario.veiculos.filter(tipo_veiculo='0').first()
+                    if not tracao:
+                        tracao = cte.modal_rodoviario.veiculos.first()
+                    placa_tracao = tracao.placa if tracao else None
             except Exception:
-                condutor = None
+                pass
 
             cancelado = bool(getattr(cte, 'cancelamento', None) and cte.cancelamento.c_stat == 135)
 
             dados.append({
+                'chave': cte.chave,
                 'numero': numero,
+                'serie': ide.serie if ide else None,
                 'data_emissao': data_emissao,
                 'remetente': remetente,
                 'destinatario': destinatario,
                 'condutor': condutor or '-',
+                'placa': placa_tracao or '-',
+                'uf_origem': ide.uf_ini if ide else None,
+                'municipio_origem': ide.nome_mun_ini if ide else None,
+                'uf_destino': ide.uf_fim if ide else None,
+                'municipio_destino': ide.nome_mun_fim if ide else None,
+                'dist_km': ide.dist_km if ide else 0,
                 'valor_total': valor_total,
+                'valor_recebido': valor_recebido,
+                'valor_cif': valor_cif,
+                'valor_fob': valor_fob,
                 'modalidade': cte.modalidade or 'N/A',
+                'tipo_cte': TIPO_CTE.get(ide.tipo_cte, 'N/A') if ide else 'N/A',
+                'cfop': ide.cfop if ide else None,
+                'natureza_operacao': ide.natureza_operacao if ide else None,
                 'pago': 'Sim' if cte.pago else 'Não',
+                'status': cte.get_status_display() if hasattr(cte, 'get_status_display') else cte.status,
                 'situacao': 'Cancelado' if cancelado else 'Ativo',
             })
 
@@ -771,8 +790,11 @@ class RelatorioAPIView(APIView):
             qs = qs.filter(identificacao__n_mdf=filtros['numero'])
         if 'emitente' in filtros and filtros['emitente']:
             qs = qs.filter(emitente__razao_social__icontains=filtros['emitente'])
+        if 'status' in filtros and filtros['status']:
+            qs = qs.filter(status=filtros['status'])
         if 'encerrado' in filtros:
-            qs = qs.filter(encerrado=bool(filtros['encerrado']))
+            enc_val = str(filtros['encerrado']).lower()
+            qs = qs.filter(encerrado=(enc_val in ('true', '1', 'sim')))
         if 'processado' in filtros:
             qs = qs.filter(processado=bool(filtros['processado']))
         # Filtros por veículo e condutor
@@ -788,56 +810,54 @@ class RelatorioAPIView(APIView):
         # Limita quantidade para performance
         qs = qs.order_by('-identificacao__dh_emi')[:1000]
 
+        MODAL_MDFE = {'1': 'Rodoviário', '2': 'Aéreo', '3': 'Aquaviário', '4': 'Ferroviário'}
+
         dados = []
         for mdfe in qs:
-            # Pega placa do veículo de tração
+            ide = mdfe.identificacao
+            totais = mdfe.totais
+
             placa_tracao = None
+            renavam = None
             try:
                 if mdfe.modal_rodoviario and mdfe.modal_rodoviario.veiculo_tracao:
                     placa_tracao = mdfe.modal_rodoviario.veiculo_tracao.placa
+                    renavam = mdfe.modal_rodoviario.veiculo_tracao.renavam
             except Exception:
                 pass
 
-            # Conta CT-es vinculados
-            try:
-                qtd_ctes = mdfe.docs_vinculados_mdfe.count()
-            except Exception:
-                qtd_ctes = 0
+            qtd_ctes = mdfe.docs_vinculados_mdfe.count() if hasattr(mdfe, 'docs_vinculados_mdfe') else 0
+            condutor = mdfe.condutores.first()
+            condutor_nome = condutor.nome if condutor else None
 
-            # Pega primeiro condutor
-            try:
-                condutor = mdfe.condutores.first()
-                condutor_nome = condutor.nome if condutor else None
-            except Exception:
-                condutor_nome = None
+            numero = ide.n_mdf if ide else None
+            data_emissao = ide.dh_emi.strftime('%d/%m/%Y %H:%M') if ide and ide.dh_emi else None
+            dh_ini_viagem = ide.dh_ini_viagem.strftime('%d/%m/%Y %H:%M') if ide and ide.dh_ini_viagem else None
 
-            # Dados do MDF-e
-            try:
-                numero = mdfe.identificacao.n_mdf
-                data_emissao = mdfe.identificacao.dh_emi.strftime('%d/%m/%Y %H:%M')
-                uf_inicio = mdfe.identificacao.uf_ini
-                uf_fim = mdfe.identificacao.uf_fim
-            except Exception:
-                numero = None
-                data_emissao = None
-                uf_inicio = None
-                uf_fim = None
-
-            try:
-                valor_carga = float(mdfe.totais.v_carga) if mdfe.totais.v_carga else 0
-            except Exception:
-                valor_carga = 0
+            valor_carga = float(totais.v_carga) if totais and totais.v_carga else 0
+            qtd_nfe = totais.q_nfe if totais else None
+            qtd_carga = float(totais.q_carga) if totais and totais.q_carga else 0
+            unidade_carga = totais.c_unid if totais else None
 
             dados.append({
+                'chave': mdfe.chave,
                 'numero': numero,
+                'serie': ide.serie if ide else None,
                 'data_emissao': data_emissao,
-                'uf_inicio': uf_inicio,
-                'uf_fim': uf_fim,
+                'dh_ini_viagem': dh_ini_viagem,
+                'uf_inicio': ide.uf_ini if ide else None,
+                'uf_fim': ide.uf_fim if ide else None,
                 'placa': placa_tracao or '-',
+                'renavam': renavam,
                 'condutor': condutor_nome or '-',
                 'qtd_ctes': qtd_ctes,
+                'qtd_nfe': qtd_nfe,
+                'peso_carga': qtd_carga,
+                'unidade_carga': unidade_carga,
                 'valor_carga': valor_carga,
+                'modal': MODAL_MDFE.get(ide.modal, ide.modal) if ide else None,
                 'encerrado': 'Sim' if mdfe.encerrado else 'Não',
+                'status': mdfe.get_status_display() if hasattr(mdfe, 'get_status_display') else mdfe.status,
             })
 
         return dados
@@ -878,12 +898,14 @@ class RelatorioAPIView(APIView):
                     'tipo': 'Agregado',
                     'id': pag.id,
                     'cte_numero': pag.cte.identificacao.numero if hasattr(pag.cte, 'identificacao') else None,
+                    'cte_chave': pag.cte.chave if pag.cte else None,
                     'placa': pag.placa,
                     'condutor': pag.condutor_nome,
                     'cpf_condutor': pag.condutor_cpf,
                     'valor_frete': float(pag.valor_frete_total),
                     'percentual_repasse': float(pag.percentual_repasse),
-                    'valor_repassado': float(pag.valor_repassado),
+                    'desconto': float(pag.desconto) if pag.desconto else 0,
+                    'valor_total_pagar': float(pag.valor_repassado),
                     'status': pag.status,
                     'data_prevista': pag.data_prevista.strftime('%Y-%m-%d'),
                     'data_pagamento': pag.data_pagamento.strftime('%Y-%m-%d') if pag.data_pagamento else None,
@@ -919,15 +941,17 @@ class RelatorioAPIView(APIView):
                 dados.append({
                     'tipo': 'Próprio',
                     'id': pag.id,
-                    'cte_numero': None,  # Não se aplica a pagamentos próprios
+                    'cte_numero': pag.cte_numero,
+                    'cte_chave': pag.cte.chave if pag.cte else None,
                     'placa': pag.veiculo.placa,
-                    'condutor': 'Condutor Próprio',
-                    'cpf_condutor': None,
-                    'valor_frete': None,  # Não se aplica
-                    'percentual_repasse': None,  # Não se aplica
-                    'valor_repassado': float(pag.valor_total_pagar),
+                    'condutor': pag.motorista_nome or 'Condutor Próprio',
+                    'cpf_condutor': pag.motorista_cpf,
+                    'valor_frete': None,
+                    'percentual_repasse': None,
+                    'desconto': None,
+                    'valor_total_pagar': float(pag.valor_total_pagar),
                     'status': pag.status,
-                    'data_prevista': None,  # Pagamentos próprios usam período
+                    'data_prevista': pag.data_prevista.strftime('%Y-%m-%d') if pag.data_prevista else None,
                     'data_pagamento': pag.data_pagamento.strftime('%Y-%m-%d') if pag.data_pagamento else None,
                     'observacoes': pag.obs or '',
                     'periodo': pag.periodo,
@@ -1167,6 +1191,22 @@ class RelatorioAPIView(APIView):
                 'cnh': m.cnh or '-',
                 'categoria_cnh': m.categoria_cnh or '-',
                 'validade_cnh': m.validade_cnh.strftime('%d/%m/%Y') if m.validade_cnh else '-',
+                'validade_nr20': m.nr20_validade.strftime('%d/%m/%Y') if m.nr20_validade else '-',
+                'validade_nr35': m.nr35_validade.strftime('%d/%m/%Y') if m.nr35_validade else '-',
+                'validade_mopp': m.mopp_validade.strftime('%d/%m/%Y') if m.mopp_validade else '-',
+                'validade_toxicologico': m.toxicologico_validade.strftime('%d/%m/%Y') if m.toxicologico_validade else '-',
+                'validade_aso': m.aso_validade.strftime('%d/%m/%Y') if m.aso_validade else '-',
+                'telefone': m.telefone or '-',
+                'email': m.email or '-',
+                'cidade': m.cidade or '-',
+                'estado': m.estado or '-',
+                'banco': m.banco or '-',
+                'agencia': m.agencia or '-',
+                'conta': m.conta or '-',
+                'tipo_conta': m.get_tipo_conta_display() if m.tipo_conta else '-',
+                'tipo_chave_pix': m.get_tipo_chave_pix_display() if m.tipo_chave_pix else '-',
+                'chave_pix': m.chave_pix or '-',
+                'favorecido': m.favorecido or '-',
                 'viagens_cte': viagens_cte,
                 'viagens_mdfe': viagens_mdfe,
                 'viagens_total': viagens_cte + viagens_mdfe,

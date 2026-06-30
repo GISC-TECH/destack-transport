@@ -37,8 +37,18 @@ server {
         add_header Content-Type text/plain;
     }
 
-    # SPA routing
+    # Assets com hash no nome: cache longo e imutavel
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable" always;
+        try_files $uri =404;
+    }
+
+    # index.html e rotas da SPA: nunca cachear para evitar assets quebrados apos deploy
     location / {
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header Pragma "no-cache" always;
+        expires 0;
         try_files $uri $uri/ /index.html;
     }
 }

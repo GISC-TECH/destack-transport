@@ -3,9 +3,21 @@ import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
+const DEFAULT_PERMISSIONS = { superuser: false, modulos: {} };
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [permissions, setPermissions] = useState(DEFAULT_PERMISSIONS);
   const [loading, setLoading] = useState(true);
+
+  const loadPermissions = useCallback(async () => {
+    try {
+      const perms = await authAPI.getPermissions();
+      setPermissions(perms || DEFAULT_PERMISSIONS);
+    } catch {
+      setPermissions(DEFAULT_PERMISSIONS);
+    }
+  }, []);
 
   const initializeAuth = useCallback(async () => {
     try {
@@ -16,32 +28,50 @@ export function AuthProvider({ children }) {
       const response = await authAPI.checkAuth();
       if (response.authenticated) {
         setUser(response.user);
+        await loadPermissions();
       } else {
         setUser(null);
+        setPermissions(DEFAULT_PERMISSIONS);
       }
     } catch {
       setUser(null);
+      setPermissions(DEFAULT_PERMISSIONS);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadPermissions]);
 
   useEffect(() => {
-    // Inicializacao de autenticacao ao montar o provider.
-     
+    // Inicializacao de autenticação ao montar o provider.
+
     initializeAuth();
   }, [initializeAuth]);
+
+  // Escuta sessão expirada durante uso da aplicação e redireciona para login
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login?expired=1';
+      }
+    };
+
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
+  }, []);
 
   const checkAuth = async () => {
     try {
       const response = await authAPI.checkAuth();
       if (response.authenticated) {
         setUser(response.user);
+        await loadPermissions();
       } else {
         setUser(null);
+        setPermissions(DEFAULT_PERMISSIONS);
       }
     } catch {
       setUser(null);
+      setPermissions(DEFAULT_PERMISSIONS);
     }
   };
 
@@ -52,6 +82,7 @@ export function AuthProvider({ children }) {
 
       if (response.success) {
         setUser(response.user);
+        await loadPermissions();
         return { success: true };
       }
 
@@ -69,10 +100,21 @@ export function AuthProvider({ children }) {
       console.error('Erro ao fazer logout:', error);
     }
     setUser(null);
+    setPermissions(DEFAULT_PERMISSIONS);
   };
 
+  const refreshPermissions = loadPermissions;
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{
+      user,
+      permissions,
+      loading,
+      login,
+      logout,
+      checkAuth,
+      refreshPermissions,
+    }}>
       {children}
     </AuthContext.Provider>
   );

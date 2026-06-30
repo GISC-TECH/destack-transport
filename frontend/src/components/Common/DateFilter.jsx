@@ -62,7 +62,8 @@ function DateFilter({
   defaultPeriodo = 'mes',
   showPeriodButtons = true,
   initialDataInicio = null,
-  initialDataFim = null
+  initialDataFim = null,
+  variant = 'default'
 }) {
   // Calcula datas iniciais - usa valores passados ou calcula baseado no periodo
   const defaultDates = getDateRange(defaultPeriodo);
@@ -148,7 +149,7 @@ function DateFilter({
   };
 
   return (
-    <div className={styles.dateFilter}>
+    <div className={`${styles.dateFilter} ${variant === 'flat' ? styles.dateFilterFlat : ''}`}>
       {showPeriodButtons && (
         <div className={styles.periodButtons}>
           <button

@@ -16,6 +16,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 # Imports locais (serializers)
 from ..permissions import TransportModelPermission
 from ..serializers.user_serializers import UserSerializer, UserUpdateSerializer
+from transport.services.permissao_service import get_permissoes_efetivas, PERFIS
 
 
 # ===============================================================
@@ -63,6 +64,7 @@ class CurrentUserAPIView(APIView):
     def get(self, request, format=None):
         """Retorna os dados do usuario autenticado."""
         user = request.user
+        permissoes = get_permissoes_efetivas(user)
         data = {
             'id': user.id,
             'username': user.username,
@@ -72,7 +74,8 @@ class CurrentUserAPIView(APIView):
             'is_staff': user.is_staff,
             'is_superuser': user.is_superuser,
             'last_login': user.last_login,
-            'date_joined': user.date_joined
+            'date_joined': user.date_joined,
+            'permissions': permissoes,
         }
         return Response(data)
 
@@ -84,6 +87,16 @@ class CurrentUserAPIView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserPermissionsAPIView(APIView):
+    """API para obter as permissoes efetivas do usuario autenticado."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        """Retorna as permissoes efetivas do usuario logado."""
+        permissoes = get_permissoes_efetivas(request.user)
+        return Response(permissoes)
 
 
 class UserViewSet(viewsets.ModelViewSet):

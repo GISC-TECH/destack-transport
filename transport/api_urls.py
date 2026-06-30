@@ -11,7 +11,12 @@ from drf_yasg import openapi
 # --- Views ---
 from .views.auth_views import (
     UserViewSet, CurrentUserAPIView,
-    CSRFTokenAPIView, CheckAuthAPIView
+    CSRFTokenAPIView, CheckAuthAPIView,
+    UserPermissionsAPIView,
+)
+from .views.perfil_views import (
+    PerfisAPIView, PerfilDetalheAPIView,
+    ModulosPermissoesAPIView, SincronizarPerfisAPIView,
 )
 from .views.upload_views import UnifiedUploadViewSet
 from .views.cte_views import CTeDocumentoViewSet
@@ -190,6 +195,14 @@ urlpatterns = [
 
     # Dados do usuário autenticado (usado pelo JavaScript)
     path("users/me/", CurrentUserAPIView.as_view(), name="user_me"),
+    path("users/me/permissions/", UserPermissionsAPIView.as_view(), name="user_me_permissions"),
+
+    # --- Perfis/Grupos de permissões ---
+    # Rotas fixas devem vir ANTES de <str:nome> para nao serem capturadas como nome de perfil
+    path("perfis/", PerfisAPIView.as_view(), name="perfis"),
+    path("perfis/modulos/", ModulosPermissoesAPIView.as_view(), name="perfis-modulos"),
+    path("perfis/sincronizar/", SincronizarPerfisAPIView.as_view(), name="perfis-sincronizar"),
+    path("perfis/<str:nome>/", PerfilDetalheAPIView.as_view(), name="perfil-detalhe"),
 
     # --- Autenticação API (para frontend React SPA) ---
     # Login/Logout são tratados em core/urls.py via simple_auth.py (csrf_exempt)

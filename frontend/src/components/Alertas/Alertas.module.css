@@ -68,6 +68,8 @@
 
 .tabBtn {
   padding: 8px 16px;
+  white-space: nowrap;
+  flex-shrink: 0;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 20px;
@@ -249,6 +251,20 @@
     overflow-x: auto;
     padding-bottom: 8px;
     flex-wrap: nowrap;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  }
+
+  .filtrosTabs::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .filtrosTabs::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 2px;
   }
 
   .tabBtn {

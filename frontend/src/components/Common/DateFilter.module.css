@@ -11,6 +11,14 @@
   border: 1px solid var(--border-light);
 }
 
+.dateFilterFlat {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+
 .periodButtons {
   display: flex;
   gap: var(--space-2);

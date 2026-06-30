@@ -9,6 +9,7 @@ import Modal from '../Common/Modal';
 import StatusPill from '../Common/StatusPill';
 import TableContainer from '../Common/TableContainer';
 import Button from '../Common/Button';
+import PermissionGuard from '../Common/PermissionGuard';
 import tokens from '../../styles/tokens.module.css';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -307,18 +308,15 @@ function MDFeList() {
         </div>
       </div>
 
-      {/* Filtro para Graficos */}
-      <div className={styles.sectionHeader}>
-        <h3>Analise de MDF-es</h3>
-        <DateFilter
-          onFilterChange={handleDateFilterChange}
-          defaultPeriodo="mes"
-          initialDataInicio={filtros.data_inicio}
-          initialDataFim={filtros.data_fim}
-        />
-      </div>
+      <DateFilter
+        onFilterChange={handleDateFilterChange}
+        defaultPeriodo="mes"
+        initialDataInicio={filtros.data_inicio}
+        initialDataFim={filtros.data_fim}
+      />
 
       {/* Graficos */}
+      <h3 className={styles.sectionTitle}>Analise de MDF-es</h3>
       <div className={styles.chartsGrid}>
         {/* Grafico de Top Veículos */}
         <div className={styles.chartCard}>

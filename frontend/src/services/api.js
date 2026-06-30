@@ -61,6 +61,15 @@ const mutationOptions = (method, data) => {
 // Timeout padrão para requisições fetch (30 segundos)
 const DEFAULT_TIMEOUT = 30000;
 
+// Emite evento global quando a sessão expirar (401 em endpoints protegidos)
+function notifySessionExpired(url) {
+  if (typeof window === 'undefined') return;
+  if (url.includes('/auth/')) return; // Ignora endpoints de autenticação
+  window.dispatchEvent(new CustomEvent('auth:session-expired', {
+    detail: { url, status: 401 }
+  }));
+}
+
 // Wrapper para fetch com AbortController/timeout
 async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_TIMEOUT) {
   const controller = new AbortController();
@@ -70,6 +79,11 @@ async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_TIMEOUT) {
       ...options,
       signal: options.signal || controller.signal,
     });
+
+    if (response.status === 401) {
+      notifySessionExpired(url);
+    }
+
     return response;
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -245,6 +259,63 @@ export const authAPI = {
   // Alias para compatibilidade
   getCSRFToken: async () => {
     return authAPI.fetchCSRFToken();
+  },
+
+  // Permissoes efetivas do usuario logado
+  getPermissions: async () => {
+    const response = await fetchWithTimeout(`${API_BASE}/users/me/permissions/`, defaultOptions);
+    if (!response.ok) {
+      return { superuser: false, modulos: {} };
+    }
+    return response.json();
+  }
+};
+
+// ======================================
+// PERFIS / GRUPOS DE PERMISSOES
+// ======================================
+
+export const perfisAPI = {
+  list: async () => {
+    const response = await fetchWithTimeout(`${API_BASE}/perfis/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar perfis');
+    return response.json();
+  },
+
+  get: async (nome) => {
+    const response = await fetchWithTimeout(`${API_BASE}/perfis/${encodeURIComponent(nome)}/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar perfil');
+    return response.json();
+  },
+
+  update: async (nome, data) => {
+    const response = await fetchWithTimeout(`${API_BASE}/perfis/${encodeURIComponent(nome)}/`, {
+      ...defaultOptions,
+      method: 'PUT',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || err.detail || 'Erro ao atualizar perfil');
+    }
+    return response.json();
+  },
+
+  getModulos: async () => {
+    const response = await fetchWithTimeout(`${API_BASE}/perfis/modulos/`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao buscar módulos');
+    return response.json();
+  },
+
+  sincronizar: async () => {
+    const response = await fetchWithTimeout(`${API_BASE}/perfis/sincronizar/`, {
+      ...defaultOptions,
+      method: 'POST',
+      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
+    });
+    if (!response.ok) throw new Error('Erro ao sincronizar perfis');
+    return response.json();
   }
 };
 
@@ -2437,6 +2508,7 @@ export default {
   faixasKm: faixasKmAPI,
   documentos: documentosAPI,
   usuarios: usuariosAPI,
+  perfis: perfisAPI,
   external: externalAPI,
   gps: gpsAPI,
   comunicacao: comunicacaoAPI,

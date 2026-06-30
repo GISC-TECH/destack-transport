@@ -144,14 +144,13 @@ function FinanceiroPainel() {
         subtitle="Visão geral do faturamento e indicadores"
         icon={financeiroIcon}
         breadcrumbs={[{ label: 'Financeiro' }]}
-        actions={
-          <DateFilter
-            onFilterChange={handleDateFilterChange}
-            defaultPeriodo="mes"
-            initialDataInicio={filtros.data_inicio}
-            initialDataFim={filtros.data_fim}
-          />
-        }
+      />
+
+      <DateFilter
+        onFilterChange={handleDateFilterChange}
+        defaultPeriodo="mes"
+        initialDataInicio={filtros.data_inicio}
+        initialDataFim={filtros.data_fim}
       />
 
       {/* KPIs */}

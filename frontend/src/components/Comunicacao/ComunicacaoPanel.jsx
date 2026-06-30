@@ -157,7 +157,7 @@ function ComunicacaoPanel() {
                   ))}
                 </select>
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Motorista</label>
                 <select name="motorista_id" value={form.motorista_id} onChange={handleChange}>
                   <option value="">Selecione</option>
@@ -166,7 +166,7 @@ function ComunicacaoPanel() {
                   ))}
                 </select>
               </div>
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Ordem de Viagem</label>
                 <select name="ordem_id" value={form.ordem_id} onChange={handleChange}>
                   <option value="">Selecione</option>
@@ -178,7 +178,7 @@ function ComunicacaoPanel() {
             </div>
 
             {form.canal === 'email' && (
-              <div className="form-row">
+              <div className={styles.formRow}>
                 <div className={styles.formGroup} style={{ flex: 1 }}>
                   <label>Assunto</label>
                   <input
@@ -192,7 +192,7 @@ function ComunicacaoPanel() {
               </div>
             )}
 
-            <div className="form-row">
+            <div className={styles.formRow}>
               <div className={styles.formGroup} style={{ flex: 1 }}>
                 <label>Mensagem</label>
                 <textarea

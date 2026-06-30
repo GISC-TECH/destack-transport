@@ -242,6 +242,13 @@
   font-weight: 600;
 }
 
+.sectionTitle {
+  margin: 25px 0 15px 0;
+  font-size: 18px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
 /* Filtros */
 .filtrosSection {
   background: var(--card-bg);
@@ -903,8 +910,10 @@
     margin: 20px 0 12px 0;
   }
 
-  .sectionHeader h3 {
+  .sectionHeader h3,
+  .sectionTitle {
     font-size: 16px;
+    margin: 20px 0 12px 0;
   }
 
   .filtrosSection {

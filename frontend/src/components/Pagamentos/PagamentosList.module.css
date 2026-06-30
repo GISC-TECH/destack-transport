@@ -4,6 +4,17 @@
   margin: 0 auto;
 }
 
+.headerActions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.headerActions > * {
+  display: inline-flex;
+}
+
 /* Cards de resumo */
 .summaryCards {
   display: grid;
@@ -466,6 +477,16 @@
 @media (max-width: 768px) {
   .page {
     padding: var(--space-4);
+  }
+
+  .headerActions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .headerActions > * {
+    width: 100%;
+    justify-content: center;
   }
 
   .summaryCards {

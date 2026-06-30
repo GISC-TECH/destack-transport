@@ -11,6 +11,7 @@ import Button from '../Common/Button';
 import Modal from '../Common/Modal';
 import StatusPill from '../Common/StatusPill';
 import TableContainer from '../Common/TableContainer';
+import PermissionGuard from '../Common/PermissionGuard';
 import ComprovantePagamento from './ComprovantePagamento';
 import styles from './PagamentosList.module.css';
 
@@ -516,19 +517,21 @@ function PagamentosList() {
           </svg>
         </Button>
       )}
-      <Button
-        variant="ghost"
-        size="sm"
-        iconOnly
-        onClick={() => handleEditarPagamento(pagamento.id)}
-        title="Editar"
-        aria-label="Editar"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
-      </Button>
+      <PermissionGuard modulo="pagamentos" acao="change">
+        <Button
+          variant="ghost"
+          size="sm"
+          iconOnly
+          onClick={() => handleEditarPagamento(pagamento.id)}
+          title="Editar"
+          aria-label="Editar"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+        </Button>
+      </PermissionGuard>
       {pagamento.status !== 'pago' && (
         <Button
           variant="success"
@@ -559,19 +562,21 @@ function PagamentosList() {
           <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
         </svg>
       </Button>
-      <Button
-        variant="danger"
-        size="sm"
-        iconOnly
-        onClick={() => handleAbrirExcluir(pagamento)}
-        title="Excluir"
-        aria-label="Excluir"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
-      </Button>
+      <PermissionGuard modulo="pagamentos" acao="delete">
+        <Button
+          variant="danger"
+          size="sm"
+          iconOnly
+          onClick={() => handleAbrirExcluir(pagamento)}
+          title="Excluir"
+          aria-label="Excluir"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </Button>
+      </PermissionGuard>
     </div>
   );
 
@@ -604,17 +609,19 @@ function PagamentosList() {
           <span>Baixar</span>
         </button>
       )}
-      <button
-        className={`${styles.mobileActionBtn} ${styles.edit}`}
-        onClick={() => handleEditarPagamento(pagamento.id)}
-        title="Editar"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
-        <span>Editar</span>
-      </button>
+      <PermissionGuard modulo="pagamentos" acao="change">
+        <button
+          className={`${styles.mobileActionBtn} ${styles.edit}`}
+          onClick={() => handleEditarPagamento(pagamento.id)}
+          title="Editar"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          <span>Editar</span>
+        </button>
+      </PermissionGuard>
       {pagamento.status !== 'pago' && (
         <button
           className={`${styles.mobileActionBtn} ${styles.whatsapp}`}
@@ -641,22 +648,24 @@ function PagamentosList() {
         </svg>
         <span>Conv.</span>
       </button>
-      <button
-        className={`${styles.mobileActionBtn} ${styles.delete}`}
-        onClick={() => handleAbrirExcluir(pagamento)}
-        title="Excluir"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
-        <span>Excl.</span>
-      </button>
+      <PermissionGuard modulo="pagamentos" acao="delete">
+        <button
+          className={`${styles.mobileActionBtn} ${styles.delete}`}
+          onClick={() => handleAbrirExcluir(pagamento)}
+          title="Excluir"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          <span>Excl.</span>
+        </button>
+      </PermissionGuard>
     </div>
   );
 
   const headerActions = (
-    <>
+    <div className={styles.headerActions}>
       <Button variant="outline" onClick={handleExport}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -674,14 +683,16 @@ function PagamentosList() {
         </svg>
         <span>Gerar Lote</span>
       </Button>
-      <Button variant="primary" onClick={handleNovoPagamento}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        <span>Novo Pagamento</span>
-      </Button>
-    </>
+      <PermissionGuard modulo="pagamentos" acao="add">
+        <Button variant="primary" onClick={handleNovoPagamento}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Novo Pagamento</span>
+        </Button>
+      </PermissionGuard>
+    </div>
   );
 
   return (

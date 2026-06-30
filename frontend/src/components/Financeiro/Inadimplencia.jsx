@@ -86,21 +86,18 @@ function Inadimplencia() {
         subtitle="Faturas atrasadas por cliente e total em aberto"
         icon={inadimplenciaIcon}
         breadcrumbs={[{ label: 'Financeiro' }, { label: 'Inadimplência' }]}
-        actions={
-          <div className="date-inputs">
-            <div className="date-input-group">
-              <label htmlFor="data-corte">Data de corte:</label>
-              <input
-                id="data-corte"
-                type="date"
-                value={dataCorte}
-                onChange={(e) => setDataCorte(e.target.value)}
-                className="date-input"
-              />
-            </div>
-          </div>
-        }
       />
+
+      <div className={styles.dataCorteFilter}>
+        <label htmlFor="data-corte">Data de corte</label>
+        <input
+          id="data-corte"
+          type="date"
+          value={dataCorte}
+          onChange={(e) => setDataCorte(e.target.value)}
+          className={styles.dataCorteInput}
+        />
+      </div>
 
       {/* KPIs */}
       <div className={styles.finKpiGrid}>
@@ -167,15 +164,19 @@ function Inadimplencia() {
         {/* Top clientes inadimplentes */}
         <div className={styles.finChartCard}>
           <h3>Top Clientes Inadimplentes</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={dados?.clientes?.slice(0, 10) || []} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis type="number" tickFormatter={formatCurrency} tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="nome" width={150} tick={{ fontSize: 11 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="total_aberto" name="Total em aberto (R$)" fill={tokens.dangerColor} radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {(dados?.clientes?.length || 0) > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dados.clientes.slice(0, 10)} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis type="number" tickFormatter={formatCurrency} tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="nome" width={150} tick={{ fontSize: 11 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="total_aberto" name="Total em aberto (R$)" fill={tokens.dangerColor} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className={styles.emptyChart}>Nenhum cliente inadimplente no período</div>
+          )}
         </div>
 
         {/* Distribuição por faixa de atraso */}
