@@ -2,8 +2,8 @@
 
 ## Último Deploy Realizado
 - **Data:** 2026-06-30
-- **Versão:** v1.1.7
-- **Commit:** 7def2d6
+- **Versão:** v1.1.8
+- **Commit:** d4e36db
 - **Branch:** feat/reskin-verde-prototipo
 - **Servidor:** destack-prod (31.97.247.165)
 - **Health check:** https://destacktransporte.site/api/health/ -> healthy
@@ -11,6 +11,7 @@
 - **Stash local no servidor:** pre-deploy-v1.1.5-local-changes
 
 ### Deploys Anteriores
+- **v1.1.7** (7def2d6): Reversão de baixa em pagamentos agregados/próprios
 - **v1.1.6** (63d3868): Ajustes finos de responsividade nos filtros de relatórios
 - **v1.1.5** (b55d9c7): Melhorias nos relatórios - filtros específicos, campos completos, responsividade mobile
 
@@ -24,6 +25,15 @@
   - MDF-e: chave, série, dh_ini_viagem, qtd NF-e, peso carga, unidade, modal, renavam, status
   - Pagamentos: coluna valor_total_pagar padronizada, cte_chave, desconto, dados do condutor
   - Motoristas: telefone, email, cidade/UF, dados bancários/pix, validades NR20/NR35/MOPP/Toxicológico/ASO
+
+### Auditoria e Correções de Responsividade (v1.1.8)
+- Auditoria visual de todas as telas do frontend
+- Corrigidas telas que ficavam em branco no mobile (tabelas escondidas sem cards alternativos):
+  - Planos de Manutenção, Backup, Multas/Sinistros, Ordens de Viagem, Abastecimentos, Pedágios
+- Corrigido uso de tokens inexistentes (`infoLight`, `warningLight`, `successLight`) em ícones de KPI
+- Corrigida classe global inexistente `ml-2` em Pagamentos Pendentes
+- Adicionados safe checks em `DRE.jsx` e `Inadimplencia.jsx`
+- Corrigidos wrappers `desktopOnly`/`mobileOnly` inexistentes no CIOT
 
 ### Reversão de Baixa em Pagamentos (v1.1.7)
 - Adicionados endpoints:
