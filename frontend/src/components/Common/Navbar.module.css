@@ -59,6 +59,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 200px;
+  min-height: 44px;
 }
 
 .menu > li > a:hover,
@@ -153,6 +154,9 @@
   transition: all 0.2s;
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .configBtn:hover {
@@ -199,6 +203,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  min-height: 44px;
 }
 
 .logoutBtn:hover {

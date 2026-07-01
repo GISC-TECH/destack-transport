@@ -162,7 +162,7 @@ function Dashboard() {
             <span className={styles.kpiLabel}>CT-es Emitidos</span>
             <span className={styles.kpiValue}>{data?.cards?.total_ctes || 0}</span>
             <span className={`${styles.kpiChange} ${(data?.grafico_metas?.[0]?.crescimento || 0) >= 0 ? styles.kpiChangePositive : styles.kpiChangeNegative}`}>
-              {data?.grafico_metas?.[0]?.crescimento > 0 ? '+' : ''}{data?.grafico_metas?.[0]?.crescimento?.toFixed(1) || 0}% vs anterior
+              {data?.grafico_metas?.[0]?.crescimento > 0 ? '+' : ''}{(data?.grafico_metas?.[0]?.crescimento || 0).toFixed(1)}% vs anterior
             </span>
           </div>
         </Link>

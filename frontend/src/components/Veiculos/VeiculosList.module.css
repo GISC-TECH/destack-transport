@@ -8,9 +8,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
   flex-wrap: wrap;
-  gap: 15px;
+  gap: var(--space-4);
 }
 
 .veiculosHeader h2 {
@@ -21,10 +21,10 @@
 
 .filtrosContainer {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
   flex-wrap: wrap;
-  padding: 16px;
+  padding: var(--space-4);
   background-color: var(--card-bg);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -53,7 +53,7 @@
 
 .headerButtons {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
@@ -75,7 +75,7 @@
   .filtrosContainer {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   .inputFilter,
@@ -108,77 +108,22 @@
   background-color: var(--content-bg);
 }
 
-.badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: 600;
-}
-
-.badgeTipo00 {
-  background-color: var(--success-color);
-  color: white;
-}
-
-.badgeTipo01 {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.badgeTipo02 {
-  background-color: var(--warning-color);
-  color: white;
-}
-
-.badgeCompartimentos {
-  background-color: var(--info-color);
-  color: white;
-}
-
 .actionsCell {
   text-align: center;
-}
-
-.btnAction {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast) ease;
-}
-
-.btnAction svg {
-  width: 18px;
-  height: 18px;
-}
-
-.btnEdit {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.btnEdit:hover {
-  background-color: var(--primary-dark);
-  transform: scale(1.05);
 }
 
 /* Alertas */
 .alertasContainer {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .alertaCard {
   background-color: var(--card-bg);
   border: 2px solid var(--warning-color);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: var(--space-5);
   box-shadow: var(--shadow-sm);
 }
 
@@ -189,19 +134,19 @@
 }
 
 .alertaCard p {
-  margin: 8px 0;
+  margin: var(--space-2) 0;
   color: var(--text-secondary);
   font-size: var(--text-base);
 }
 
 .documentosVencendo {
-  margin-top: 15px;
-  padding-top: 15px;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--border-color);
 }
 
 .documentosVencendo h4 {
-  margin: 0 0 10px 0;
+  margin: 0 0 var(--space-2) 0;
   color: var(--text-primary);
   font-size: var(--text-md);
 }
@@ -210,8 +155,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
-  margin: 8px 0;
+  padding: var(--space-2);
+  margin: var(--space-2) 0;
   border-radius: var(--radius-md);
   font-size: var(--text-base);
 }
@@ -243,28 +188,8 @@
 .paginationButtons {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  margin-top: 30px;
-}
-
-.btnPage {
-  padding: 10px 20px;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: var(--text-base);
-  transition: background-color var(--transition-fast);
-}
-
-.btnPage:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-}
-
-.btnPage:disabled {
-  background-color: var(--border-strong);
-  cursor: not-allowed;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
 }
 
 /* Desktop / Mobile visibility */
@@ -286,7 +211,7 @@
   .veiculosHeader {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   .headerButtons {
@@ -294,15 +219,14 @@
     flex-direction: column;
   }
 
-  .headerButtons button,
-  .headerButtons .btn {
+  .headerButtons button {
     width: 100%;
     justify-content: center;
   }
 
   .filtrosContainer {
     flex-direction: column;
-    padding: 14px;
+    padding: var(--space-3);
   }
 
   .inputFilter,
@@ -317,7 +241,7 @@
 
   .veiculosTable th,
   .veiculosTable td {
-    padding: 12px 10px;
+    padding: var(--space-3) 10px;
     font-size: var(--text-sm);
   }
 
@@ -328,7 +252,7 @@
   .docItem {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .desktopOnly {
@@ -351,13 +275,8 @@
     font-size: var(--text-xs);
   }
 
-  .badge {
-    padding: 3px 8px;
-    font-size: 10px;
-  }
-
   .alertaCard {
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .alertaCard h3 {
@@ -366,10 +285,5 @@
 
   .paginationButtons {
     flex-wrap: wrap;
-  }
-
-  .btnPage {
-    padding: 8px 14px;
-    font-size: var(--text-sm);
   }
 }

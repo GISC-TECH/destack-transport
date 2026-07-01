@@ -550,7 +550,7 @@ function PagamentosList() {
         </Button>
       ) : (
         <Button
-          variant="warning"
+          variant="outline"
           size="sm"
           iconOnly
           onClick={() => handleAbrirReverterBaixa(pagamento)}

@@ -35,6 +35,8 @@
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .periodBtn:hover {
@@ -119,7 +121,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--space-1);
   padding: 9px 14px;
   border: none;
   border-radius: var(--radius-md);
@@ -130,6 +132,8 @@
   cursor: pointer;
   transition: background var(--transition-fast), transform var(--transition-fast);
   white-space: nowrap;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .applyBtn:hover {

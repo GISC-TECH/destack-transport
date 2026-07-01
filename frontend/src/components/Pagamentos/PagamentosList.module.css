@@ -246,6 +246,7 @@
 .mobileActionBtn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 6px 10px;
   border-radius: var(--radius-sm);
@@ -256,6 +257,8 @@
   transition: all var(--transition-fast);
   color: white;
   background: var(--text-secondary);
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .mobileActionBtn svg {

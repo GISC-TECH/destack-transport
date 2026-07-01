@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './Modal.module.css';
 
@@ -23,6 +23,9 @@ function Modal({
   footer,
   closeOnOverlayClick = true,
 }) {
+  const closeButtonRef = useRef(null);
+  const contentRef = useRef(null);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -35,9 +38,19 @@ function Modal({
     document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
 
+    // Foca no botão de fechar ou no conteúdo ao abrir para acessibilidade
+    const timer = setTimeout(() => {
+      if (closeButtonRef.current) {
+        closeButtonRef.current.focus();
+      } else if (contentRef.current) {
+        contentRef.current.focus();
+      }
+    }, 0);
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
+      clearTimeout(timer);
     };
   }, [isOpen, onClose]);
 
@@ -57,7 +70,11 @@ function Modal({
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
     >
-      <div className={`${styles.content} ${styles[size]}`}>
+      <div
+        className={`${styles.content} ${styles[size]}`}
+        ref={contentRef}
+        tabIndex={-1}
+      >
         {(title || onClose) && (
           <div className={styles.header}>
             {title && (
@@ -71,6 +88,7 @@ function Modal({
                 className={styles.closeButton}
                 onClick={onClose}
                 aria-label="Fechar"
+                ref={closeButtonRef}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />

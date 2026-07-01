@@ -60,14 +60,20 @@
 
 .iconOnly {
   padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .iconOnly.sm {
   padding: 6px;
+  min-width: 36px;
+  min-height: 36px;
 }
 
 .iconOnly.lg {
   padding: 14px;
+  min-width: 52px;
+  min-height: 52px;
 }
 
 /* Variants */

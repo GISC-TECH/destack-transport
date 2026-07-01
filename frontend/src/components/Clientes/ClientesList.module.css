@@ -95,53 +95,8 @@
   background-color: var(--content-bg);
 }
 
-.badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: 600;
-}
-
-.badgeCif {
-  background-color: var(--success-light);
-  color: var(--success-dark);
-}
-
-.badgeFob {
-  background-color: var(--warning-light);
-  color: var(--warning-dark);
-}
-
 .actionsCell {
   text-align: center;
-}
-
-.btnAction {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast) ease;
-}
-
-.btnAction svg {
-  width: 18px;
-  height: 18px;
-}
-
-.btnEdit {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.btnEdit:hover {
-  background-color: var(--primary-dark);
-  transform: scale(1.05);
 }
 
 .paginationButtons {
@@ -149,26 +104,6 @@
   justify-content: center;
   gap: 15px;
   margin-top: 30px;
-}
-
-.btnPage {
-  padding: 10px 20px;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: var(--text-base);
-  transition: background-color var(--transition-fast);
-}
-
-.btnPage:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-}
-
-.btnPage:disabled {
-  background-color: var(--border-strong);
-  cursor: not-allowed;
 }
 
 /* Desktop / Mobile visibility */
@@ -219,20 +154,5 @@
   .clientesTable td {
     padding: 10px 8px;
     font-size: var(--text-xs);
-  }
-
-  .badge {
-    padding: 3px 8px;
-    font-size: 10px;
-  }
-
-  .btnAction {
-    padding: 5px 10px;
-    font-size: var(--text-xs);
-  }
-
-  .btnPage {
-    padding: 8px 14px;
-    font-size: var(--text-sm);
   }
 }

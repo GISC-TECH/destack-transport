@@ -390,7 +390,7 @@ function MDFeList() {
         <div className={`${styles.chartCard} ${styles.chartSmall}`}>
           <h3>Eficiência de Encerramento</h3>
           <div className={styles.eficienciaDisplay}>
-            <div className={styles.eficienciaValue}>{kpis.eficiencia.toFixed(1)}%</div>
+            <div className={styles.eficienciaValue}>{(kpis.eficiencia || 0).toFixed(1)}%</div>
             <div className={styles.eficienciaLabel}>MDF-es Encerrados</div>
             <div className={styles.eficienciaDetail}>
               {kpis.encerrados} de {kpis.total} MDF-es

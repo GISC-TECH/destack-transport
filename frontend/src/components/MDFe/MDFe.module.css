@@ -127,12 +127,6 @@
   color: var(--green-700);
 }
 
-.kpiIconRed {
-  composes: kpiIcon;
-  background: var(--danger-light);
-  color: var(--danger-color);
-}
-
 .kpiContent {
   display: flex;
   flex-direction: column;
@@ -221,25 +215,6 @@
   font-size: 12px;
   color: var(--text-muted);
   margin-top: 5px;
-}
-
-/* Section Header */
-.sectionHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 25px 0 15px 0;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--border-light);
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.sectionHeader h3 {
-  margin: 0;
-  font-size: 18px;
-  color: var(--text-primary);
-  font-weight: 600;
 }
 
 .sectionTitle {
@@ -431,129 +406,6 @@
   background-color: var(--green-700);
 }
 
-/* Mobile Cards */
-.mobileCards {
-  display: none;
-}
-
-.mobileCard {
-  background: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.mobileCard:active {
-  transform: scale(0.99);
-}
-
-.mobileCardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px;
-  background: linear-gradient(135deg, var(--content-bg) 0%, var(--card-bg) 100%);
-  border-bottom: 1px solid var(--border-light);
-}
-
-.mobileCardTitle {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.mobileCardNumber {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.mobileCardDate {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.mobileCardStatus {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mobileCardBody {
-  padding: 14px 16px;
-}
-
-.mobileCardRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.mobileCardRow:last-child {
-  border-bottom: none;
-}
-
-.mobileCardLabel {
-  font-size: 12px;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  flex-shrink: 0;
-}
-
-.mobileCardValue {
-  font-size: 14px;
-  color: var(--text-primary);
-  font-weight: 500;
-  text-align: right;
-  max-width: 65%;
-  word-break: break-word;
-  overflow-wrap: break-word;
-}
-
-.mobileCardFooter {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: var(--content-bg);
-  border-top: 1px solid var(--border-light);
-  gap: 10px;
-}
-
-.mobileCardActions {
-  display: flex;
-  gap: 8px;
-}
-
-.mobileCardActions .actionBtn {
-  padding: 8px 12px;
-  font-size: 12px;
-}
-
-.mobileEmpty {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-secondary);
-  background: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.mobileEmptyIcon {
-  font-size: 48px;
-  margin-bottom: 12px;
-  opacity: 0.5;
-}
-
-.mobileEmptyText {
-  font-size: 14px;
-  margin: 0;
-}
-
 /* Pagination */
 .pagination {
   display: flex;
@@ -622,100 +474,11 @@
 }
 
 /* Detail Page */
-.pageHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.pageHeader h1 {
-  color: var(--text-primary);
-  font-size: 28px;
-  margin: 0 0 5px 0;
-}
-
-.pageHeader p {
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.backLink {
-  color: var(--primary-color);
-  text-decoration: none;
-  font-size: 14px;
-  display: inline-block;
-  margin-bottom: 10px;
-}
-
-.backLink:hover {
-  text-decoration: underline;
-}
-
 .chaveCte {
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   color: var(--text-secondary);
   word-break: break-all;
-}
-
-.headerActions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 12px;
-}
-
-.statusBadge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  border-radius: 30px;
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.statusIcon {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.statusSuccess {
-  composes: statusBadge;
-  background: var(--green-600);
-  color: white;
-}
-
-.statusDanger {
-  composes: statusBadge;
-  background: linear-gradient(135deg, var(--danger-dark) 0%, var(--danger-color) 100%);
-  color: white;
-}
-
-.statusWarning {
-  composes: statusBadge;
-  background: linear-gradient(135deg, var(--warning-dark) 0%, var(--warning-color) 100%);
-  color: white;
-}
-
-.statusInfo {
-  composes: statusBadge;
-  background: linear-gradient(135deg, var(--info-color) 0%, var(--info-dark) 100%);
-  color: white;
-}
-
-.statusSecondary {
-  composes: statusBadge;
-  background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-muted) 100%);
-  color: white;
 }
 
 /* Detail Grid */
@@ -839,17 +602,6 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .pageHeader {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
-  }
-
-  .headerActions {
-    width: 100%;
-    align-items: stretch;
-  }
-
   .actionButtons {
     width: 100%;
     justify-content: flex-start;
@@ -903,14 +655,6 @@
     padding: 14px;
   }
 
-  .sectionHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    margin: 20px 0 12px 0;
-  }
-
-  .sectionHeader h3,
   .sectionTitle {
     font-size: 16px;
     margin: 20px 0 12px 0;
@@ -938,12 +682,6 @@
     font-size: 13px;
   }
 
-  .mobileCards {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
   .detailGrid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -960,11 +698,6 @@
 
   .detailRow .value {
     text-align: left;
-  }
-
-  .statusBadge {
-    padding: 8px 16px;
-    font-size: 14px;
   }
 
   .pagination {
@@ -1058,24 +791,4 @@
     gap: 8px;
   }
 
-  .mobileCardRow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .mobileCardValue {
-    text-align: left;
-    max-width: 100%;
-  }
-
-  .mobileCardFooter {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .mobileCardActions {
-    width: 100%;
-    justify-content: center;
-  }
 }

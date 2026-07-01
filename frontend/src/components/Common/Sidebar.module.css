@@ -35,6 +35,11 @@
   cursor: pointer;
   border-radius: 8px;
   transition: background var(--transition-speed);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .menuToggle:hover {
@@ -85,6 +90,11 @@
   cursor: pointer;
   border-radius: 8px;
   transition: background var(--transition-speed);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mobileLogout:hover {
@@ -214,6 +224,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .collapseBtn:hover {
@@ -313,6 +325,7 @@
   font-family: inherit;
   text-align: left;
   position: relative;
+  min-height: 44px;
 }
 
 .menuLink:hover {
@@ -721,7 +734,8 @@
     padding: 6px 2px;
     cursor: pointer;
     transition: color 0.2s ease;
-    min-width: 0;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .bottomNavItemActive {
@@ -806,8 +820,8 @@
     background: none;
     border: none;
     color: var(--sidebar-text);
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -865,6 +879,7 @@
     font-size: 12px;
     cursor: pointer;
     transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    min-height: 44px;
   }
 
   .bottomSheetGridItemActive {
