@@ -324,6 +324,16 @@
   color: white;
 }
 
+.mobileActionBtn.reverter {
+  background: var(--warning-light);
+  color: var(--warning-dark);
+}
+
+.mobileActionBtn.reverter:hover {
+  background: var(--warning-color);
+  color: white;
+}
+
 .mobileActionBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -394,6 +404,17 @@
 
 .modalDescription.danger {
   color: var(--danger-color);
+}
+
+.modalAlert {
+  background: var(--warning-light);
+  color: var(--warning-dark);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--warning-color);
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .modalBodyGroup {

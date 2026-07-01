@@ -524,6 +524,39 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         http_status = status.HTTP_200_OK if resultado['status'] == 'enviado' else status.HTTP_502_BAD_GATEWAY
         return Response(resultado, status=http_status)
 
+    @action(detail=True, methods=['post'], url_path='reverter-baixa')
+    def reverter_baixa(self, request, pk=None):
+        """Reverte a baixa de um pagamento agregado, voltando para pendente."""
+        pagamento = self.get_object()
+
+        if pagamento.status != 'pago':
+            return Response(
+                {"detail": "Apenas pagamentos com status 'pago' podem ter a baixa revertida."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            # Remove comprovante se existir
+            if pagamento.comprovante:
+                try:
+                    pagamento.comprovante.delete(save=False)
+                except Exception as e:
+                    logger.warning(f"Erro ao remover comprovante do pagamento agregado {pagamento.id}: {e}")
+                pagamento.comprovante = None
+
+            pagamento.status = 'pendente'
+            pagamento.data_pagamento = None
+            pagamento.save(update_fields=['status', 'data_pagamento', 'comprovante'])
+
+            # Sincroniza CT-e
+            sincronizar_status_pagamento_agregado(pagamento)
+
+        return Response({
+            "message": "Baixa revertida com sucesso.",
+            "pagamento_id": str(pagamento.id),
+            "status": pagamento.status
+        })
+
 
 class PagamentoProprioViewSet(viewsets.ModelViewSet):
     """API para gerenciar pagamentos a motoristas próprios."""
@@ -1032,3 +1065,36 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         resultado = notificar_gestor_pagamento(pagamento, 'proprio')
         http_status = status.HTTP_200_OK if resultado['status'] == 'enviado' else status.HTTP_502_BAD_GATEWAY
         return Response(resultado, status=http_status)
+
+    @action(detail=True, methods=['post'], url_path='reverter-baixa')
+    def reverter_baixa(self, request, pk=None):
+        """Reverte a baixa de um pagamento próprio, voltando para pendente."""
+        pagamento = self.get_object()
+
+        if pagamento.status != 'pago':
+            return Response(
+                {"detail": "Apenas pagamentos com status 'pago' podem ter a baixa revertida."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            # Remove comprovante se existir
+            if pagamento.comprovante:
+                try:
+                    pagamento.comprovante.delete(save=False)
+                except Exception as e:
+                    logger.warning(f"Erro ao remover comprovante do pagamento próprio {pagamento.id}: {e}")
+                pagamento.comprovante = None
+
+            pagamento.status = 'pendente'
+            pagamento.data_pagamento = None
+            pagamento.save(update_fields=['status', 'data_pagamento', 'comprovante'])
+
+            # Sincroniza CT-e
+            sincronizar_status_pagamento_proprio(pagamento)
+
+        return Response({
+            "message": "Baixa revertida com sucesso.",
+            "pagamento_id": str(pagamento.id),
+            "status": pagamento.status
+        })

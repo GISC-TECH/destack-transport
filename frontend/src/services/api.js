@@ -876,6 +876,16 @@ export const pagamentosAPI = {
         throw new Error(extractErrorMessage(error, 'Erro ao notificar gestor'));
       }
       return response.json();
+    },
+
+    // Reverte a baixa de um pagamento agregado (volta para pendente)
+    reverterBaixa: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/agregados/${id}/reverter-baixa/`, mutationOptions('POST', {}));
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(error, 'Erro ao reverter baixa'));
+      }
+      return response.json();
     }
   },
 
@@ -962,6 +972,16 @@ export const pagamentosAPI = {
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
         throw new Error(extractErrorMessage(error, 'Erro ao notificar gestor'));
+      }
+      return response.json();
+    },
+
+    // Reverte a baixa de um pagamento próprio (volta para pendente)
+    reverterBaixa: async (id) => {
+      const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/${id}/reverter-baixa/`, mutationOptions('POST', {}));
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(error, 'Erro ao reverter baixa'));
       }
       return response.json();
     }

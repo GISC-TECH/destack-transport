@@ -358,6 +358,38 @@ function PagamentosList() {
     }
   };
 
+  // Modal de reverter baixa
+  const [modalReverterBaixa, setModalReverterBaixa] = useState({ show: false, id: null, info: '' });
+  const [revertendoBaixa, setRevertendoBaixa] = useState(false);
+
+  // Abre modal de reverter baixa
+  const handleAbrirReverterBaixa = (pagamento) => {
+    const condutor = pagamento.condutor_nome || pagamento.motorista_nome || '';
+    const placa = pagamento.placa || pagamento.veiculo_placa || '';
+    const info = `CT-e #${pagamento.cte_numero || '-'} - ${condutor || placa}`;
+    setModalReverterBaixa({ show: true, id: pagamento.id, info });
+  };
+
+  // Confirma reversão da baixa
+  const handleConfirmarReverterBaixa = async () => {
+    setRevertendoBaixa(true);
+    try {
+      if (activeTab === 'agregados') {
+        await pagamentosAPI.agregados.reverterBaixa(modalReverterBaixa.id);
+      } else {
+        await pagamentosAPI.proprios.reverterBaixa(modalReverterBaixa.id);
+      }
+      setModalReverterBaixa({ show: false, id: null, info: '' });
+      toast.success('Baixa revertida com sucesso!');
+      loadPagamentos();
+    } catch (err) {
+      console.error('Erro ao reverter baixa:', err);
+      toast.error(err.message || 'Erro ao reverter baixa. Tente novamente.');
+    } finally {
+      setRevertendoBaixa(false);
+    }
+  };
+
   // Abre modal de conversão
   const handleAbrirConverter = (pagamento) => {
     const tipo = activeTab === 'agregados' ? 'agregado_para_proprio' : 'proprio_para_agregado';
@@ -502,7 +534,7 @@ function PagamentosList() {
           <line x1="9" y1="15" x2="15" y2="15"></line>
         </svg>
       </Button>
-      {pagamento.status !== 'pago' && (
+      {pagamento.status !== 'pago' ? (
         <Button
           variant="success"
           size="sm"
@@ -514,6 +546,20 @@ function PagamentosList() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </Button>
+      ) : (
+        <Button
+          variant="warning"
+          size="sm"
+          iconOnly
+          onClick={() => handleAbrirReverterBaixa(pagamento)}
+          title="Reverter Baixa"
+          aria-label="Reverter Baixa"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
           </svg>
         </Button>
       )}
@@ -596,7 +642,7 @@ function PagamentosList() {
         </svg>
         <span>Comp.</span>
       </button>
-      {pagamento.status !== 'pago' && (
+      {pagamento.status !== 'pago' ? (
         <button
           className={`${styles.mobileActionBtn} ${styles.download}`}
           onClick={() => handleAbrirBaixa(pagamento)}
@@ -607,6 +653,18 @@ function PagamentosList() {
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
           <span>Baixar</span>
+        </button>
+      ) : (
+        <button
+          className={`${styles.mobileActionBtn} ${styles.reverter}`}
+          onClick={() => handleAbrirReverterBaixa(pagamento)}
+          title="Reverter Baixa"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          <span>Reverter</span>
         </button>
       )}
       <PermissionGuard modulo="pagamentos" acao="change">
@@ -833,6 +891,42 @@ function PagamentosList() {
             </small>
           )}
         </div>
+      </Modal>
+
+      {/* Modal de Reverter Baixa */}
+      <Modal
+        isOpen={modalReverterBaixa.show}
+        onClose={() => setModalReverterBaixa({ show: false, id: null, info: '' })}
+        title="Reverter Baixa"
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setModalReverterBaixa({ show: false, id: null, info: '' })}
+              disabled={revertendoBaixa}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="warning"
+              onClick={handleConfirmarReverterBaixa}
+              disabled={revertendoBaixa}
+            >
+              {revertendoBaixa ? 'Revertendo...' : 'Confirmar Reversão'}
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.modalDescription}>
+          Deseja reverter a baixa deste pagamento?
+        </p>
+        <p className={styles.modalInfo}>
+          {modalReverterBaixa.info}
+        </p>
+        <p className={styles.modalAlert}>
+          O status voltará para <strong>Pendente</strong>, a data de pagamento será removida e o comprovante (se houver) será excluído.
+        </p>
       </Modal>
 
       {/* Modal de Conversão */}
