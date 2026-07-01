@@ -290,7 +290,7 @@ function DRE() {
               <div className={styles.clienteRank}>{item.mes}</div>
               <div className={styles.clienteInfo}>
                 <span className={styles.clienteNome}>
-                  Receita: {formatCurrency(item.receita)} | Custos: {formatCurrency(item.custos)} | Margem: {item.margem.toFixed(1)}%
+                  Receita: {formatCurrency(item.receita)} | Custos: {formatCurrency(item.custos)} | Margem: {(item.margem || 0).toFixed(1)}%
                 </span>
                 <div className={styles.clienteBarContainer}>
                   <div

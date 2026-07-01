@@ -202,112 +202,6 @@
   text-align: center;
 }
 
-.mobileCards {
-  display: none;
-}
-
-.mobileEmpty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 20px;
-  color: var(--text-secondary);
-}
-
-.mobileEmptyIcon {
-  opacity: 0.5;
-  margin-bottom: 12px;
-}
-
-.mobileEmptyText {
-  margin: 0;
-}
-
-.mobileCard {
-  background: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-
-.mobileCard:last-child {
-  margin-bottom: 0;
-}
-
-.mobileCardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 14px 16px;
-  background: var(--content-bg);
-  border-bottom: 1px solid var(--border-light);
-}
-
-.mobileCardTitle {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.mobileCardNumber {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  word-break: break-word;
-}
-
-.mobileCardDate {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.mobileCardBody {
-  padding: 12px 16px;
-}
-
-.mobileCardRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.mobileCardRow:last-child {
-  border-bottom: none;
-}
-
-.mobileCardLabel {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  flex-shrink: 0;
-}
-
-.mobileCardValue {
-  font-size: 13px;
-  color: var(--text-primary);
-  text-align: right;
-  word-break: break-word;
-  min-width: 0;
-}
-
-.mobileCardFooter {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 10px 16px;
-  background: var(--content-bg);
-  border-top: 1px solid var(--border-light);
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .actions {
@@ -337,16 +231,6 @@
 
   .tableContainer {
     margin: 0 -18px;
-  }
-
-  .table {
-    display: none;
-  }
-
-  .mobileCards {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
   }
 
   .table th,

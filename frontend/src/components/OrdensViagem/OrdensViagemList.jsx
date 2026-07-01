@@ -134,7 +134,7 @@ function OrdensViagemList() {
 
       <div className={styles.finKpiGrid}>
         <div className={styles.finKpiCard}>
-          <div className={styles.finKpiIcon} style={{ background: tokens.infoLight, color: tokens.infoColor }}>
+          <div className={styles.finKpiIcon} style={{ background: 'var(--info-light)', color: tokens.infoColor }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
@@ -146,7 +146,7 @@ function OrdensViagemList() {
           </div>
         </div>
         <div className={styles.finKpiCard}>
-          <div className={styles.finKpiIcon} style={{ background: tokens.warningLight, color: tokens.warningColor }}>
+          <div className={styles.finKpiIcon} style={{ background: 'var(--warning-light)', color: tokens.warningColor }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -160,7 +160,7 @@ function OrdensViagemList() {
           </div>
         </div>
         <div className={styles.finKpiCard}>
-          <div className={styles.finKpiIcon} style={{ background: tokens.successLight, color: tokens.successColor }}>
+          <div className={styles.finKpiIcon} style={{ background: 'var(--success-light)', color: tokens.successColor }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>

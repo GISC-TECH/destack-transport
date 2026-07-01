@@ -194,6 +194,10 @@
   gap: 15px;
 }
 
+.filtroCount {
+  margin-left: 8px;
+}
+
 @media (max-width: 768px) {
   .filtrosAvancadosPanel {
     padding: 14px;

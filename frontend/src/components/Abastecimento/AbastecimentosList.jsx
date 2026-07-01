@@ -139,7 +139,7 @@ function AbastecimentosList() {
 
       <div className={styles.finKpiGrid}>
         <div className={styles.finKpiCard}>
-          <div className={styles.finKpiIcon} style={{ background: tokens.infoLight, color: tokens.infoColor }}>
+          <div className={styles.finKpiIcon} style={{ background: 'var(--info-light)', color: tokens.infoColor }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path>
               <circle cx="7" cy="17" r="2"></circle>
@@ -153,7 +153,7 @@ function AbastecimentosList() {
           </div>
         </div>
         <div className={styles.finKpiCard}>
-          <div className={styles.finKpiIcon} style={{ background: tokens.warningLight, color: tokens.warningColor }}>
+          <div className={styles.finKpiIcon} style={{ background: 'var(--warning-light)', color: tokens.warningColor }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 2v20M2 12h20"></path>
             </svg>
@@ -164,7 +164,7 @@ function AbastecimentosList() {
           </div>
         </div>
         <div className={styles.finKpiCard}>
-          <div className={styles.finKpiIcon} style={{ background: tokens.successLight, color: tokens.successColor }}>
+          <div className={styles.finKpiIcon} style={{ background: 'var(--success-light)', color: tokens.successColor }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>

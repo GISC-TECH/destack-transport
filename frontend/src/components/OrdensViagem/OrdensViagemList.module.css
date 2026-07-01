@@ -35,32 +35,6 @@
   background: var(--content-bg);
 }
 
-.osMobileCard {
-  display: none;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.osMobileCard:last-child {
-  border-bottom: none;
-}
-
-.osMobileRow {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.osMobileRow:last-child {
-  margin-bottom: 0;
-}
-
-.osMobileLabel {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
 .osActions {
   display: flex;
   gap: 8px;
@@ -226,14 +200,6 @@
 }
 
 @media (max-width: 768px) {
-  .osTable {
-    display: none;
-  }
-
-  .osMobileCard {
-    display: block;
-  }
-
   .finKpiGrid {
     grid-template-columns: 1fr 1fr;
     gap: 12px;

@@ -402,7 +402,6 @@ function CIOTManager() {
           <p className={styles.emptyText}>Nenhum CIOT encontrado.</p>
         ) : (
           <>
-            <div className={styles.desktopOnly}>
               <TableContainer>
                 <table className={styles.table}>
                   <thead>
@@ -450,55 +449,6 @@ function CIOTManager() {
                   </tbody>
                 </table>
               </TableContainer>
-            </div>
-
-            <div className={`${styles.mobileCards} ${styles.mobileOnly}`}>
-              {filteredCiots.map(item => (
-                <div key={item.id} className={styles.mobileCard}>
-                  <div className={styles.mobileCardHeader}>
-                    <div className={styles.mobileCardTitle}>
-                      <span className={styles.mobileCardPrimary}>{item.codigo}</span>
-                      <span className={styles.mobileCardSecondary}>{item.descricao || 'Sem descrição'}</span>
-                    </div>
-                    <StatusPill status={getStatusVariant(item.status)}>
-                      {item.status_display || item.status}
-                    </StatusPill>
-                  </div>
-                  <div className={styles.mobileCardBody}>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Contratante</span>
-                      <span className={styles.mobileCardValue}>{item.cliente_nome || '-'}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Contratado</span>
-                      <span className={styles.mobileCardValue}>{item.motorista_nome || '-'}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Origem</span>
-                      <span className={styles.mobileCardValue}>{item.origem_cidade ? `${item.origem_cidade}/${item.origem_uf}` : '-'}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Destino</span>
-                      <span className={styles.mobileCardValue}>{item.destino_cidade ? `${item.destino_cidade}/${item.destino_uf}` : '-'}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Validade</span>
-                      <span className={styles.mobileCardValue}>{item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '-'}</span>
-                    </div>
-                  </div>
-                  <div className={styles.mobileCardFooter}>
-                    <Button variant="ghost" size="sm" iconOnly onClick={() => handleEdit(item)} title="Editar" aria-label="Editar">✏️</Button>
-                    {item.status === 'ativo' && (
-                      <Button variant="ghost" size="sm" iconOnly onClick={() => handleUsar(item.id)} title="Marcar como usado" aria-label="Marcar como usado">✓</Button>
-                    )}
-                    {item.status !== 'cancelado' && (
-                      <Button variant="warning" size="sm" iconOnly onClick={() => handleCancelar(item.id)} title="Cancelar" aria-label="Cancelar">🚫</Button>
-                    )}
-                    <Button variant="danger" size="sm" iconOnly onClick={() => handleDelete(item.id)} title="Excluir" aria-label="Excluir">🗑️</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
           </>
         )}
       </div>

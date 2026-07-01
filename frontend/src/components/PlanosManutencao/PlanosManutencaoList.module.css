@@ -35,32 +35,6 @@
   background: var(--content-bg);
 }
 
-.planosMobileCard {
-  display: none;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.planosMobileCard:last-child {
-  border-bottom: none;
-}
-
-.planosMobileRow {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.planosMobileRow:last-child {
-  margin-bottom: 0;
-}
-
-.planosMobileLabel {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
 /* Filtros */
 .filtrosForm {
   display: flex;
@@ -226,14 +200,6 @@
 }
 
 @media (max-width: 768px) {
-  .planosTable {
-    display: none;
-  }
-
-  .planosMobileCard {
-    display: block;
-  }
-
   .finKpiGrid {
     grid-template-columns: 1fr 1fr;
     gap: 12px;

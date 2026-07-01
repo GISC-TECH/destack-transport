@@ -73,10 +73,10 @@ function Inadimplencia() {
   );
 
   const faixaAtividade = [
-    { nome: '1-30 dias', valor: dados.faturas.filter(f => f.dias_atraso >= 1 && f.dias_atraso <= 30).reduce((acc, f) => acc + f.valor, 0) },
-    { nome: '31-60 dias', valor: dados.faturas.filter(f => f.dias_atraso >= 31 && f.dias_atraso <= 60).reduce((acc, f) => acc + f.valor, 0) },
-    { nome: '61-90 dias', valor: dados.faturas.filter(f => f.dias_atraso >= 61 && f.dias_atraso <= 90).reduce((acc, f) => acc + f.valor, 0) },
-    { nome: '90+ dias', valor: dados.faturas.filter(f => f.dias_atraso > 90).reduce((acc, f) => acc + f.valor, 0) },
+    { nome: '1-30 dias', valor: (dados?.faturas || []).filter(f => f.dias_atraso >= 1 && f.dias_atraso <= 30).reduce((acc, f) => acc + f.valor, 0) },
+    { nome: '31-60 dias', valor: (dados?.faturas || []).filter(f => f.dias_atraso >= 31 && f.dias_atraso <= 60).reduce((acc, f) => acc + f.valor, 0) },
+    { nome: '61-90 dias', valor: (dados?.faturas || []).filter(f => f.dias_atraso >= 61 && f.dias_atraso <= 90).reduce((acc, f) => acc + f.valor, 0) },
+    { nome: '90+ dias', valor: (dados?.faturas || []).filter(f => f.dias_atraso > 90).reduce((acc, f) => acc + f.valor, 0) },
   ].filter(f => f.valor > 0);
 
   return (
