@@ -41,6 +41,11 @@
   background: var(--sidebar-hover);
 }
 
+.menuToggle:focus-visible {
+  outline: 2px solid var(--sidebar-active);
+  outline-offset: 2px;
+}
+
 .menuToggle svg {
   width: 24px;
   height: 24px;
@@ -84,6 +89,11 @@
 
 .mobileLogout:hover {
   background: var(--danger-light);
+}
+
+.mobileLogout:focus-visible {
+  outline: 2px solid var(--danger-color);
+  outline-offset: 2px;
 }
 
 .mobileLogout svg {
@@ -211,6 +221,11 @@
   color: var(--sidebar-text-light);
 }
 
+.collapseBtn:focus-visible {
+  outline: 2px solid var(--sidebar-active);
+  outline-offset: 2px;
+}
+
 .collapseBtn svg {
   width: 18px;
   height: 18px;
@@ -304,6 +319,11 @@
   background: var(--sidebar-hover);
   color: var(--sidebar-text-light);
   transform: translateX(3px);
+}
+
+.menuLink:focus-visible {
+  outline: 2px solid var(--sidebar-active);
+  outline-offset: 2px;
 }
 
 .menuLinkActive {

@@ -252,8 +252,9 @@ function CIOTManager() {
           <form onSubmit={handleSubmit}>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Código CIOT *</label>
+                <label htmlFor="codigo">Código CIOT *</label>
                 <input
+                  id="codigo"
                   type="text"
                   name="codigo"
                   value={form.codigo}
@@ -264,8 +265,9 @@ function CIOTManager() {
                 />
               </div>
               <div className={styles.formGroup} style={{ flex: 2 }}>
-                <label>Descrição</label>
+                <label htmlFor="descricao">Descrição</label>
                 <input
+                  id="descricao"
                   type="text"
                   name="descricao"
                   value={form.descricao}
@@ -277,8 +279,9 @@ function CIOTManager() {
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>CNPJ Responsável</label>
+                <label htmlFor="responsavel_cnpj">CNPJ Responsável</label>
                 <input
+                  id="responsavel_cnpj"
                   type="text"
                   name="responsavel_cnpj"
                   value={form.responsavel_cnpj}
@@ -288,8 +291,9 @@ function CIOTManager() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>CPF Responsável</label>
+                <label htmlFor="responsavel_cpf">CPF Responsável</label>
                 <input
+                  id="responsavel_cpf"
                   type="text"
                   name="responsavel_cpf"
                   value={form.responsavel_cpf}
@@ -299,8 +303,9 @@ function CIOTManager() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>Valor da Operação</label>
+                <label htmlFor="valor">Valor da Operação</label>
                 <input
+                  id="valor"
                   type="number"
                   step="0.01"
                   name="valor"
@@ -312,8 +317,8 @@ function CIOTManager() {
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Contratante (Cliente)</label>
-                <select name="cliente" value={form.cliente} onChange={handleChange}>
+                <label htmlFor="cliente">Contratante (Cliente)</label>
+                <select id="cliente" name="cliente" value={form.cliente} onChange={handleChange}>
                   <option value="">Selecione</option>
                   {clientes.map(c => (
                     <option key={c.id} value={c.id}>{c.razao_social}</option>
@@ -321,8 +326,8 @@ function CIOTManager() {
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label>Contratado (Motorista)</label>
-                <select name="motorista" value={form.motorista} onChange={handleChange}>
+                <label htmlFor="motorista">Contratado (Motorista)</label>
+                <select id="motorista" name="motorista" value={form.motorista} onChange={handleChange}>
                   <option value="">Selecione</option>
                   {motoristas.map(m => (
                     <option key={m.id} value={m.id}>{m.nome}</option>
@@ -333,38 +338,38 @@ function CIOTManager() {
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Origem - Cidade</label>
-                <input type="text" name="origem_cidade" value={form.origem_cidade} onChange={handleChange} />
+                <label htmlFor="origem_cidade">Origem - Cidade</label>
+                <input id="origem_cidade" type="text" name="origem_cidade" value={form.origem_cidade} onChange={handleChange} />
               </div>
               <div className={styles.formGroup}>
-                <label>Origem - UF</label>
-                <input type="text" name="origem_uf" value={form.origem_uf} onChange={handleChange} maxLength={2} />
+                <label htmlFor="origem_uf">Origem - UF</label>
+                <input id="origem_uf" type="text" name="origem_uf" value={form.origem_uf} onChange={handleChange} maxLength={2} />
               </div>
               <div className={styles.formGroup}>
-                <label>Destino - Cidade</label>
-                <input type="text" name="destino_cidade" value={form.destino_cidade} onChange={handleChange} />
+                <label htmlFor="destino_cidade">Destino - Cidade</label>
+                <input id="destino_cidade" type="text" name="destino_cidade" value={form.destino_cidade} onChange={handleChange} />
               </div>
               <div className={styles.formGroup}>
-                <label>Destino - UF</label>
-                <input type="text" name="destino_uf" value={form.destino_uf} onChange={handleChange} maxLength={2} />
+                <label htmlFor="destino_uf">Destino - UF</label>
+                <input id="destino_uf" type="text" name="destino_uf" value={form.destino_uf} onChange={handleChange} maxLength={2} />
               </div>
             </div>
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Data de Emissão</label>
-                <input type="date" name="data_emissao" value={form.data_emissao} onChange={handleChange} />
+                <label htmlFor="data_emissao">Data de Emissão</label>
+                <input id="data_emissao" type="date" name="data_emissao" value={form.data_emissao} onChange={handleChange} />
               </div>
               <div className={styles.formGroup}>
-                <label>Data de Validade</label>
-                <input type="date" name="data_validade" value={form.data_validade} onChange={handleChange} />
+                <label htmlFor="data_validade">Data de Validade</label>
+                <input id="data_validade" type="date" name="data_validade" value={form.data_validade} onChange={handleChange} />
               </div>
             </div>
 
             <div className={styles.formRow}>
               <div className={styles.formGroup} style={{ flex: 1 }}>
-                <label>Observação</label>
-                <textarea name="observacao" value={form.observacao} onChange={handleChange} rows={3} />
+                <label htmlFor="observacao">Observação</label>
+                <textarea id="observacao" name="observacao" value={form.observacao} onChange={handleChange} rows={3} />
               </div>
             </div>
 
@@ -378,16 +383,17 @@ function CIOTManager() {
 
       <div className={styles.filters}>
         <div className={styles.formGroup}>
-          <label>Status</label>
-          <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
+          <label htmlFor="filter_status">Status</label>
+          <select id="filter_status" value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
             {STATUS_OPTIONS.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
         </div>
         <div className={`${styles.formGroup} ${styles.filterSearch}`}>
-          <label>Buscar</label>
+          <label htmlFor="filter_search">Buscar</label>
           <input
+            id="filter_search"
             type="text"
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}

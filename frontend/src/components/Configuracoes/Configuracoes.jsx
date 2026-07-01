@@ -185,7 +185,11 @@ function Configuracoes() {
       </div>
 
       {message && (
-        <div className={`${styles.messageBox} ${message.type === 'success' ? styles.messageSuccess : styles.messageError}`}>
+        <div
+          className={`${styles.messageBox} ${message.type === 'success' ? styles.messageSuccess : styles.messageError}`}
+          role={message.type === 'error' ? 'alert' : 'status'}
+          aria-live="polite"
+        >
           {message.text}
         </div>
       )}
@@ -196,8 +200,9 @@ function Configuracoes() {
           <div className={styles.section}>
             <div className={styles.formGrid}>
               <div className={`${styles.formGroup} ${styles.full}`}>
-                <label>Razão Social</label>
+                <label htmlFor="razao_social">Razão Social</label>
                 <input
+                  id="razao_social"
                   type="text"
                   value={empresa.razao_social || ''}
                   onChange={(e) => handleEmpresaChange('razao_social', e.target.value)}
@@ -205,8 +210,9 @@ function Configuracoes() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>Nome Fantasia</label>
+                <label htmlFor="nome_fantasia">Nome Fantasia</label>
                 <input
+                  id="nome_fantasia"
                   type="text"
                   value={empresa.nome_fantasia || ''}
                   onChange={(e) => handleEmpresaChange('nome_fantasia', e.target.value)}
@@ -214,8 +220,9 @@ function Configuracoes() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>CNPJ</label>
+                <label htmlFor="cnpj">CNPJ</label>
                 <input
+                  id="cnpj"
                   type="text"
                   value={empresa.cnpj || ''}
                   onChange={(e) => handleEmpresaChange('cnpj', e.target.value)}
@@ -223,8 +230,9 @@ function Configuracoes() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>Inscrição Estadual</label>
+                <label htmlFor="ie">Inscrição Estadual</label>
                 <input
+                  id="ie"
                   type="text"
                   value={empresa.ie || ''}
                   onChange={(e) => handleEmpresaChange('ie', e.target.value)}
@@ -232,8 +240,9 @@ function Configuracoes() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>Telefone</label>
+                <label htmlFor="telefone">Telefone</label>
                 <input
+                  id="telefone"
                   type="text"
                   value={empresa.telefone || ''}
                   onChange={(e) => handleEmpresaChange('telefone', e.target.value)}
@@ -241,8 +250,9 @@ function Configuracoes() {
                 />
               </div>
               <div className={`${styles.formGroup} ${styles.full}`}>
-                <label>E-mail</label>
+                <label htmlFor="email">E-mail</label>
                 <input
+                  id="email"
                   type="email"
                   value={empresa.email || ''}
                   onChange={(e) => handleEmpresaChange('email', e.target.value)}
@@ -255,8 +265,9 @@ function Configuracoes() {
               </div>
 
               <div className={styles.formGroup}>
-                <label>Telefone do Gestor</label>
+                <label htmlFor="telefone_gestor">Telefone do Gestor</label>
                 <input
+                  id="telefone_gestor"
                   type="text"
                   value={empresa.telefone_gestor || ''}
                   onChange={(e) => handleEmpresaChange('telefone_gestor', e.target.value)}
@@ -265,8 +276,9 @@ function Configuracoes() {
                 <small>Recebe alertas de pagamentos e situações críticas</small>
               </div>
               <div className={styles.formGroup}>
-                <label>Telefone do Financeiro</label>
+                <label htmlFor="telefone_financeiro">Telefone do Financeiro</label>
                 <input
+                  id="telefone_financeiro"
                   type="text"
                   value={empresa.telefone_financeiro || ''}
                   onChange={(e) => handleEmpresaChange('telefone_financeiro', e.target.value)}
@@ -275,8 +287,9 @@ function Configuracoes() {
                 <small>Recebe alertas de cobranças e faturamentos</small>
               </div>
               <div className={styles.formGroup}>
-                <label>Telefone do Operacional</label>
+                <label htmlFor="telefone_operacional">Telefone do Operacional</label>
                 <input
+                  id="telefone_operacional"
                   type="text"
                   value={empresa.telefone_operacional || ''}
                   onChange={(e) => handleEmpresaChange('telefone_operacional', e.target.value)}
@@ -290,8 +303,9 @@ function Configuracoes() {
               </div>
 
               <div className={`${styles.formGroup} ${styles.span2}`}>
-                <label>Logradouro</label>
+                <label htmlFor="logradouro">Logradouro</label>
                 <input
+                  id="logradouro"
                   type="text"
                   value={empresa.logradouro || ''}
                   onChange={(e) => handleEmpresaChange('logradouro', e.target.value)}
@@ -299,8 +313,9 @@ function Configuracoes() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>Número</label>
+                <label htmlFor="numero">Número</label>
                 <input
+                  id="numero"
                   type="text"
                   value={empresa.numero || ''}
                   onChange={(e) => handleEmpresaChange('numero', e.target.value)}
@@ -308,8 +323,9 @@ function Configuracoes() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>Bairro</label>
+                <label htmlFor="bairro">Bairro</label>
                 <input
+                  id="bairro"
                   type="text"
                   value={empresa.bairro || ''}
                   onChange={(e) => handleEmpresaChange('bairro', e.target.value)}
@@ -317,8 +333,9 @@ function Configuracoes() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>Cidade/Município</label>
+                <label htmlFor="municipio">Cidade/Município</label>
                 <input
+                  id="municipio"
                   type="text"
                   value={empresa.municipio || ''}
                   onChange={(e) => handleEmpresaChange('municipio', e.target.value)}
@@ -326,8 +343,9 @@ function Configuracoes() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>UF</label>
+                <label htmlFor="uf">UF</label>
                 <input
+                  id="uf"
                   type="text"
                   value={empresa.uf || ''}
                   onChange={(e) => handleEmpresaChange('uf', e.target.value)}
@@ -336,8 +354,9 @@ function Configuracoes() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>CEP</label>
+                <label htmlFor="cep">CEP</label>
                 <input
+                  id="cep"
                   type="text"
                   value={empresa.cep || ''}
                   onChange={(e) => handleEmpresaChange('cep', e.target.value)}
@@ -368,8 +387,9 @@ function Configuracoes() {
                     </div>
                     <div className={styles.parametroValor}>
                       {param.tipo_dado === 'bool' ? (
-                        <label className={styles.switch}>
+                        <label className={styles.switch} htmlFor={`param_${param.id}`}>
                           <input
+                            id={`param_${param.id}`}
                             type="checkbox"
                             checked={param.valor === 'true' || param.valor === true}
                             onChange={(e) => handleParametroChange(param.id, e.target.checked.toString())}
@@ -378,10 +398,12 @@ function Configuracoes() {
                         </label>
                       ) : (
                         <input
+                          id={`param_${param.id}`}
                           type={param.tipo_dado === 'int' || param.tipo_dado === 'float' ? 'number' : 'text'}
                           value={param.valor || ''}
                           onChange={(e) => handleParametroChange(param.id, e.target.value)}
                           disabled={!param.editavel}
+                          aria-label={param.nome}
                         />
                       )}
                     </div>
@@ -429,7 +451,11 @@ function Configuracoes() {
             </div>
 
             {whatsappStatus && (
-              <div className={`${styles.messageBox} ${whatsappStatus.type === 'success' ? styles.messageSuccess : styles.messageError}`}>
+              <div
+                className={`${styles.messageBox} ${whatsappStatus.type === 'success' ? styles.messageSuccess : styles.messageError}`}
+                role={whatsappStatus.type === 'error' ? 'alert' : 'status'}
+                aria-live="polite"
+              >
                 {whatsappStatus.type === 'success' ? (
                   <>
                     <strong>Conectado!</strong>

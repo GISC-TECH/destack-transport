@@ -484,6 +484,7 @@ function MDFeList() {
                         className={styles.actionBtnView}
                         onClick={() => handleOpenModal(mdfe)}
                         title="Ver Detalhes"
+                        aria-label="Ver detalhes do MDF-e"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -494,6 +495,7 @@ function MDFeList() {
                         className={styles.actionBtnDownload}
                         onClick={() => handleDownloadXML(mdfe.id, mdfe.numero_mdfe)}
                         title="Baixar XML"
+                        aria-label="Baixar XML do MDF-e"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

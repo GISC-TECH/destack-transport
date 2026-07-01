@@ -67,6 +67,12 @@
   color: white;
 }
 
+.menu > li > a:focus-visible,
+.menu > li > .dropdownToggle:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
 .menu > li > a.active,
 .menu > li > .dropdownToggle.active {
   background: var(--primary-light);
@@ -154,6 +160,11 @@
   color: white;
 }
 
+.configBtn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
 .configBtn.active {
   background: var(--primary-light);
   color: var(--primary-color);
@@ -193,6 +204,11 @@
 .logoutBtn:hover {
   background: var(--danger-color);
   color: white;
+}
+
+.logoutBtn:focus-visible {
+  outline: 2px solid var(--danger-color);
+  outline-offset: 2px;
 }
 
 @media (max-width: 1200px) {

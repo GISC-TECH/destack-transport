@@ -284,8 +284,8 @@ function PagamentosPendentes() {
             <div className={styles.filtrosAvancadosGrid}>
 
               {/* Filtro Modalidade */}
-              <div className={styles.filtroGrupo}>
-                <label>Modalidade</label>
+              <div className={styles.filtroGrupo} role="group" aria-labelledby="filtro-modalidade">
+                <label id="filtro-modalidade">Modalidade</label>
                 <div className={styles.filterTagList}>
                   {(filtrosDisponiveis.modalidades || []).map(modalidade => (
                     <Button
@@ -301,8 +301,8 @@ function PagamentosPendentes() {
               </div>
 
               {/* Filtro Remetente */}
-              <div className={styles.filtroGrupo}>
-                <label>
+              <div className={styles.filtroGrupo} role="group" aria-labelledby="filtro-remetente">
+                <label id="filtro-remetente">
                   Remetente ({filtrosAvancados.remetentes.length} selecionado{filtrosAvancados.remetentes.length !== 1 ? 's' : ''})
                 </label>
                 <div className={styles.checkboxList}>
@@ -326,8 +326,8 @@ function PagamentosPendentes() {
               </div>
 
               {/* Filtro Destinatário */}
-              <div className={styles.filtroGrupo}>
-                <label>
+              <div className={styles.filtroGrupo} role="group" aria-labelledby="filtro-destinatario">
+                <label id="filtro-destinatario">
                   Destinatário ({filtrosAvancados.destinatarios.length} selecionado{filtrosAvancados.destinatarios.length !== 1 ? 's' : ''})
                 </label>
                 <div className={styles.checkboxList}>
@@ -664,8 +664,9 @@ function PagamentosPendentes() {
           Confirmar baixa do CT-e <strong>#{modalBaixa.cteNumero}</strong>?
         </p>
         <div className={styles.formGroup}>
-          <label>Data do Pagamento</label>
+          <label htmlFor="pp_data_baixa">Data do Pagamento</label>
           <input
+            id="pp_data_baixa"
             type="date"
             value={dataBaixa}
             onChange={(e) => setDataBaixa(e.target.value)}
@@ -674,8 +675,9 @@ function PagamentosPendentes() {
         </div>
 
         <div className={styles.formGroup}>
-          <label>Comprovante (opcional)</label>
+          <label htmlFor="pp_comprovante">Comprovante (opcional)</label>
           <input
+            id="pp_comprovante"
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
             onChange={(e) => setComprovanteFile(e.target.files[0] || null)}

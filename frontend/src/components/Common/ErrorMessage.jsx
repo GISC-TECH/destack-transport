@@ -2,7 +2,7 @@ import styles from './ErrorMessage.module.css';
 
 function ErrorMessage({ message, onRetry }) {
   return (
-    <div className={styles.container}>
+    <div className={styles.container} role="alert" aria-live="polite">
       <div className={styles.icon}>⚠️</div>
       <p className={styles.text}>{message}</p>
       {onRetry && (

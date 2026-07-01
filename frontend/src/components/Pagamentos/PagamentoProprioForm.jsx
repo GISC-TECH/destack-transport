@@ -388,9 +388,9 @@ function PagamentoProprioForm() {
       />
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`}>
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -403,8 +403,9 @@ function PagamentoProprioForm() {
 
           {!cteSelecionado ? (
             <div className={`${styles.formGroup} ${styles.searchFieldWrapper}`}>
-              <label>Buscar CT-e</label>
+              <label htmlFor="busca_cte">Buscar CT-e</label>
               <input
+                id="busca_cte"
                 type="text"
                 value={buscaCte}
                 onChange={(e) => setBuscaCte(e.target.value)}
@@ -478,11 +479,12 @@ function PagamentoProprioForm() {
           {/* Busca de Condutor por Nome */}
           {!condutorSelecionado ? (
             <div className={`${styles.formGroup} ${styles.searchFieldWrapper}`}>
-              <label>Buscar Nome do Condutor</label>
+              <label htmlFor="busca_condutor">Buscar Nome do Condutor</label>
               <small className={`${styles.formHint} ${styles.mb10} ${styles.textMuted}`}>
                 Digite o nome do motorista para buscar e vincular automaticamente
               </small>
               <input
+                id="busca_condutor"
                 type="text"
                 value={buscaCondutor}
                 onChange={(e) => setBuscaCondutor(e.target.value)}
@@ -559,11 +561,12 @@ function PagamentoProprioForm() {
           {/* Busca de Veículo por Placa */}
           {!veiculoSelecionado ? (
             <div className={`${styles.formGroup} ${styles.searchFieldWrapper}`}>
-              <label>Placa do Veículo *</label>
+              <label htmlFor="busca_veiculo">Placa do Veículo *</label>
               <small className={`${styles.formHint} ${styles.mb10} ${styles.textMuted}`}>
                 Digite a placa do veiculo para buscar e vincular automaticamente
               </small>
               <input
+                id="busca_veiculo"
                 type="text"
                 value={buscaVeiculo}
                 onChange={(e) => setBuscaVeiculo(e.target.value.toUpperCase())}
@@ -636,8 +639,9 @@ function PagamentoProprioForm() {
 
           {/* Campo CPF oculto mas editavel se necessario */}
           <div className={styles.formGroup}>
-            <label>CPF do Condutor</label>
+            <label htmlFor="motorista_cpf">CPF do Condutor</label>
             <input
+              id="motorista_cpf"
               type="text"
               name="motorista_cpf"
               value={formData.motorista_cpf}
@@ -653,8 +657,9 @@ function PagamentoProprioForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Quilometragem (KM)</label>
+              <label htmlFor="km_total_periodo">Quilometragem (KM)</label>
               <input
+                id="km_total_periodo"
                 type="number"
                 name="km_total_periodo"
                 value={formData.km_total_periodo}
@@ -673,8 +678,9 @@ function PagamentoProprioForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Valor Base / Repasse (R$) *</label>
+              <label htmlFor="valor_base_faixa">Valor Base / Repasse (R$) *</label>
               <input
+                id="valor_base_faixa"
                 type="number"
                 step="0.01"
                 name="valor_base_faixa"
@@ -690,8 +696,9 @@ function PagamentoProprioForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Ajustes (R$)</label>
+              <label htmlFor="ajustes">Ajustes (R$)</label>
               <input
+                id="ajustes"
                 type="number"
                 step="0.01"
                 name="ajustes"
@@ -703,8 +710,9 @@ function PagamentoProprioForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Valor Total a Pagar (R$)</label>
+              <label htmlFor="valor_total">Valor Total a Pagar (R$)</label>
               <input
+                id="valor_total"
                 type="text"
                 value={`R$ ${valorTotal.toFixed(2)}`}
                 disabled
@@ -720,8 +728,9 @@ function PagamentoProprioForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Período (AAAA-MM) *</label>
+              <label htmlFor="periodo">Período (AAAA-MM) *</label>
               <input
+                id="periodo"
                 type="month"
                 name="periodo"
                 value={formData.periodo}
@@ -731,8 +740,9 @@ function PagamentoProprioForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Data Prevista</label>
+              <label htmlFor="data_prevista">Data Prevista</label>
               <input
+                id="data_prevista"
                 type="date"
                 name="data_prevista"
                 value={formData.data_prevista}
@@ -741,8 +751,9 @@ function PagamentoProprioForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Data Pagamento</label>
+              <label htmlFor="data_pagamento">Data Pagamento</label>
               <input
+                id="data_pagamento"
                 type="date"
                 name="data_pagamento"
                 value={formData.data_pagamento || ''}
@@ -753,8 +764,9 @@ function PagamentoProprioForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Status *</label>
+              <label htmlFor="status">Status *</label>
               <select
+                id="status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
@@ -767,8 +779,9 @@ function PagamentoProprioForm() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Observações</label>
+            <label htmlFor="obs">Observações</label>
             <textarea
+              id="obs"
               name="obs"
               value={formData.obs}
               onChange={handleChange}
@@ -780,8 +793,9 @@ function PagamentoProprioForm() {
           {/* Campo de comprovante apenas na criacao */}
           {!isEditing && (
             <div className={styles.formGroup}>
-              <label>Comprovante de Pagamento (opcional)</label>
+              <label htmlFor="comprovante">Comprovante de Pagamento (opcional)</label>
               <input
+                id="comprovante"
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
                 onChange={(e) => setComprovanteFile(e.target.files[0] || null)}

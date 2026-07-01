@@ -341,8 +341,9 @@ function UsuarioForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label className={styles.checkboxContainer}>
+              <label className={styles.checkboxContainer} htmlFor="is_active">
                 <input
+                  id="is_active"
                   type="checkbox"
                   name="is_active"
                   checked={formData.is_active}

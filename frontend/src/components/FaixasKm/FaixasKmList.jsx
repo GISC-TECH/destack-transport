@@ -203,9 +203,9 @@ function FaixasKmList() {
       />
 
       {message && (
-        <div className={`${styles.alert} ${styles[`alert-${message.type}`]}`}>
+        <div className={`${styles.alert} ${styles[`alert-${message.type}`]}`} role={message.type === 'error' ? 'alert' : 'status'} aria-live="polite">
           {message.text}
-          <button className={styles.alertClose} onClick={() => setMessage(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setMessage(null)} aria-label="Fechar mensagem">&times;</button>
         </div>
       )}
 
@@ -246,6 +246,7 @@ function FaixasKmList() {
                           className={`${styles.btnAction} ${styles.btnEdit}`}
                           onClick={() => handleOpenModal(faixa)}
                           title="Editar"
+                          aria-label="Editar faixa de KM"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -256,6 +257,7 @@ function FaixasKmList() {
                           className={`${styles.btnAction} ${styles.btnDelete}`}
                           onClick={() => handleDelete(faixa.id)}
                           title="Excluir"
+                          aria-label="Excluir faixa de KM"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="3 6 5 6 21 6"></polyline>
@@ -313,8 +315,9 @@ function FaixasKmList() {
         <form id="faixa-form" onSubmit={handleSubmit}>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>KM Mínimo *</label>
+              <label htmlFor="min_km">KM Mínimo *</label>
               <input
+                id="min_km"
                 type="number"
                 value={formData.min_km}
                 onChange={e => setFormData({...formData, min_km: e.target.value})}
@@ -323,8 +326,9 @@ function FaixasKmList() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>KM Máximo</label>
+              <label htmlFor="max_km">KM Máximo</label>
               <input
+                id="max_km"
                 type="number"
                 value={formData.max_km}
                 onChange={e => setFormData({...formData, max_km: e.target.value})}
@@ -334,8 +338,9 @@ function FaixasKmList() {
             </div>
           </div>
           <div className={styles.formGroup}>
-            <label>Valor a Pagar (R$) *</label>
+            <label htmlFor="valor_pago">Valor a Pagar (R$) *</label>
             <input
+              id="valor_pago"
               type="number"
               step="0.01"
               value={formData.valor_pago}

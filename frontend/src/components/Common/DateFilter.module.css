@@ -43,6 +43,11 @@
   color: var(--primary-color);
 }
 
+.periodBtn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
 .periodBtnActive {
   background: var(--primary-color);
   border-color: var(--primary-color);

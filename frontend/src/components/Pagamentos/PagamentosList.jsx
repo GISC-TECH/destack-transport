@@ -633,6 +633,7 @@ function PagamentosList() {
         className={`${styles.mobileActionBtn} ${styles.view}`}
         onClick={() => handleAbrirComprovante(pagamento)}
         title="Gerar Comprovante"
+        aria-label="Gerar comprovante"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -647,6 +648,7 @@ function PagamentosList() {
           className={`${styles.mobileActionBtn} ${styles.download}`}
           onClick={() => handleAbrirBaixa(pagamento)}
           title="Baixar Pagamento"
+          aria-label="Baixar pagamento"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -659,6 +661,7 @@ function PagamentosList() {
           className={`${styles.mobileActionBtn} ${styles.reverter}`}
           onClick={() => handleAbrirReverterBaixa(pagamento)}
           title="Reverter Baixa"
+          aria-label="Reverter baixa"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
@@ -672,6 +675,7 @@ function PagamentosList() {
           className={`${styles.mobileActionBtn} ${styles.edit}`}
           onClick={() => handleEditarPagamento(pagamento.id)}
           title="Editar"
+          aria-label="Editar pagamento"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -686,6 +690,7 @@ function PagamentosList() {
           onClick={() => handleNotificarGestor(pagamento)}
           disabled={notificando[pagamento.id]}
           title="Notificar gestor via WhatsApp"
+          aria-label="Notificar gestor via WhatsApp"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
@@ -697,6 +702,7 @@ function PagamentosList() {
         className={`${styles.mobileActionBtn} ${styles.convert}`}
         onClick={() => handleAbrirConverter(pagamento)}
         title={activeTab === 'agregados' ? 'Converter' : 'Converter'}
+        aria-label="Converter pagamento"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="17 1 21 5 17 9"></polyline>
@@ -711,6 +717,7 @@ function PagamentosList() {
           className={`${styles.mobileActionBtn} ${styles.delete}`}
           onClick={() => handleAbrirExcluir(pagamento)}
           title="Excluir"
+          aria-label="Excluir pagamento"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="3 6 5 6 21 6"></polyline>
@@ -785,8 +792,9 @@ function PagamentosList() {
         </p>
 
         <div className={styles.modalBodyGroup}>
-          <label>Tipo de Pagamento</label>
+          <label htmlFor="lote_tipo">Tipo de Pagamento</label>
           <select
+            id="lote_tipo"
             value={loteConfig.tipo}
             onChange={(e) => setLoteConfig({...loteConfig, tipo: e.target.value})}
             className={styles.modalSelect}
@@ -798,8 +806,9 @@ function PagamentosList() {
 
         <div className={styles.modalBodyRow}>
           <div className={styles.modalBodyGroup}>
-            <label>Data Início</label>
+            <label htmlFor="lote_data_inicio">Data Início</label>
             <input
+              id="lote_data_inicio"
               type="date"
               value={loteConfig.data_inicio}
               onChange={(e) => setLoteConfig({...loteConfig, data_inicio: e.target.value})}
@@ -807,8 +816,9 @@ function PagamentosList() {
             />
           </div>
           <div className={styles.modalBodyGroup}>
-            <label>Data Fim</label>
+            <label htmlFor="lote_data_fim">Data Fim</label>
             <input
+              id="lote_data_fim"
               type="date"
               value={loteConfig.data_fim}
               onChange={(e) => setLoteConfig({...loteConfig, data_fim: e.target.value})}
@@ -819,8 +829,9 @@ function PagamentosList() {
 
         {loteConfig.tipo === 'agregados' && (
           <div className={styles.modalBodyGroup}>
-            <label>Percentual de Repasse (%) *</label>
+            <label htmlFor="lote_percentual">Percentual de Repasse (%) *</label>
             <input
+              id="lote_percentual"
               type="number"
               value={loteConfig.percentual}
               onChange={(e) => setLoteConfig({...loteConfig, percentual: e.target.value})}
@@ -868,8 +879,9 @@ function PagamentosList() {
         </p>
 
         <div className={styles.modalBodyGroup}>
-          <label>Data do Pagamento</label>
+          <label htmlFor="data_baixa">Data do Pagamento</label>
           <input
+            id="data_baixa"
             type="date"
             value={dataBaixa}
             onChange={(e) => setDataBaixa(e.target.value)}
@@ -878,8 +890,9 @@ function PagamentosList() {
         </div>
 
         <div className={`${styles.modalBodyGroup} ${styles.mt20}`}>
-          <label>Comprovante (opcional)</label>
+          <label htmlFor="comprovante_baixa">Comprovante (opcional)</label>
           <input
+            id="comprovante_baixa"
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
             onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
@@ -964,8 +977,9 @@ function PagamentosList() {
 
         {modalConverter.tipo === 'agregado_para_proprio' ? (
           <div className={styles.modalBodyGroup}>
-            <label>Período (AAAA-MM)</label>
+            <label htmlFor="conv_periodo">Período (AAAA-MM)</label>
             <input
+              id="conv_periodo"
               type="text"
               value={dadosConversao.periodo}
               onChange={(e) => setDadosConversao({...dadosConversao, periodo: e.target.value})}
@@ -979,8 +993,9 @@ function PagamentosList() {
         ) : (
           <>
             <div className={styles.modalBodyGroup}>
-              <label>ID do CT-e *</label>
+              <label htmlFor="conv_cte_id">ID do CT-e *</label>
               <input
+                id="conv_cte_id"
                 type="text"
                 value={dadosConversao.cte_id}
                 onChange={(e) => setDadosConversao({...dadosConversao, cte_id: e.target.value})}
@@ -990,8 +1005,9 @@ function PagamentosList() {
             </div>
             <div className={styles.modalBodyRow}>
               <div className={styles.modalBodyGroup}>
-                <label>Nome do Condutor *</label>
+                <label htmlFor="conv_condutor_nome">Nome do Condutor *</label>
                 <input
+                  id="conv_condutor_nome"
                   type="text"
                   value={dadosConversao.condutor_nome}
                   onChange={(e) => setDadosConversao({...dadosConversao, condutor_nome: e.target.value})}
@@ -1000,8 +1016,9 @@ function PagamentosList() {
                 />
               </div>
               <div className={styles.modalBodyGroup}>
-                <label>CPF do Condutor</label>
+                <label htmlFor="conv_condutor_cpf">CPF do Condutor</label>
                 <input
+                  id="conv_condutor_cpf"
                   type="text"
                   value={dadosConversao.condutor_cpf}
                   onChange={(e) => setDadosConversao({...dadosConversao, condutor_cpf: e.target.value})}
@@ -1012,8 +1029,9 @@ function PagamentosList() {
             </div>
             <div className={styles.modalBodyRow}>
               <div className={styles.modalBodyGroup}>
-                <label>Percentual Repasse (%)</label>
+                <label htmlFor="conv_percentual_repasse">Percentual Repasse (%)</label>
                 <input
+                  id="conv_percentual_repasse"
                   type="number"
                   value={dadosConversao.percentual_repasse}
                   onChange={(e) => setDadosConversao({...dadosConversao, percentual_repasse: e.target.value})}
@@ -1023,8 +1041,9 @@ function PagamentosList() {
                 />
               </div>
               <div className={styles.modalBodyGroup}>
-                <label>Data Prevista</label>
+                <label htmlFor="conv_data_prevista">Data Prevista</label>
                 <input
+                  id="conv_data_prevista"
                   type="date"
                   value={dadosConversao.data_prevista}
                   onChange={(e) => setDadosConversao({...dadosConversao, data_prevista: e.target.value})}
@@ -1388,6 +1407,7 @@ function PagamentosList() {
             onClick={() => handlePageChange(1)}
             disabled={paginacao.page === 1}
             title="Primeira página"
+            aria-label="Primeira página"
           >
             &laquo;
           </button>
@@ -1396,6 +1416,7 @@ function PagamentosList() {
             onClick={() => handlePageChange(paginacao.page - 1)}
             disabled={paginacao.page === 1}
             title="Página anterior"
+            aria-label="Página anterior"
           >
             &lsaquo;
           </button>
@@ -1430,6 +1451,7 @@ function PagamentosList() {
             onClick={() => handlePageChange(paginacao.page + 1)}
             disabled={paginacao.page === paginacao.totalPages}
             title="Próxima página"
+            aria-label="Próxima página"
           >
             &rsaquo;
           </button>
@@ -1438,6 +1460,7 @@ function PagamentosList() {
             onClick={() => handlePageChange(paginacao.totalPages)}
             disabled={paginacao.page === paginacao.totalPages}
             title="Última página"
+            aria-label="Última página"
           >
             &raquo;
           </button>

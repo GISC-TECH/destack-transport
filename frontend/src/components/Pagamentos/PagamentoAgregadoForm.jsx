@@ -384,9 +384,9 @@ function PagamentoAgregadoForm() {
       />
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`}>
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -399,8 +399,9 @@ function PagamentoAgregadoForm() {
 
           {!cteSelecionado ? (
             <div className={`${styles.formGroup} ${styles.searchFieldWrapper}`}>
-              <label>Buscar CT-e</label>
+              <label htmlFor="busca_cte">Buscar CT-e</label>
               <input
+                id="busca_cte"
                 type="text"
                 value={buscaCte}
                 onChange={(e) => setBuscaCte(e.target.value)}
@@ -477,11 +478,12 @@ function PagamentoAgregadoForm() {
           {/* Busca de Condutor por Nome */}
           {!condutorSelecionado ? (
             <div className={`${styles.formGroup} ${styles.searchFieldWrapper}`}>
-              <label>Buscar Nome do Condutor</label>
+              <label htmlFor="busca_condutor">Buscar Nome do Condutor</label>
               <small className={`${styles.formHint} ${styles.mb10} ${styles.textMuted}`}>
                 Digite o nome do motorista para buscar e vincular automaticamente
               </small>
               <input
+                id="busca_condutor"
                 type="text"
                 value={buscaCondutor}
                 onChange={(e) => setBuscaCondutor(e.target.value)}
@@ -553,11 +555,12 @@ function PagamentoAgregadoForm() {
           {/* Busca de Veículo por Placa */}
           {!veiculoSelecionado ? (
             <div className={`${styles.formGroup} ${styles.searchFieldWrapper}`}>
-              <label>Placa do Veículo *</label>
+              <label htmlFor="busca_veiculo">Placa do Veículo *</label>
               <small className={`${styles.formHint} ${styles.mb10} ${styles.textMuted}`}>
                 Digite a placa do veiculo para buscar e vincular automaticamente
               </small>
               <input
+                id="busca_veiculo"
                 type="text"
                 value={buscaVeiculo}
                 onChange={(e) => setBuscaVeiculo(e.target.value.toUpperCase())}
@@ -630,8 +633,9 @@ function PagamentoAgregadoForm() {
 
           {/* Campo CPF oculto mas editavel se necessario */}
           <div className={styles.formGroup}>
-            <label>CPF do Condutor</label>
+            <label htmlFor="condutor_cpf">CPF do Condutor</label>
             <input
+              id="condutor_cpf"
               type="text"
               name="condutor_cpf"
               value={formData.condutor_cpf}
@@ -647,8 +651,9 @@ function PagamentoAgregadoForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Valor do Frete Total (R$) *</label>
+              <label htmlFor="valor_frete_total">Valor do Frete Total (R$) *</label>
               <input
+                id="valor_frete_total"
                 type="number"
                 step="0.01"
                 name="valor_frete_total"
@@ -661,8 +666,9 @@ function PagamentoAgregadoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Percentual de Repasse (%) *</label>
+              <label htmlFor="percentual_repasse">Percentual de Repasse (%) *</label>
               <input
+                id="percentual_repasse"
                 type="number"
                 step="0.01"
                 name="percentual_repasse"
@@ -676,8 +682,9 @@ function PagamentoAgregadoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Desconto (R$)</label>
+              <label htmlFor="desconto">Desconto (R$)</label>
               <input
+                id="desconto"
                 type="number"
                 step="0.01"
                 name="desconto"
@@ -690,8 +697,9 @@ function PagamentoAgregadoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Valor a Repassar (R$)</label>
+              <label htmlFor="valor_repassar">Valor a Repassar (R$)</label>
               <input
+                id="valor_repassar"
                 type="text"
                 value={`R$ ${valorRepassado}`}
                 disabled
@@ -707,8 +715,9 @@ function PagamentoAgregadoForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Data Prevista *</label>
+              <label htmlFor="data_prevista">Data Prevista *</label>
               <input
+                id="data_prevista"
                 type="date"
                 name="data_prevista"
                 value={formData.data_prevista}
@@ -718,8 +727,9 @@ function PagamentoAgregadoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Data Pagamento</label>
+              <label htmlFor="data_pagamento">Data Pagamento</label>
               <input
+                id="data_pagamento"
                 type="date"
                 name="data_pagamento"
                 value={formData.data_pagamento || ''}
@@ -728,8 +738,9 @@ function PagamentoAgregadoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Status *</label>
+              <label htmlFor="status">Status *</label>
               <select
+                id="status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
@@ -742,8 +753,9 @@ function PagamentoAgregadoForm() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Observações</label>
+            <label htmlFor="obs">Observações</label>
             <textarea
+              id="obs"
               name="obs"
               value={formData.obs}
               onChange={handleChange}
@@ -755,8 +767,9 @@ function PagamentoAgregadoForm() {
           {/* Campo de comprovante apenas na criacao */}
           {!isEditing && (
             <div className={styles.formGroup}>
-              <label>Comprovante de Pagamento (opcional)</label>
+              <label htmlFor="comprovante">Comprovante de Pagamento (opcional)</label>
               <input
+                id="comprovante"
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
                 onChange={(e) => setComprovanteFile(e.target.files[0] || null)}

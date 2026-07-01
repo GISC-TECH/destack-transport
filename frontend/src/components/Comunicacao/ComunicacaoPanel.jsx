@@ -128,15 +128,16 @@ function ComunicacaoPanel() {
           <form onSubmit={handleSubmit}>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Canal</label>
-                <select name="canal" value={form.canal} onChange={handleChange}>
+                <label htmlFor="canal">Canal</label>
+                <select id="canal" name="canal" value={form.canal} onChange={handleChange}>
                   <option value="email">E-mail</option>
                   <option value="whatsapp">WhatsApp</option>
                 </select>
               </div>
               <div className={styles.formGroup} style={{ flex: 2 }}>
-                <label>Destinatário</label>
+                <label htmlFor="destinatario">Destinatário</label>
                 <input
+                  id="destinatario"
                   type="text"
                   name="destinatario"
                   value={form.destinatario}
@@ -149,8 +150,8 @@ function ComunicacaoPanel() {
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Cliente</label>
-                <select name="cliente_id" value={form.cliente_id} onChange={handleChange}>
+                <label htmlFor="cliente_id">Cliente</label>
+                <select id="cliente_id" name="cliente_id" value={form.cliente_id} onChange={handleChange}>
                   <option value="">Selecione</option>
                   {clientes.map(c => (
                     <option key={c.id} value={c.id}>{c.razao_social}</option>
@@ -158,8 +159,8 @@ function ComunicacaoPanel() {
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label>Motorista</label>
-                <select name="motorista_id" value={form.motorista_id} onChange={handleChange}>
+                <label htmlFor="motorista_id">Motorista</label>
+                <select id="motorista_id" name="motorista_id" value={form.motorista_id} onChange={handleChange}>
                   <option value="">Selecione</option>
                   {motoristas.map(m => (
                     <option key={m.id} value={m.id}>{m.nome}</option>
@@ -167,8 +168,8 @@ function ComunicacaoPanel() {
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label>Ordem de Viagem</label>
-                <select name="ordem_id" value={form.ordem_id} onChange={handleChange}>
+                <label htmlFor="ordem_id">Ordem de Viagem</label>
+                <select id="ordem_id" name="ordem_id" value={form.ordem_id} onChange={handleChange}>
                   <option value="">Selecione</option>
                   {ordens.map(o => (
                     <option key={o.id} value={o.id}>{o.numero}</option>
@@ -180,8 +181,9 @@ function ComunicacaoPanel() {
             {form.canal === 'email' && (
               <div className={styles.formRow}>
                 <div className={styles.formGroup} style={{ flex: 1 }}>
-                  <label>Assunto</label>
+                  <label htmlFor="assunto">Assunto</label>
                   <input
+                    id="assunto"
                     type="text"
                     name="assunto"
                     value={form.assunto}
@@ -194,8 +196,9 @@ function ComunicacaoPanel() {
 
             <div className={styles.formRow}>
               <div className={styles.formGroup} style={{ flex: 1 }}>
-                <label>Mensagem</label>
+                <label htmlFor="conteudo">Mensagem</label>
                 <textarea
+                  id="conteudo"
                   name="conteudo"
                   value={form.conteudo}
                   onChange={handleChange}

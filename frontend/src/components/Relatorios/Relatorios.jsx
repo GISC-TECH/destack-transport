@@ -316,12 +316,14 @@ function Relatorios() {
 
   const renderFiltro = (config) => {
     const { campo, label, tipo, opcoes, placeholder } = config;
+    const inputId = `filtro_${campo}`;
 
     if (tipo === 'select') {
       return (
         <div key={campo} className={styles.formGroup}>
-          <label>{label}</label>
+          <label htmlFor={inputId}>{label}</label>
           <select
+            id={inputId}
             value={filtros[campo] || ''}
             onChange={(e) => handleFiltroChange(campo, e.target.value)}
           >
@@ -335,8 +337,9 @@ function Relatorios() {
 
     return (
       <div key={campo} className={styles.formGroup}>
-        <label>{label}</label>
+        <label htmlFor={inputId}>{label}</label>
         <input
+          id={inputId}
           type="text"
           value={filtros[campo] || ''}
           placeholder={placeholder || ''}
@@ -361,8 +364,18 @@ function Relatorios() {
           {relatoriosDisponiveis.map((rel) => (
             <div
               key={rel.id}
+              role="button"
+              tabIndex={0}
+              aria-pressed={tipoRelatorio === rel.id}
+              aria-label={`Selecionar relatório ${rel.nome}`}
               className={`${styles.card} ${tipoRelatorio === rel.id ? styles.cardSelected : ''}`}
               onClick={() => setTipoRelatorio(rel.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setTipoRelatorio(rel.id);
+                }
+              }}
             >
               <div className={styles.icon}>
                 {getIcon(rel.icon)}
@@ -372,7 +385,7 @@ function Relatorios() {
                 <p>{rel.descricao}</p>
               </div>
               {tipoRelatorio === rel.id && (
-                <div className={styles.selectedCheck}>✓</div>
+                <div className={styles.selectedCheck} aria-hidden="true">✓</div>
               )}
             </div>
           ))}
@@ -392,8 +405,9 @@ function Relatorios() {
               </div>
               {filtrosPorTipo[tipoRelatorio]?.map(renderFiltro)}
               <div className={styles.formGroup}>
-                <label>Formato</label>
+                <label htmlFor="formato">Formato</label>
                 <select
+                  id="formato"
                   value={formato}
                   onChange={(e) => setFormato(e.target.value)}
                 >
@@ -405,11 +419,11 @@ function Relatorios() {
             </div>
 
             {error && (
-              <div className={styles.errorMessage}>{error}</div>
+              <div className={styles.errorMessage} role="alert" aria-live="polite">{error}</div>
             )}
 
             {sucesso && (
-              <div className={styles.successMessage}>{sucesso}</div>
+              <div className={styles.successMessage} role="status" aria-live="polite">{sucesso}</div>
             )}
 
             <div className={styles.actions}>

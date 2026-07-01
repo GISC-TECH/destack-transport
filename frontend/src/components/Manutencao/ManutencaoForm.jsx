@@ -152,9 +152,9 @@ function ManutencaoForm() {
       />
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`}>
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -164,8 +164,9 @@ function ManutencaoForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Veículo *</label>
+              <label htmlFor="veiculo">Veículo *</label>
               <select
+                id="veiculo"
                 name="veiculo"
                 value={formData.veiculo}
                 onChange={handleChange}
@@ -181,8 +182,9 @@ function ManutencaoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Tipo de Manutenção *</label>
+              <label htmlFor="tipo">Tipo de Manutenção *</label>
               <select
+                id="tipo"
                 name="tipo"
                 value={formData.tipo}
                 onChange={handleChange}
@@ -196,8 +198,9 @@ function ManutencaoForm() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Descrição *</label>
+            <label htmlFor="descricao">Descrição *</label>
             <textarea
+              id="descricao"
               name="descricao"
               value={formData.descricao}
               onChange={handleChange}
@@ -213,8 +216,9 @@ function ManutencaoForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Data Agendada *</label>
+              <label htmlFor="data_agendada">Data Agendada *</label>
               <input
+                id="data_agendada"
                 type="date"
                 name="data_agendada"
                 value={formData.data_agendada}
@@ -224,8 +228,9 @@ function ManutencaoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Data Realizada</label>
+              <label htmlFor="data_realizada">Data Realizada</label>
               <input
+                id="data_realizada"
                 type="date"
                 name="data_realizada"
                 value={formData.data_realizada}
@@ -234,8 +239,9 @@ function ManutencaoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Status *</label>
+              <label htmlFor="status">Status *</label>
               <select
+                id="status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
@@ -255,8 +261,9 @@ function ManutencaoForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>KM Atual</label>
+              <label htmlFor="km_atual">KM Atual</label>
               <input
+                id="km_atual"
                 type="number"
                 name="km_atual"
                 value={formData.km_atual}
@@ -266,8 +273,9 @@ function ManutencaoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Custo (R$)</label>
+              <label htmlFor="custo">Custo (R$)</label>
               <input
+                id="custo"
                 type="number"
                 step="0.01"
                 name="custo"
@@ -280,8 +288,9 @@ function ManutencaoForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Fornecedor/Oficina</label>
+              <label htmlFor="fornecedor">Fornecedor/Oficina</label>
               <input
+                id="fornecedor"
                 type="text"
                 name="fornecedor"
                 value={formData.fornecedor}
@@ -292,8 +301,9 @@ function ManutencaoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Número da Nota Fiscal</label>
+              <label htmlFor="numero_nota">Número da Nota Fiscal</label>
               <input
+                id="numero_nota"
                 type="text"
                 name="numero_nota"
                 value={formData.numero_nota}
@@ -305,8 +315,9 @@ function ManutencaoForm() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Arquivo da Nota Fiscal (opcional)</label>
+            <label htmlFor="arquivo_nota">Arquivo da Nota Fiscal (opcional)</label>
             <input
+              id="arquivo_nota"
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => setArquivoNota(e.target.files[0] || null)}
@@ -320,8 +331,9 @@ function ManutencaoForm() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Observações</label>
+            <label htmlFor="observacoes">Observações</label>
             <textarea
+              id="observacoes"
               name="observacoes"
               value={formData.observacoes}
               onChange={handleChange}

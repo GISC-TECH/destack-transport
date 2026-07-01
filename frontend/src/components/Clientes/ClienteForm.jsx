@@ -209,9 +209,9 @@ function ClienteForm() {
       />
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`}>
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -221,10 +221,11 @@ function ClienteForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>CNPJ <span className={styles.required}>*</span></label>
+              <label htmlFor="cnpj">CNPJ <span className={styles.required}>*</span></label>
               <div className={styles.cnpjInputGroup}>
                 <input
                   type="text"
+                  id="cnpj"
                   name="cnpj"
                   className={styles.cnpjInput}
                   value={formData.cnpj}
@@ -247,9 +248,10 @@ function ClienteForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Inscrição Estadual</label>
+              <label htmlFor="ie">Inscrição Estadual</label>
               <input
                 type="text"
+                id="ie"
                 name="ie"
                 value={formData.ie}
                 onChange={handleChange}
@@ -264,9 +266,10 @@ function ClienteForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Razão Social <span className={styles.required}>*</span></label>
+              <label htmlFor="razao_social">Razão Social <span className={styles.required}>*</span></label>
               <input
                 type="text"
+                id="razao_social"
                 name="razao_social"
                 value={formData.razao_social}
                 onChange={handleChange}
@@ -276,9 +279,10 @@ function ClienteForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Nome Fantasia</label>
+              <label htmlFor="nome_fantasia">Nome Fantasia</label>
               <input
                 type="text"
+                id="nome_fantasia"
                 name="nome_fantasia"
                 value={formData.nome_fantasia}
                 onChange={handleChange}
@@ -289,8 +293,9 @@ function ClienteForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Tipo de Frete <span className={styles.required}>*</span></label>
+              <label htmlFor="tipo_frete">Tipo de Frete <span className={styles.required}>*</span></label>
               <select
+                id="tipo_frete"
                 name="tipo_frete"
                 value={formData.tipo_frete}
                 onChange={handleChange}
@@ -302,9 +307,10 @@ function ClienteForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Distancia (km)</label>
+              <label htmlFor="distancia">Distancia (km)</label>
               <input
                 type="number"
+                id="distancia"
                 name="distancia"
                 value={formData.distancia}
                 onChange={handleChange}
@@ -320,9 +326,10 @@ function ClienteForm() {
 
           <div className={styles.formRow}>
             <div className={`${styles.formGroup} ${styles.formGroupCep}`}>
-              <label>CEP</label>
+              <label htmlFor="cep">CEP</label>
               <input
                 type="text"
+                id="cep"
                 name="cep"
                 value={formData.cep}
                 onChange={(e) => setFormData({...formData, cep: formatCEP(e.target.value)})}
@@ -332,9 +339,10 @@ function ClienteForm() {
             </div>
 
             <div className={`${styles.formGroup} ${styles.formGroupLogradouro}`}>
-              <label>Logradouro</label>
+              <label htmlFor="logradouro">Logradouro</label>
               <input
                 type="text"
+                id="logradouro"
                 name="logradouro"
                 value={formData.logradouro}
                 onChange={handleChange}
@@ -344,9 +352,10 @@ function ClienteForm() {
             </div>
 
             <div className={`${styles.formGroup} ${styles.formGroupNumero}`}>
-              <label>Número</label>
+              <label htmlFor="numero">Número</label>
               <input
                 type="text"
+                id="numero"
                 name="numero"
                 value={formData.numero}
                 onChange={handleChange}
@@ -357,9 +366,10 @@ function ClienteForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Complemento</label>
+              <label htmlFor="complemento">Complemento</label>
               <input
                 type="text"
+                id="complemento"
                 name="complemento"
                 value={formData.complemento}
                 onChange={handleChange}
@@ -369,9 +379,10 @@ function ClienteForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Bairro</label>
+              <label htmlFor="bairro">Bairro</label>
               <input
                 type="text"
+                id="bairro"
                 name="bairro"
                 value={formData.bairro}
                 onChange={handleChange}
@@ -382,9 +393,10 @@ function ClienteForm() {
 
           <div className={styles.formRow}>
             <div className={`${styles.formGroup} ${styles.formGroupCidade}`}>
-              <label>Cidade</label>
+              <label htmlFor="cidade">Cidade</label>
               <input
                 type="text"
+                id="cidade"
                 name="cidade"
                 value={formData.cidade}
                 onChange={handleChange}
@@ -393,8 +405,9 @@ function ClienteForm() {
             </div>
 
             <div className={`${styles.formGroup} ${styles.formGroupUf}`}>
-              <label>UF</label>
+              <label htmlFor="estado">UF</label>
               <select
+                id="estado"
                 name="estado"
                 value={formData.estado}
                 onChange={handleChange}
@@ -409,9 +422,10 @@ function ClienteForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>E-mail</label>
+              <label htmlFor="email">E-mail</label>
               <input
                 type="email"
+                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
@@ -421,9 +435,10 @@ function ClienteForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Telefone</label>
+              <label htmlFor="telefone">Telefone</label>
               <input
                 type="text"
+                id="telefone"
                 name="telefone"
                 value={formData.telefone}
                 onChange={handleChange}
@@ -438,8 +453,9 @@ function ClienteForm() {
           <h3>Informações Adicionais</h3>
 
           <div className={styles.formGroup}>
-            <label>Observações</label>
+            <label htmlFor="observacoes">Observações</label>
             <textarea
+              id="observacoes"
               name="observacoes"
               value={formData.observacoes}
               onChange={handleChange}
@@ -449,9 +465,10 @@ function ClienteForm() {
           </div>
 
           <div className={`${styles.formGroup} ${styles.checkboxGroup}`}>
-            <label>
+            <label htmlFor="ativo">
               <input
                 type="checkbox"
+                id="ativo"
                 name="ativo"
                 checked={formData.ativo}
                 onChange={handleChange}

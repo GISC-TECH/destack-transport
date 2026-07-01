@@ -128,9 +128,9 @@ function PlanoManutencaoForm() {
       />
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`}>
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -139,8 +139,8 @@ function PlanoManutencaoForm() {
           <h3>Informações Básicas</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Veículo *</label>
-              <select name="veiculo" value={formData.veiculo} onChange={handleChange} required>
+              <label htmlFor="veiculo">Veículo *</label>
+              <select id="veiculo" name="veiculo" value={formData.veiculo} onChange={handleChange} required>
                 <option value="">Selecione</option>
                 {veiculos.map(v => (
                   <option key={v.id} value={v.id}>{v.placa}</option>
@@ -148,16 +148,17 @@ function PlanoManutencaoForm() {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Tipo *</label>
-              <select name="tipo" value={formData.tipo} onChange={handleChange} required>
+              <label htmlFor="tipo">Tipo *</label>
+              <select id="tipo" name="tipo" value={formData.tipo} onChange={handleChange} required>
                 <option value="preventiva">Preventiva</option>
                 <option value="corretiva">Corretiva</option>
                 <option value="preditiva">Preditiva</option>
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Ativo</label>
+              <label className={styles.checkboxLabel} htmlFor="ativo">Ativo</label>
               <input
+                id="ativo"
                 type="checkbox"
                 name="ativo"
                 checked={formData.ativo}
@@ -168,8 +169,9 @@ function PlanoManutencaoForm() {
 
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
-              <label>Descrição do Serviço *</label>
+              <label htmlFor="descricao">Descrição do Serviço *</label>
               <input
+                id="descricao"
                 type="text"
                 name="descricao"
                 value={formData.descricao}
@@ -186,8 +188,9 @@ function PlanoManutencaoForm() {
           <h3>Intervalos</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Intervalo (KM)</label>
+              <label htmlFor="intervalo_km">Intervalo (KM)</label>
               <input
+                id="intervalo_km"
                 type="number"
                 name="intervalo_km"
                 value={formData.intervalo_km}
@@ -197,8 +200,9 @@ function PlanoManutencaoForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Intervalo (Dias)</label>
+              <label htmlFor="intervalo_dias">Intervalo (Dias)</label>
               <input
+                id="intervalo_dias"
                 type="number"
                 name="intervalo_dias"
                 value={formData.intervalo_dias}
@@ -215,8 +219,9 @@ function PlanoManutencaoForm() {
           <h3>Última Manutenção</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Última KM</label>
+              <label htmlFor="ultima_km">Última KM</label>
               <input
+                id="ultima_km"
                 type="number"
                 name="ultima_km"
                 value={formData.ultima_km}
@@ -225,8 +230,9 @@ function PlanoManutencaoForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Última Data</label>
+              <label htmlFor="ultima_data">Última Data</label>
               <input
+                id="ultima_data"
                 type="date"
                 name="ultima_data"
                 value={formData.ultima_data}
@@ -241,8 +247,9 @@ function PlanoManutencaoForm() {
           <h3>Próxima Manutenção (ou deixe em branco para calcular)</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Próxima KM</label>
+              <label htmlFor="proxima_km">Próxima KM</label>
               <input
+                id="proxima_km"
                 type="number"
                 name="proxima_km"
                 value={formData.proxima_km}
@@ -251,8 +258,9 @@ function PlanoManutencaoForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Próxima Data</label>
+              <label htmlFor="proxima_data">Próxima Data</label>
               <input
+                id="proxima_data"
                 type="date"
                 name="proxima_data"
                 value={formData.proxima_data}
@@ -267,7 +275,9 @@ function PlanoManutencaoForm() {
           <h3>Observações</h3>
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
+              <label htmlFor="observacao">Observação</label>
               <textarea
+                id="observacao"
                 name="observacao"
                 value={formData.observacao}
                 onChange={handleChange}

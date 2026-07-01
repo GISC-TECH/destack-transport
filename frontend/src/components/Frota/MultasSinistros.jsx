@@ -319,15 +319,15 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
       <form onSubmit={handleSubmit}>
         <div className={styles.formRow}>
           <div className={styles.formGroup}>
-              <label>Veículo *</label>
-              <select name="veiculo" value={formData.veiculo} onChange={handleChange} required>
+              <label htmlFor="veiculo">Veículo *</label>
+              <select id="veiculo" name="veiculo" value={formData.veiculo} onChange={handleChange} required>
                 <option value="">Selecione</option>
                 {veiculos.map(v => <option key={v.id} value={v.id}>{v.placa}</option>)}
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Motorista</label>
-              <select name="motorista" value={formData.motorista} onChange={handleChange}>
+              <label htmlFor="motorista">Motorista</label>
+              <select id="motorista" name="motorista" value={formData.motorista} onChange={handleChange}>
                 <option value="">Selecione</option>
                 {motoristas.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
               </select>
@@ -338,16 +338,16 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
             <>
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Data Infração *</label>
-                  <input type="date" name="data_infracao" value={formData.data_infracao} onChange={handleChange} required />
+                  <label htmlFor="data_infracao">Data Infração *</label>
+                  <input id="data_infracao" type="date" name="data_infracao" value={formData.data_infracao} onChange={handleChange} required />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Auto de Infração</label>
-                  <input type="text" name="auto_infracao" value={formData.auto_infracao} onChange={handleChange} />
+                  <label htmlFor="auto_infracao">Auto de Infração</label>
+                  <input id="auto_infracao" type="text" name="auto_infracao" value={formData.auto_infracao} onChange={handleChange} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Gravidade</label>
-                  <select name="gravidade" value={formData.gravidade} onChange={handleChange}>
+                  <label htmlFor="gravidade">Gravidade</label>
+                  <select id="gravidade" name="gravidade" value={formData.gravidade} onChange={handleChange}>
                     <option value="leve">Leve</option>
                     <option value="media">Média</option>
                     <option value="grave">Grave</option>
@@ -357,16 +357,16 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
               </div>
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Valor (R$) *</label>
-                  <input type="number" step="0.01" name="valor" value={formData.valor} onChange={handleChange} required />
+                  <label htmlFor="valor">Valor (R$) *</label>
+                  <input id="valor" type="number" step="0.01" name="valor" value={formData.valor} onChange={handleChange} required />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Pontos</label>
-                  <input type="number" name="pontos" value={formData.pontos} onChange={handleChange} />
+                  <label htmlFor="pontos">Pontos</label>
+                  <input id="pontos" type="number" name="pontos" value={formData.pontos} onChange={handleChange} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Status</label>
-                  <select name="status" value={formData.status} onChange={handleChange}>
+                  <label htmlFor="status">Status</label>
+                  <select id="status" name="status" value={formData.status} onChange={handleChange}>
                     <option value="pendente">Pendente</option>
                     <option value="paga">Paga</option>
                     <option value="impugnada">Impugnada</option>
@@ -379,12 +379,12 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
             <>
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Data *</label>
-                  <input type="date" name="data" value={formData.data} onChange={handleChange} required />
+                  <label htmlFor="data">Data *</label>
+                  <input id="data" type="date" name="data" value={formData.data} onChange={handleChange} required />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Tipo</label>
-                  <select name="tipo" value={formData.tipo} onChange={handleChange}>
+                  <label htmlFor="tipo">Tipo</label>
+                  <select id="tipo" name="tipo" value={formData.tipo} onChange={handleChange}>
                     <option value="colisao">Colisão</option>
                     <option value="incendio">Incêndio</option>
                     <option value="furto_roubo">Furto/Roubo</option>
@@ -393,8 +393,8 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
                   </select>
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Status</label>
-                  <select name="status" value={formData.status} onChange={handleChange}>
+                  <label htmlFor="status">Status</label>
+                  <select id="status" name="status" value={formData.status} onChange={handleChange}>
                     <option value="aberto">Aberto</option>
                     <option value="em_andamento">Em Andamento</option>
                     <option value="resolvido">Resolvido</option>
@@ -404,16 +404,16 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
               </div>
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Custo Total (R$)</label>
-                  <input type="number" step="0.01" name="custo_total" value={formData.custo_total} onChange={handleChange} />
+                  <label htmlFor="custo_total">Custo Total (R$)</label>
+                  <input id="custo_total" type="number" step="0.01" name="custo_total" value={formData.custo_total} onChange={handleChange} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Número Sinistro</label>
-                  <input type="text" name="numero_sinistro" value={formData.numero_sinistro} onChange={handleChange} />
+                  <label htmlFor="numero_sinistro">Número Sinistro</label>
+                  <input id="numero_sinistro" type="text" name="numero_sinistro" value={formData.numero_sinistro} onChange={handleChange} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Seguradora</label>
-                  <input type="text" name="seguradora" value={formData.seguradora} onChange={handleChange} />
+                  <label htmlFor="seguradora">Seguradora</label>
+                  <input id="seguradora" type="text" name="seguradora" value={formData.seguradora} onChange={handleChange} />
                 </div>
               </div>
             </>
@@ -421,19 +421,19 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
 
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
-              <label>Local</label>
-              <input type="text" name="local" value={formData.local} onChange={handleChange} />
+              <label htmlFor="local">Local</label>
+              <input id="local" type="text" name="local" value={formData.local} onChange={handleChange} />
             </div>
             <div className={styles.formGroup}>
-              <label>Descrição</label>
-              <input type="text" name="descricao" value={formData.descricao} onChange={handleChange} />
+              <label htmlFor="descricao">Descrição</label>
+              <input id="descricao" type="text" name="descricao" value={formData.descricao} onChange={handleChange} />
             </div>
           </div>
 
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
-              <label>Observação</label>
-              <textarea name="observacao" value={formData.observacao} onChange={handleChange} />
+              <label htmlFor="observacao">Observação</label>
+              <textarea id="observacao" name="observacao" value={formData.observacao} onChange={handleChange} />
             </div>
           </div>
 

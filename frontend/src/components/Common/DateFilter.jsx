@@ -222,7 +222,7 @@ function DateFilter({
         </button>
       </div>
 
-      {erro && <span className={styles.errorMessage}>{erro}</span>}
+      {erro && <span className={styles.errorMessage} role="alert" aria-live="polite">{erro}</span>}
     </div>
   );
 }

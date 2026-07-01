@@ -326,9 +326,10 @@ function MotoristaForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.checkboxLabel}>
+              <label className={styles.checkboxLabel} htmlFor="ativo">
                 <input
                   type="checkbox"
+                  id="ativo"
                   name="ativo"
                   checked={formData.ativo}
                   onChange={handleChange}

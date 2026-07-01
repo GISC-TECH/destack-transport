@@ -443,8 +443,9 @@ function VeiculoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Última Sincronização</label>
+              <label htmlFor="gps_ultima_sincronizacao">Última Sincronização</label>
               <input
+                id="gps_ultima_sincronizacao"
                 type="text"
                 value={formData.gps_ultima_sincronizacao
                   ? new Date(formData.gps_ultima_sincronizacao).toLocaleString('pt-BR')
@@ -473,8 +474,9 @@ function VeiculoForm() {
                     <span className={styles.numeroValue}>{comp.numero_boca}</span>
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Capacidade (m³)</label>
+                    <label htmlFor={`compartimento_capacidade_${index}`}>Capacidade (m³)</label>
                     <input
+                      id={`compartimento_capacidade_${index}`}
                       type="number"
                       value={comp.capacidade_m3}
                       onChange={(e) => handleCompartimentoChange(index, 'capacidade_m3', e.target.value)}
@@ -535,9 +537,10 @@ function VeiculoForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.checkboxLabel}>
+              <label className={styles.checkboxLabel} htmlFor="ativo">
                 <input
                   type="checkbox"
+                  id="ativo"
                   name="ativo"
                   checked={formData.ativo}
                   onChange={handleChange}

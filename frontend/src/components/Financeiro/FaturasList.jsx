@@ -392,8 +392,9 @@ function FaturasList() {
       >
         <form id="lote-form" onSubmit={handleGerarLote}>
           <div className="form-group">
-            <label>Cliente *</label>
+            <label htmlFor="lote_cliente">Cliente *</label>
             <select
+              id="lote_cliente"
               value={lote.cliente}
               onChange={(e) => setLote(prev => ({ ...prev, cliente: e.target.value }))}
               required
@@ -407,8 +408,9 @@ function FaturasList() {
 
           <div className="form-row">
             <div className="form-group">
-              <label>Data de Vencimento *</label>
+              <label htmlFor="lote_data_vencimento">Data de Vencimento *</label>
               <input
+                id="lote_data_vencimento"
                 type="date"
                 value={lote.data_vencimento}
                 onChange={(e) => setLote(prev => ({ ...prev, data_vencimento: e.target.value }))}
@@ -418,16 +420,17 @@ function FaturasList() {
           </div>
 
           <div className="form-group">
-            <label>Observação</label>
+            <label htmlFor="lote_observacao">Observação</label>
             <textarea
+              id="lote_observacao"
               rows="2"
               value={lote.observacao}
               onChange={(e) => setLote(prev => ({ ...prev, observacao: e.target.value }))}
             />
           </div>
 
-          <div className="form-group">
-            <label>CT-es disponíveis *</label>
+          <div className="form-group" role="group" aria-labelledby="lote_ctes_label">
+            <label id="lote_ctes_label">CT-es disponíveis *</label>
             {loadingModal ? (
               <p>Carregando...</p>
             ) : ctes.length === 0 ? (

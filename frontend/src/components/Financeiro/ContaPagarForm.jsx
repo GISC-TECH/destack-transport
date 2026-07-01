@@ -127,9 +127,9 @@ function ContaPagarForm() {
       />
 
       {error && (
-        <div className="alert alert-error">
+        <div className="alert alert-error" role="alert" aria-live="polite">
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className="alert-close" onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -139,9 +139,10 @@ function ContaPagarForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Descrição *</label>
+              <label htmlFor="descricao">Descrição *</label>
               <input
                 type="text"
+                id="descricao"
                 name="descricao"
                 value={formData.descricao}
                 onChange={handleChange}
@@ -152,8 +153,9 @@ function ContaPagarForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Categoria *</label>
+              <label htmlFor="categoria">Categoria *</label>
               <select
+                id="categoria"
                 name="categoria"
                 value={formData.categoria}
                 onChange={handleChange}
@@ -170,9 +172,10 @@ function ContaPagarForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Fornecedor</label>
+              <label htmlFor="fornecedor">Fornecedor</label>
               <input
                 type="text"
+                id="fornecedor"
                 name="fornecedor"
                 value={formData.fornecedor}
                 onChange={handleChange}
@@ -182,9 +185,10 @@ function ContaPagarForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Valor (R$) *</label>
+              <label htmlFor="valor">Valor (R$) *</label>
               <input
                 type="number"
+                id="valor"
                 step="0.01"
                 name="valor"
                 value={formData.valor}
@@ -201,9 +205,10 @@ function ContaPagarForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Data de Vencimento *</label>
+              <label htmlFor="data_vencimento">Data de Vencimento *</label>
               <input
                 type="date"
+                id="data_vencimento"
                 name="data_vencimento"
                 value={formData.data_vencimento}
                 onChange={handleChange}
@@ -212,9 +217,10 @@ function ContaPagarForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Data de Pagamento</label>
+              <label htmlFor="data_pagamento">Data de Pagamento</label>
               <input
                 type="date"
+                id="data_pagamento"
                 name="data_pagamento"
                 value={formData.data_pagamento}
                 onChange={handleChange}
@@ -222,8 +228,9 @@ function ContaPagarForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Status *</label>
+              <label htmlFor="status">Status *</label>
               <select
+                id="status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
@@ -243,8 +250,9 @@ function ContaPagarForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Veículo (opcional)</label>
+              <label htmlFor="veiculo">Veículo (opcional)</label>
               <select
+                id="veiculo"
                 name="veiculo"
                 value={formData.veiculo}
                 onChange={handleChange}
@@ -259,8 +267,9 @@ function ContaPagarForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Comprovante (opcional)</label>
+              <label htmlFor="comprovante">Comprovante (opcional)</label>
               <input
+                id="comprovante"
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
                 onChange={(e) => setComprovante(e.target.files[0] || null)}
@@ -275,8 +284,9 @@ function ContaPagarForm() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Observação</label>
+            <label htmlFor="observacao">Observação</label>
             <textarea
+              id="observacao"
               name="observacao"
               value={formData.observacao}
               onChange={handleChange}

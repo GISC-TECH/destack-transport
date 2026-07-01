@@ -254,9 +254,9 @@ function OrdemViagemForm() {
       />
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`}>
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -265,8 +265,9 @@ function OrdemViagemForm() {
           <h3>Informações Básicas</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Número</label>
+              <label htmlFor="numero">Número</label>
               <input
+                id="numero"
                 type="text"
                 name="numero"
                 value={formData.numero}
@@ -275,8 +276,8 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Tipo</label>
-              <select name="tipo" value={formData.tipo} onChange={handleChange}>
+              <label htmlFor="tipo">Tipo</label>
+              <select id="tipo" name="tipo" value={formData.tipo} onChange={handleChange}>
                 <option value="carga">Carga</option>
                 <option value="descarga">Descarga</option>
                 <option value="transferencia">Transferência</option>
@@ -284,8 +285,8 @@ function OrdemViagemForm() {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Status</label>
-              <select name="status" value={formData.status} onChange={handleChange}>
+              <label htmlFor="status">Status</label>
+              <select id="status" name="status" value={formData.status} onChange={handleChange}>
                 <option value="rascunho">Rascunho</option>
                 <option value="agendada">Agendada</option>
                 <option value="em_andamento">Em Andamento</option>
@@ -297,8 +298,8 @@ function OrdemViagemForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Veículo *</label>
-              <select name="veiculo" value={formData.veiculo} onChange={handleChange} required>
+              <label htmlFor="veiculo">Veículo *</label>
+              <select id="veiculo" name="veiculo" value={formData.veiculo} onChange={handleChange} required>
                 <option value="">Selecione</option>
                 {veiculos.map(v => (
                   <option key={v.id} value={v.id}>{v.placa}</option>
@@ -306,8 +307,8 @@ function OrdemViagemForm() {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Motorista</label>
-              <select name="motorista" value={formData.motorista} onChange={handleChange}>
+              <label htmlFor="motorista">Motorista</label>
+              <select id="motorista" name="motorista" value={formData.motorista} onChange={handleChange}>
                 <option value="">Selecione</option>
                 {motoristas.map(m => (
                   <option key={m.id} value={m.id}>{m.nome}</option>
@@ -315,8 +316,8 @@ function OrdemViagemForm() {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Cliente</label>
-              <select name="cliente" value={formData.cliente} onChange={handleChange}>
+              <label htmlFor="cliente">Cliente</label>
+              <select id="cliente" name="cliente" value={formData.cliente} onChange={handleChange}>
                 <option value="">Selecione</option>
                 {clientes.map(c => (
                   <option key={c.id} value={c.id}>{c.razao_social}</option>
@@ -330,8 +331,9 @@ function OrdemViagemForm() {
           <h3>Datas e Quilometragem</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Data/Hora Saída</label>
+              <label htmlFor="data_saida">Data/Hora Saída</label>
               <input
+                id="data_saida"
                 type="datetime-local"
                 name="data_saida"
                 value={formData.data_saida}
@@ -339,8 +341,9 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Previsão Chegada</label>
+              <label htmlFor="data_previsao_chegada">Previsão Chegada</label>
               <input
+                id="data_previsao_chegada"
                 type="datetime-local"
                 name="data_previsao_chegada"
                 value={formData.data_previsao_chegada}
@@ -348,8 +351,9 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Data/Hora Retorno</label>
+              <label htmlFor="data_retorno">Data/Hora Retorno</label>
               <input
+                id="data_retorno"
                 type="datetime-local"
                 name="data_retorno"
                 value={formData.data_retorno}
@@ -360,8 +364,9 @@ function OrdemViagemForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>KM Inicial</label>
+              <label htmlFor="km_inicial">KM Inicial</label>
               <input
+                id="km_inicial"
                 type="number"
                 name="km_inicial"
                 value={formData.km_inicial}
@@ -370,8 +375,9 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>KM Final</label>
+              <label htmlFor="km_final">KM Final</label>
               <input
+                id="km_final"
                 type="number"
                 name="km_final"
                 value={formData.km_final}
@@ -380,8 +386,9 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Distância (KM)</label>
+              <label htmlFor="distancia">Distância (KM)</label>
               <input
+                id="distancia"
                 type="text"
                 value={formData.km_inicial && formData.km_final
                   ? formData.km_final - formData.km_inicial
@@ -397,8 +404,9 @@ function OrdemViagemForm() {
           <h3>Rota</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Origem - Cidade</label>
+              <label htmlFor="origem_cidade">Origem - Cidade</label>
               <input
+                id="origem_cidade"
                 type="text"
                 name="origem_cidade"
                 value={formData.origem_cidade}
@@ -406,8 +414,9 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Origem - UF</label>
+              <label htmlFor="origem_uf">Origem - UF</label>
               <input
+                id="origem_uf"
                 type="text"
                 name="origem_uf"
                 value={formData.origem_uf}
@@ -416,8 +425,9 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Origem - Latitude</label>
+              <label htmlFor="origem_latitude">Origem - Latitude</label>
               <input
+                id="origem_latitude"
                 type="number"
                 step="any"
                 name="origem_latitude"
@@ -427,8 +437,9 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Origem - Longitude</label>
+              <label htmlFor="origem_longitude">Origem - Longitude</label>
               <input
+                id="origem_longitude"
                 type="number"
                 step="any"
                 name="origem_longitude"
@@ -440,8 +451,9 @@ function OrdemViagemForm() {
           </div>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Destino - Cidade</label>
+              <label htmlFor="destino_cidade">Destino - Cidade</label>
               <input
+                id="destino_cidade"
                 type="text"
                 name="destino_cidade"
                 value={formData.destino_cidade}
@@ -449,8 +461,9 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Destino - UF</label>
+              <label htmlFor="destino_uf">Destino - UF</label>
               <input
+                id="destino_uf"
                 type="text"
                 name="destino_uf"
                 value={formData.destino_uf}
@@ -459,8 +472,9 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Destino - Latitude</label>
+              <label htmlFor="destino_latitude">Destino - Latitude</label>
               <input
+                id="destino_latitude"
                 type="number"
                 step="any"
                 name="destino_latitude"
@@ -470,8 +484,9 @@ function OrdemViagemForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Destino - Longitude</label>
+              <label htmlFor="destino_longitude">Destino - Longitude</label>
               <input
+                id="destino_longitude"
                 type="number"
                 step="any"
                 name="destino_longitude"
@@ -492,6 +507,8 @@ function OrdemViagemForm() {
             {formData.ctes.map((cte, index) => (
               <div key={index} className={styles.itemRow}>
                 <select
+                  id={`cte_vinculado_${index}`}
+                  aria-label={`CT-e vinculado ${index + 1}`}
                   value={cte.cte}
                   onChange={(e) => handleCteChange(index, 'cte', e.target.value)}
                 >
@@ -503,7 +520,9 @@ function OrdemViagemForm() {
                   ))}
                 </select>
                 <input
+                  id={`cte_ordem_${index}`}
                   type="number"
+                  aria-label={`Ordem de entrega do CT-e ${index + 1}`}
                   placeholder="Ordem"
                   value={cte.ordem_entrega}
                   onChange={(e) => handleCteChange(index, 'ordem_entrega', e.target.value)}
@@ -513,7 +532,8 @@ function OrdemViagemForm() {
                   type="button"
                   className={styles.btnIcon}
                   onClick={() => handleRemoveCte(index)}
-                  title="Remover"
+                  title="Remover CT-e"
+                  aria-label={`Remover CT-e vinculado ${index + 1}`}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -537,6 +557,8 @@ function OrdemViagemForm() {
             {formData.paradas.map((parada, index) => (
               <div key={index} className={`${styles.itemRow} ${styles.paradaRow}`}>
                 <select
+                  id={`parada_tipo_${index}`}
+                  aria-label={`Tipo da parada ${index + 1}`}
                   value={parada.tipo}
                   onChange={(e) => handleParadaChange(index, 'tipo', e.target.value)}
                 >
@@ -546,34 +568,44 @@ function OrdemViagemForm() {
                   <option value="outros">Outros</option>
                 </select>
                 <input
+                  id={`parada_cidade_${index}`}
                   type="text"
+                  aria-label={`Cidade da parada ${index + 1}`}
                   placeholder="Cidade"
                   value={parada.cidade}
                   onChange={(e) => handleParadaChange(index, 'cidade', e.target.value)}
                 />
                 <input
+                  id={`parada_uf_${index}`}
                   type="text"
+                  aria-label={`UF da parada ${index + 1}`}
                   placeholder="UF"
                   value={parada.uf}
                   onChange={(e) => handleParadaChange(index, 'uf', e.target.value)}
                   maxLength="2"
                 />
                 <input
+                  id={`parada_latitude_${index}`}
                   type="number"
                   step="any"
+                  aria-label={`Latitude da parada ${index + 1}`}
                   placeholder="Latitude"
                   value={parada.latitude}
                   onChange={(e) => handleParadaChange(index, 'latitude', e.target.value)}
                 />
                 <input
+                  id={`parada_longitude_${index}`}
                   type="number"
                   step="any"
+                  aria-label={`Longitude da parada ${index + 1}`}
                   placeholder="Longitude"
                   value={parada.longitude}
                   onChange={(e) => handleParadaChange(index, 'longitude', e.target.value)}
                 />
                 <input
+                  id={`parada_data_previsao_${index}`}
                   type="datetime-local"
+                  aria-label={`Data prevista da parada ${index + 1}`}
                   value={parada.data_previsao}
                   onChange={(e) => handleParadaChange(index, 'data_previsao', e.target.value)}
                 />
@@ -581,7 +613,8 @@ function OrdemViagemForm() {
                   type="button"
                   className={styles.btnIcon}
                   onClick={() => handleRemoveParada(index)}
-                  title="Remover"
+                  title="Remover parada"
+                  aria-label={`Remover parada ${index + 1}`}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -600,8 +633,9 @@ function OrdemViagemForm() {
           <h3>CIOT</h3>
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
-              <label>Código CIOT Vinculado</label>
+              <label htmlFor="ciot">Código CIOT Vinculado</label>
               <select
+                id="ciot"
                 name="ciot"
                 value={formData.ciot}
                 onChange={handleChange}
@@ -626,7 +660,9 @@ function OrdemViagemForm() {
           <h3>Observações</h3>
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
+              <label htmlFor="observacoes">Observações</label>
               <textarea
+                id="observacoes"
                 name="observacoes"
                 value={formData.observacoes}
                 onChange={handleChange}

@@ -117,9 +117,9 @@ function TabelaFreteForm() {
       />
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`}>
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -128,30 +128,30 @@ function TabelaFreteForm() {
           <h3>Rota</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Origem UF *</label>
-              <input type="text" name="origem_uf" value={formData.origem_uf} onChange={handleChange} required maxLength="2" />
+              <label htmlFor="origem_uf">Origem UF *</label>
+              <input id="origem_uf" type="text" name="origem_uf" value={formData.origem_uf} onChange={handleChange} required maxLength="2" />
             </div>
             <div className={styles.formGroup}>
-              <label>Origem Cidade *</label>
-              <input type="text" name="origem_cidade" value={formData.origem_cidade} onChange={handleChange} required />
+              <label htmlFor="origem_cidade">Origem Cidade *</label>
+              <input id="origem_cidade" type="text" name="origem_cidade" value={formData.origem_cidade} onChange={handleChange} required />
             </div>
             <div className={styles.formGroup}>
-              <label>Destino UF *</label>
-              <input type="text" name="destino_uf" value={formData.destino_uf} onChange={handleChange} required maxLength="2" />
+              <label htmlFor="destino_uf">Destino UF *</label>
+              <input id="destino_uf" type="text" name="destino_uf" value={formData.destino_uf} onChange={handleChange} required maxLength="2" />
             </div>
           </div>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Destino Cidade *</label>
-              <input type="text" name="destino_cidade" value={formData.destino_cidade} onChange={handleChange} required />
+              <label htmlFor="destino_cidade">Destino Cidade *</label>
+              <input id="destino_cidade" type="text" name="destino_cidade" value={formData.destino_cidade} onChange={handleChange} required />
             </div>
             <div className={styles.formGroup}>
-              <label>Tipo de Veículo</label>
-              <input type="text" name="tipo_veiculo" value={formData.tipo_veiculo} onChange={handleChange} />
+              <label htmlFor="tipo_veiculo">Tipo de Veículo</label>
+              <input id="tipo_veiculo" type="text" name="tipo_veiculo" value={formData.tipo_veiculo} onChange={handleChange} />
             </div>
             <div className={styles.formGroup}>
-              <label className={styles.checkboxLabel}>
-                <input type="checkbox" name="ativo" checked={formData.ativo} onChange={handleChange} />
+              <label className={styles.checkboxLabel} htmlFor="ativo">
+                <input id="ativo" type="checkbox" name="ativo" checked={formData.ativo} onChange={handleChange} />
                 Ativo
               </label>
             </div>
@@ -162,30 +162,30 @@ function TabelaFreteForm() {
           <h3>Valores</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Valor por KM (R$) *</label>
-              <input type="number" step="0.01" name="valor_por_km" value={formData.valor_por_km} onChange={handleChange} required min="0" />
+              <label htmlFor="valor_por_km">Valor por KM (R$) *</label>
+              <input id="valor_por_km" type="number" step="0.01" name="valor_por_km" value={formData.valor_por_km} onChange={handleChange} required min="0" />
             </div>
             <div className={styles.formGroup}>
-              <label>Valor Mínimo (R$) *</label>
-              <input type="number" step="0.01" name="valor_minimo" value={formData.valor_minimo} onChange={handleChange} required min="0" />
+              <label htmlFor="valor_minimo">Valor Mínimo (R$) *</label>
+              <input id="valor_minimo" type="number" step="0.01" name="valor_minimo" value={formData.valor_minimo} onChange={handleChange} required min="0" />
             </div>
             <div className={styles.formGroup}>
-              <label>Valor por Tonelada (R$)</label>
-              <input type="number" step="0.01" name="valor_tonelada" value={formData.valor_tonelada} onChange={handleChange} min="0" />
+              <label htmlFor="valor_tonelada">Valor por Tonelada (R$)</label>
+              <input id="valor_tonelada" type="number" step="0.01" name="valor_tonelada" value={formData.valor_tonelada} onChange={handleChange} min="0" />
             </div>
           </div>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Valor por M³ (R$)</label>
-              <input type="number" step="0.01" name="valor_m3" value={formData.valor_m3} onChange={handleChange} min="0" />
+              <label htmlFor="valor_m3">Valor por M³ (R$)</label>
+              <input id="valor_m3" type="number" step="0.01" name="valor_m3" value={formData.valor_m3} onChange={handleChange} min="0" />
             </div>
             <div className={styles.formGroup}>
-              <label>Início Vigência *</label>
-              <input type="date" name="vigencia_inicio" value={formData.vigencia_inicio} onChange={handleChange} required />
+              <label htmlFor="vigencia_inicio">Início Vigência *</label>
+              <input id="vigencia_inicio" type="date" name="vigencia_inicio" value={formData.vigencia_inicio} onChange={handleChange} required />
             </div>
             <div className={styles.formGroup}>
-              <label>Fim Vigência</label>
-              <input type="date" name="vigencia_fim" value={formData.vigencia_fim} onChange={handleChange} />
+              <label htmlFor="vigencia_fim">Fim Vigência</label>
+              <input id="vigencia_fim" type="date" name="vigencia_fim" value={formData.vigencia_fim} onChange={handleChange} />
             </div>
           </div>
         </div>
@@ -194,7 +194,8 @@ function TabelaFreteForm() {
           <h3>Observações</h3>
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
-              <textarea name="observacao" value={formData.observacao} onChange={handleChange} placeholder="Informações adicionais" />
+              <label htmlFor="observacao">Observação</label>
+              <textarea id="observacao" name="observacao" value={formData.observacao} onChange={handleChange} placeholder="Informações adicionais" />
             </div>
           </div>
         </div>

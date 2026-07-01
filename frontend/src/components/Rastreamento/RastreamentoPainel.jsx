@@ -71,8 +71,9 @@ function RastreamentoPainel() {
       <div className={styles.card}>
         <div className={styles.formRow}>
           <div className={styles.formGroup} style={{ flex: 2 }}>
-            <label>Veículo</label>
+            <label htmlFor="veiculo_rastreamento">Veículo</label>
             <select
+              id="veiculo_rastreamento"
               value={veiculoSelecionado}
               onChange={(e) => setVeiculoSelecionado(e.target.value)}
             >

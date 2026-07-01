@@ -187,9 +187,9 @@ function FaturaForm() {
       />
 
       {error && (
-        <div className="alert alert-error">
+        <div className="alert alert-error" role="alert" aria-live="polite">
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className="alert-close" onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -199,8 +199,9 @@ function FaturaForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Cliente *</label>
+              <label htmlFor="cliente">Cliente *</label>
               <select
+                id="cliente"
                 name="cliente"
                 value={formData.cliente}
                 onChange={handleChange}
@@ -214,9 +215,10 @@ function FaturaForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Número *</label>
+              <label htmlFor="numero">Número *</label>
               <input
                 type="text"
+                id="numero"
                 name="numero"
                 value={formData.numero}
                 onChange={handleChange}
@@ -228,9 +230,10 @@ function FaturaForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Data de Emissão *</label>
+              <label htmlFor="data_emissao">Data de Emissão *</label>
               <input
                 type="date"
+                id="data_emissao"
                 name="data_emissao"
                 value={formData.data_emissao}
                 onChange={handleChange}
@@ -239,9 +242,10 @@ function FaturaForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Data de Vencimento *</label>
+              <label htmlFor="data_vencimento">Data de Vencimento *</label>
               <input
                 type="date"
+                id="data_vencimento"
                 name="data_vencimento"
                 value={formData.data_vencimento}
                 onChange={handleChange}
@@ -250,8 +254,9 @@ function FaturaForm() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Status *</label>
+              <label htmlFor="status">Status *</label>
               <select
+                id="status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
@@ -267,8 +272,9 @@ function FaturaForm() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Observação</label>
+            <label htmlFor="observacao">Observação</label>
             <textarea
+              id="observacao"
               name="observacao"
               rows="3"
               value={formData.observacao}
@@ -290,8 +296,9 @@ function FaturaForm() {
           {formData.itens.map((item, index) => (
             <div key={index} className={styles.itemRow}>
               <div className={`${styles.formGroup} ${styles.itemCte}`}>
-                <label>CT-e</label>
+                <label htmlFor={`item_cte_${index}`}>CT-e</label>
                 <select
+                  id={`item_cte_${index}`}
                   value={item.cte}
                   onChange={(e) => handleItemChange(index, 'cte', e.target.value)}
                 >
@@ -305,9 +312,10 @@ function FaturaForm() {
               </div>
 
               <div className={`${styles.formGroup} ${styles.itemDescricao}`}>
-                <label>Descrição *</label>
+                <label htmlFor={`item_descricao_${index}`}>Descrição *</label>
                 <input
                   type="text"
+                  id={`item_descricao_${index}`}
                   value={item.descricao}
                   onChange={(e) => handleItemChange(index, 'descricao', e.target.value)}
                   required
@@ -315,9 +323,10 @@ function FaturaForm() {
               </div>
 
               <div className={`${styles.formGroup} ${styles.itemValor}`}>
-                <label>Valor *</label>
+                <label htmlFor={`item_valor_${index}`}>Valor *</label>
                 <input
                   type="number"
+                  id={`item_valor_${index}`}
                   step="0.01"
                   min="0"
                   value={item.valor}

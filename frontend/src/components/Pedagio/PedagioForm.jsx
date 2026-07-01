@@ -128,9 +128,9 @@ function PedagioForm() {
       />
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`}>
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -139,8 +139,8 @@ function PedagioForm() {
           <h3>Informações Básicas</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Veículo *</label>
-              <select name="veiculo" value={formData.veiculo} onChange={handleChange} required>
+              <label htmlFor="veiculo">Veículo *</label>
+              <select id="veiculo" name="veiculo" value={formData.veiculo} onChange={handleChange} required>
                 <option value="">Selecione</option>
                 {veiculos.map(v => (
                   <option key={v.id} value={v.id}>{v.placa}</option>
@@ -148,8 +148,8 @@ function PedagioForm() {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Ordem de Viagem</label>
-              <select name="ordem" value={formData.ordem} onChange={handleChange}>
+              <label htmlFor="ordem">Ordem de Viagem</label>
+              <select id="ordem" name="ordem" value={formData.ordem} onChange={handleChange}>
                 <option value="">Selecione</option>
                 {ordens.map(o => (
                   <option key={o.id} value={o.id}>{o.numero}</option>
@@ -157,38 +157,38 @@ function PedagioForm() {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Data *</label>
-              <input type="date" name="data" value={formData.data} onChange={handleChange} required />
+              <label htmlFor="data">Data *</label>
+              <input id="data" type="date" name="data" value={formData.data} onChange={handleChange} required />
             </div>
           </div>
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Praça/Pedágio *</label>
-              <input type="text" name="praca" value={formData.praca} onChange={handleChange} required maxLength={120} />
+              <label htmlFor="praca">Praça/Pedágio *</label>
+              <input id="praca" type="text" name="praca" value={formData.praca} onChange={handleChange} required maxLength={120} />
             </div>
             <div className={styles.formGroup}>
-              <label>Rodovia/BR</label>
-              <input type="text" name="rodovia" value={formData.rodovia} onChange={handleChange} maxLength={20} />
+              <label htmlFor="rodovia">Rodovia/BR</label>
+              <input id="rodovia" type="text" name="rodovia" value={formData.rodovia} onChange={handleChange} maxLength={20} />
             </div>
             <div className={styles.formGroup}>
-              <label>KM</label>
-              <input type="number" name="km" value={formData.km} onChange={handleChange} min="0" />
+              <label htmlFor="km">KM</label>
+              <input id="km" type="number" name="km" value={formData.km} onChange={handleChange} min="0" />
             </div>
           </div>
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Categoria</label>
-              <input type="text" name="categoria" value={formData.categoria} onChange={handleChange} maxLength={10} />
+              <label htmlFor="categoria">Categoria</label>
+              <input id="categoria" type="text" name="categoria" value={formData.categoria} onChange={handleChange} maxLength={10} />
             </div>
             <div className={styles.formGroup}>
-              <label>Tag/Passagem</label>
-              <input type="text" name="tag" value={formData.tag} onChange={handleChange} maxLength={30} />
+              <label htmlFor="tag">Tag/Passagem</label>
+              <input id="tag" type="text" name="tag" value={formData.tag} onChange={handleChange} maxLength={30} />
             </div>
             <div className={styles.formGroup}>
-              <label>Valor (R$) *</label>
-              <input type="number" step="0.01" name="valor" value={formData.valor} onChange={handleChange} required min="0" />
+              <label htmlFor="valor">Valor (R$) *</label>
+              <input id="valor" type="number" step="0.01" name="valor" value={formData.valor} onChange={handleChange} required min="0" />
             </div>
           </div>
         </div>
@@ -197,7 +197,8 @@ function PedagioForm() {
           <h3>Observações</h3>
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
-              <textarea name="observacao" value={formData.observacao} onChange={handleChange} placeholder="Informações adicionais" />
+              <label htmlFor="observacao">Observação</label>
+              <textarea id="observacao" name="observacao" value={formData.observacao} onChange={handleChange} placeholder="Informações adicionais" />
             </div>
           </div>
         </div>

@@ -26,6 +26,11 @@
   transform: scale(0.98);
 }
 
+.button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
 .button svg {
   width: 18px;
   height: 18px;

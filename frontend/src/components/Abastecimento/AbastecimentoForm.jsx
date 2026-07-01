@@ -137,9 +137,9 @@ function AbastecimentoForm() {
       />
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`}>
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className={styles.alertClose} onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -148,8 +148,8 @@ function AbastecimentoForm() {
           <h3>Informações Básicas</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Veículo *</label>
-              <select name="veiculo" value={formData.veiculo} onChange={handleChange} required>
+              <label htmlFor="veiculo">Veículo *</label>
+              <select id="veiculo" name="veiculo" value={formData.veiculo} onChange={handleChange} required>
                 <option value="">Selecione</option>
                 {veiculos.map(v => (
                   <option key={v.id} value={v.id}>{v.placa}</option>
@@ -157,8 +157,8 @@ function AbastecimentoForm() {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Motorista</label>
-              <select name="motorista" value={formData.motorista} onChange={handleChange}>
+              <label htmlFor="motorista">Motorista</label>
+              <select id="motorista" name="motorista" value={formData.motorista} onChange={handleChange}>
                 <option value="">Selecione</option>
                 {motoristas.map(m => (
                   <option key={m.id} value={m.id}>{m.nome}</option>
@@ -166,8 +166,8 @@ function AbastecimentoForm() {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Ordem de Viagem</label>
-              <select name="ordem_viagem" value={formData.ordem_viagem} onChange={handleChange}>
+              <label htmlFor="ordem_viagem">Ordem de Viagem</label>
+              <select id="ordem_viagem" name="ordem_viagem" value={formData.ordem_viagem} onChange={handleChange}>
                 <option value="">Selecione</option>
                 {ordens.map(o => (
                   <option key={o.id} value={o.id}>{o.numero}</option>
@@ -178,8 +178,9 @@ function AbastecimentoForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Data *</label>
+              <label htmlFor="data">Data *</label>
               <input
+                id="data"
                 type="date"
                 name="data"
                 value={formData.data}
@@ -188,8 +189,8 @@ function AbastecimentoForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Tipo de Combustível *</label>
-              <select name="tipo_combustivel" value={formData.tipo_combustivel} onChange={handleChange} required>
+              <label htmlFor="tipo_combustivel">Tipo de Combustível *</label>
+              <select id="tipo_combustivel" name="tipo_combustivel" value={formData.tipo_combustivel} onChange={handleChange} required>
                 <option value="diesel">Diesel</option>
                 <option value="diesel_s10">Diesel S10</option>
                 <option value="arla">Arla 32</option>
@@ -200,8 +201,9 @@ function AbastecimentoForm() {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Hodômetro (KM) *</label>
+              <label htmlFor="hodometro">Hodômetro (KM) *</label>
               <input
+                id="hodometro"
                 type="number"
                 name="hodometro"
                 value={formData.hodometro}
@@ -217,8 +219,9 @@ function AbastecimentoForm() {
           <h3>Valores</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Litros *</label>
+              <label htmlFor="litros">Litros *</label>
               <input
+                id="litros"
                 type="number"
                 step="0.01"
                 name="litros"
@@ -229,8 +232,9 @@ function AbastecimentoForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Valor Total (R$) *</label>
+              <label htmlFor="valor_total">Valor Total (R$) *</label>
               <input
+                id="valor_total"
                 type="number"
                 step="0.01"
                 name="valor_total"
@@ -241,8 +245,9 @@ function AbastecimentoForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Preço/L (calculado)</label>
+              <label htmlFor="preco_litro">Preço/L (calculado)</label>
               <input
+                id="preco_litro"
                 type="text"
                 value={formData.litros && formData.valor_total && formData.litros > 0
                   ? `R$ ${(formData.valor_total / formData.litros).toFixed(3)}`
@@ -258,8 +263,9 @@ function AbastecimentoForm() {
           <h3>Fornecedor</h3>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Posto/Fornecedor</label>
+              <label htmlFor="posto">Posto/Fornecedor</label>
               <input
+                id="posto"
                 type="text"
                 name="posto"
                 value={formData.posto}
@@ -268,8 +274,9 @@ function AbastecimentoForm() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>CNPJ Posto</label>
+              <label htmlFor="cnpj_posto">CNPJ Posto</label>
               <input
+                id="cnpj_posto"
                 type="text"
                 name="cnpj_posto"
                 value={formData.cnpj_posto}
@@ -285,7 +292,9 @@ function AbastecimentoForm() {
           <h3>Observações</h3>
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
+              <label htmlFor="observacao">Observação</label>
               <textarea
+                id="observacao"
                 name="observacao"
                 value={formData.observacao}
                 onChange={handleChange}

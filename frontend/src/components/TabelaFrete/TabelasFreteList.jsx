@@ -119,40 +119,40 @@ function TabelasFreteList() {
         <form onSubmit={handleSimular}>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Origem UF</label>
-              <input type="text" maxLength="2" value={simData.origem_uf} onChange={e => setSimData({ ...simData, origem_uf: e.target.value })} />
+              <label htmlFor="sim_origem_uf">Origem UF</label>
+              <input id="sim_origem_uf" type="text" maxLength="2" value={simData.origem_uf} onChange={e => setSimData({ ...simData, origem_uf: e.target.value })} />
             </div>
             <div className={styles.formGroup}>
-              <label>Origem Cidade</label>
-              <input type="text" value={simData.origem_cidade} onChange={e => setSimData({ ...simData, origem_cidade: e.target.value })} />
+              <label htmlFor="sim_origem_cidade">Origem Cidade</label>
+              <input id="sim_origem_cidade" type="text" value={simData.origem_cidade} onChange={e => setSimData({ ...simData, origem_cidade: e.target.value })} />
             </div>
             <div className={styles.formGroup}>
-              <label>Destino UF</label>
-              <input type="text" maxLength="2" value={simData.destino_uf} onChange={e => setSimData({ ...simData, destino_uf: e.target.value })} />
-            </div>
-          </div>
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label>Destino Cidade</label>
-              <input type="text" value={simData.destino_cidade} onChange={e => setSimData({ ...simData, destino_cidade: e.target.value })} />
-            </div>
-            <div className={styles.formGroup}>
-              <label>Tipo Veículo</label>
-              <input type="text" value={simData.tipo_veiculo} onChange={e => setSimData({ ...simData, tipo_veiculo: e.target.value })} />
-            </div>
-            <div className={styles.formGroup}>
-              <label>Distância (KM)</label>
-              <input type="number" value={simData.distancia_km} onChange={e => setSimData({ ...simData, distancia_km: e.target.value })} />
+              <label htmlFor="sim_destino_uf">Destino UF</label>
+              <input id="sim_destino_uf" type="text" maxLength="2" value={simData.destino_uf} onChange={e => setSimData({ ...simData, destino_uf: e.target.value })} />
             </div>
           </div>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Peso (KG)</label>
-              <input type="number" value={simData.peso_kg} onChange={e => setSimData({ ...simData, peso_kg: e.target.value })} />
+              <label htmlFor="sim_destino_cidade">Destino Cidade</label>
+              <input id="sim_destino_cidade" type="text" value={simData.destino_cidade} onChange={e => setSimData({ ...simData, destino_cidade: e.target.value })} />
             </div>
             <div className={styles.formGroup}>
-              <label>Volume (M³)</label>
-              <input type="number" value={simData.volume_m3} onChange={e => setSimData({ ...simData, volume_m3: e.target.value })} />
+              <label htmlFor="sim_tipo_veiculo">Tipo Veículo</label>
+              <input id="sim_tipo_veiculo" type="text" value={simData.tipo_veiculo} onChange={e => setSimData({ ...simData, tipo_veiculo: e.target.value })} />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="sim_distancia_km">Distância (KM)</label>
+              <input id="sim_distancia_km" type="number" value={simData.distancia_km} onChange={e => setSimData({ ...simData, distancia_km: e.target.value })} />
+            </div>
+          </div>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="sim_peso_kg">Peso (KG)</label>
+              <input id="sim_peso_kg" type="number" value={simData.peso_kg} onChange={e => setSimData({ ...simData, peso_kg: e.target.value })} />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="sim_volume_m3">Volume (M³)</label>
+              <input id="sim_volume_m3" type="number" value={simData.volume_m3} onChange={e => setSimData({ ...simData, volume_m3: e.target.value })} />
             </div>
             <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'end' }}>
               <Button type="submit" variant="primary" loading={simulando}>

@@ -212,7 +212,9 @@ function VencimentosPainel() {
               />
               <span>Mostrar todos</span>
             </label>
+            <label htmlFor="dias_filtro" className={styles.visuallyHidden}>Prazo de vencimento</label>
             <select
+              id="dias_filtro"
               className={styles.selectFilter}
               value={diasFiltro}
               onChange={(e) => setDiasFiltro(Number(e.target.value))}

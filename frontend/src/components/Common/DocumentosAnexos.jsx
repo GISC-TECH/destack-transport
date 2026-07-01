@@ -336,14 +336,14 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
       )}
 
       {tipoValido && error && (
-        <div className={styles.errorMessage}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div className={styles.errorMessage} role="alert" aria-live="polite">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
           {error}
-          <button onClick={() => setError(null)} className={styles.closeBtn} aria-label="Fechar">&times;</button>
+          <button onClick={() => setError(null)} className={styles.closeBtn} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
@@ -352,8 +352,9 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
         <div className={styles.uploadForm}>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Tipo de Documento</label>
+              <label htmlFor="upload_tipo">Tipo de Documento</label>
               <select
+                id="upload_tipo"
                 value={uploadData.tipo}
                 onChange={(e) => setUploadData(prev => ({ ...prev, tipo: e.target.value }))}
               >
@@ -363,8 +364,9 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label>Nome do Documento</label>
+              <label htmlFor="upload_nome">Nome do Documento</label>
               <input
+                id="upload_nome"
                 type="text"
                 value={uploadData.nome}
                 onChange={(e) => setUploadData(prev => ({ ...prev, nome: e.target.value }))}
@@ -374,16 +376,18 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
           </div>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Data de Validade (opcional)</label>
+              <label htmlFor="upload_validade">Data de Validade (opcional)</label>
               <input
+                id="upload_validade"
                 type="date"
                 value={uploadData.validade}
                 onChange={(e) => setUploadData(prev => ({ ...prev, validade: e.target.value }))}
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Observações</label>
+              <label htmlFor="upload_observacoes">Observações</label>
               <input
+                id="upload_observacoes"
                 type="text"
                 value={uploadData.observacoes}
                 onChange={(e) => setUploadData(prev => ({ ...prev, observacoes: e.target.value }))}
@@ -393,9 +397,10 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
           </div>
           <div className={styles.formRow}>
             <div className={`${styles.formGroup} ${styles.fileInputGroup}`}>
-              <label>Arquivo</label>
+              <label htmlFor="upload_arquivo">Arquivo</label>
               <div className={styles.fileInputWrapper}>
                 <input
+                  id="upload_arquivo"
                   ref={fileInputRef}
                   type="file"
                   onChange={handleFileSelect}
@@ -455,8 +460,9 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
         }
       >
         <div className={styles.formGroup}>
-          <label>Tipo de Documento</label>
+          <label htmlFor="edit_tipo">Tipo de Documento</label>
           <select
+            id="edit_tipo"
             value={editData.tipo}
             onChange={(e) => setEditData(prev => ({ ...prev, tipo: e.target.value }))}
           >
@@ -466,8 +472,9 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
           </select>
         </div>
         <div className={styles.formGroup}>
-          <label>Nome do Documento</label>
+          <label htmlFor="edit_nome">Nome do Documento</label>
           <input
+            id="edit_nome"
             type="text"
             value={editData.nome}
             onChange={(e) => setEditData(prev => ({ ...prev, nome: e.target.value }))}
@@ -475,16 +482,18 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
           />
         </div>
         <div className={styles.formGroup}>
-          <label>Data de Validade</label>
+          <label htmlFor="edit_validade">Data de Validade</label>
           <input
+            id="edit_validade"
             type="date"
             value={editData.validade}
             onChange={(e) => setEditData(prev => ({ ...prev, validade: e.target.value }))}
           />
         </div>
         <div className={styles.formGroup}>
-          <label>Observações</label>
+          <label htmlFor="edit_observacoes">Observações</label>
           <input
+            id="edit_observacoes"
             type="text"
             value={editData.observacoes}
             onChange={(e) => setEditData(prev => ({ ...prev, observacoes: e.target.value }))}
