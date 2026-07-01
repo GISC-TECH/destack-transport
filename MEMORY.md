@@ -2,8 +2,8 @@
 
 ## Último Deploy Realizado
 - **Data:** 2026-06-30
-- **Versão:** v1.1.9
-- **Commit:** cadc06b
+- **Versão:** v1.1.10
+- **Commit:** 5ca41df
 - **Branch:** feat/reskin-verde-prototipo
 - **Servidor:** destack-prod (31.97.247.165)
 - **Health check:** https://destacktransporte.site/api/health/ -> healthy
@@ -11,6 +11,7 @@
 - **Stash local no servidor:** pre-deploy-v1.1.5-local-changes
 
 ### Deploys Anteriores
+- **v1.1.9** (cadc06b): Fase 1 de acessibilidade
 - **v1.1.8** (d4e36db): Auditoria e correções de responsividade mobile
 - **v1.1.7** (7def2d6): Reversão de baixa em pagamentos agregados/próprios
 - **v1.1.6** (63d3868): Ajustes finos de responsividade nos filtros de relatórios
@@ -26,6 +27,15 @@
   - MDF-e: chave, série, dh_ini_viagem, qtd NF-e, peso carga, unidade, modal, renavam, status
   - Pagamentos: coluna valor_total_pagar padronizada, cte_chave, desconto, dados do condutor
   - Motoristas: telefone, email, cidade/UF, dados bancários/pix, validades NR20/NR35/MOPP/Toxicológico/ASO
+
+### Fases 2 a 5 - CSS Morto, Ajustes Visuais e Variáveis CSS (v1.1.10)
+- Removidas classes CSS mortas em CTeShared, MDFe, Financeiro, Dashboard, VeiculosList, MotoristasList, ClientesList
+- Aplicados touch targets mínimos 44×44px em botões e ícones mobile (Button, DateFilter, Sidebar, Navbar, PagamentosList, Relatorios)
+- Padronizadas cores, espaçamentos, fontes e bordas com variáveis CSS globais
+- Corrigidos safe checks em `.toFixed()` do Dashboard e MDFeList
+- Botão "Reverter Baixa" ajustado para não parecer ação primária (outline)
+- Modal com foco automático ao abrir
+- ~1.249 linhas removidas, ~497 inseridas
 
 ### Fase 1 de Acessibilidade (v1.1.9)
 - Associados labels e inputs via `htmlFor` + `id` em todos os formulários principais
