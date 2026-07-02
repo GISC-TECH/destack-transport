@@ -1,9 +1,9 @@
 # Memory - Destack Transport
 
 ## Último Deploy Realizado
-- **Data:** 2026-06-30
-- **Versão:** v1.1.10
-- **Commit:** 5ca41df
+- **Data:** 2026-07-02
+- **Versão:** v1.1.11
+- **Commit:** 7adfab9
 - **Branch:** feat/reskin-verde-prototipo
 - **Servidor:** destack-prod (31.97.247.165)
 - **Health check:** https://destacktransporte.site/api/health/ -> healthy
@@ -11,6 +11,7 @@
 - **Stash local no servidor:** pre-deploy-v1.1.5-local-changes
 
 ### Deploys Anteriores
+- **v1.1.10** (5ca41df): Fases 2 a 5 - CSS morto, ajustes visuais e variáveis CSS
 - **v1.1.9** (cadc06b): Fase 1 de acessibilidade
 - **v1.1.8** (d4e36db): Auditoria e correções de responsividade mobile
 - **v1.1.7** (7def2d6): Reversão de baixa em pagamentos agregados/próprios
@@ -27,6 +28,11 @@
   - MDF-e: chave, série, dh_ini_viagem, qtd NF-e, peso carga, unidade, modal, renavam, status
   - Pagamentos: coluna valor_total_pagar padronizada, cte_chave, desconto, dados do condutor
   - Motoristas: telefone, email, cidade/UF, dados bancários/pix, validades NR20/NR35/MOPP/Toxicológico/ASO
+
+### Correção de Redirecionamento da Landing Page (v1.1.11)
+- Corrigido redirecionamento indevido para `/login?expired=1` ao acessar a landing page (`/`)
+- Evento `auth:session-expired` agora só redireciona quando o usuário está em rotas protegidas
+- Landing page (`/`) e página de login (`/login`) permanecem acessíveis mesmo com sessão expirada
 
 ### Fases 2 a 5 - CSS Morto, Ajustes Visuais e Variáveis CSS (v1.1.10)
 - Removidas classes CSS mortas em CTeShared, MDFe, Financeiro, Dashboard, VeiculosList, MotoristasList, ClientesList
