@@ -48,9 +48,12 @@ export function AuthProvider({ children }) {
   }, [initializeAuth]);
 
   // Escuta sessão expirada durante uso da aplicação e redireciona para login
+  // Não redireciona se estiver na landing page (/) ou na página de login (/login)
   useEffect(() => {
     const handleSessionExpired = () => {
-      if (window.location.pathname !== '/login') {
+      const publicPaths = ['/', '/login'];
+      const currentPath = window.location.pathname;
+      if (!publicPaths.includes(currentPath)) {
         window.location.href = '/login?expired=1';
       }
     };
