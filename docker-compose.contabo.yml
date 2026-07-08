@@ -1,0 +1,281 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: destack_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-destack_db}
+      POSTGRES_USER: ${POSTGRES_USER:-destack_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-destack_prod_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-destack_user} -d ${POSTGRES_DB:-destack_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - destack_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: destack_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_default_password}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_default_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - destack_network
+
+  # Django Application (Backend API)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: destack_web
+    hostname: destack
+    networks:
+      destack_network:
+        aliases:
+          - destack
+    env_file:
+      - .env
+    restart: unless-stopped
+    environment:
+      - DEBUG=False
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-your-secret-key-change-in-production}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-destacktransporte.com,www.destacktransporte.com}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-https://destacktransporte.com,https://www.destacktransporte.com}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:-destack_prod_password}@postgres:5432/${POSTGRES_DB:-destack_db}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - REDIS_CACHE_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/15
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://destacktransporte.com,https://www.destacktransporte.com}
+      - EVOLUTION_API_URL=http://destack_evolution_api:8080
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
+      - EVOLUTION_INSTANCE_NAME=${EVOLUTION_INSTANCE_NAME:-destack}
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+    expose:
+      - "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Frontend React (Nginx serving built files + proxy /api to backend)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: destack_frontend
+    restart: unless-stopped
+    expose:
+      - "8000"
+    networks:
+      - destack_network
+      - traefik-proxy
+    depends_on:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-proxy"
+      # HTTPS router
+      - "traefik.http.routers.destack-frontend.rule=Host(`destacktransporte.com`) || Host(`www.destacktransporte.com`)"
+      - "traefik.http.routers.destack-frontend.entrypoints=websecure"
+      - "traefik.http.routers.destack-frontend.tls=true"
+      - "traefik.http.routers.destack-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.destack-frontend.loadbalancer.server.port=8000"
+      # HTTP router (para testes/Cloudflare Flexible; alta prioridade evita redirect global)
+      - "traefik.http.routers.destack-frontend-http.rule=Host(`destacktransporte.com`) || Host(`www.destacktransporte.com`)"
+      - "traefik.http.routers.destack-frontend-http.entrypoints=web"
+      - "traefik.http.routers.destack-frontend-http.priority=100"
+      - "traefik.http.routers.destack-frontend-http.service=destack-frontend"
+      # Redirect www to apex (optional; keep both if desired)
+      # - "traefik.http.routers.destack-frontend-www.rule=Host(`www.destacktransporte.com`)"
+      # - "traefik.http.routers.destack-frontend-www.entrypoints=websecure"
+      # - "traefik.http.routers.destack-frontend-www.tls=true"
+      # - "traefik.http.routers.destack-frontend-www.tls.certresolver=letsencrypt"
+      # - "traefik.http.routers.destack-frontend-www.middlewares=www-to-apex"
+      # - "traefik.http.middlewares.www-to-apex.redirectregex.regex=^https://www\\.(.*)"
+      # - "traefik.http.middlewares.www-to-apex.redirectregex.replacement=https://$${1}"
+
+  # Celery Worker (para tarefas assincronas)
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: destack_celery_worker
+    restart: unless-stopped
+    command: celery -A core worker -l info
+    environment:
+      - DEBUG=False
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-your-secret-key-change-in-production}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-destacktransporte.com,www.destacktransporte.com}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-https://destacktransporte.com,https://www.destacktransporte.com}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://destacktransporte.com,https://www.destacktransporte.com}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:-destack_prod_password}@postgres:5432/${POSTGRES_DB:-destack_db}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - REDIS_CACHE_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/15
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - EVOLUTION_API_URL=http://destack_evolution_api:8080
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
+      - EVOLUTION_INSTANCE_NAME=${EVOLUTION_INSTANCE_NAME:-destack}
+    volumes:
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - destack_network
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A core inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+
+  # Celery Beat (agendador de tarefas)
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: destack_celery_beat
+    restart: unless-stopped
+    command: celery -A core beat -l info
+    environment:
+      - DEBUG=False
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-your-secret-key-change-in-production}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-destacktransporte.com,www.destacktransporte.com}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-https://destacktransporte.com,https://www.destacktransporte.com}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://destacktransporte.com,https://www.destacktransporte.com}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-destack_user}:${POSTGRES_PASSWORD:-destack_prod_password}@postgres:5432/${POSTGRES_DB:-destack_db}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - REDIS_CACHE_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/15
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-redis_default_password}@redis:6379/0
+      - EVOLUTION_API_URL=http://destack_evolution_api:8080
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
+      - EVOLUTION_INSTANCE_NAME=${EVOLUTION_INSTANCE_NAME:-destack}
+    volumes:
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - destack_network
+    healthcheck:
+      test: ["CMD-SHELL", "pidof -x celery >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+
+  # --- SERVICOS OPCIONAIS ---
+  # Descomente as secoes abaixo quando quiser habilitar.
+  # Evolution API - Gateway de WhatsApp self-hosted
+  # evolution_api:
+  #   image: evoapicloud/evolution-api:latest
+  #   container_name: destack_evolution_api
+  #   restart: "no"
+  #   expose:
+  #     - "8080"
+  #   environment:
+  #     - SERVER_URL=${EVOLUTION_SERVER_URL:-https://api.destacktransporte.com}
+  #     - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:?set EVOLUTION_API_KEY in .env}
+  #     - DATABASE_ENABLED=true
+  #     - DATABASE_PROVIDER=${EVOLUTION_DATABASE_PROVIDER:-postgresql}
+  #     - DATABASE_CONNECTION_URI=${EVOLUTION_DATABASE_URI:?set EVOLUTION_DATABASE_URI in .env}
+  #     - DATABASE_SAVE_DATA_INSTANCE=true
+  #     - DATABASE_SAVE_LOGS=true
+  #     - WEBHOOK_GLOBAL_ENABLED=false
+  #     - REDIS_ENABLED=true
+  #     - REDIS_HOST=${REDIS_HOST:-destack_redis}
+  #     - REDIS_PORT=${REDIS_PORT:-6379}
+  #     - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_default_password}
+  #     - REDIS_DB=${REDIS_DB:-1}
+  #     - CACHE_REDIS_URI=redis://default:${REDIS_PASSWORD:-redis_default_password}@redis:6379/${REDIS_DB:-1}
+  #   volumes:
+  #     - evolution_api_data:/evolution/instances
+  #     - evolution_api_db:/evolution/db
+  #   networks:
+  #     - destack_network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ || exit 1"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     start_period: 60s
+  #     retries: 5
+
+  # EGS XML Collector - Robot para coleta automatica de XMLs
+  # scraper:
+  #   build:
+  #     context: ./scraper
+  #     dockerfile: Dockerfile
+  #   container_name: destack_scraper
+  #   restart: "no"
+  #   environment:
+  #     # EGS Sistemas
+  #     - EGS_BASE_URL=https://app.egssistemas.com.br
+  #     - EGS_LOGIN_URL=https://app.egssistemas.com.br/login
+  #     - EGS_USERNAME=${EGS_USERNAME:-DESTACK}
+  #     - EGS_PASSWORD=${EGS_PASSWORD:?set EGS_PASSWORD in .env}
+  #     - EGS_ACCESS_KEY=${EGS_ACCESS_KEY:?set EGS_ACCESS_KEY in .env}
+  #     # Destack API
+  #     - DESTACK_API_URL=${DESTACK_API_URL:-http://destack:8000/api}
+  #     - DESTACK_USERNAME=${DESTACK_USERNAME:-admin}
+  #     - DESTACK_PASSWORD=${DESTACK_PASSWORD:?set DESTACK_PASSWORD in .env}
+  #     # Collector
+  #     - COLLECT_INTERVAL_MINUTES=60
+  #     - DAYS_LOOKBACK=7
+  #     - LOG_LEVEL=INFO
+  #     - SELENIUM_HEADLESS=true
+  #   volumes:
+  #     - scraper_data:/app/data
+  #     - scraper_logs:/app/logs
+  #   depends_on:
+  #     - web
+  #   networks:
+  #     - destack_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+  scraper_data:
+    driver: local
+  scraper_logs:
+    driver: local
+  evolution_api_data:
+    driver: local
+  evolution_api_db:
+    driver: local
+
+networks:
+  destack_network:
+    driver: bridge
+  traefik-proxy:
+    external: true

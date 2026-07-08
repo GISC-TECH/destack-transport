@@ -1,14 +1,22 @@
 # Memory - Destack Transport
 
+## Infraestrutura Atual (Contabo)
+- **Servidor:** Contabo VPS 207.180.255.150
+- **Domínio:** https://destacktransporte.com
+- **Domínio WWW:** https://www.destacktransporte.com
+- **Reverse Proxy:** Traefik v3.6.11 (Let's Encrypt automático)
+- **Stack:** PostgreSQL 17, Redis 7, Django, React, Celery
+- **Caminho no servidor:** /root/apps/destack
+- **Compose:** docker-compose.contabo.yml
+- **Health check:** https://destacktransporte.com/api/health/ -> healthy
+
 ## Último Deploy Realizado
 - **Data:** 2026-07-02
 - **Versão:** v1.1.11
 - **Commit:** 7adfab9
 - **Branch:** feat/reskin-verde-prototipo
-- **Servidor:** destack-prod (31.97.247.165)
-- **Health check:** https://destacktransporte.site/api/health/ -> healthy
-- **Backup pré-deploy:** /tmp/prod_destack_db_pre_v1.1.5_20260629_214314.dump (último backup completo)
-- **Stash local no servidor:** pre-deploy-v1.1.5-local-changes
+- **Servidor anterior:** destack-prod (31.97.247.165) — inacessível
+- **Backup usado na migração:** backups/daily/20260703_020000.dump
 
 ### Deploys Anteriores
 - **v1.1.10** (5ca41df): Fases 2 a 5 - CSS morto, ajustes visuais e variáveis CSS
@@ -28,6 +36,15 @@
   - MDF-e: chave, série, dh_ini_viagem, qtd NF-e, peso carga, unidade, modal, renavam, status
   - Pagamentos: coluna valor_total_pagar padronizada, cte_chave, desconto, dados do condutor
   - Motoristas: telefone, email, cidade/UF, dados bancários/pix, validades NR20/NR35/MOPP/Toxicológico/ASO
+
+### Migração para Contabo (2026-07-08)
+- Servidor antigo (31.97.247.165) ficou inacessível via SSH
+- Código fonte enviado para `/root/apps/destack` no Contabo (207.180.255.150)
+- Criado `docker-compose.contabo.yml` adaptado para rede `traefik-proxy`
+- Banco PostgreSQL 17 restaurado a partir de `backups/daily/20260703_020000.dump`
+- Domínios configurados no Cloudflare: `destacktransporte.com` e `www.destacktransporte.com`
+- SSL/TLS via Let's Encrypt + Cloudflare
+- Health check público OK: https://destacktransporte.com/api/health/
 
 ### Correção de Redirecionamento da Landing Page (v1.1.11)
 - Corrigido redirecionamento indevido para `/login?expired=1` ao acessar a landing page (`/`)
