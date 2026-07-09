@@ -46,6 +46,16 @@
 - SSL/TLS via Let's Encrypt + Cloudflare
 - Health check público OK: https://destacktransporte.com/api/health/
 
+### Coleta de XMLs via Scraper Local (2026-07-09)
+- Scraper no Contabo bloqueado pelo EGS Sistemas (IP estrangeiro)
+- Scraper local (Mac, IP brasileiro) configurado para enviar XMLs direto para API da Contabo
+- Credenciais EGS atualizadas no `.env.local`
+- Execução do `daily_download.py` local:
+  - **85 XMLs novos enviados e processados com sucesso** (CT-e e MDF-e)
+  - **2.425 XMLs ignorados** (já existiam no banco)
+  - **2 falhas** (XML fora do leiaute oficial)
+- Container scraper no Contabo permanece parado; coletas devem ser feitas localmente até resolver o bloqueio de IP
+
 ### Correção de Redirecionamento da Landing Page (v1.1.11)
 - Corrigido redirecionamento indevido para `/login?expired=1` ao acessar a landing page (`/`)
 - Evento `auth:session-expired` agora só redireciona quando o usuário está em rotas protegidas
