@@ -108,14 +108,47 @@
 - `python manage.py test transport.tests.test_relatorios` (4/4 passaram)
 
 ## Comandos Úteis
-```bash
-# Deploy
-PROD_SSH=destack-prod VERSION=v1.1.5 ./scripts/deploy-producao.sh
 
-# Health check
-ssh destack-prod "curl -sf https://destacktransporte.site/api/health/"
+### Deploy na Contabo
+```bash
+ssh root@207.180.255.150
+cd /root/apps/destack
+docker compose -f docker-compose.contabo.yml up -d --build
+docker compose -f docker-compose.contabo.yml exec -T web python manage.py migrate --noinput
+docker compose -f docker-compose.contabo.yml exec -T web python manage.py collectstatic --noinput
+```
+
+### Health check
+```bash
+curl -sf https://destacktransporte.com/api/health/
+```
+
+### Coleta de XMLs local (IP brasileiro → Contabo)
+```bash
+cd /Users/italocosta/workspace/projects/destack-transport
+
+# Ultimos 7 dias
+docker compose -f docker-compose.local.yml run --rm \
+  -e DESTACK_API_URL=https://destacktransporte.com/api \
+  scraper python daily_download.py
+
+# Range de datas (ex: 01/07/2026 a 09/07/2026)
+docker compose -f docker-compose.local.yml run --rm \
+  -e DESTACK_API_URL=https://destacktransporte.com/api \
+  -v /Users/italocosta/workspace/projects/destack-transport/scraper/download_date_range.py:/app/download_date_range.py \
+  scraper python download_date_range.py 01/07/2026 09/07/2026
+```
+
+### Totais atuais no banco (Contabo)
+```text
+CT-e:  7.122
+MDF-e: 4.544
+CT-e julho/2026:  42
+MDFe julho/2026:  22
 ```
 
 ## Notas
-- Servidor de produção tinha mudanças locais não commitadas; foram stashed antes do deploy.
+- Servidor antigo (31.97.247.165) tinha mudanças locais não commitadas; foram stashed antes da migração.
+- Scraper no Contabo está parado porque o EGS Sistemas bloqueia IP estrangeiro; coletas devem ser feitas localmente.
+- Container scraper no Contabo pode ser ativado se o EGS liberar o IP 207.180.255.150 ou se for configurado proxy/VPN brasileiro.
 - Usuários devem fazer hard refresh no navegador após deploys de frontend.
