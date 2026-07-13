@@ -228,7 +228,24 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
   // Handler para visualizar
   const handleView = (doc) => {
     if (doc.arquivo_url) {
-      window.open(doc.arquivo_url, '_blank');
+      // Usa caminho relativo para evitar URLs absolutas com host interno do backend
+      let url = doc.arquivo_url;
+      if (url.startsWith('http')) {
+        try {
+          url = new URL(url).pathname;
+        } catch {
+          // mantém url original se não for parseável
+        }
+      }
+      // Abre via link temporario para contornar bloqueios de popup
+      // e garantir comportamento consistente em mobile/desktop.
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -269,25 +286,42 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
     }
   };
 
+  // Interpreta string YYYY-MM-DD como data local, evitando deslocamento de timezone.
+  const parseLocalDate = (dateStr) => {
+    if (!dateStr) return null;
+    const [year, month, day] = dateStr.split('T')[0].split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   // Formatar data
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('pt-BR');
+    const date = parseLocalDate(dateStr);
+    if (!date || Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('pt-BR');
   };
 
   // Verificar se documento esta vencido
   const isExpired = (validade) => {
     if (!validade) return false;
-    return new Date(validade) < new Date();
+    const validadeDate = parseLocalDate(validade);
+    if (!validadeDate) return false;
+    // Considera vencido a partir do dia seguinte à validade
+    const hoje = new Date();
+    const hojeLocal = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+    return validadeDate < hojeLocal;
   };
 
   // Verificar se documento esta proximo de vencer (30 dias)
   const isExpiringSoon = (validade) => {
     if (!validade) return false;
-    const thirtyDaysFromNow = new Date();
+    const validadeDate = parseLocalDate(validade);
+    if (!validadeDate) return false;
+    const hoje = new Date();
+    const hojeLocal = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+    const thirtyDaysFromNow = new Date(hojeLocal);
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    const validadeDate = new Date(validade);
-    return validadeDate > new Date() && validadeDate <= thirtyDaysFromNow;
+    return validadeDate >= hojeLocal && validadeDate <= thirtyDaysFromNow;
   };
 
   const getValidadeStatus = (validade) => {

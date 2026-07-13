@@ -4,7 +4,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.http import FileResponse, Http404
 
 from ..permissions import TransportModelPermission, ReadOnlyPermission
@@ -74,7 +74,7 @@ class DocumentoAnexoViewSet(viewsets.ModelViewSet):
 
     queryset = DocumentoAnexo.objects.all()
     permission_classes = [IsAuthenticated, TransportModelPermission]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_serializer_class(self):
         """Retorna serializer apropriado para a action."""
@@ -143,7 +143,7 @@ class ClienteDocumentoViewSet(viewsets.ViewSet):
 
     queryset = DocumentoAnexo.objects.all()
     permission_classes = [IsAuthenticated, TransportModelPermission]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def list(self, request, cliente_pk=None):
         """Lista documentos do cliente."""
@@ -220,7 +220,7 @@ class MotoristaDocumentoViewSet(viewsets.ViewSet):
 
     queryset = DocumentoAnexo.objects.all()
     permission_classes = [IsAuthenticated, TransportModelPermission]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def list(self, request, motorista_pk=None):
         """Lista documentos do motorista."""
@@ -306,7 +306,7 @@ class VeiculoDocumentoViewSet(viewsets.ViewSet):
 
     queryset = DocumentoAnexo.objects.all()
     permission_classes = [IsAuthenticated, TransportModelPermission]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def list(self, request, veiculo_pk=None):
         """Lista documentos do veiculo."""
@@ -392,7 +392,7 @@ class CTeDocumentoAnexoViewSet(viewsets.ViewSet):
 
     queryset = DocumentoAnexo.objects.all()
     permission_classes = [IsAuthenticated, TransportModelPermission]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def list(self, request, cte_pk=None):
         """Lista documentos do CT-e."""

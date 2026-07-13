@@ -40,6 +40,9 @@ server {
         add_header Content-Type text/plain;
     }
 
+    # Tamanho maximo de upload (anexos de documentos, XMLs, etc.)
+    client_max_body_size 50M;
+
     # Proxy API requests to Django backend
     location /api/ {
         set $upstream_web web;
@@ -62,18 +65,20 @@ server {
         proxy_set_header X-Forwarded-Host $host;
     }
 
-    # Serve Django static files from backend
+    # Serve Django static files directly (collected by web container)
     location /static/ {
-        set $upstream_web web;
-        proxy_pass http://$upstream_web:8000;
-        proxy_set_header Host $host;
+        alias /app/static/;
+        expires 1y;
+        add_header Cache-Control "public, immutable" always;
+        try_files $uri =404;
     }
 
-    # Serve Django media files from backend
+    # Serve Django media files directly (uploads stored in shared volume)
     location /media/ {
-        set $upstream_web web;
-        proxy_pass http://$upstream_web:8000;
-        proxy_set_header Host $host;
+        alias /app/media/;
+        expires 7d;
+        add_header Cache-Control "public" always;
+        try_files $uri =404;
     }
 
     # Assets com hash no nome: cache longo e imutavel

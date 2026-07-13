@@ -65,6 +65,7 @@ services:
       - EVOLUTION_API_URL=http://destack_evolution_api:8080
       - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
       - EVOLUTION_INSTANCE_NAME=${EVOLUTION_INSTANCE_NAME:-destack}
+      - MEDIA_ROOT=/app/media
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
@@ -87,6 +88,9 @@ services:
     restart: unless-stopped
     expose:
       - "8000"
+    volumes:
+      - static_volume:/app/static:ro
+      - media_volume:/app/media:ro
     networks:
       - destack_network
       - traefik-proxy
@@ -226,35 +230,35 @@ services:
   #     retries: 5
 
   # EGS XML Collector - Robot para coleta automatica de XMLs
-  # scraper:
-  #   build:
-  #     context: ./scraper
-  #     dockerfile: Dockerfile
-  #   container_name: destack_scraper
-  #   restart: "no"
-  #   environment:
-  #     # EGS Sistemas
-  #     - EGS_BASE_URL=https://app.egssistemas.com.br
-  #     - EGS_LOGIN_URL=https://app.egssistemas.com.br/login
-  #     - EGS_USERNAME=${EGS_USERNAME:-DESTACK}
-  #     - EGS_PASSWORD=${EGS_PASSWORD:?set EGS_PASSWORD in .env}
-  #     - EGS_ACCESS_KEY=${EGS_ACCESS_KEY:?set EGS_ACCESS_KEY in .env}
-  #     # Destack API
-  #     - DESTACK_API_URL=${DESTACK_API_URL:-http://destack:8000/api}
-  #     - DESTACK_USERNAME=${DESTACK_USERNAME:-admin}
-  #     - DESTACK_PASSWORD=${DESTACK_PASSWORD:?set DESTACK_PASSWORD in .env}
-  #     # Collector
-  #     - COLLECT_INTERVAL_MINUTES=60
-  #     - DAYS_LOOKBACK=7
-  #     - LOG_LEVEL=INFO
-  #     - SELENIUM_HEADLESS=true
-  #   volumes:
-  #     - scraper_data:/app/data
-  #     - scraper_logs:/app/logs
-  #   depends_on:
-  #     - web
-  #   networks:
-  #     - destack_network
+  scraper:
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    container_name: destack_scraper
+    restart: "no"
+    environment:
+      # EGS Sistemas
+      - EGS_BASE_URL=https://app.egssistemas.com.br
+      - EGS_LOGIN_URL=https://app.egssistemas.com.br/login
+      - EGS_USERNAME=${EGS_USERNAME:-DESTACK}
+      - EGS_PASSWORD=${EGS_PASSWORD:?set EGS_PASSWORD in .env}
+      - EGS_ACCESS_KEY=${EGS_ACCESS_KEY:?set EGS_ACCESS_KEY in .env}
+      # Destack API
+      - DESTACK_API_URL=${DESTACK_API_URL:-http://destack:8000/api}
+      - DESTACK_USERNAME=${DESTACK_USERNAME:-admin}
+      - DESTACK_PASSWORD=${DESTACK_PASSWORD:?set DESTACK_PASSWORD in .env}
+      # Collector
+      - COLLECT_INTERVAL_MINUTES=60
+      - DAYS_LOOKBACK=7
+      - LOG_LEVEL=INFO
+      - SELENIUM_HEADLESS=true
+    volumes:
+      - scraper_data:/app/data
+      - scraper_logs:/app/logs
+    depends_on:
+      - web
+    networks:
+      - destack_network
 
 volumes:
   postgres_data:

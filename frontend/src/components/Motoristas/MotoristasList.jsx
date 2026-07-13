@@ -37,7 +37,13 @@ function MotoristasList() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(url, { credentials: 'include' });
+      // O DRF retorna URLs absolutas em pagination.next/previous.
+      // Convertemos para caminho relativo para sempre passar pelo proxy do Vite/nginx.
+      const relativeUrl = url.startsWith('http')
+        ? new URL(url).pathname + new URL(url).search
+        : url;
+
+      const response = await fetch(relativeUrl, { credentials: 'include' });
       if (!response.ok) throw new Error('Erro ao carregar motoristas');
       const data = await response.json();
 

@@ -26,11 +26,8 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'tamanho', 'tipo_mime', 'criado_em', 'criado_por')
 
     def get_arquivo_url(self, obj):
-        """Retorna URL completa do arquivo."""
+        """Retorna URL do arquivo (caminho relativo para evitar host interno)."""
         if obj.arquivo:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.arquivo.url)
             return obj.arquivo.url
         return None
 
@@ -71,10 +68,18 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """Valida que apenas uma entidade seja preenchida."""
-        cliente = data.get('cliente')
-        motorista = data.get('motorista')
-        veiculo = data.get('veiculo')
-        cte = data.get('cte')
+        # Em atualizacoes parciais (PATCH), preserva a entidade ja vinculada
+        # para permitir edicao de campos como validade sem reenviar a entidade.
+        if self.instance:
+            cliente = data.get('cliente', self.instance.cliente)
+            motorista = data.get('motorista', self.instance.motorista)
+            veiculo = data.get('veiculo', self.instance.veiculo)
+            cte = data.get('cte', self.instance.cte)
+        else:
+            cliente = data.get('cliente')
+            motorista = data.get('motorista')
+            veiculo = data.get('veiculo')
+            cte = data.get('cte')
 
         entidades = [e for e in [cliente, motorista, veiculo, cte] if e is not None]
 
@@ -139,10 +144,8 @@ class DocumentoAnexoListSerializer(serializers.ModelSerializer):
         ]
 
     def get_arquivo_url(self, obj):
+        """Retorna URL do arquivo (caminho relativo para evitar host interno)."""
         if obj.arquivo:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.arquivo.url)
             return obj.arquivo.url
         return None
 

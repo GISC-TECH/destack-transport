@@ -356,6 +356,13 @@ def get_permissoes_efetivas(user):
 
         resultado[modulo] = permissoes_modulo
 
+    # O dashboard é a tela inicial do sistema e não possui um modelo dedicado
+    # (o modelo dashboardcache não existe). Qualquer usuário autenticado deve
+    # poder visualizar o dashboard, já que ele apenas agrega dados dos módulos
+    # aos quais o usuário já tem acesso.
+    resultado["dashboard"] = resultado.get("dashboard", {})
+    resultado["dashboard"]["view"] = True
+
     return {"superuser": False, "modulos": resultado}
 
 
