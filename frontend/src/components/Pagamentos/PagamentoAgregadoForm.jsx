@@ -392,7 +392,7 @@ function PagamentoAgregadoForm() {
 
       <form onSubmit={handleSubmit} className={styles.formContainer}>
         <div className={styles.formSection}>
-          <h3>Vincular CT-e (Opcional)</h3>
+          <h3>Vincular CT-e (Obrigatório)</h3>
           <p className={`${styles.formHint} ${styles.mb15} ${styles.textMuted}`}>
             Digite o numero do CT-e para buscar e vincular automaticamente
           </p>
@@ -764,24 +764,22 @@ function PagamentoAgregadoForm() {
             />
           </div>
 
-          {/* Campo de comprovante apenas na criacao */}
-          {!isEditing && (
-            <div className={styles.formGroup}>
-              <label htmlFor="comprovante">Comprovante de Pagamento (opcional)</label>
-              <input
-                id="comprovante"
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
-                className={styles.fileInput}
-              />
-              {comprovanteFile && (
-                <small className={`${styles.formHint} ${styles.textMuted}`}>
-                  Arquivo selecionado: {comprovanteFile.name}
-                </small>
-              )}
-            </div>
-          )}
+          {/* Campo de comprovante na criacao e edicao */}
+          <div className={styles.formGroup}>
+            <label htmlFor="comprovante">Comprovante de Pagamento (opcional)</label>
+            <input
+              id="comprovante"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+              className={styles.fileInput}
+            />
+            {comprovanteFile && (
+              <small className={`${styles.formHint} ${styles.textMuted}`}>
+                Arquivo selecionado: {comprovanteFile.name}
+              </small>
+            )}
+          </div>
         </div>
 
         <div className={styles.formActions}>

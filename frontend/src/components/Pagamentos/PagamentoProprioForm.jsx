@@ -790,24 +790,22 @@ function PagamentoProprioForm() {
             />
           </div>
 
-          {/* Campo de comprovante apenas na criacao */}
-          {!isEditing && (
-            <div className={styles.formGroup}>
-              <label htmlFor="comprovante">Comprovante de Pagamento (opcional)</label>
-              <input
-                id="comprovante"
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
-                className={styles.fileInput}
-              />
-              {comprovanteFile && (
-                <small className={`${styles.formHint} ${styles.textMuted}`}>
-                  Arquivo selecionado: {comprovanteFile.name}
-                </small>
-              )}
-            </div>
-          )}
+          {/* Campo de comprovante na criacao e edicao */}
+          <div className={styles.formGroup}>
+            <label htmlFor="comprovante">Comprovante de Pagamento (opcional)</label>
+            <input
+              id="comprovante"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+              className={styles.fileInput}
+            />
+            {comprovanteFile && (
+              <small className={`${styles.formHint} ${styles.textMuted}`}>
+                Arquivo selecionado: {comprovanteFile.name}
+              </small>
+            )}
+          </div>
         </div>
 
         <div className={styles.formActions}>
