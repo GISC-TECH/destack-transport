@@ -12,8 +12,8 @@
 
 ## Último Deploy Realizado
 - **Data:** 2026-07-14
-- **Versão:** v1.1.12
-- **Commit:** 3bfe9cb
+- **Versão:** v1.1.13
+- **Commit:** 40b5cdf
 - **Branch:** feat/reskin-verde-prototipo
 - **Servidor anterior:** destack-prod (31.97.247.165) — inacessível
 - **Backup usado na migração:** backups/daily/20260703_020000.dump
@@ -56,6 +56,13 @@
   - **2.425 XMLs ignorados** (já existiam no banco)
   - **2 falhas** (XML fora do leiaute oficial)
 - Container scraper no Contabo permanece parado; coletas devem ser feitas localmente até resolver o bloqueio de IP
+
+### Upload de Comprovante em Abastecimento, Pedágio, Multas e Sinistros (v1.1.13)
+- Adicionado campo de upload de `comprovante` em `AbastecimentoForm.jsx`
+- Adicionado campo de upload de `comprovante` em `PedagioForm.jsx`
+- Adicionado campo de upload de `comprovante` no modal de `MultasSinistros.jsx`
+- Payload enviado como `FormData` quando há arquivo selecionado
+- Corrige bug onde usuários do financeiro não conseguiam anexar comprovantes em formulários que já possuíam o campo no backend
 
 ### Permite Upload de Comprovante na Edição de Pagamentos (v1.1.12)
 - Remove restrição `!isEditing` do campo de comprovante em `PagamentoAgregadoForm`
