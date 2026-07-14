@@ -35,6 +35,7 @@ function AbastecimentoForm() {
     cnpj_posto: '',
     observacao: ''
   });
+  const [comprovanteFile, setComprovanteFile] = useState(null);
 
   useEffect(() => {
     loadOptions();
@@ -91,15 +92,32 @@ function AbastecimentoForm() {
   };
 
   const buildPayload = () => {
-    return {
-      ...formData,
+    const baseData = {
       veiculo: formData.veiculo,
       motorista: formData.motorista || null,
       ordem_viagem: formData.ordem_viagem || null,
+      data: formData.data,
       hodometro: formData.hodometro ? parseInt(formData.hodometro, 10) : null,
       litros: formData.litros ? parseFloat(formData.litros) : null,
-      valor_total: formData.valor_total ? parseFloat(formData.valor_total) : null
+      valor_total: formData.valor_total ? parseFloat(formData.valor_total) : null,
+      tipo_combustivel: formData.tipo_combustivel,
+      posto: formData.posto || '',
+      cnpj_posto: formData.cnpj_posto || '',
+      observacao: formData.observacao || ''
     };
+
+    if (comprovanteFile) {
+      const data = new FormData();
+      Object.keys(baseData).forEach(key => {
+        if (baseData[key] !== null && baseData[key] !== '') {
+          data.append(key, baseData[key]);
+        }
+      });
+      data.append('comprovante', comprovanteFile);
+      return data;
+    }
+
+    return baseData;
   };
 
   const handleSubmit = async (e) => {
@@ -289,7 +307,7 @@ function AbastecimentoForm() {
         </div>
 
         <div className={styles.formSection}>
-          <h3>Observações</h3>
+          <h3>Observações e Comprovante</h3>
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
               <label htmlFor="observacao">Observação</label>
@@ -301,6 +319,22 @@ function AbastecimentoForm() {
                 placeholder="Informações adicionais sobre o abastecimento"
               />
             </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="comprovante">Comprovante (opcional)</label>
+            <input
+              id="comprovante"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+              className={styles.fileInput}
+            />
+            {comprovanteFile && (
+              <small className={styles.fileHint}>
+                Arquivo selecionado: {comprovanteFile.name}
+              </small>
+            )}
           </div>
         </div>
 

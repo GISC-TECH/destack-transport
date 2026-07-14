@@ -31,6 +31,7 @@ function PedagioForm() {
     valor: '',
     observacao: ''
   });
+  const [comprovanteFile, setComprovanteFile] = useState(null);
 
   useEffect(() => {
     loadOptions();
@@ -84,13 +85,31 @@ function PedagioForm() {
   };
 
   const buildPayload = () => {
-    return {
-      ...formData,
+    const baseData = {
       veiculo: formData.veiculo,
       ordem: formData.ordem || null,
+      data: formData.data,
+      praca: formData.praca,
+      rodovia: formData.rodovia || '',
       km: formData.km ? parseInt(formData.km, 10) : null,
-      valor: formData.valor ? parseFloat(formData.valor) : null
+      categoria: formData.categoria || '',
+      tag: formData.tag || '',
+      valor: formData.valor ? parseFloat(formData.valor) : null,
+      observacao: formData.observacao || ''
     };
+
+    if (comprovanteFile) {
+      const data = new FormData();
+      Object.keys(baseData).forEach(key => {
+        if (baseData[key] !== null && baseData[key] !== '') {
+          data.append(key, baseData[key]);
+        }
+      });
+      data.append('comprovante', comprovanteFile);
+      return data;
+    }
+
+    return baseData;
   };
 
   const handleSubmit = async (e) => {
@@ -194,12 +213,28 @@ function PedagioForm() {
         </div>
 
         <div className={styles.formSection}>
-          <h3>Observações</h3>
+          <h3>Observações e Comprovante</h3>
           <div className={styles.formRow2}>
             <div className={styles.formGroup}>
               <label htmlFor="observacao">Observação</label>
               <textarea id="observacao" name="observacao" value={formData.observacao} onChange={handleChange} placeholder="Informações adicionais" />
             </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="comprovante">Comprovante (opcional)</label>
+            <input
+              id="comprovante"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+              className={styles.fileInput}
+            />
+            {comprovanteFile && (
+              <small className={styles.fileHint}>
+                Arquivo selecionado: {comprovanteFile.name}
+              </small>
+            )}
           </div>
         </div>
 

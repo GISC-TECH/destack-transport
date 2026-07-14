@@ -237,6 +237,7 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
     envolvidos_terceiros: '', custo_total: '', status: 'aberto',
     numero_sinistro: '', seguradora: '', observacao: ''
   });
+  const [comprovanteFile, setComprovanteFile] = useState(null);
 
   useEffect(() => {
     if (isEditing) {
@@ -284,16 +285,30 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { ...formData };
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === '') payload[key] = null;
+      const basePayload = { ...formData };
+      Object.keys(basePayload).forEach(key => {
+        if (basePayload[key] === '') basePayload[key] = null;
       });
       if (tipo === 'multa') {
-        payload.valor = parseFloat(payload.valor) || 0;
-        payload.pontos = payload.pontos ? parseInt(payload.pontos, 10) : null;
+        basePayload.valor = parseFloat(basePayload.valor) || 0;
+        basePayload.pontos = basePayload.pontos ? parseInt(basePayload.pontos, 10) : null;
       } else {
-        payload.custo_total = payload.custo_total ? parseFloat(payload.custo_total) : null;
+        basePayload.custo_total = basePayload.custo_total ? parseFloat(basePayload.custo_total) : null;
       }
+
+      let payload;
+      if (comprovanteFile) {
+        payload = new FormData();
+        Object.keys(basePayload).forEach(key => {
+          if (basePayload[key] !== null && basePayload[key] !== undefined) {
+            payload.append(key, basePayload[key]);
+          }
+        });
+        payload.append('comprovante', comprovanteFile);
+      } else {
+        payload = basePayload;
+      }
+
       if (isEditing) {
         await (tipo === 'multa' ? multaAPI.update(id, payload) : sinistroAPI.update(id, payload));
         toast.success('Registro atualizado com sucesso!');
@@ -434,6 +449,24 @@ function RegistroModal({ tipo, id, veiculos, motoristas, onClose, onSave }) {
             <div className={styles.formGroup}>
               <label htmlFor="observacao">Observação</label>
               <textarea id="observacao" name="observacao" value={formData.observacao} onChange={handleChange} />
+            </div>
+          </div>
+
+          <div className={styles.formRow2}>
+            <div className={styles.formGroup}>
+              <label htmlFor="comprovante">Comprovante (opcional)</label>
+              <input
+                id="comprovante"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => setComprovanteFile(e.target.files[0] || null)}
+                className={styles.fileInput}
+              />
+              {comprovanteFile && (
+                <small className={styles.fileHint}>
+                  Arquivo selecionado: {comprovanteFile.name}
+                </small>
+              )}
             </div>
           </div>
 

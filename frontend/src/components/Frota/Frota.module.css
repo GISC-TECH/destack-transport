@@ -166,6 +166,16 @@
   border-color: var(--border-strong);
 }
 
+.fileInput {
+  padding: var(--space-2) !important;
+}
+
+.fileHint {
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: block;
+}
+
 @media (max-width: 768px) {
   .formRow,
   .formRow2 {
