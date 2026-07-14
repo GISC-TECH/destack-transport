@@ -13,7 +13,7 @@
 ## Último Deploy Realizado
 - **Data:** 2026-07-14
 - **Versão:** v1.1.13
-- **Commit:** ca46ebb
+- **Commit:** 6df629f
 - **Branch:** feat/reskin-verde-prototipo
 - **Servidor anterior:** destack-prod (31.97.247.165) — inacessível
 - **Backup usado na migração:** backups/daily/20260703_020000.dump
