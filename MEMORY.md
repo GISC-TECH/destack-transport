@@ -11,14 +11,15 @@
 - **Health check:** https://destacktransporte.com/api/health/ -> healthy
 
 ## Último Deploy Realizado
-- **Data:** 2026-07-02
-- **Versão:** v1.1.11
-- **Commit:** 7adfab9
+- **Data:** 2026-07-14
+- **Versão:** v1.1.12
+- **Commit:** 3bfe9cb
 - **Branch:** feat/reskin-verde-prototipo
 - **Servidor anterior:** destack-prod (31.97.247.165) — inacessível
 - **Backup usado na migração:** backups/daily/20260703_020000.dump
 
 ### Deploys Anteriores
+- **v1.1.11** (7adfab9): Correção de redirecionamento da landing page
 - **v1.1.10** (5ca41df): Fases 2 a 5 - CSS morto, ajustes visuais e variáveis CSS
 - **v1.1.9** (cadc06b): Fase 1 de acessibilidade
 - **v1.1.8** (d4e36db): Auditoria e correções de responsividade mobile
@@ -55,6 +56,12 @@
   - **2.425 XMLs ignorados** (já existiam no banco)
   - **2 falhas** (XML fora do leiaute oficial)
 - Container scraper no Contabo permanece parado; coletas devem ser feitas localmente até resolver o bloqueio de IP
+
+### Permite Upload de Comprovante na Edição de Pagamentos (v1.1.12)
+- Remove restrição `!isEditing` do campo de comprovante em `PagamentoAgregadoForm`
+- Remove restrição `!isEditing` do campo de comprovante em `PagamentoProprioForm`
+- Ajusta label de CT-e de "Opcional" para "Obrigatório" no formulário agregado
+- Usuários do grupo Financeiro podem agora adicionar/complementar o comprovante tanto na criação quanto na edição do pagamento
 
 ### Correção de Redirecionamento da Landing Page (v1.1.11)
 - Corrigido redirecionamento indevido para `/login?expired=1` ao acessar a landing page (`/`)
