@@ -13,7 +13,7 @@
 ## Último Deploy Realizado
 - **Data:** 2026-07-14
 - **Versão:** v1.1.13
-- **Commit:** 40b5cdf
+- **Commit:** ca46ebb
 - **Branch:** feat/reskin-verde-prototipo
 - **Servidor anterior:** destack-prod (31.97.247.165) — inacessível
 - **Backup usado na migração:** backups/daily/20260703_020000.dump
@@ -166,3 +166,18 @@ MDFe julho/2026:  22
 - Scraper no Contabo está parado porque o EGS Sistemas bloqueia IP estrangeiro; coletas devem ser feitas localmente.
 - Container scraper no Contabo pode ser ativado se o EGS liberar o IP 207.180.255.150 ou se for configurado proxy/VPN brasileiro.
 - Usuários devem fazer hard refresh no navegador após deploys de frontend.
+
+### Auditoria de Documentos Anexos (2026-07-14)
+- **Total de documentos anexos no banco:** 251
+- **Documentos com arquivo físico faltante:** 237
+- **Causa:** migração para Contabo não incluiu a pasta `media/anexos/` do servidor antigo
+- **Servidor antigo:** 31.97.247.165 está inacessível (ping/SSH/HTTP falham)
+- **Backups locais pesquisados:** nenhuma cópia dos arquivos `anexos/` encontrada
+- **Status:** impossível recuperar os 237 arquivos antigos sem acesso ao servidor antigo ou backup de mídia
+- **Impacto:** visualização/download de documentos antigos retorna 404; novos uploads funcionam normalmente
+
+### Permissões dos Usuários (2026-07-14)
+- Grupos padrão (`Financeiro`, `Operacional`, `Administrativo`, `Leitura`) estão configurados
+- Usuária `LUANNAVICTORIA` está no grupo `Financeiro` com permissões corretas (`add`/`change`/`delete` em pagamentos e financeiro)
+- Perfis de acesso estão funcionando no endpoint `/api/users/me/permissions/`
+- Landing page (`/`) e login (`/login`) permanecem acessíveis sem autenticação
