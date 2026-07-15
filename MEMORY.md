@@ -13,7 +13,7 @@
 ## Último Deploy Realizado
 - **Data:** 2026-07-14
 - **Versão:** v1.1.13
-- **Commit:** 6df629f
+- **Commit:** daac1dc
 - **Branch:** feat/reskin-verde-prototipo
 - **Servidor anterior:** destack-prod (31.97.247.165) — inacessível
 - **Backup usado na migração:** backups/daily/20260703_020000.dump
@@ -176,8 +176,22 @@ MDFe julho/2026:  22
 - **Status:** impossível recuperar os 237 arquivos antigos sem acesso ao servidor antigo ou backup de mídia
 - **Impacto:** visualização/download de documentos antigos retorna 404; novos uploads funcionam normalmente
 
-### Permissões dos Usuários (2026-07-14)
+### Permissões dos Usuários (2026-07-15)
 - Grupos padrão (`Financeiro`, `Operacional`, `Administrativo`, `Leitura`) estão configurados
-- Usuária `LUANNAVICTORIA` está no grupo `Financeiro` com permissões corretas (`add`/`change`/`delete` em pagamentos e financeiro)
+- Usuária `LUANNAVICTORIA` estava no grupo `Administrativo`; movida para `Financeiro`
+- Adicionadas permissões individuais a `LUANNAVICTORIA` para edição de veículos, motoristas e documentos anexos (documentação da frota)
+- Criada permissão customizada `CanUpdatePagamentoCTePermission` para permitir que usuários do Financeiro marquem CT-e como pago via `/api/ctes/{id}/pagamento/`
 - Perfis de acesso estão funcionando no endpoint `/api/users/me/permissions/`
 - Landing page (`/`) e login (`/login`) permanecem acessíveis sem autenticação
+
+### Usuários Ativos e Perfis (2026-07-15)
+| Usuário | Perfil | Observação |
+|---------|--------|------------|
+| Jailda | Administrativo | Acesso administrativo completo |
+| LINDAWELLEN | Administrativo | Acesso administrativo completo |
+| LUANNAVICTORIA | Financeiro + permissões individuais | Financeiro + documentação de veículos/motoristas |
+| Lidiane | Operacional | Operação/logística |
+| Tarcisia | Operacional | Operação/logística |
+| Daniel | Super Admin | Acesso total |
+| Jacival | Super Admin | Acesso total |
+| admin | Super Admin | Acesso total |
