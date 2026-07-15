@@ -131,3 +131,23 @@ class CanUploadXMLPermission(BasePermission):
             request.user.has_perm('transport.add_ctedocumento') or
             request.user.has_perm('transport.add_mdfedocumento')
         )
+
+
+class CanUpdatePagamentoCTePermission(BasePermission):
+    """
+    Permissão para atualizar o status de pagamento de um CT-e.
+    Permite usuários que podem alterar CT-e ou gerenciar pagamentos
+    (agregados/próprios), já que a ação afeta diretamente o fluxo financeiro.
+    Superusuários têm acesso total.
+    """
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        if request.user.is_superuser:
+            return True
+        return (
+            request.user.has_perm('transport.change_ctedocumento') or
+            request.user.has_perm('transport.change_pagamentoagregado') or
+            request.user.has_perm('transport.change_pagamentoproprio')
+        )

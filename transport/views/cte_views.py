@@ -21,7 +21,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Imports Locais
-from ..permissions import TransportModelPermission
+from ..permissions import TransportModelPermission, CanUpdatePagamentoCTePermission
 from ..serializers.cte_serializers import (
     CTeDocumentoListSerializer, 
     CTeDocumentoDetailSerializer
@@ -658,7 +658,7 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @action(detail=True, methods=['patch'])
+    @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated, CanUpdatePagamentoCTePermission])
     def pagamento(self, request, pk=None):
         """
         Atualiza o status de pagamento de um CT-e.
