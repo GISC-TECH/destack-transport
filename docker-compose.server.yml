@@ -105,6 +105,8 @@ services:
     image: evoapicloud/evolution-api:latest
     container_name: destack_evolution_api
     restart: unless-stopped
+    init: true
+    pids_limit: 256
     expose:
       - "8080"
     environment:
@@ -142,6 +144,9 @@ services:
       dockerfile: Dockerfile
     container_name: destack_scraper
     restart: unless-stopped
+    # docker-init (tini) recolhe processos Chrome orfaos ao fim de cada job.
+    init: true
+    pids_limit: 512
     environment:
       # EGS Sistemas
       - EGS_BASE_URL=https://app.egssistemas.com.br
@@ -174,6 +179,8 @@ services:
       dockerfile: Dockerfile
     container_name: destack_celery_worker
     restart: unless-stopped
+    init: true
+    pids_limit: 256
     command: celery -A core worker -l info
     environment:
       - DEBUG=False
@@ -211,6 +218,8 @@ services:
       dockerfile: Dockerfile
     container_name: destack_celery_beat
     restart: unless-stopped
+    init: true
+    pids_limit: 64
     command: celery -A core beat -l info
     environment:
       - DEBUG=False
