@@ -161,6 +161,77 @@
   font-weight: 700 !important;
 }
 
+.manualValueNotice {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--warning-light);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.editForm label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.editForm p,
+.deleteWarning p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.currencyInput {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+}
+
+.currencyInput:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.currencyInput span {
+  padding: var(--space-2) var(--space-4);
+  color: var(--text-secondary);
+  background: var(--content-bg);
+  border-right: 1px solid var(--border-color);
+  font-weight: 600;
+}
+
+.currencyInput input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.deleteWarning {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-left: 4px solid var(--danger-color);
+  border-radius: var(--radius-md);
+  background: var(--danger-light);
+}
+
 .detailCardFull {
   grid-column: 1 / -1;
 }

@@ -449,8 +449,11 @@ def parse_cte_valores(cte_doc, infcte):
     """Parseia os blocos <vPrest> e <imp>."""
     vprest = safe_get(infcte, 'vPrest')
     if not vprest:
-        # Limpa registros anteriores se o bloco não existir
-        CTePrestacaoServico.objects.filter(cte=cte_doc).delete()
+        # Um valor negociado manualmente não pode ser apagado por reprocessamento.
+        if not cte_doc.valor_frete_editado_manualmente:
+            CTePrestacaoServico.objects.filter(cte=cte_doc).delete()
+        cte_doc.valor_frete_importado = None
+        cte_doc.save(update_fields=['valor_frete_importado'])
         CTeTributos.objects.filter(cte=cte_doc).delete()
         return None, None # Retorna None para prestacao e tributos
 
@@ -460,14 +463,24 @@ def parse_cte_valores(cte_doc, infcte):
     if valor_total is None:
         logger.warning("Valor total da prestação (vTPrest) ausente para CT-e %s.", cte_doc.chave)
 
+    # Mantém o valor recebido do EGS/XML para auditoria, mesmo quando há uma
+    # negociação manual ativa sobre o valor efetivo usado pelo financeiro.
+    cte_doc.valor_frete_importado = valor_total
+    cte_doc.save(update_fields=['valor_frete_importado'])
+
     # --- Prestação de Serviço ---
     prest_data = {
-        'valor_total_prestado': valor_total,
         'valor_recebido': valor_recebido,
         # Campos CIF/FOB - Detectar modalidade baseado no tomador ou outros valores
         'valor_cif': to_decimal(safe_get(vprest, 'vCIF')), # Só se existir no XML
         'valor_fob': to_decimal(safe_get(vprest, 'vFOB')), # Só se existir no XML
     }
+    preservar_valor_manual = (
+        cte_doc.valor_frete_editado_manualmente
+        and CTePrestacaoServico.objects.filter(cte=cte_doc).exists()
+    )
+    if not preservar_valor_manual:
+        prest_data['valor_total_prestado'] = valor_total
     prest_data_cleaned = {k: v for k, v in prest_data.items() if v is not None}
     
     try:

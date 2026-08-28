@@ -7,6 +7,7 @@ from io import StringIO
 
 # Imports Django
 from django.http import HttpResponse
+from django.db import transaction
 from django.db.models import Q, Sum, Count, F
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -21,10 +22,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Imports Locais
-from ..permissions import TransportModelPermission, CanUpdatePagamentoCTePermission
+from ..permissions import (
+    TransportModelPermission,
+    CanUpdatePagamentoCTePermission,
+    CanEditCTeFreightValuePermission,
+    CanDeleteImportedCTePermission,
+)
 from ..serializers.cte_serializers import (
-    CTeDocumentoListSerializer, 
-    CTeDocumentoDetailSerializer
+    CTeDocumentoListSerializer,
+    CTeDocumentoDetailSerializer,
+    CTeValorFreteManualSerializer,
 )
 
 from ..models import (
@@ -152,6 +159,8 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
     - GET /api/ctes/{id}/xml/ - Download do XML do CT-e
     - GET /api/ctes/{id}/dacte/ - Gera DACTE (PDF) do CT-e
     - POST /api/ctes/{id}/reprocessar/ - Reprocessa o CT-e
+    - PATCH /api/ctes/{id}/valor-frete/ - Edita o valor negociado do frete
+    - DELETE /api/ctes/{id}/excluir/ - Exclui um CT-e sem vínculos bloqueantes
     
     Filtros disponíveis:
     - data_inicio: Data inicial (YYYY-MM-DD)
@@ -364,6 +373,102 @@ class CTeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 queryset = queryset.order_by(ordering)
 
         return queryset.distinct()
+
+    @action(
+        detail=True,
+        methods=['patch'],
+        url_path='valor-frete',
+        permission_classes=[IsAuthenticated, CanEditCTeFreightValuePermission],
+    )
+    def editar_valor_frete(self, request, pk=None):
+        """Sobrescreve o valor efetivo e preserva o valor importado para auditoria."""
+        serializer = CTeValorFreteManualSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        novo_valor = serializer.validated_data['valor_total_prestado']
+
+        cte_base = self.get_object()
+        with transaction.atomic():
+            cte = CTeDocumento.objects.select_for_update().get(pk=cte_base.pk)
+            prestacao = CTePrestacaoServico.objects.select_for_update().filter(
+                cte=cte
+            ).first()
+            if prestacao is None:
+                return Response(
+                    {'detail': 'Este CT-e não possui valor de prestação para editar.'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            if cte.valor_frete_importado is None:
+                cte.valor_frete_importado = prestacao.valor_total_prestado
+
+            prestacao.valor_total_prestado = novo_valor
+            prestacao.save(update_fields=['valor_total_prestado'])
+
+            cte.valor_frete_editado_manualmente = True
+            cte.valor_frete_editado_por = request.user
+            cte.valor_frete_editado_em = timezone.now()
+            cte.save(update_fields=[
+                'valor_frete_importado',
+                'valor_frete_editado_manualmente',
+                'valor_frete_editado_por',
+                'valor_frete_editado_em',
+            ])
+
+        return Response({
+            'detail': 'Valor do frete atualizado com sucesso.',
+            'valor_total_prestado': str(novo_valor),
+            'valor_frete_importado': (
+                str(cte.valor_frete_importado)
+                if cte.valor_frete_importado is not None
+                else None
+            ),
+            'valor_frete_editado_por': request.user.username,
+            'valor_frete_editado_em': cte.valor_frete_editado_em,
+        })
+
+    @action(
+        detail=True,
+        methods=['delete'],
+        url_path='excluir',
+        permission_classes=[IsAuthenticated, CanDeleteImportedCTePermission],
+    )
+    def excluir_cte(self, request, pk=None):
+        """Exclui um CT-e, impedindo cascatas sobre vínculos de negócio."""
+        cte_base = self.get_object()
+        with transaction.atomic():
+            cte = CTeDocumento.objects.select_for_update().get(pk=cte_base.pk)
+            bloqueios = []
+
+            if cte.pago or cte.data_pagamento:
+                bloqueios.append('CT-e marcado como pago')
+            if hasattr(cte, 'pagamento_agregado'):
+                bloqueios.append('pagamento de agregado')
+            if hasattr(cte, 'pagamento_proprio'):
+                bloqueios.append('pagamento de motorista próprio')
+            if cte.faturas_itens.exists():
+                bloqueios.append('item de fatura')
+            if cte.ordens_viagem.exists():
+                bloqueios.append('ordem de viagem')
+            if cte.ciots.exists():
+                bloqueios.append('CIOT')
+            if cte.mdfe_transportador.exists():
+                bloqueios.append('MDF-e')
+
+            if bloqueios:
+                return Response(
+                    {
+                        'detail': (
+                            'O CT-e não pode ser excluído enquanto possuir vínculos: '
+                            + ', '.join(bloqueios)
+                            + '.'
+                        ),
+                        'bloqueios': bloqueios,
+                    },
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            cte.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'])
     def export(self, request):

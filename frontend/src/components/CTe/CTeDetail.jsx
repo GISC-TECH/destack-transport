@@ -1,22 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { cteAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
 import Button from '../Common/Button';
+import Modal from '../Common/Modal';
 import StatusPill from '../Common/StatusPill';
 import PageHeader from '../Common/PageHeader';
 import styles from './CTeDetail.module.css';
 
 function CTeDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const toast = useToast();
   const [cte, setCte] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
+  const [editValueOpen, setEditValueOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [freightValue, setFreightValue] = useState('');
 
   const loadCTe = useCallback(async () => {
     try {
@@ -87,6 +92,46 @@ function CTeDetail() {
     }
   };
 
+  const openEditValue = () => {
+    setFreightValue(cte.prestacao?.valor_total_prestado ?? '');
+    setEditValueOpen(true);
+  };
+
+  const handleEditValue = async (event) => {
+    event.preventDefault();
+    const parsedValue = Number(freightValue);
+    if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+      toast.error('Informe um valor de frete maior que zero.');
+      return;
+    }
+
+    try {
+      setActionLoading('editar-valor');
+      await cteAPI.editarValorFrete(id, freightValue);
+      toast.success('Valor do frete atualizado com sucesso!');
+      setEditValueOpen(false);
+      await loadCTe();
+    } catch (err) {
+      toast.error(err.message || 'Erro ao atualizar o valor do frete.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setActionLoading('excluir');
+      await cteAPI.excluir(id);
+      toast.success('CT-e excluído com sucesso!');
+      navigate('/ctes', { replace: true });
+    } catch (err) {
+      toast.error(err.message || 'Erro ao excluir CT-e.');
+    } finally {
+      setActionLoading(null);
+      setDeleteOpen(false);
+    }
+  };
+
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -139,6 +184,24 @@ function CTeDetail() {
   const headerActions = (
     <>
       <StatusPill status={status.status}>{status.icon} {status.text}</StatusPill>
+      {cte.permissoes_especiais?.editar_valor_frete && (
+        <Button
+          variant="gold"
+          onClick={openEditValue}
+          disabled={actionLoading !== null}
+        >
+          Editar valor
+        </Button>
+      )}
+      {cte.permissoes_especiais?.excluir_cte && (
+        <Button
+          variant="danger"
+          onClick={() => setDeleteOpen(true)}
+          disabled={actionLoading !== null}
+        >
+          Excluir CT-e
+        </Button>
+      )}
       <Button
         variant="danger"
         onClick={handleDownloadPDF}
@@ -263,6 +326,20 @@ function CTeDetail() {
                 {formatCurrency(cte.prestacao?.valor_total_prestado)}
               </span>
             </div>
+            {cte.valor_frete_editado_manualmente && (
+              <>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>Valor importado do EGS:</span>
+                  <span className={styles.value}>
+                    {formatCurrency(cte.valor_frete_importado)}
+                  </span>
+                </div>
+                <div className={styles.manualValueNotice}>
+                  Ajustado manualmente por {cte.valor_frete_editado_por_nome || 'usuário autorizado'}
+                  {cte.valor_frete_editado_em ? ` em ${formatDate(cte.valor_frete_editado_em)}` : ''}.
+                </div>
+              </>
+            )}
             <div className={styles.detailRow}>
               <span className={styles.label}>Valor Receber:</span>
               <span className={styles.value}>{formatCurrency(cte.prestacao?.valor_receber)}</span>
@@ -512,6 +589,90 @@ function CTeDetail() {
           />
         </div>
       </div>
+
+      <Modal
+        isOpen={editValueOpen}
+        onClose={() => actionLoading !== 'editar-valor' && setEditValueOpen(false)}
+        title="Editar valor do frete"
+        size="sm"
+        closeOnOverlayClick={actionLoading !== 'editar-valor'}
+        footer={(
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setEditValueOpen(false)}
+              disabled={actionLoading === 'editar-valor'}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="edit-cte-freight-form"
+              variant="gold"
+              loading={actionLoading === 'editar-valor'}
+            >
+              Salvar valor
+            </Button>
+          </>
+        )}
+      >
+        <form id="edit-cte-freight-form" onSubmit={handleEditValue} className={styles.editForm}>
+          <label htmlFor="cte-freight-value">Novo valor negociado</label>
+          <div className={styles.currencyInput}>
+            <span>R$</span>
+            <input
+              id="cte-freight-value"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={freightValue}
+              onChange={(event) => setFreightValue(event.target.value)}
+              disabled={actionLoading === 'editar-valor'}
+              required
+              autoFocus
+            />
+          </div>
+          <p>
+            O valor importado do EGS será preservado para auditoria. Relatórios e painéis
+            passarão a usar o novo valor negociado.
+          </p>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={deleteOpen}
+        onClose={() => actionLoading !== 'excluir' && setDeleteOpen(false)}
+        title="Excluir CT-e"
+        size="sm"
+        closeOnOverlayClick={actionLoading !== 'excluir'}
+        footer={(
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteOpen(false)}
+              disabled={actionLoading === 'excluir'}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+              loading={actionLoading === 'excluir'}
+            >
+              Excluir definitivamente
+            </Button>
+          </>
+        )}
+      >
+        <div className={styles.deleteWarning}>
+          <p>
+            Tem certeza que deseja excluir permanentemente o CT-e
+            <strong> #{cte.identificacao?.numero || '-'}</strong>?
+          </p>
+          <p>Dados fiscais internos e anexos vinculados também serão removidos.</p>
+          <p>CT-es com pagamentos, faturas, CIOT, MDF-e ou ordem de viagem não podem ser excluídos.</p>
+        </div>
+      </Modal>
     </div>
   );
 }

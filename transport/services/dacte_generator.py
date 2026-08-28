@@ -107,6 +107,15 @@ class DACTEGenerator:
             return f"R$ {value:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
         except (ValueError, TypeError):
             return 'R$ 0,00'
+
+    def _valor_total_fiscal(self, prestacao):
+        """Mantém no DACTE o valor fiscal originalmente importado."""
+        if (
+            self.cte.valor_frete_editado_manualmente
+            and self.cte.valor_frete_importado is not None
+        ):
+            return self.cte.valor_frete_importado
+        return prestacao.valor_total_prestado
     
     def _generate_qrcode(self):
         """Gera o QR Code do CT-e."""
@@ -436,7 +445,10 @@ class DACTEGenerator:
                     Paragraph("Modalidade", self.styles['FieldLabel']),
                 ],
                 [
-                    Paragraph(self._format_money(prestacao.valor_total_prestado), self.styles['FieldValue']),
+                    Paragraph(
+                        self._format_money(self._valor_total_fiscal(prestacao)),
+                        self.styles['FieldValue'],
+                    ),
                     Paragraph(self._format_money(prestacao.valor_recebido), self.styles['FieldValue']),
                     Paragraph(self.cte.modalidade or 'N/I', self.styles['FieldValue']),
                 ]

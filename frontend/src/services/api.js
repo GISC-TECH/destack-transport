@@ -595,7 +595,27 @@ export const cteAPI = {
     return response.json();
   },
 
-  // create/update/delete nao suportados: CTeDocumentoViewSet e ReadOnlyModelViewSet.
+  editarValorFrete: async (id, valorTotalPrestado) => {
+    const response = await fetchWithCSRFRetry(
+      `${API_BASE}/ctes/${id}/valor-frete/`,
+      mutationOptions('PATCH', { valor_total_prestado: valorTotalPrestado })
+    );
+    if (!response.ok) {
+      await handleHttpError(response, 'Erro ao atualizar o valor do frete');
+    }
+    return response.json();
+  },
+
+  excluir: async (id) => {
+    const response = await fetchWithCSRFRetry(
+      `${API_BASE}/ctes/${id}/excluir/`,
+      mutationOptions('DELETE')
+    );
+    if (!response.ok) {
+      await handleHttpError(response, 'Erro ao excluir CT-e');
+    }
+    return true;
+  },
 
   cancelar: async (id, justificativa) => {
     const response = await fetchWithTimeout(`${API_BASE}/ctes/${id}/cancelar/`, mutationOptions('POST', { justificativa }));

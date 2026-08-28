@@ -1,6 +1,14 @@
 # transport/serializers/cte_serializers.py
 
+from decimal import Decimal
+
 from rest_framework import serializers
+
+from ..permissions import (
+    CTE_EDITAR_VALOR_PERMISSION,
+    CTE_EXCLUIR_PERMISSION,
+    has_direct_cte_permission,
+)
 
 # Importar todos os modelos CT-e e o Endereco base
 from ..models import (
@@ -188,6 +196,13 @@ class CTeCancelamentoSerializer(serializers.ModelSerializer):
 
 # --- Serializers Principais para CT-e (Listagem e Detalhe) ---
 
+class CTeValorFreteManualSerializer(serializers.Serializer):
+    valor_total_prestado = serializers.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        min_value=Decimal('0.01'),
+    )
+
 class CTeDocumentoListSerializer(serializers.ModelSerializer):
     """ Serializer otimizado para listagem de CT-es (usado por CTeDocumentoViewSet). """
     # Campos derivados de relações para facilitar a exibição na lista
@@ -340,6 +355,12 @@ class CTeDocumentoDetailSerializer(serializers.ModelSerializer):
     eventos = CTeEventoSerializer(many=True, read_only=True)
     # Campo derivado
     status_geral = serializers.SerializerMethodField()
+    valor_frete_editado_por_nome = serializers.CharField(
+        source='valor_frete_editado_por.username',
+        read_only=True,
+        allow_null=True,
+    )
+    permissoes_especiais = serializers.SerializerMethodField()
 
     class Meta:
         model = CTeDocumento
@@ -347,6 +368,8 @@ class CTeDocumentoDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'chave', 'versao', 'modalidade', 'data_upload', 'processado', 'status_geral',
             'pago', 'data_pagamento', 'observacao_pagamento',
+            'valor_frete_importado', 'valor_frete_editado_manualmente',
+            'valor_frete_editado_por_nome', 'valor_frete_editado_em', 'permissoes_especiais',
             'identificacao', 'complemento', 'emitente', 'remetente', 'expedidor',
             'recebedor', 'destinatario', 'prestacao', 'tributos', 'carga',
             'modal_rodoviario', 'modal_aereo', 'modal_aquaviario', 'modal_ferroviario',
@@ -361,3 +384,13 @@ class CTeDocumentoDetailSerializer(serializers.ModelSerializer):
     def get_status_geral(self, obj):
         """ Reutiliza a lógica de status do serializer de lista. """
         return CTeDocumentoListSerializer().get_status(obj)
+
+    def get_permissoes_especiais(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        return {
+            'editar_valor_frete': has_direct_cte_permission(
+                user, CTE_EDITAR_VALOR_PERMISSION
+            ),
+            'excluir_cte': has_direct_cte_permission(user, CTE_EXCLUIR_PERMISSION),
+        }

@@ -70,6 +70,26 @@ class CTeDocumento(models.Model):
     modalidade = models.CharField("Modalidade Frete", max_length=3, choices=MODALIDADE_CHOICES, null=True, blank=True, db_index=True)
     status = models.CharField("Status", max_length=15, choices=STATUS_CHOICES, default='autorizado', db_index=True)
 
+    # Controle do valor de frete negociado. O valor efetivo continua em
+    # CTePrestacaoServico.valor_total_prestado para manter os relatórios atuais.
+    valor_frete_importado = models.DecimalField(
+        "Valor de Frete Importado",
+        max_digits=15,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Último valor recebido do XML/EGS, preservado para auditoria.",
+    )
+    valor_frete_editado_manualmente = models.BooleanField(default=False)
+    valor_frete_editado_por = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ctes_com_valor_editado',
+    )
+    valor_frete_editado_em = models.DateTimeField(null=True, blank=True)
+
     # Campos de controle de pagamento (inseridos pelo admin)
     pago = models.BooleanField("Pago", default=False, db_index=True)
     data_pagamento = models.DateTimeField("Data do Pagamento", null=True, blank=True)
@@ -95,6 +115,10 @@ class CTeDocumento(models.Model):
             models.Index(fields=['processado', 'data_upload']),
             models.Index(fields=['pago', 'data_pagamento']),
             models.Index(fields=['pago', 'data_upload']),
+        ]
+        permissions = [
+            ('editar_valor_frete_cte', 'Pode editar manualmente o valor de frete do CT-e'),
+            ('excluir_cte_importado', 'Pode excluir CT-e importado'),
         ]
 
     def __str__(self):

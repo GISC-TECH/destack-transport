@@ -14,6 +14,40 @@ Superusuários têm acesso total.
 from rest_framework.permissions import BasePermission
 
 
+CTE_EDITAR_VALOR_PERMISSION = 'editar_valor_frete_cte'
+CTE_EXCLUIR_PERMISSION = 'excluir_cte_importado'
+
+
+def has_direct_cte_permission(user, codename):
+    """
+    Verifica uma permissão especial atribuída diretamente ao usuário.
+
+    Não usa ``has_perm`` de propósito: superusuários e grupos não devem obter
+    automaticamente estas duas operações sensíveis de CT-e.
+    """
+    if not user or not user.is_authenticated:
+        return False
+    return user.user_permissions.filter(
+        content_type__app_label='transport',
+        content_type__model='ctedocumento',
+        codename=codename,
+    ).exists()
+
+
+class CanEditCTeFreightValuePermission(BasePermission):
+    """Permite editar o frete somente a usuários autorizados diretamente."""
+
+    def has_permission(self, request, view):
+        return has_direct_cte_permission(request.user, CTE_EDITAR_VALOR_PERMISSION)
+
+
+class CanDeleteImportedCTePermission(BasePermission):
+    """Permite excluir CT-e somente a usuários autorizados diretamente."""
+
+    def has_permission(self, request, view):
+        return has_direct_cte_permission(request.user, CTE_EXCLUIR_PERMISSION)
+
+
 class TransportModelPermission(BasePermission):
     """
     Permissão customizada que exige a permissão Django nativa correspondente
