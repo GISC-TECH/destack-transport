@@ -1,5 +1,8 @@
 # transport/serializers/payment_serializers.py
 
+import logging
+
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
@@ -7,6 +10,8 @@ from rest_framework.reverse import reverse
 from ..models import FaixaKM, PagamentoAgregado, PagamentoProprio, ContaPagar, CTeDocumento # CTeDocumento para o link
 from ..validators import validar_cpf
 
+
+logger = logging.getLogger(__name__)
 
 COMPROVANTE_MAX_BYTES = 10 * 1024 * 1024
 COMPROVANTE_ASSINATURAS = {
@@ -43,6 +48,31 @@ def _so_digitos(value):
     if value is None:
         return ''
     return str(value).replace('.', '').replace('-', '').replace('/', '').strip()
+
+
+class ComprovanteCleanupMixin:
+    """Remove do storage o comprovante substituido/removido apos o commit."""
+
+    def update(self, instance, validated_data):
+        comprovante_anterior = instance.comprovante
+        nome_anterior = comprovante_anterior.name if comprovante_anterior else ''
+        storage_anterior = comprovante_anterior.storage if comprovante_anterior else None
+
+        instance = super().update(instance, validated_data)
+        nome_atual = instance.comprovante.name if instance.comprovante else ''
+
+        if nome_anterior and nome_anterior != nome_atual:
+            def remover_comprovante_anterior():
+                try:
+                    storage_anterior.delete(nome_anterior)
+                except Exception:
+                    logger.exception(
+                        'Falha ao remover comprovante substituido do storage: %s',
+                        nome_anterior,
+                    )
+
+            transaction.on_commit(remover_comprovante_anterior)
+        return instance
 
 # ===================================================
 # === Serializers Pagamentos e Parametrização ===
@@ -96,7 +126,7 @@ class FaixaKMSerializer(serializers.ModelSerializer):
         return data
 
 
-class PagamentoAgregadoSerializer(serializers.ModelSerializer):
+class PagamentoAgregadoSerializer(ComprovanteCleanupMixin, serializers.ModelSerializer):
     """ Serializer para o modelo PagamentoAgregado. """
     # Campos somente leitura para exibir informações do CT-e relacionado
     cte_id = serializers.UUIDField(source='cte.id', read_only=True, allow_null=True)
@@ -167,7 +197,7 @@ class PagamentoAgregadoSerializer(serializers.ModelSerializer):
         # Isso permite PATCH sem enviar cte
         extra_kwargs = {'cte': {'write_only': True, 'required': False}}
 
-class PagamentoProprioSerializer(serializers.ModelSerializer):
+class PagamentoProprioSerializer(ComprovanteCleanupMixin, serializers.ModelSerializer):
     """ Serializer para o modelo PagamentoProprio. """
     comprovante_url = serializers.SerializerMethodField(read_only=True)
     comprovante = serializers.FileField(write_only=True, required=False, allow_null=True)

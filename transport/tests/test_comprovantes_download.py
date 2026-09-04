@@ -3,6 +3,7 @@ import tempfile
 import zipfile
 from datetime import date
 from decimal import Decimal
+from unittest import mock
 
 from django.contrib.auth.models import Permission, User
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -186,6 +187,7 @@ class ComprovantesDownloadTests(APITestCase):
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
     def test_patch_aceita_remover_comprovante_com_null(self):
+        nome_anterior = self.agregado_pago.comprovante.name
         serializer = PagamentoAgregadoSerializer(
             self.agregado_pago,
             data={'comprovante': None},
@@ -193,6 +195,49 @@ class ComprovantesDownloadTests(APITestCase):
         )
 
         self.assertTrue(serializer.is_valid(), serializer.errors)
+        with self.captureOnCommitCallbacks(execute=True):
+            serializer.save()
+        self.assertFalse(self.agregado_pago.comprovante)
+        self.assertFalse(self.agregado_pago.comprovante.storage.exists(nome_anterior))
+
+    def test_patch_substitui_e_remove_comprovante_anterior(self):
+        nome_anterior = self.agregado_pago.comprovante.name
+        serializer = PagamentoAgregadoSerializer(
+            self.agregado_pago,
+            data={
+                'comprovante': SimpleUploadedFile(
+                    'novo.pdf', b'%PDF-1.7 novo comprovante', content_type='application/pdf'
+                )
+            },
+            partial=True,
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        with self.captureOnCommitCallbacks(execute=True):
+            pagamento = serializer.save()
+        self.assertNotEqual(pagamento.comprovante.name, nome_anterior)
+        self.assertFalse(pagamento.comprovante.storage.exists(nome_anterior))
+        self.assertTrue(pagamento.comprovante.storage.exists(pagamento.comprovante.name))
+
+    def test_falha_ao_limpar_storage_nao_desfaz_pagamento_atualizado(self):
+        self.user.user_permissions.add(
+            Permission.objects.get(codename='change_pagamentoagregado')
+        )
+        storage = self.agregado_pago.comprovante.storage
+
+        with mock.patch.object(storage, 'delete', side_effect=OSError('storage indisponivel')):
+            with self.assertLogs('transport.serializers.payment_serializers', level='ERROR'):
+                with self.captureOnCommitCallbacks(execute=True):
+                    response = self.client.patch(
+                        f'/api/pagamentos/agregados/{self.agregado_pago.pk}/',
+                        {'comprovante': None, 'obs': 'Atualizacao confirmada'},
+                        format='json',
+                    )
+
+        self.assertEqual(response.status_code, 200)
+        self.agregado_pago.refresh_from_db()
+        self.assertFalse(self.agregado_pago.comprovante)
+        self.assertEqual(self.agregado_pago.obs, 'Atualizacao confirmada')
 
     @override_settings(COMPROVANTES_ZIP_MAX_FILES=1)
     def test_registros_sem_comprovante_nao_contam_no_limite(self):

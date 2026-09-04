@@ -39,7 +39,7 @@ services:
 
   # MinIO — Object Storage S3-compatible
   minio:
-    image: minio/minio:latest
+    image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     container_name: destack_minio
     hostname: destack_minio
     restart: unless-stopped
@@ -72,7 +72,7 @@ services:
       - "traefik.http.services.destack-minio.loadbalancer.server.port=9000"
 
   minio_init:
-    image: minio/mc:latest
+    image: minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
     container_name: destack_minio_init
     restart: "no"
     entrypoint: ["/bin/sh", "/scripts/init-minio.sh"]
@@ -204,6 +204,12 @@ services:
       - EVOLUTION_API_URL=http://destack_evolution_api:8080
       - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
       - EVOLUTION_INSTANCE_NAME=${EVOLUTION_INSTANCE_NAME:-destack}
+      - USE_MINIO=${USE_MINIO:-true}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:?set MINIO_ACCESS_KEY in .env}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:?set MINIO_SECRET_KEY in .env}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:?set MINIO_BUCKET_NAME in .env}
+      - MINIO_ENDPOINT_URL=${MINIO_ENDPOINT_URL:-http://minio:9000}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:?set MINIO_PUBLIC_URL in .env}
     volumes:
       - ./logs:/app/logs
       - ./backups:/app/backups
@@ -243,6 +249,12 @@ services:
       - EVOLUTION_API_URL=http://destack_evolution_api:8080
       - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
       - EVOLUTION_INSTANCE_NAME=${EVOLUTION_INSTANCE_NAME:-destack}
+      - USE_MINIO=${USE_MINIO:-true}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:?set MINIO_ACCESS_KEY in .env}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:?set MINIO_SECRET_KEY in .env}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:?set MINIO_BUCKET_NAME in .env}
+      - MINIO_ENDPOINT_URL=${MINIO_ENDPOINT_URL:-http://minio:9000}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:?set MINIO_PUBLIC_URL in .env}
     volumes:
       - ./logs:/app/logs
       - ./backups:/app/backups
