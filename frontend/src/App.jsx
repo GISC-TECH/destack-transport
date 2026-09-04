@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './components/Common/Toast';
 import Sidebar from './components/Common/Sidebar';
+import PermissionGuard from './components/Common/PermissionGuard';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Login from './components/Auth/Login';
 
@@ -22,6 +23,19 @@ function PageLoader() {
       <div className="spinner" />
       <p>Carregando...</p>
     </div>
+  );
+}
+
+function GuardedPage({ modulo, acao = 'view', capability, children }) {
+  return (
+    <PermissionGuard
+      modulo={modulo}
+      acao={acao}
+      capability={capability}
+      fallback={<Navigate to="/dashboard" replace />}
+    >
+      {children}
+    </PermissionGuard>
   );
 }
 
@@ -125,6 +139,7 @@ const CIOTManager = lazy(() => import('./components/CIOT/CIOTManager'));
 // Usuarios
 const UsuariosList = lazy(() => import('./components/Usuarios/UsuariosList'));
 const UsuarioForm = lazy(() => import('./components/Usuarios/UsuarioForm'));
+const UsuarioAcessos = lazy(() => import('./components/Usuarios/UsuarioAcessos'));
 
 // Perfis
 const Perfis = lazy(() => import('./components/Perfis/Perfis'));
@@ -152,125 +167,146 @@ function App() {
                     <main className="main-content">
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
-                          <Route path="/dashboard" element={<Dashboard />} />
+                          <Route path="/dashboard" element={<GuardedPage capability="dashboard.geral"><Dashboard /></GuardedPage>} />
 
                           {/* Clientes */}
-                          <Route path="/clientes" element={<ClientesList />} />
-                          <Route path="/clientes/novo" element={<ClienteForm />} />
-                          <Route path="/clientes/editar/:id" element={<ClienteForm />} />
+                          <Route path="/clientes" element={<GuardedPage modulo="clientes"><ClientesList /></GuardedPage>} />
+                          <Route path="/clientes/novo" element={<GuardedPage modulo="clientes" acao="add"><ClienteForm /></GuardedPage>} />
+                          <Route path="/clientes/editar/:id" element={<GuardedPage modulo="clientes" acao="change"><ClienteForm /></GuardedPage>} />
 
                           {/* Motoristas */}
-                          <Route path="/motoristas" element={<MotoristasList />} />
-                          <Route path="/motoristas/novo" element={<MotoristaForm />} />
-                          <Route path="/motoristas/editar/:id" element={<MotoristaForm />} />
+                          <Route path="/motoristas" element={<GuardedPage modulo="motoristas"><MotoristasList /></GuardedPage>} />
+                          <Route path="/motoristas/novo" element={<GuardedPage modulo="motoristas" acao="add"><MotoristaForm /></GuardedPage>} />
+                          <Route path="/motoristas/editar/:id" element={<GuardedPage modulo="motoristas" acao="change"><MotoristaForm /></GuardedPage>} />
 
                           {/* Veículos */}
-                          <Route path="/veiculos" element={<VeiculosList />} />
-                          <Route path="/veiculos/novo" element={<VeiculoForm />} />
-                          <Route path="/veiculos/editar/:id" element={<VeiculoForm />} />
+                          <Route path="/veiculos" element={<GuardedPage modulo="veiculos"><VeiculosList /></GuardedPage>} />
+                          <Route path="/veiculos/novo" element={<GuardedPage modulo="veiculos" acao="add"><VeiculoForm /></GuardedPage>} />
+                          <Route path="/veiculos/editar/:id" element={<GuardedPage modulo="veiculos" acao="change"><VeiculoForm /></GuardedPage>} />
 
                           {/* CT-e */}
-                          <Route path="/ctes" element={<CTeList />} />
-                          <Route path="/ctes/pendentes" element={<PagamentosPendentes />} />
-                          <Route path="/ctes/:id" element={<CTeDetail />} />
+                          <Route path="/ctes" element={<GuardedPage modulo="cte"><CTeList /></GuardedPage>} />
+                          <Route path="/ctes/pendentes" element={<GuardedPage modulo="cte"><PagamentosPendentes /></GuardedPage>} />
+                          <Route path="/ctes/:id" element={<GuardedPage modulo="cte"><CTeDetail /></GuardedPage>} />
 
                           {/* MDF-e */}
-                          <Route path="/mdfes" element={<MDFeList />} />
-                          <Route path="/mdfes/:id" element={<MDFeDetail />} />
+                          <Route path="/mdfes" element={<GuardedPage modulo="mdfe"><MDFeList /></GuardedPage>} />
+                          <Route path="/mdfes/:id" element={<GuardedPage modulo="mdfe"><MDFeDetail /></GuardedPage>} />
 
                           {/* Upload XML */}
-                          <Route path="/upload" element={<UploadXML />} />
+                          <Route path="/upload" element={<GuardedPage modulo="cte" acao="add"><UploadXML /></GuardedPage>} />
 
                           {/* Pagamentos */}
-                          <Route path="/pagamentos" element={<PagamentosList />} />
-                          <Route path="/pagamentos/agregados/novo" element={<PagamentoAgregadoForm />} />
-                          <Route path="/pagamentos/agregados/:id/editar" element={<PagamentoAgregadoForm />} />
-                          <Route path="/pagamentos/proprios/novo" element={<PagamentoProprioForm />} />
-                          <Route path="/pagamentos/proprios/:id/editar" element={<PagamentoProprioForm />} />
+                          <Route path="/pagamentos" element={<GuardedPage modulo="pagamentos"><PagamentosList /></GuardedPage>} />
+                          <Route path="/pagamentos/agregados/novo" element={<GuardedPage modulo="pagamentos" acao="add"><PagamentoAgregadoForm /></GuardedPage>} />
+                          <Route path="/pagamentos/agregados/:id/editar" element={<GuardedPage modulo="pagamentos" acao="change"><PagamentoAgregadoForm /></GuardedPage>} />
+                          <Route path="/pagamentos/proprios/novo" element={<GuardedPage modulo="pagamentos" acao="add"><PagamentoProprioForm /></GuardedPage>} />
+                          <Route path="/pagamentos/proprios/:id/editar" element={<GuardedPage modulo="pagamentos" acao="change"><PagamentoProprioForm /></GuardedPage>} />
 
                           {/* Manutenção */}
-                          <Route path="/manutencoes" element={<ManutencaoList />} />
-                          <Route path="/manutencoes/nova" element={<ManutencaoForm />} />
-                          <Route path="/manutencoes/:id" element={<ManutencaoForm />} />
+                          <Route path="/manutencoes" element={<GuardedPage modulo="veiculos"><ManutencaoList /></GuardedPage>} />
+                          <Route path="/manutencoes/nova" element={<GuardedPage modulo="veiculos" acao="add"><ManutencaoForm /></GuardedPage>} />
+                          <Route path="/manutencoes/:id" element={<GuardedPage modulo="veiculos" acao="change"><ManutencaoForm /></GuardedPage>} />
 
                           {/* Ordens de Viagem */}
-                          <Route path="/ordens-viagem" element={<OrdensViagemList />} />
-                          <Route path="/ordens-viagem/nova" element={<OrdemViagemForm />} />
-                          <Route path="/ordens-viagem/:id" element={<OrdemViagemForm />} />
+                          <Route path="/ordens-viagem" element={<GuardedPage modulo="ordens_viagem"><OrdensViagemList /></GuardedPage>} />
+                          <Route path="/ordens-viagem/nova" element={<GuardedPage modulo="ordens_viagem" acao="add"><OrdemViagemForm /></GuardedPage>} />
+                          <Route path="/ordens-viagem/:id" element={<GuardedPage modulo="ordens_viagem" acao="change"><OrdemViagemForm /></GuardedPage>} />
 
                           {/* Abastecimento */}
-                          <Route path="/abastecimentos" element={<AbastecimentosList />} />
-                          <Route path="/abastecimentos/novo" element={<AbastecimentoForm />} />
-                          <Route path="/abastecimentos/:id" element={<AbastecimentoForm />} />
+                          <Route path="/abastecimentos" element={<GuardedPage modulo="frota"><AbastecimentosList /></GuardedPage>} />
+                          <Route path="/abastecimentos/novo" element={<GuardedPage modulo="frota" acao="add"><AbastecimentoForm /></GuardedPage>} />
+                          <Route path="/abastecimentos/:id" element={<GuardedPage modulo="frota" acao="change"><AbastecimentoForm /></GuardedPage>} />
 
                           {/* Planos de Manutenção */}
-                          <Route path="/planos-manutencao" element={<PlanosManutencaoList />} />
-                          <Route path="/planos-manutencao/novo" element={<PlanoManutencaoForm />} />
-                          <Route path="/planos-manutencao/:id" element={<PlanoManutencaoForm />} />
+                          <Route path="/planos-manutencao" element={<GuardedPage modulo="veiculos"><PlanosManutencaoList /></GuardedPage>} />
+                          <Route path="/planos-manutencao/novo" element={<GuardedPage modulo="veiculos" acao="add"><PlanoManutencaoForm /></GuardedPage>} />
+                          <Route path="/planos-manutencao/:id" element={<GuardedPage modulo="veiculos" acao="change"><PlanoManutencaoForm /></GuardedPage>} />
 
                           {/* Multas e Sinistros */}
-                          <Route path="/frota/multas-sinistros" element={<MultasSinistros />} />
+                          <Route path="/frota/multas-sinistros" element={<GuardedPage modulo="frota"><MultasSinistros /></GuardedPage>} />
 
                           {/* Pedágio */}
-                          <Route path="/pedagios" element={<PedagiosList />} />
-                          <Route path="/pedagios/novo" element={<PedagioForm />} />
-                          <Route path="/pedagios/:id" element={<PedagioForm />} />
+                          <Route path="/pedagios" element={<GuardedPage modulo="frota"><PedagiosList /></GuardedPage>} />
+                          <Route path="/pedagios/novo" element={<GuardedPage modulo="frota" acao="add"><PedagioForm /></GuardedPage>} />
+                          <Route path="/pedagios/:id" element={<GuardedPage modulo="frota" acao="change"><PedagioForm /></GuardedPage>} />
 
                           {/* Tabela de Frete */}
-                          <Route path="/tabelas-frete" element={<TabelasFreteList />} />
-                          <Route path="/tabelas-frete/nova" element={<TabelaFreteForm />} />
-                          <Route path="/tabelas-frete/:id" element={<TabelaFreteForm />} />
+                          <Route path="/tabelas-frete" element={<GuardedPage modulo="frota"><TabelasFreteList /></GuardedPage>} />
+                          <Route path="/tabelas-frete/nova" element={<GuardedPage modulo="frota" acao="add"><TabelaFreteForm /></GuardedPage>} />
+                          <Route path="/tabelas-frete/:id" element={<GuardedPage modulo="frota" acao="change"><TabelaFreteForm /></GuardedPage>} />
 
                           {/* Financeiro */}
-                          <Route path="/financeiro" element={<FinanceiroPainel />} />
-                          <Route path="/faturas" element={<FaturasList />} />
-                          <Route path="/faturas/nova" element={<FaturaForm />} />
-                          <Route path="/faturas/:id/editar" element={<FaturaForm />} />
-                          <Route path="/financeiro/contas-a-pagar" element={<ContasPagarList />} />
-                          <Route path="/financeiro/contas-a-pagar/nova" element={<ContaPagarForm />} />
-                          <Route path="/financeiro/contas-a-pagar/:id/editar" element={<ContaPagarForm />} />
-                          <Route path="/financeiro/conciliacao" element={<ConciliacaoBancaria />} />
-                          <Route path="/financeiro/inadimplencia" element={<Inadimplencia />} />
-                          <Route path="/financeiro/fluxo-caixa" element={<FluxoCaixa />} />
-                          <Route path="/financeiro/dre" element={<DRE />} />
+                          <Route path="/financeiro" element={<GuardedPage capability="financeiro.painel"><FinanceiroPainel /></GuardedPage>} />
+                          <Route path="/faturas" element={<GuardedPage modulo="financeiro"><FaturasList /></GuardedPage>} />
+                          <Route path="/faturas/nova" element={<GuardedPage modulo="financeiro" acao="add"><FaturaForm /></GuardedPage>} />
+                          <Route path="/faturas/:id/editar" element={<GuardedPage modulo="financeiro" acao="change"><FaturaForm /></GuardedPage>} />
+                          <Route path="/financeiro/contas-a-pagar" element={<GuardedPage modulo="financeiro"><ContasPagarList /></GuardedPage>} />
+                          <Route path="/financeiro/contas-a-pagar/nova" element={<GuardedPage modulo="financeiro" acao="add"><ContaPagarForm /></GuardedPage>} />
+                          <Route path="/financeiro/contas-a-pagar/:id/editar" element={<GuardedPage modulo="financeiro" acao="change"><ContaPagarForm /></GuardedPage>} />
+                          <Route path="/financeiro/conciliacao" element={<GuardedPage modulo="financeiro"><ConciliacaoBancaria /></GuardedPage>} />
+                          <Route path="/financeiro/inadimplencia" element={<GuardedPage capability="financeiro.inadimplencia"><Inadimplencia /></GuardedPage>} />
+                          <Route path="/financeiro/fluxo-caixa" element={<GuardedPage capability="financeiro.fluxo_caixa"><FluxoCaixa /></GuardedPage>} />
+                          <Route path="/financeiro/dre" element={<GuardedPage capability="financeiro.dre"><DRE /></GuardedPage>} />
 
                           {/* Configurações */}
-                          <Route path="/configuracoes" element={<Configuracoes />} />
+                          <Route path="/configuracoes" element={<GuardedPage modulo="configuracoes"><Configuracoes /></GuardedPage>} />
 
                           {/* Relatórios */}
-                          <Route path="/relatorios" element={<Relatorios />} />
+                          <Route path="/relatorios" element={<GuardedPage capability="dashboard.relatorios"><Relatorios /></GuardedPage>} />
 
                           {/* Backup */}
-                          <Route path="/backup" element={<BackupManager />} />
+                          <Route path="/backup" element={<GuardedPage modulo="backup"><BackupManager /></GuardedPage>} />
 
                           {/* Alertas */}
-                          <Route path="/alertas" element={<AlertasSistema />} />
+                          <Route path="/alertas" element={<GuardedPage modulo="alertas"><AlertasSistema /></GuardedPage>} />
 
                           {/* Faixas KM */}
-                          <Route path="/faixas-km" element={<FaixasKmList />} />
+                          <Route path="/faixas-km" element={<GuardedPage modulo="pagamentos"><FaixasKmList /></GuardedPage>} />
 
                           {/* Vencimentos */}
-                          <Route path="/vencimentos" element={<VencimentosPainel />} />
+                          <Route path="/vencimentos" element={<GuardedPage modulo="alertas"><VencimentosPainel /></GuardedPage>} />
 
                           {/* Geográfico */}
-                          <Route path="/geografico" element={<GeograficoPainel />} />
+                          <Route path="/geografico" element={<GuardedPage capability="dashboard.geral"><GeograficoPainel /></GuardedPage>} />
 
                           {/* Rastreamento GPS */}
-                          <Route path="/rastreamento" element={<RastreamentoPainel />} />
+                          <Route path="/rastreamento" element={<GuardedPage capability="frota.visualizar_gps"><RastreamentoPainel /></GuardedPage>} />
 
                           {/* Comunicação */}
-                          <Route path="/comunicacao" element={<ComunicacaoPanel />} />
+                          <Route path="/comunicacao" element={<GuardedPage modulo="comunicacao"><ComunicacaoPanel /></GuardedPage>} />
 
                           {/* CIOT */}
-                          <Route path="/ciot" element={<CIOTManager />} />
+                          <Route path="/ciot" element={<GuardedPage modulo="frota"><CIOTManager /></GuardedPage>} />
 
                           {/* Usuários */}
-                          <Route path="/usuarios" element={<UsuariosList />} />
-                          <Route path="/usuarios/novo" element={<UsuarioForm />} />
-                          <Route path="/usuarios/editar/:id" element={<UsuarioForm />} />
+                          <Route path="/usuarios" element={
+                            <PermissionGuard capability="usuarios.manage_access" fallback={<Navigate to="/dashboard" replace />}>
+                              <UsuariosList />
+                            </PermissionGuard>
+                          } />
+                          <Route path="/usuarios/novo" element={
+                            <PermissionGuard capability="usuarios.manage_access" fallback={<Navigate to="/dashboard" replace />}>
+                              <UsuarioForm />
+                            </PermissionGuard>
+                          } />
+                          <Route path="/usuarios/editar/:id" element={
+                            <PermissionGuard capability="usuarios.manage_access" fallback={<Navigate to="/dashboard" replace />}>
+                              <UsuarioForm />
+                            </PermissionGuard>
+                          } />
+                          <Route path="/usuarios/:id/acessos" element={
+                            <PermissionGuard capability="usuarios.manage_access" fallback={<Navigate to="/dashboard" replace />}>
+                              <UsuarioAcessos />
+                            </PermissionGuard>
+                          } />
 
                           {/* Perfis */}
-                          <Route path="/perfis" element={<Perfis />} />
+                          <Route path="/perfis" element={
+                            <PermissionGuard capability="usuarios.manage_access" fallback={<Navigate to="/dashboard" replace />}>
+                              <Perfis />
+                            </PermissionGuard>
+                          } />
 
                           {/* Rota padrão - redireciona para Dashboard */}
                           <Route path="*" element={<Navigate to="/dashboard" replace />} />

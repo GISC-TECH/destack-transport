@@ -11,6 +11,7 @@ import time
 import signal
 import schedule
 from datetime import datetime
+from pathlib import Path
 
 from daily_download import download_daily_xmls
 from logger_setup import setup_logger
@@ -19,6 +20,9 @@ logger = setup_logger('scheduler')
 
 # Flag para controle de parada
 running = True
+STATE_DIR = Path(os.getenv("SCRAPER_STATE_DIR", "/app/data"))
+LAST_SUCCESS_FILE = STATE_DIR / "last_success"
+LAST_FAILURE_FILE = STATE_DIR / "last_job_failed"
 
 
 def signal_handler(signum, frame):
@@ -28,24 +32,50 @@ def signal_handler(signum, frame):
     running = False
 
 
+def record_job_result(success: bool):
+    """Persiste o resultado para o healthcheck externo do container."""
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().isoformat()
+
+    if success:
+        temp_file = LAST_SUCCESS_FILE.with_suffix(".tmp")
+        temp_file.write_text(timestamp, encoding="utf-8")
+        temp_file.replace(LAST_SUCCESS_FILE)
+        LAST_FAILURE_FILE.unlink(missing_ok=True)
+        return
+
+    LAST_FAILURE_FILE.write_text(timestamp, encoding="utf-8")
+
+
 def job_download():
-    """Job que executa o download de XMLs"""
+    """Job que executa o download de XMLs (1 retentativa apos falha)."""
     logger.info("=" * 60)
     logger.info(f"INICIANDO JOB DE DOWNLOAD - {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     logger.info("=" * 60)
 
+    success = False
     try:
         success = download_daily_xmls()
-        if success:
-            logger.info("Job concluído com SUCESSO")
-        else:
-            logger.error("Job concluído com FALHA")
+        if not success:
+            logger.warning("Primeira tentativa falhou — retentando em 120s...")
+            time.sleep(120)
+            success = download_daily_xmls()
     except Exception as e:
         logger.error(f"Erro no job: {e}")
         import traceback
         traceback.print_exc()
 
-    logger.info(f"Próxima execução em 6 horas")
+    if success:
+        logger.info("Job concluído com SUCESSO")
+    else:
+        logger.error("Job concluído com FALHA (apos retentativa)")
+
+    try:
+        record_job_result(success)
+    except Exception as e:
+        logger.error(f"Não foi possível gravar o estado do job: {e}")
+
+    logger.info("Próxima execução no horário agendado (00/06/12/18)")
     logger.info("")
 
 

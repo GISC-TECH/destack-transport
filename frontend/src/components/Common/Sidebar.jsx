@@ -10,7 +10,7 @@ const menuItemsConfig = [
       id: 'dashboard',
       section: 'Principal',
       label: 'Dashboard',
-      modulo: 'dashboard',
+      capability: 'dashboard.geral',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -67,13 +67,13 @@ const menuItemsConfig = [
         </svg>
       ),
       submenu: [
-        { label: 'Painel Financeiro', path: '/financeiro', modulo: 'financeiro' },
+        { label: 'Painel Financeiro', path: '/financeiro', capability: 'financeiro.painel' },
         { label: 'Faturas', path: '/faturas', modulo: 'financeiro' },
         { label: 'Contas a Pagar', path: '/financeiro/contas-a-pagar', modulo: 'financeiro' },
         { label: 'Conciliação Bancária', path: '/financeiro/conciliacao', modulo: 'financeiro' },
-        { label: 'Inadimplência', path: '/financeiro/inadimplencia', modulo: 'financeiro' },
-        { label: 'Fluxo de Caixa', path: '/financeiro/fluxo-caixa', modulo: 'financeiro' },
-        { label: 'DRE', path: '/financeiro/dre', modulo: 'financeiro' },
+        { label: 'Inadimplência', path: '/financeiro/inadimplencia', capability: 'financeiro.inadimplencia' },
+        { label: 'Fluxo de Caixa', path: '/financeiro/fluxo-caixa', capability: 'financeiro.fluxo_caixa' },
+        { label: 'DRE', path: '/financeiro/dre', capability: 'financeiro.dre' },
         { label: 'Pagamentos', path: '/pagamentos', modulo: 'pagamentos' },
         { label: 'CT-es Pendentes', path: '/ctes/pendentes', modulo: 'cte' },
         { label: 'Faixas de KM', path: '/faixas-km', modulo: 'pagamentos' }
@@ -92,7 +92,7 @@ const menuItemsConfig = [
       ),
       submenu: [
         { label: 'Ordens de Viagem', path: '/ordens-viagem', modulo: 'ordens_viagem' },
-        { label: 'Rastreamento GPS', path: '/rastreamento', modulo: 'frota' },
+        { label: 'Rastreamento GPS', path: '/rastreamento', capability: 'frota.visualizar_gps' },
         { label: 'Comunicação', path: '/comunicacao', modulo: 'comunicacao' },
         { label: 'CIOT', path: '/ciot', modulo: 'frota' },
         { label: 'Abastecimento', path: '/abastecimentos', modulo: 'frota' },
@@ -128,15 +128,15 @@ const menuItemsConfig = [
         </svg>
       ),
       submenu: [
-        { label: 'Relatórios Gerais', path: '/relatorios', modulo: 'dashboard' },
-        { label: 'Painel Geográfico', path: '/geografico', modulo: 'dashboard' }
+        { label: 'Relatórios Gerais', path: '/relatorios', capability: 'dashboard.relatorios' },
+        { label: 'Painel Geográfico', path: '/geografico', capability: 'dashboard.geral' }
       ]
     },
     {
       id: 'sistema',
       section: 'Sistema',
       label: 'Sistema',
-      modulo: 'configuracoes',
+      modulo: 'usuarios',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="3"></circle>
@@ -146,8 +146,8 @@ const menuItemsConfig = [
       submenu: [
         { label: 'Alertas', path: '/alertas', modulo: 'alertas' },
         { label: 'Vencimentos', path: '/vencimentos', modulo: 'alertas' },
-        { label: 'Usuários', path: '/usuarios', modulo: 'usuarios' },
-        { label: 'Perfis', path: '/perfis', modulo: 'usuarios' },
+        { label: 'Usuários', path: '/usuarios', capability: 'usuarios.manage_access' },
+        { label: 'Perfis', path: '/perfis', capability: 'usuarios.manage_access' },
         { label: 'Backup', path: '/backup', modulo: 'backup' },
         { label: 'Configurações', path: '/configuracoes', modulo: 'configuracoes' }
       ]
@@ -165,7 +165,7 @@ function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { canView, isSuperuser } = usePermission();
+  const { canView, canCapability } = usePermission();
   const prevPathnameRef = useRef(location.pathname);
 
   // Fechar menus ao mudar de rota
@@ -207,11 +207,13 @@ function Sidebar() {
   };
 
   const menuItems = useMemo(() => {
-    if (isSuperuser) return menuItemsConfig;
+    const isItemVisible = (item) => (
+      item.capability ? canCapability(item.capability) : canView(item.modulo)
+    );
 
     const filterSubmenu = (submenu) => {
       return submenu
-        .map(item => ({ ...item, visible: canView(item.modulo) }))
+        .map(item => ({ ...item, visible: isItemVisible(item) }))
         .filter(item => item.visible);
     };
 
@@ -220,11 +222,13 @@ function Sidebar() {
         const newItem = { ...item };
         if (newItem.submenu) {
           newItem.submenu = filterSubmenu(newItem.submenu);
+          const visible = newItem.submenu.length > 0 || isItemVisible(newItem);
+          return { ...newItem, visible };
         }
-        return { ...newItem, visible: canView(newItem.modulo) };
+        return { ...newItem, visible: isItemVisible(newItem) };
       })
       .filter(item => item.visible);
-  }, [canView, isSuperuser]);
+  }, [canView, canCapability]);
 
   const isSubmenuActive = (submenu) => {
     return submenu?.some(item => isActive(item.path));

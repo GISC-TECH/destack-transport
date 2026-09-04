@@ -5,7 +5,23 @@ import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import Button from '../Common/Button';
 import PageHeader from '../Common/PageHeader';
+import { handleCPFInputChange, handleCPFInputBlur, onlyDigits } from '../../utils/formatters';
 import styles from './PagamentoForm.module.css';
+
+// Retorna a data local de hoje no formato YYYY-MM-DD sem depender de timezone UTC.
+const getLocalDateString = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Converte qualquer representação de data em 'YYYY-MM-DD' local, evitando deslocamento de timezone.
+const toDateInputValue = (value) => {
+  if (!value) return '';
+  const datePart = value.split('T')[0].split(' ')[0];
+  const [year, month, day] = datePart.split('-').map(Number);
+  if (!year || !month || !day) return '';
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+};
 
 function PagamentoAgregadoForm() {
   const navigate = useNavigate();
@@ -47,7 +63,7 @@ function PagamentoAgregadoForm() {
     valor_frete_total: '',
     percentual_repasse: '25.00',
     desconto: '0.00',
-    data_prevista: new Date().toISOString().split('T')[0],
+    data_prevista: getLocalDateString(),
     status: 'pendente',
     obs: ''
   });
@@ -66,8 +82,8 @@ function PagamentoAgregadoForm() {
         valor_frete_total: result.valor_frete_total || '',
         percentual_repasse: result.percentual_repasse || '25.00',
         desconto: result.desconto || '0.00',
-        data_prevista: result.data_prevista || '',
-        data_pagamento: result.data_pagamento || '',
+        data_prevista: toDateInputValue(result.data_prevista),
+        data_pagamento: toDateInputValue(result.data_pagamento),
         status: result.status || 'pendente',
         obs: result.obs || ''
       });
@@ -262,14 +278,12 @@ function PagamentoAgregadoForm() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const formatCPF = (value) => {
-    const numbers = value.replace(/\D/g, '');
-    return numbers.slice(0, 11);
+  const handleCPFChange = (e) => {
+    handleCPFInputChange(e, (value) => setFormData(prev => ({ ...prev, condutor_cpf: value })));
   };
 
-  const handleCPFChange = (e) => {
-    const formatted = formatCPF(e.target.value);
-    setFormData(prev => ({ ...prev, condutor_cpf: formatted }));
+  const handleCPFBlur = (e) => {
+    handleCPFInputBlur(e, (value) => setFormData(prev => ({ ...prev, condutor_cpf: value })));
   };
 
   const handleSubmit = async (e) => {
@@ -305,6 +319,18 @@ function PagamentoAgregadoForm() {
       return;
     }
 
+    if (!formData.condutor_nome) {
+      toast.warning('Nome do condutor é obrigatório.');
+      setSaving(false);
+      return;
+    }
+
+    if (!formData.placa) {
+      toast.warning('Placa do veículo é obrigatória.');
+      setSaving(false);
+      return;
+    }
+
     try {
       const desconto = parseFloat(formData.desconto) || 0;
       let dataToSend;
@@ -314,7 +340,7 @@ function PagamentoAgregadoForm() {
         dataToSend = new FormData();
         dataToSend.append('placa', formData.placa.toUpperCase());
         dataToSend.append('condutor_nome', formData.condutor_nome);
-        if (formData.condutor_cpf) dataToSend.append('condutor_cpf', formData.condutor_cpf);
+        if (formData.condutor_cpf) dataToSend.append('condutor_cpf', onlyDigits(formData.condutor_cpf));
         dataToSend.append('valor_frete_total', valorFrete);
         dataToSend.append('percentual_repasse', percentual);
         dataToSend.append('desconto', desconto);
@@ -329,7 +355,7 @@ function PagamentoAgregadoForm() {
         dataToSend = {
           placa: formData.placa.toUpperCase(),
           condutor_nome: formData.condutor_nome,
-          condutor_cpf: formData.condutor_cpf || null,
+          condutor_cpf: onlyDigits(formData.condutor_cpf) || null,
           valor_frete_total: valorFrete,
           percentual_repasse: percentual,
           desconto: desconto,
@@ -418,7 +444,7 @@ function PagamentoAgregadoForm() {
                   {resultadosBusca.map(cte => (
                     <div
                       key={cte.id}
-                      className={`search-result-card ${cte.tem_pagamento_agregado ? 'result-disabled' : ''}`}
+                      className={`${styles.searchResultCard} ${cte.tem_pagamento_agregado ? styles.resultDisabled : ''}`}
                       onClick={() => !cte.tem_pagamento_agregado && handleSelecionarCte(cte)}
                     >
                       <div className={styles.resultTitle}>
@@ -452,6 +478,7 @@ function PagamentoAgregadoForm() {
                 onClick={handleRemoverCte}
                 className={`${styles.btnRemoveCircle} ${styles.btnSm}`}
                 title="Remover CT-e"
+                aria-label="Remover CT-e"
               >
                 ×
               </button>
@@ -535,6 +562,7 @@ function PagamentoAgregadoForm() {
                 onClick={handleRemoverCondutor}
                 className={`${styles.btnRemoveCircle} ${styles.btnSm}`}
                 title="Remover condutor"
+                aria-label="Remover condutor"
               >
                 ×
               </button>
@@ -611,6 +639,7 @@ function PagamentoAgregadoForm() {
                 onClick={handleRemoverVeiculo}
                 className={`${styles.btnRemoveCircle} ${styles.btnSm}`}
                 title="Remover veículo"
+                aria-label="Remover veículo"
               >
                 ×
               </button>
@@ -637,11 +666,13 @@ function PagamentoAgregadoForm() {
             <input
               id="condutor_cpf"
               type="text"
+              inputMode="numeric"
               name="condutor_cpf"
               value={formData.condutor_cpf}
               onChange={handleCPFChange}
-              maxLength="11"
-              placeholder="00000000000"
+              onBlur={handleCPFBlur}
+              maxLength={14}
+              placeholder="000.000.000-00"
             />
           </div>
         </div>

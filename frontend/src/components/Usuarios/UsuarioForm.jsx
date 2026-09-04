@@ -17,6 +17,8 @@ function UsuarioForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [perfis, setPerfis] = useState([]);
   const [perfisLoading, setPerfisLoading] = useState(true);
+  const [accessProtected, setAccessProtected] = useState(false);
+  const [protectionReason, setProtectionReason] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -29,7 +31,6 @@ function UsuarioForm() {
   });
 
   const detectarPerfil = (data) => {
-    if (data.is_superuser) return 'Super Admin';
     const grupoPerfil = (data.groups || []).find(g =>
       ['Leitura', 'Operacional', 'Financeiro', 'Administrativo'].includes(g)
     );
@@ -40,6 +41,10 @@ function UsuarioForm() {
     try {
       setLoading(true);
       const data = await usuariosAPI.get(id);
+      setAccessProtected(data.is_superuser || data.can_manage_access === false);
+      setProtectionReason(data.protection_reason || (data.is_superuser
+        ? 'A administração principal não pode ser rebaixada por este formulário.'
+        : 'O status e o perfil deste usuário estão protegidos.'));
       setFormData({
         ...data,
         password: '',
@@ -138,12 +143,16 @@ function UsuarioForm() {
         email: formData.email,
         first_name: formData.first_name,
         last_name: formData.last_name,
-        is_active: formData.is_active,
-        perfil: formData.perfil
       };
 
-      // Só envia senha se foi preenchida
-      if (formData.password) {
+      if (!isEdit && !accessProtected) {
+        dataToSend.is_active = formData.is_active;
+        dataToSend.perfil = formData.perfil;
+      }
+
+      // Senhas de usuários existentes são alteradas somente pela ação dedicada,
+      // que possui autorização e auditoria próprias.
+      if (!isEdit && formData.password) {
         dataToSend.password = formData.password;
       }
 
@@ -234,10 +243,10 @@ function UsuarioForm() {
             </div>
           </div>
 
-          <div className={styles.formRow}>
+          {!isEdit && <div className={styles.formRow}>
             <div className={styles.formGroup}>
               <label htmlFor="password">
-                Senha {!isEdit && <span className={styles.required}>*</span>}
+                Senha <span className={styles.required}>*</span>
               </label>
               <div className={styles.passwordWrapper}>
                 <input
@@ -247,7 +256,7 @@ function UsuarioForm() {
                   value={formData.password}
                   onChange={handleChange}
                   minLength={8}
-                  placeholder={isEdit ? '(deixe em branco para manter)' : 'Mínimo 8 caracteres'}
+                  placeholder="Mínimo 8 caracteres"
                   autoComplete="new-password"
                 />
                 <button
@@ -269,12 +278,11 @@ function UsuarioForm() {
                   )}
                 </button>
               </div>
-              {isEdit && <small className={styles.fieldHint}>Deixe em branco para manter a senha atual</small>}
             </div>
 
             <div className={styles.formGroup}>
               <label htmlFor="password_confirm">
-                Confirmar Senha {!isEdit && formData.password && <span className={styles.required}>*</span>}
+                Confirmar Senha {formData.password && <span className={styles.required}>*</span>}
               </label>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -286,7 +294,7 @@ function UsuarioForm() {
                 autoComplete="new-password"
               />
             </div>
-          </div>
+          </div>}
         </fieldset>
 
         <fieldset className={styles.fieldset}>
@@ -348,6 +356,7 @@ function UsuarioForm() {
                   name="is_active"
                   checked={formData.is_active}
                   onChange={handleChange}
+                  disabled={accessProtected || isEdit}
                 />
                 <span className={styles.checkmark}></span>
                 <div className={styles.permissionInfo}>
@@ -366,7 +375,7 @@ function UsuarioForm() {
                 name="perfil"
                 value={formData.perfil}
                 onChange={handleChange}
-                disabled={perfisLoading}
+                disabled={perfisLoading || accessProtected || isEdit}
                 required
               >
                 {perfisLoading && <option value="">Carregando perfis...</option>}
@@ -375,13 +384,33 @@ function UsuarioForm() {
                     {perfil.nome} — {perfil.descricao}
                   </option>
                 ))}
-                <option value="Super Admin">Super Admin — Acesso total ao sistema</option>
               </select>
               <small className={styles.fieldHint}>
                 Define o que o usuário pode ver e fazer no sistema
               </small>
+              {accessProtected && (
+                <small className={styles.protectedHint} role="status">
+                  {protectionReason}
+                </small>
+              )}
+              {isEdit && !accessProtected && (
+                <small className={styles.fieldHint}>
+                  Status e perfil são alterados na tela de gerenciamento de acessos.
+                </small>
+              )}
             </div>
           </div>
+          {isEdit && !accessProtected && (
+            <div className={styles.accessShortcut}>
+              <Button
+                type="button"
+                variant="gold"
+                onClick={() => navigate(`/usuarios/${id}/acessos`)}
+              >
+                Gerenciar acessos deste usuário
+              </Button>
+            </div>
+          )}
         </fieldset>
 
         <div className={styles.formActions}>

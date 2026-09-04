@@ -105,6 +105,8 @@ services:
     image: evoapicloud/evolution-api:v2.2.2
     container_name: destack_evolution_api_local
     restart: unless-stopped
+    init: true
+    pids_limit: 256
     ports:
       - "8080:8080"
     environment:
@@ -139,6 +141,8 @@ services:
       dockerfile: Dockerfile.local
     container_name: destack_celery_local
     restart: unless-stopped
+    init: true
+    pids_limit: 256
     command: celery -A core worker -l info
     env_file:
       - .env.local
@@ -159,6 +163,8 @@ services:
       dockerfile: Dockerfile.local
     container_name: destack_beat_local
     restart: unless-stopped
+    init: true
+    pids_limit: 64
     command: celery -A core beat -l info
     env_file:
       - .env.local
@@ -181,6 +187,9 @@ services:
       dockerfile: Dockerfile
     container_name: destack_scraper_local
     restart: unless-stopped
+    # docker-init (tini) recolhe processos Chrome orfaos ao fim de cada job.
+    init: true
+    pids_limit: 512
     env_file:
       - .env.local
     environment:

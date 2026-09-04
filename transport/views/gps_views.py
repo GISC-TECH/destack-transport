@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from ..models import OrdemViagem, PosicaoVeiculo, Veiculo
+from ..permissions import CanViewGPSPermission
 
 
 def _encontrar_ordem_ativa(veiculo):
@@ -89,7 +90,7 @@ def webhook_posicao_gps(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, CanViewGPSPermission])
 def ultima_posicao_veiculo(request, veiculo_id):
     """Retorna a última posição conhecida de um veículo."""
     try:

@@ -2,6 +2,7 @@
 
 # Imports do Django
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
@@ -11,12 +12,32 @@ from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 
 # Imports locais (serializers)
-from ..permissions import TransportModelPermission
-from ..serializers.user_serializers import UserSerializer, UserUpdateSerializer
-from transport.services.permissao_service import get_permissoes_efetivas, PERFIS
+from ..models import AuditoriaAcessoUsuario
+from ..permissions import CanManageUserAccessPermission
+from ..serializers.user_serializers import (
+    UserAccessUpdateSerializer,
+    UserPasswordResetSerializer,
+    UserSerializer,
+    UserStatusSerializer,
+    UserUpdateSerializer,
+)
+from transport.services.permissao_service import (
+    ConflitoVersaoAcesso,
+    OperacaoAcessoProtegida,
+    PERFIS,
+    atualizar_acesso_usuario,
+    atualizar_status_usuario,
+    get_acesso_usuario,
+    get_catalogo_acessos,
+    get_permissoes_efetivas,
+    obter_configuracao_acesso,
+    redefinir_senha_usuario,
+    registrar_auditoria_usuario,
+)
 
 
 # ===============================================================
@@ -47,6 +68,7 @@ class CheckAuthAPIView(APIView):
                     'first_name': request.user.first_name,
                     'last_name': request.user.last_name,
                     'is_staff': request.user.is_staff,
+                    'is_superuser': request.user.is_superuser,
                 }
             })
         else:
@@ -101,9 +123,101 @@ class UserPermissionsAPIView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     """API para administracao de usuarios (somente admin)."""
-    queryset = User.objects.all().order_by('-date_joined')
+    queryset = User.objects.select_related('configuracao_acesso').prefetch_related(
+        'user_permissions__content_type',
+        'groups__permissions__content_type',
+    ).order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, TransportModelPermission]
+    permission_classes = [IsAuthenticated, CanManageUserAccessPermission]
+
+    def _verificar_permissao_super_admin(self, dados):
+        """
+        Apenas superusuarios podem criar/editar usuarios com perfil Super Admin
+        ou alterar o perfil de um superusuario existente.
+        """
+        if dados.get('perfil') == 'Super Admin':
+            raise PermissionDenied('O perfil Super Admin não pode ser atribuído pelo painel.')
+
+    def create(self, request, *args, **kwargs):
+        self._verificar_permissao_super_admin(request.data)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self._verificar_permissao_super_admin(request.data)
+        instance = self.get_object()
+        if 'perfil' in request.data:
+            raise PermissionDenied('Use a tela de acessos para alterar o perfil do usuário.')
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        expected_version = (
+            request.data.get('expected_version')
+            or request.data.get('versao')
+            or request.query_params.get('expected_version')
+            or request.query_params.get('versao')
+        )
+        if expected_version is None:
+            return Response(
+                {'detail': 'expected_version é obrigatório para excluir o usuário.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            atualizar_status_usuario(
+                request.user, instance, False, request=request,
+                motivo=request.data.get('motivo', 'Desativação solicitada pela exclusão lógica.'),
+                expected_version=expected_version,
+            )
+        except ConflitoVersaoAcesso as exc:
+            return Response({
+                'code': 'access_version_conflict',
+                'detail': str(exc),
+                'current_version': exc.versao_atual,
+                'versao_atual': exc.versao_atual,
+            }, status=status.HTTP_409_CONFLICT)
+        except (OperacaoAcessoProtegida, ValueError) as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @transaction.atomic
+    def perform_create(self, serializer):
+        user = serializer.save()
+        config = obter_configuracao_acesso(user)
+        registrar_auditoria_usuario(
+            self.request.user,
+            user,
+            'criacao_usuario',
+            {},
+            {
+                'username': user.username,
+                'is_active': user.is_active,
+                'access_mode': config.modo,
+                'profile': config.perfil_base or None,
+                'version': config.versao,
+            },
+            self.request,
+        )
+
+    @transaction.atomic
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        before = {
+            'username': instance.username,
+            'first_name': instance.first_name,
+            'last_name': instance.last_name,
+            'email': instance.email,
+        }
+        user = serializer.save()
+        after = {
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+        }
+        registrar_auditoria_usuario(
+            self.request.user, user, 'alteracao_usuario', before, after,
+            self.request,
+        )
 
     def get_serializer_class(self):
         """Define qual serializer usar dependendo da acao."""
@@ -126,3 +240,102 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    @action(detail=False, methods=['get'], url_path='catalogo-acessos')
+    def catalogo_acessos(self, request):
+        return Response(get_catalogo_acessos())
+
+    @action(detail=True, methods=['get', 'put'], url_path='acessos')
+    def acessos(self, request, pk=None):
+        user = self.get_object()
+        if request.method == 'GET':
+            return Response(get_acesso_usuario(user, actor=request.user))
+
+        serializer = UserAccessUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            updated, _ = atualizar_acesso_usuario(
+                request.user, user, serializer.validated_data, request=request,
+            )
+        except ConflitoVersaoAcesso as exc:
+            return Response({
+                'code': 'access_version_conflict',
+                'detail': str(exc),
+                'current_version': exc.versao_atual,
+                'versao_atual': exc.versao_atual,
+            }, status=status.HTTP_409_CONFLICT)
+        except (OperacaoAcessoProtegida, ValueError) as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(get_acesso_usuario(updated, actor=request.user))
+
+    @action(detail=True, methods=['patch'], url_path='status')
+    def alterar_status(self, request, pk=None):
+        serializer = UserStatusSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            updated, config = atualizar_status_usuario(
+                request.user,
+                self.get_object(),
+                serializer.validated_data['is_active'],
+                request=request,
+                motivo=serializer.validated_data.get('motivo', ''),
+                expected_version=serializer.validated_data.get(
+                    'expected_version', serializer.validated_data.get('versao')
+                ),
+            )
+        except ConflitoVersaoAcesso as exc:
+            return Response({
+                'code': 'access_version_conflict',
+                'detail': str(exc),
+                'current_version': exc.versao_atual,
+                'versao_atual': exc.versao_atual,
+            }, status=status.HTTP_409_CONFLICT)
+        except OperacaoAcessoProtegida as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'id': updated.pk,
+            'is_active': updated.is_active,
+            'version': config.versao,
+            'versao': config.versao,
+        })
+
+    @action(detail=True, methods=['get'], url_path='auditoria')
+    def auditoria(self, request, pk=None):
+        user = self.get_object()
+        logs = AuditoriaAcessoUsuario.objects.filter(usuario_afetado=user).select_related('ator')[:100]
+        return Response({'results': [{
+            'id': log.pk,
+            'action': log.acao,
+            'acao': log.acao,
+            'actor': log.ator.username if log.ator else None,
+            'ator': log.ator.username if log.ator else None,
+            'before': log.antes,
+            'antes': log.antes,
+            'after': log.depois,
+            'depois': log.depois,
+            'reason': log.motivo,
+            'motivo': log.motivo,
+            'origin': log.origem,
+            'request_id': log.request_id,
+            'created_at': log.criado_em,
+        } for log in logs]})
+
+    @action(detail=True, methods=['post'], url_path='redefinir-senha')
+    def redefinir_senha(self, request, pk=None):
+        target = self.get_object()
+        serializer = UserPasswordResetSerializer(
+            data=request.data,
+            context={'user': target},
+        )
+        serializer.is_valid(raise_exception=True)
+        try:
+            _, config = redefinir_senha_usuario(
+                request.user,
+                target,
+                serializer.validated_data['password'],
+                request=request,
+                motivo=serializer.validated_data.get('motivo', ''),
+            )
+        except OperacaoAcessoProtegida as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status': 'success', 'version': config.versao})

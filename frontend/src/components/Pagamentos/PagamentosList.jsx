@@ -13,7 +13,24 @@ import StatusPill from '../Common/StatusPill';
 import TableContainer from '../Common/TableContainer';
 import PermissionGuard from '../Common/PermissionGuard';
 import ComprovantePagamento from './ComprovantePagamento';
+import { handleCPFInputChange, handleCPFInputBlur, onlyDigits } from '../../utils/formatters';
 import styles from './PagamentosList.module.css';
+
+// Retorna a data local de hoje no formato YYYY-MM-DD sem depender de timezone UTC.
+const getLocalDateString = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Normaliza a URL do comprovante. Aceita URL absoluta (S3/MinIO) ou
+// path relativo, que é prefixado com /media/ para compatibilidade local.
+const getComprovanteUrl = (comprovante) => {
+  if (!comprovante) return null;
+  if (typeof comprovante === 'string' && comprovante.startsWith('http')) return comprovante;
+  if (typeof comprovante === 'string' && comprovante.startsWith('/api/')) return comprovante;
+  const path = String(comprovante).replace(/^\/+/, '');
+  return `/media/${path}`;
+};
 
 function PagamentosList() {
   const navigate = useNavigate();
@@ -23,6 +40,8 @@ function PagamentosList() {
   const [activeTab, setActiveTab] = useState('agregados');
   const [pagamentos, setPagamentos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [comprovantesSelecionados, setComprovantesSelecionados] = useState([]);
+  const [baixandoComprovantes, setBaixandoComprovantes] = useState(false);
   const [showGerarLote, setShowGerarLote] = useState(false);
   const [gerandoLote, setGerandoLote] = useState(false);
   const [loteConfig, setLoteConfig] = useState({
@@ -33,7 +52,7 @@ function PagamentosList() {
   });
   // Modal de baixa rápida
   const [modalBaixa, setModalBaixa] = useState({ show: false, id: null, info: '' });
-  const [dataBaixa, setDataBaixa] = useState(new Date().toISOString().split('T')[0]);
+  const [dataBaixa, setDataBaixa] = useState(getLocalDateString());
   const [comprovanteFile, setComprovanteFile] = useState(null);
   const [processandoBaixa, setProcessandoBaixa] = useState(false);
 
@@ -54,7 +73,7 @@ function PagamentosList() {
     condutor_cpf: '',
     cte_id: '',
     percentual_repasse: '25',
-    data_prevista: new Date().toISOString().split('T')[0]
+    data_prevista: getLocalDateString()
   });
 
   // Funcao para calcular datas baseadas no periodo
@@ -205,6 +224,49 @@ function PagamentosList() {
     }
   };
 
+  const pagamentosComComprovante = pagamentos.filter((item) => item.tem_comprovante);
+  const todosDaPaginaSelecionados = pagamentosComComprovante.length > 0
+    && pagamentosComComprovante.every((item) => comprovantesSelecionados.includes(item.id));
+
+  const toggleComprovante = (id) => {
+    setComprovantesSelecionados((atuais) => (
+      atuais.includes(id) ? atuais.filter((item) => item !== id) : [...atuais, id]
+    ));
+  };
+
+  const toggleTodosDaPagina = () => {
+    const idsPagina = pagamentosComComprovante.map((item) => item.id);
+    setComprovantesSelecionados((atuais) => {
+      if (todosDaPaginaSelecionados) {
+        return atuais.filter((id) => !idsPagina.includes(id));
+      }
+      return [...new Set([...atuais, ...idsPagina])];
+    });
+  };
+
+  const handleBaixarComprovantes = async (todos = false) => {
+    if (!todos && comprovantesSelecionados.length === 0) {
+      toast.warning('Selecione pelo menos um comprovante.');
+      return;
+    }
+    const params = { ...filtros };
+    Object.keys(params).forEach((key) => !params[key] && delete params[key]);
+    const api = activeTab === 'agregados' ? pagamentosAPI.agregados : pagamentosAPI.proprios;
+    try {
+      setBaixandoComprovantes(true);
+      await api.baixarComprovantes(todos ? { todos: true } : { ids: comprovantesSelecionados }, params);
+      toast.success(todos ? 'Download dos comprovantes filtrados iniciado.' : 'Download dos comprovantes selecionados iniciado.');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBaixandoComprovantes(false);
+    }
+  };
+
+  useEffect(() => {
+    setComprovantesSelecionados([]);
+  }, [activeTab, filtros.status, filtros.busca, filtros.data_inicio, filtros.data_fim]);
+
   const handleGerarLote = async () => {
     if (!loteConfig.data_inicio || !loteConfig.data_fim) {
       toast.warning('Por favor, selecione o período para geração');
@@ -253,9 +315,18 @@ function PagamentosList() {
     }).format(value || 0);
   };
 
+  // Interpreta string YYYY-MM-DD como data local, evitando deslocamento de timezone.
+  const parseLocalDate = (dateStr) => {
+    if (!dateStr) return null;
+    const [year, month, day] = dateStr.split('T')[0].split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    const date = parseLocalDate(dateString);
+    if (!date || Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('pt-BR');
   };
 
   const getStatusBadge = (status) => {
@@ -318,7 +389,7 @@ function PagamentosList() {
     const condutor = pagamento.condutor_nome || pagamento.motorista_nome || '';
     const placa = pagamento.placa || pagamento.veiculo_placa || '';
     const info = `CT-e #${pagamento.cte_numero || '-'} - ${condutor || placa}`;
-    setDataBaixa(new Date().toISOString().split('T')[0]);
+    setDataBaixa(getLocalDateString());
     setComprovanteFile(null);
     setModalBaixa({ show: true, id: pagamento.id, info });
   };
@@ -409,7 +480,7 @@ function PagamentosList() {
       condutor_cpf: pagamento.condutor_cpf || '',
       cte_id: '',
       percentual_repasse: '25',
-      data_prevista: new Date().toISOString().split('T')[0]
+      data_prevista: getLocalDateString()
     });
     setModalConverter({ show: true, id: pagamento.id, tipo, info });
   };
@@ -445,7 +516,7 @@ function PagamentosList() {
         }
         await pagamentosAPI.proprios.converterParaAgregado(modalConverter.id, {
           condutor_nome: dadosConversao.condutor_nome,
-          condutor_cpf: dadosConversao.condutor_cpf,
+          condutor_cpf: dadosConversao.condutor_cpf ? onlyDigits(dadosConversao.condutor_cpf) : '',
           cte_id: dadosConversao.cte_id,
           percentual_repasse: percentualRepasse,
           data_prevista: dadosConversao.data_prevista
@@ -516,7 +587,7 @@ function PagamentosList() {
     }
   };
 
-  // Botoes de acao desktop (todos visiveis)
+  // Botoes de acao desktop (respeitam permissões)
   const renderActionButtons = (pagamento) => (
     <div className={styles.actionButtons}>
       <Button
@@ -534,35 +605,37 @@ function PagamentosList() {
           <line x1="9" y1="15" x2="15" y2="15"></line>
         </svg>
       </Button>
-      {pagamento.status !== 'pago' ? (
-        <Button
-          variant="success"
-          size="sm"
-          iconOnly
-          onClick={() => handleAbrirBaixa(pagamento)}
-          title="Baixar Pagamento"
-          aria-label="Baixar Pagamento"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-        </Button>
-      ) : (
-        <Button
-          variant="outline"
-          size="sm"
-          iconOnly
-          onClick={() => handleAbrirReverterBaixa(pagamento)}
-          title="Reverter Baixa"
-          aria-label="Reverter Baixa"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-            <path d="M3 3v5h5"></path>
-          </svg>
-        </Button>
-      )}
+      <PermissionGuard modulo="pagamentos" acao="change">
+        {pagamento.status !== 'pago' ? (
+          <Button
+            variant="success"
+            size="sm"
+            iconOnly
+            onClick={() => handleAbrirBaixa(pagamento)}
+            title="Baixar Pagamento"
+            aria-label="Baixar Pagamento"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            iconOnly
+            onClick={() => handleAbrirReverterBaixa(pagamento)}
+            title="Reverter Baixa"
+            aria-label="Reverter Baixa"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+          </Button>
+        )}
+      </PermissionGuard>
       <PermissionGuard modulo="pagamentos" acao="change">
         <Button
           variant="ghost"
@@ -579,35 +652,39 @@ function PagamentosList() {
         </Button>
       </PermissionGuard>
       {pagamento.status !== 'pago' && (
+        <PermissionGuard modulo="pagamentos" acao="change">
+          <Button
+            variant="success"
+            size="sm"
+            iconOnly
+            onClick={() => handleNotificarGestor(pagamento)}
+            disabled={notificando[pagamento.id]}
+            title="Notificar gestor via WhatsApp"
+            aria-label="Notificar gestor via WhatsApp"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+          </Button>
+        </PermissionGuard>
+      )}
+      <PermissionGuard modulo="pagamentos" acao="change">
         <Button
-          variant="success"
+          variant="outline"
           size="sm"
           iconOnly
-          onClick={() => handleNotificarGestor(pagamento)}
-          disabled={notificando[pagamento.id]}
-          title="Notificar gestor via WhatsApp"
-          aria-label="Notificar gestor via WhatsApp"
+          onClick={() => handleAbrirConverter(pagamento)}
+          title={activeTab === 'agregados' ? 'Converter para Próprio' : 'Converter para Agregado'}
+          aria-label={activeTab === 'agregados' ? 'Converter para Próprio' : 'Converter para Agregado'}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            <polyline points="17 1 21 5 17 9"></polyline>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+            <polyline points="7 23 3 19 7 15"></polyline>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
           </svg>
         </Button>
-      )}
-      <Button
-        variant="outline"
-        size="sm"
-        iconOnly
-        onClick={() => handleAbrirConverter(pagamento)}
-        title={activeTab === 'agregados' ? 'Converter para Próprio' : 'Converter para Agregado'}
-        aria-label={activeTab === 'agregados' ? 'Converter para Próprio' : 'Converter para Agregado'}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="17 1 21 5 17 9"></polyline>
-          <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-          <polyline points="7 23 3 19 7 15"></polyline>
-          <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-        </svg>
-      </Button>
+      </PermissionGuard>
       <PermissionGuard modulo="pagamentos" acao="delete">
         <Button
           variant="danger"
@@ -643,33 +720,35 @@ function PagamentosList() {
         </svg>
         <span>Comp.</span>
       </button>
-      {pagamento.status !== 'pago' ? (
-        <button
-          className={`${styles.mobileActionBtn} ${styles.download}`}
-          onClick={() => handleAbrirBaixa(pagamento)}
-          title="Baixar Pagamento"
-          aria-label="Baixar pagamento"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-          <span>Baixar</span>
-        </button>
-      ) : (
-        <button
-          className={`${styles.mobileActionBtn} ${styles.reverter}`}
-          onClick={() => handleAbrirReverterBaixa(pagamento)}
-          title="Reverter Baixa"
-          aria-label="Reverter baixa"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-            <path d="M3 3v5h5"></path>
-          </svg>
-          <span>Reverter</span>
-        </button>
-      )}
+      <PermissionGuard modulo="pagamentos" acao="change">
+        {pagamento.status !== 'pago' ? (
+          <button
+            className={`${styles.mobileActionBtn} ${styles.download}`}
+            onClick={() => handleAbrirBaixa(pagamento)}
+            title="Baixar Pagamento"
+            aria-label="Baixar pagamento"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span>Baixar</span>
+          </button>
+        ) : (
+          <button
+            className={`${styles.mobileActionBtn} ${styles.reverter}`}
+            onClick={() => handleAbrirReverterBaixa(pagamento)}
+            title="Reverter Baixa"
+            aria-label="Reverter baixa"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            <span>Reverter</span>
+          </button>
+        )}
+      </PermissionGuard>
       <PermissionGuard modulo="pagamentos" acao="change">
         <button
           className={`${styles.mobileActionBtn} ${styles.edit}`}
@@ -685,33 +764,37 @@ function PagamentosList() {
         </button>
       </PermissionGuard>
       {pagamento.status !== 'pago' && (
+        <PermissionGuard modulo="pagamentos" acao="change">
+          <button
+            className={`${styles.mobileActionBtn} ${styles.whatsapp}`}
+            onClick={() => handleNotificarGestor(pagamento)}
+            disabled={notificando[pagamento.id]}
+            title="Notificar gestor via WhatsApp"
+            aria-label="Notificar gestor via WhatsApp"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <span>Whats</span>
+          </button>
+        </PermissionGuard>
+      )}
+      <PermissionGuard modulo="pagamentos" acao="change">
         <button
-          className={`${styles.mobileActionBtn} ${styles.whatsapp}`}
-          onClick={() => handleNotificarGestor(pagamento)}
-          disabled={notificando[pagamento.id]}
-          title="Notificar gestor via WhatsApp"
-          aria-label="Notificar gestor via WhatsApp"
+          className={`${styles.mobileActionBtn} ${styles.convert}`}
+          onClick={() => handleAbrirConverter(pagamento)}
+          title={activeTab === 'agregados' ? 'Converter' : 'Converter'}
+          aria-label="Converter pagamento"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            <polyline points="17 1 21 5 17 9"></polyline>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+            <polyline points="7 23 3 19 7 15"></polyline>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
           </svg>
-          <span>Whats</span>
+          <span>Conv.</span>
         </button>
-      )}
-      <button
-        className={`${styles.mobileActionBtn} ${styles.convert}`}
-        onClick={() => handleAbrirConverter(pagamento)}
-        title={activeTab === 'agregados' ? 'Converter' : 'Converter'}
-        aria-label="Converter pagamento"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="17 1 21 5 17 9"></polyline>
-          <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-          <polyline points="7 23 3 19 7 15"></polyline>
-          <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-        </svg>
-        <span>Conv.</span>
-      </button>
+      </PermissionGuard>
       <PermissionGuard modulo="pagamentos" acao="delete">
         <button
           className={`${styles.mobileActionBtn} ${styles.delete}`}
@@ -1020,10 +1103,13 @@ function PagamentosList() {
                 <input
                   id="conv_condutor_cpf"
                   type="text"
+                  inputMode="numeric"
+                  maxLength={14}
                   value={dadosConversao.condutor_cpf}
-                  onChange={(e) => setDadosConversao({...dadosConversao, condutor_cpf: e.target.value})}
+                  onChange={(e) => handleCPFInputChange(e, (value) => setDadosConversao({...dadosConversao, condutor_cpf: value}))}
+                  onBlur={(e) => handleCPFInputBlur(e, (value) => setDadosConversao({...dadosConversao, condutor_cpf: value}))}
                   className={styles.modalInput}
-                  placeholder="Apenas números"
+                  placeholder="000.000.000-00"
                 />
               </div>
             </div>
@@ -1134,6 +1220,7 @@ function PagamentosList() {
           <input
             type="text"
             placeholder="Buscar por CT-e, placa ou condutor..."
+            aria-label="Buscar por CT-e, placa ou condutor"
             value={filtros.busca}
             onChange={(e) => setFiltros({...filtros, busca: e.target.value})}
             onKeyDown={(e) => {
@@ -1162,6 +1249,7 @@ function PagamentosList() {
               setTimeout(() => loadPagamentos(null, 1), 100);
             }}
             className={styles.selectFilter}
+            aria-label="Filtrar por status"
           >
             <option value="">Todos os Status</option>
             <option value="pendente">Pendente</option>
@@ -1179,6 +1267,39 @@ function PagamentosList() {
             <>Nenhum pagamento encontrado</>
           )}
         </p>
+      </div>
+
+      <div className={styles.comprovantesToolbar}>
+        <label className={styles.selectAllLabel}>
+          <input
+            type="checkbox"
+            checked={todosDaPaginaSelecionados}
+            onChange={toggleTodosDaPagina}
+            disabled={pagamentosComComprovante.length === 0 || baixandoComprovantes}
+          />
+          Selecionar comprovantes desta página
+        </label>
+        <div className={styles.comprovantesActions}>
+          <span>{comprovantesSelecionados.length} selecionado(s)</span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleBaixarComprovantes(false)}
+            disabled={comprovantesSelecionados.length === 0 || baixandoComprovantes}
+          >
+            Baixar selecionados
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => handleBaixarComprovantes(true)}
+            disabled={baixandoComprovantes || paginacao.total === 0}
+          >
+            {baixandoComprovantes ? 'Preparando ZIP...' : 'Baixar todos dos filtros'}
+          </Button>
+        </div>
       </div>
 
       {/* Loading skeletons */}
@@ -1206,6 +1327,7 @@ function PagamentosList() {
           <table>
             <thead>
               <tr>
+                <th aria-label="Selecionar comprovante"></th>
                 {activeTab === 'agregados' ? (
                   <>
                     <th>CT-e</th>
@@ -1236,6 +1358,16 @@ function PagamentosList() {
             <tbody>
               {pagamentos.map((pagamento) => (
                 <tr key={pagamento.id}>
+                  <td className={styles.selectionCell}>
+                    {pagamento.tem_comprovante && (
+                      <input
+                        type="checkbox"
+                        checked={comprovantesSelecionados.includes(pagamento.id)}
+                        onChange={() => toggleComprovante(pagamento.id)}
+                        aria-label={`Selecionar comprovante do pagamento ${pagamento.id}`}
+                      />
+                    )}
+                  </td>
                   {activeTab === 'agregados' ? (
                     <>
                       <td>
@@ -1251,9 +1383,9 @@ function PagamentosList() {
                         <strong>{formatCurrency(pagamento.valor_repassado)}</strong>
                       </td>
                       <td className={styles.textCenter}>
-                        {pagamento.comprovante ? (
+                        {pagamento.tem_comprovante ? (
                           <a
-                            href={pagamento.comprovante}
+                            href={getComprovanteUrl(pagamento.comprovante_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={styles.comprovanteLink}
@@ -1283,12 +1415,12 @@ function PagamentosList() {
                       <td>{formatDate(pagamento.data_prevista)}</td>
                       <td className={styles.textCenter}>{pagamento.km_total_periodo || '-'}</td>
                       <td className={styles.textRight}>
-                        <strong>{formatCurrency(pagamento.valor_repassado || pagamento.valor_base_faixa)}</strong>
+                        <strong>{formatCurrency(pagamento.valor_total_pagar || pagamento.valor_repassado || pagamento.valor_base_faixa)}</strong>
                       </td>
                       <td className={styles.textCenter}>
-                        {pagamento.comprovante ? (
+                        {pagamento.tem_comprovante ? (
                           <a
-                            href={pagamento.comprovante}
+                            href={getComprovanteUrl(pagamento.comprovante_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={styles.comprovanteLink}
@@ -1323,7 +1455,17 @@ function PagamentosList() {
             <div key={pagamento.id} className={styles.mobileCard}>
               <div className={styles.mobileCardHeader}>
                 <div className={styles.mobileCardTitle}>
-                  <strong>#{pagamento.cte_numero || '-'}</strong>
+                  <div className={styles.mobileTitleSelection}>
+                    {pagamento.tem_comprovante && (
+                      <input
+                        type="checkbox"
+                        checked={comprovantesSelecionados.includes(pagamento.id)}
+                        onChange={() => toggleComprovante(pagamento.id)}
+                        aria-label={`Selecionar comprovante do pagamento ${pagamento.id}`}
+                      />
+                    )}
+                    <strong>#{pagamento.cte_numero || '-'}</strong>
+                  </div>
                   <span>{getStatusBadge(pagamento.status)}</span>
                 </div>
                 <div className={styles.mobileCardSubtitle}>
@@ -1356,15 +1498,15 @@ function PagamentosList() {
                     </div>
                     <div className={styles.mobileCardRow}>
                       <span className={styles.mobileCardLabel}>Valor Repasse</span>
-                      <span className={`${styles.mobileCardValue} ${styles.mobileCardHighlight}`}>{formatCurrency(pagamento.valor_repassado || pagamento.valor_base_faixa)}</span>
+                      <span className={`${styles.mobileCardValue} ${styles.mobileCardHighlight}`}>{formatCurrency(pagamento.valor_total_pagar || pagamento.valor_repassado || pagamento.valor_base_faixa)}</span>
                     </div>
                   </>
                 )}
                 <div className={styles.mobileCardRow}>
                   <span className={styles.mobileCardLabel}>Comprovante</span>
-                  {pagamento.comprovante ? (
+                  {pagamento.tem_comprovante ? (
                     <a
-                      href={pagamento.comprovante}
+                      href={getComprovanteUrl(pagamento.comprovante_url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={styles.comprovanteLink}
@@ -1438,6 +1580,8 @@ function PagamentosList() {
                   key={i}
                   className={`${styles.paginationBtn} ${paginacao.page === i ? styles.active : ''}`}
                   onClick={() => handlePageChange(i)}
+                  aria-label={`Página ${i}`}
+                  aria-current={paginacao.page === i ? 'page' : undefined}
                 >
                   {i}
                 </button>

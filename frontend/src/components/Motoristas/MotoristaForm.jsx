@@ -7,6 +7,7 @@ import ErrorMessage from '../Common/ErrorMessage';
 import Button from '../Common/Button';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
 import PageHeader from '../Common/PageHeader';
+import { handleCPFInputChange, handleCPFInputBlur, onlyDigits } from '../../utils/formatters';
 import styles from './MotoristaForm.module.css';
 
 function MotoristaForm() {
@@ -84,17 +85,12 @@ function MotoristaForm() {
     }));
   };
 
-  const formatCPF = (value) => {
-    const digits = value.replace(/\D/g, '').substring(0, 11);
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  const handleCPFChange = (e) => {
+    handleCPFInputChange(e, (value) => setFormData(prev => ({ ...prev, cpf: value })));
   };
 
-  const handleCPFChange = (e) => {
-    const formatted = formatCPF(e.target.value);
-    setFormData(prev => ({ ...prev, cpf: formatted }));
+  const handleCPFBlur = (e) => {
+    handleCPFInputBlur(e, (value) => setFormData(prev => ({ ...prev, cpf: value })));
   };
 
   const handleSubmit = async (e) => {
@@ -107,7 +103,7 @@ function MotoristaForm() {
       // Converte strings vazias para null nos campos de data
       const dataToSend = {
         ...formData,
-        cpf: formData.cpf.replace(/\D/g, ''),
+        cpf: onlyDigits(formData.cpf),
         validade_cnh: formData.validade_cnh || null,
         nr20_validade: formData.nr20_validade || null,
         nr35_validade: formData.nr35_validade || null,
@@ -184,11 +180,14 @@ function MotoristaForm() {
               <label htmlFor="cpf">CPF <span className={styles.required}>*</span></label>
               <input
                 type="text"
+                inputMode="numeric"
                 id="cpf"
                 name="cpf"
                 value={formData.cpf}
                 onChange={handleCPFChange}
+                onBlur={handleCPFBlur}
                 required
+                maxLength={14}
                 placeholder="000.000.000-00"
               />
             </div>

@@ -22,21 +22,21 @@
 
 .kpiCard {
   background: var(--card-bg);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-2xl);
   padding: var(--space-5) var(--space-6);
   display: flex;
   align-items: flex-start;
   gap: var(--space-4);
-  border: 1px solid var(--border-light);
-  box-shadow: none;
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s cubic-bezier(0.3, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
   text-decoration: none;
   color: inherit;
 }
 
 .kpiCard:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-color);
+  transform: translateY(-4px);
+  border-color: #fff;
   box-shadow: var(--shadow-card);
 }
 
@@ -200,10 +200,16 @@
 
 .chartCard {
   background: var(--card-bg);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-2xl);
   padding: var(--space-6);
-  border: 1px solid var(--border-light);
-  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chartCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .chartCard h3 {
@@ -309,8 +315,14 @@
 
 .quickActionsCard {
   background: var(--card-bg);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transition: box-shadow 0.3s ease;
+}
+
+.quickActionsCard:hover {
   box-shadow: var(--shadow-md);
 }
 
@@ -359,8 +371,14 @@
 
 .recentDocsCard {
   background: var(--card-bg);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transition: box-shadow 0.3s ease;
+}
+
+.recentDocsCard:hover {
   box-shadow: var(--shadow-md);
 }
 

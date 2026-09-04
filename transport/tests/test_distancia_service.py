@@ -4,6 +4,7 @@ Testes para os serviços de geocodificação e cálculo de distância.
 from io import StringIO
 from unittest.mock import patch, MagicMock
 
+from django.core.cache import cache
 from django.test import TestCase, override_settings
 
 from transport.models import CTeDocumento
@@ -16,6 +17,11 @@ from transport.services import distancia_service, nominatim_service
     NOMINATIM_DELAY_SECONDS=0,
 )
 class NominatimServiceTests(TestCase):
+    def setUp(self):
+        # Cada cenário deve exercitar o HTTP simulado, não um resultado Redis
+        # persistido por outro teste que consultou a mesma cidade.
+        cache.clear()
+
     @patch("transport.services.nominatim_service.requests.get")
     def test_geocodificar_retorna_coordenadas(self, mock_get):
         mock_get.return_value = MagicMock(

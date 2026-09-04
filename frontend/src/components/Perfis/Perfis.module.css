@@ -123,6 +123,18 @@
   cursor: pointer;
 }
 
+.confirmText {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.confirmActions {
+  display: flex;
+  gap: var(--space-3);
+}
+
 @media (max-width: 768px) {
   .perfisPage {
     padding: 16px;

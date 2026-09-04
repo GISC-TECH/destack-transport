@@ -5,7 +5,20 @@ import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import Button from '../Common/Button';
 import PageHeader from '../Common/PageHeader';
+import { handleCPFInputChange, handleCPFInputBlur, onlyDigits } from '../../utils/formatters';
 import styles from './PagamentoForm.module.css';
+
+// Retorna a data local de hoje no formato YYYY-MM-DD sem depender de timezone UTC.
+const getLocalDateString = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Retorna o mês atual no formato AAAA-MM.
+const getLocalMonthString = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
 
 function PagamentoProprioForm() {
   const navigate = useNavigate();
@@ -44,8 +57,8 @@ function PagamentoProprioForm() {
     cte_numero: '',
     motorista_nome: '',
     motorista_cpf: '',
-    periodo: new Date().toISOString().slice(0, 7), // AAAA-MM
-    data_prevista: new Date().toISOString().split('T')[0],
+    periodo: getLocalMonthString(), // AAAA-MM
+    data_prevista: getLocalDateString(),
     km_total_periodo: '',
     valor_base_faixa: '',
     ajustes: '0',
@@ -76,6 +89,32 @@ function PagamentoProprioForm() {
         data_pagamento: result.data_pagamento || '',
         obs: result.obs || ''
       });
+
+      // Preenche os cards de seleção para edição, caso contrário o usuário
+      // não visualiza o veículo/CT-e/condutor já vinculados.
+      if (result.veiculo && result.veiculo_placa) {
+        setVeiculoSelecionado({
+          id: result.veiculo,
+          placa: result.veiculo_placa,
+          modelo: result.veiculo_modelo || '',
+          marca: result.veiculo_marca || ''
+        });
+      }
+      if (result.cte) {
+        setCteSelecionado({
+          id: result.cte,
+          numero_cte: result.cte_numero,
+          remetente_nome: result.cte_remetente_nome,
+          destinatario_nome: result.cte_destinatario_nome,
+          valor_total: result.valor_base_faixa || result.valor_repassado
+        });
+      }
+      if (result.motorista_nome || result.condutor_nome) {
+        setCondutorSelecionado({
+          nome: result.motorista_nome || result.condutor_nome || '',
+          cpf: result.motorista_cpf || result.condutor_cpf || ''
+        });
+      }
     } catch (err) {
       console.error('Erro ao carregar pagamento:', err);
       setError('Erro ao carregar dados do pagamento.');
@@ -292,14 +331,12 @@ function PagamentoProprioForm() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const formatCPF = (value) => {
-    const numbers = value.replace(/\D/g, '');
-    return numbers.slice(0, 11);
+  const handleCPFChange = (e) => {
+    handleCPFInputChange(e, (value) => setFormData(prev => ({ ...prev, motorista_cpf: value })));
   };
 
-  const handleCPFChange = (e) => {
-    const formatted = formatCPF(e.target.value);
-    setFormData(prev => ({ ...prev, motorista_cpf: formatted }));
+  const handleCPFBlur = (e) => {
+    handleCPFInputBlur(e, (value) => setFormData(prev => ({ ...prev, motorista_cpf: value })));
   };
 
   const handleSubmit = async (e) => {
@@ -313,6 +350,18 @@ function PagamentoProprioForm() {
       return;
     }
 
+    if (!isEditing && !formData.veiculo) {
+      toast.warning('Selecione um veículo para o pagamento próprio.');
+      setSaving(false);
+      return;
+    }
+
+    if (!isEditing && !formData.periodo) {
+      toast.warning('Informe o período para o pagamento próprio.');
+      setSaving(false);
+      return;
+    }
+
     try {
       let dataToSend;
 
@@ -320,7 +369,7 @@ function PagamentoProprioForm() {
         // Se tiver arquivo, usa FormData
         dataToSend = new FormData();
         dataToSend.append('motorista_nome', formData.motorista_nome);
-        if (formData.motorista_cpf) dataToSend.append('motorista_cpf', formData.motorista_cpf);
+        if (formData.motorista_cpf) dataToSend.append('motorista_cpf', onlyDigits(formData.motorista_cpf));
         if (formData.data_prevista) dataToSend.append('data_prevista', formData.data_prevista);
         if (formData.km_total_periodo) dataToSend.append('km_total_periodo', parseInt(formData.km_total_periodo) || 0);
         dataToSend.append('valor_base_faixa', parseFloat(formData.valor_base_faixa) || 0);
@@ -339,7 +388,7 @@ function PagamentoProprioForm() {
         // Sem arquivo, envia JSON
         dataToSend = {
           motorista_nome: formData.motorista_nome,
-          motorista_cpf: formData.motorista_cpf || null,
+          motorista_cpf: formData.motorista_cpf ? onlyDigits(formData.motorista_cpf) : null,
           data_prevista: formData.data_prevista || null,
           km_total_periodo: formData.km_total_periodo ? parseInt(formData.km_total_periodo) : 0,
           valor_base_faixa: parseFloat(formData.valor_base_faixa) || 0,
@@ -453,6 +502,7 @@ function PagamentoProprioForm() {
                 onClick={handleRemoverCte}
                 className={`${styles.btnRemoveCircle} ${styles.btnSm}`}
                 title="Remover CT-e"
+                aria-label="Remover CT-e"
               >
                 ×
               </button>
@@ -536,6 +586,7 @@ function PagamentoProprioForm() {
                 onClick={handleRemoverCondutor}
                 className={`${styles.btnRemoveCircle} ${styles.btnSm}`}
                 title="Remover condutor"
+                aria-label="Remover condutor"
               >
                 ×
               </button>
@@ -617,6 +668,7 @@ function PagamentoProprioForm() {
                 onClick={handleRemoverVeiculo}
                 className={`${styles.btnRemoveCircle} ${styles.btnSm}`}
                 title="Remover veículo"
+                aria-label="Remover veículo"
               >
                 ×
               </button>
@@ -646,8 +698,10 @@ function PagamentoProprioForm() {
               name="motorista_cpf"
               value={formData.motorista_cpf}
               onChange={handleCPFChange}
-              maxLength="11"
-              placeholder="00000000000"
+              onBlur={handleCPFBlur}
+              maxLength="14"
+              placeholder="000.000.000-00"
+              inputMode="numeric"
             />
           </div>
         </div>
@@ -728,14 +782,17 @@ function PagamentoProprioForm() {
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label htmlFor="periodo">Período (AAAA-MM) *</label>
+              <label htmlFor="periodo">Período (AAAA-MM ou AAAA-MM-XQ) *</label>
               <input
                 id="periodo"
-                type="month"
+                type="text"
                 name="periodo"
                 value={formData.periodo}
                 onChange={handleChange}
                 required
+                pattern="^\d{4}-\d{2}(-[12]Q)?$"
+                placeholder="AAAA-MM ou AAAA-MM-XQ"
+                title="Formato: AAAA-MM ou AAAA-MM-1Q / AAAA-MM-2Q"
               />
             </div>
 

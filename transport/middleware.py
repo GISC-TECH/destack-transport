@@ -3,12 +3,15 @@ from django.http import JsonResponse
 from django.urls import resolve
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from django.contrib.auth import get_user, authenticate
+from django.contrib.auth import get_user, authenticate, logout
 
 class APIAuthenticationMiddleware:
     """
-    Middleware para garantir que todas as requisicoes API sejam autenticadas
-    Suporta Session Auth e Basic Auth
+    Middleware para autenticacao via Basic Auth em requisicoes API.
+    NAO deve bloquear requisicoes aqui; a autenticacao/autorizacao e
+    responsabilidade do DRF (SessionAuthentication + IsAuthenticated).
+    Isso evita 401 prematuros em endpoints que dependem do processamento
+    normal do Django/DRF (ex: /api/users/me/permissions/).
     """
     def __init__(self, get_response):
         self.get_response = get_response
@@ -30,33 +33,10 @@ class APIAuthenticationMiddleware:
         return False
 
     def __call__(self, request):
-        # Verificar se e uma requisicao para API
-        if request.path.startswith('/api/'):
-            # Excluir algumas rotas publicas se necessario
-            public_api_paths = [
-                '/api/token/',  # Se ainda estiver sendo usado
-                '/api/swagger/',
-                '/api/redoc/',
-                '/api/health/',  # Health check endpoint
-                '/api/auth/',    # Endpoints de autenticacao (login, logout, csrf, check)
-            ]
-
-            # Debug: check if health endpoint is being excluded
-            if request.path == '/api/health/':
-                return self.get_response(request)
-
-            if not any(request.path.startswith(path) for path in public_api_paths):
-                # Verificar se o usuario esta autenticado (Session ou Basic Auth)
-                if not request.user.is_authenticated:
-                    # Tentar Basic Auth
-                    self._check_basic_auth(request)
-
-                if not request.user.is_authenticated:
-                    return JsonResponse({
-                        'error': 'Authentication required',
-                        'detail': 'You must be logged in to access this API endpoint.',
-                        'login_url': '/login/'
-                    }, status=401)
+        # Aplica Basic Auth apenas para rotas /api/ que ja chegarem com credenciais.
+        # Nao bloqueia requisicoes anonimas; o DRF/View decide o acesso.
+        if request.path.startswith('/api/') and not request.user.is_authenticated:
+            self._check_basic_auth(request)
 
         response = self.get_response(request)
         return response
@@ -69,6 +49,17 @@ class SessionSecurityMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        if request.user.is_authenticated:
+            from transport.services.permissao_service import obter_configuracao_acesso
+
+            current_version = obter_configuracao_acesso(request.user).versao
+            session_version = request.session.get('access_control_version')
+            if session_version is None:
+                # Compatibilidade com sessões abertas antes da implantação.
+                request.session['access_control_version'] = current_version
+            elif session_version != current_version:
+                logout(request)
+
         # Adicionar cabecalhos de seguranca para paginas autenticadas
         response = self.get_response(request)
 

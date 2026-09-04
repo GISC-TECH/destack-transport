@@ -66,14 +66,14 @@ function Modal({
     <div
       className={styles.overlay}
       onClick={handleOverlayClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? 'modal-title' : undefined}
     >
       <div
         className={`${styles.content} ${styles[size]}`}
         ref={contentRef}
         tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? 'modal-title' : undefined}
       >
         {(title || onClose) && (
           <div className={styles.header}>

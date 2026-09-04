@@ -4,22 +4,6 @@
   margin: 0 auto;
 }
 
-.pageHeader {
-  margin-bottom: var(--space-6);
-}
-
-.headerTitle h1 {
-  font-size: var(--text-2xl);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-2) 0;
-}
-
-.headerTitle p {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
-  margin: 0;
-}
-
 /* Form Container */
 .formContainer {
   background: var(--card-bg);
@@ -114,11 +98,6 @@
   margin-top: var(--space-1);
   font-size: var(--text-xs);
   color: var(--text-muted);
-}
-
-.formHintSuccess {
-  color: var(--success-color);
-  font-weight: 500;
 }
 
 .mb10 {
@@ -223,14 +202,17 @@
   background: var(--content-bg);
 }
 
-.searchResultCard.resultDisabled {
+.searchResultCard.resultDisabled,
+.resultDisabled {
   opacity: 0.6;
   cursor: not-allowed;
   background: #fff5f5;
 }
 
 .searchResultCard.resultDisabled:hover,
-.searchResultCard.resultDisabled:focus {
+.searchResultCard.resultDisabled:focus,
+.resultDisabled:hover,
+.resultDisabled:focus {
   background: #fff5f5;
 }
 
@@ -348,13 +330,13 @@
   position: absolute;
   top: var(--space-3);
   right: var(--space-3);
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   background: var(--danger-color);
-  color: white;
-  font-size: 18px;
+  color: var(--card-bg);
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -368,9 +350,9 @@
 }
 
 .btnSm {
-  width: 24px;
-  height: 24px;
-  font-size: 16px;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
 }
 
 /* Inputs auxiliares */
@@ -381,52 +363,6 @@
 .fileInput {
   width: 100%;
   padding: var(--space-2);
-}
-
-/* Faixas de referência */
-.faixasReferencia {
-  margin-top: var(--space-5);
-  padding: var(--space-4);
-  background: var(--content-bg);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-light);
-}
-
-.faixasReferencia h4 {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin: 0 0 var(--space-3) 0;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.faixasTableMini {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-sm);
-}
-
-.faixasTableMini th,
-.faixasTableMini td {
-  padding: var(--space-2) var(--space-3);
-  text-align: left;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.faixasTableMini th {
-  color: var(--text-secondary);
-  font-weight: 500;
-  background: transparent;
-}
-
-.faixasTableMini tr.faixaAtiva {
-  background: var(--green-200);
-}
-
-.faixasTableMini tr.faixaAtiva td {
-  color: var(--info-dark);
-  font-weight: 600;
 }
 
 /* Responsive Form */

@@ -226,26 +226,40 @@ function DocumentosAnexos({ entidadeTipo, entidadeId, readOnly = false }) {
   };
 
   // Handler para visualizar
-  const handleView = (doc) => {
-    if (doc.arquivo_url) {
-      // Usa caminho relativo para evitar URLs absolutas com host interno do backend
-      let url = doc.arquivo_url;
-      if (url.startsWith('http')) {
-        try {
-          url = new URL(url).pathname;
-        } catch {
-          // mantém url original se não for parseável
-        }
+  const handleView = async (doc) => {
+    try {
+      setError(null);
+      // Usa o endpoint de download com inline=1 para abrir no navegador.
+      const blob = await documentosAPI.view(doc.id);
+      const url = window.URL.createObjectURL(blob);
+
+      // Abre o arquivo em uma nova aba/janela. window.open funciona melhor para PDFs/imagens
+      // do que <a target="_blank"> seguido de revoke imediato, que causava erro/página em branco.
+      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+
+      if (!newWindow) {
+        // Caso o popup seja bloqueado, oferece download como fallback.
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = doc.nome || 'documento';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
-      // Abre via link temporario para contornar bloqueios de popup
-      // e garantir comportamento consistente em mobile/desktop.
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+
+      // Revoga o object URL somente após um tempo, permitindo que o navegador carregue o conteúdo.
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      console.error('Erro ao visualizar documento:', err);
+      let mensagem;
+      if (err?.response?.status === 404 || err?.message?.includes('404')) {
+        mensagem = 'Arquivo não encontrado no servidor. O documento pode ter sido enviado durante uma instabilidade e não foi salvo corretamente.';
+      } else if (err?.response?.status === 403) {
+        mensagem = 'Você não tem permissão para visualizar este documento.';
+      } else {
+        mensagem = 'Não foi possível abrir o documento. Tente baixar ou entre em contato com o suporte.';
+      }
+      setError(mensagem);
     }
   };
 

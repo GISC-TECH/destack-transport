@@ -3598,6 +3598,105 @@ class MensagemComunicacao(models.Model):
 
 
 # --------------------------------------------------
+#  C O N T R O L E   D E   A C E S S O
+# --------------------------------------------------
+
+class ConfiguracaoAcessoUsuario(models.Model):
+    """Modo de concessão de acessos de um usuário e sua versão de edição."""
+
+    MODO_PERFIL = 'perfil'
+    MODO_PERSONALIZADO = 'personalizado'
+    MODO_CHOICES = [
+        (MODO_PERFIL, 'Perfil'),
+        (MODO_PERSONALIZADO, 'Personalizado'),
+    ]
+
+    usuario = models.OneToOneField(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='configuracao_acesso',
+    )
+    modo = models.CharField(max_length=20, choices=MODO_CHOICES, default=MODO_PERFIL)
+    perfil_base = models.CharField(max_length=50, blank=True, default='')
+    versao = models.PositiveIntegerField(default=1)
+    atualizado_por = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='configuracoes_acesso_atualizadas',
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'configuracao_acesso_usuario'
+        verbose_name = 'Configuração de acesso do usuário'
+        verbose_name_plural = 'Configurações de acesso dos usuários'
+        permissions = [
+            (
+                'gerenciar_acessos_usuarios',
+                'Pode gerenciar usuários, perfis e permissões de acesso',
+            ),
+            ('visualizar_inadimplencia', 'Pode visualizar inadimplência'),
+            ('visualizar_fluxo_caixa', 'Pode visualizar fluxo de caixa'),
+            ('visualizar_dre', 'Pode visualizar DRE'),
+            ('enviar_comunicacao', 'Pode enviar comunicações'),
+            ('testar_comunicacao', 'Pode testar integrações de comunicação'),
+            ('visualizar_posicao_gps', 'Pode visualizar posição GPS'),
+            ('visualizar_relatorios', 'Pode visualizar relatórios'),
+            ('visualizar_dashboard_geral', 'Pode visualizar dashboard geral'),
+            ('visualizar_dashboard_cte', 'Pode visualizar painel de CT-e'),
+            ('visualizar_dashboard_mdfe', 'Pode visualizar painel de MDF-e'),
+            ('visualizar_dashboard_financeiro', 'Pode visualizar painel financeiro'),
+            ('visualizar_dashboard_frota', 'Pode visualizar painel de frota'),
+        ]
+
+    def __str__(self):
+        return f'{self.usuario.username} - {self.get_modo_display()}'
+
+
+class AuditoriaAcessoUsuario(models.Model):
+    """Registro imutável das alterações administrativas de usuários e acessos."""
+
+    ator = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='alteracoes_acesso_realizadas',
+    )
+    usuario_afetado = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='historico_acessos',
+    )
+    usuario_afetado_nome = models.CharField(max_length=150)
+    acao = models.CharField(max_length=40)
+    antes = models.JSONField(default=dict, blank=True)
+    depois = models.JSONField(default=dict, blank=True)
+    motivo = models.TextField(blank=True, default='')
+    request_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
+    origem = models.CharField(max_length=20, default='painel')
+    endereco_ip = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=500, blank=True, default='')
+    criado_em = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = 'auditoria_acesso_usuario'
+        verbose_name = 'Auditoria de acesso do usuário'
+        verbose_name_plural = 'Auditorias de acesso dos usuários'
+        ordering = ['-criado_em', '-id']
+        indexes = [
+            models.Index(fields=['usuario_afetado', 'criado_em']),
+            models.Index(fields=['ator', 'criado_em']),
+        ]
+
+    def __str__(self):
+        return f'{self.acao} - {self.usuario_afetado_nome}'
+
+
+# --------------------------------------------------
 #  R E L A C I O N A M E N T O S   F I N A I S
 # --------------------------------------------------
 

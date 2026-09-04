@@ -1,21 +1,31 @@
 # transport/views/payment_views.py
 
 # Imports padrão
+import csv
+import io
+import mimetypes
+import os
 import re
+import shutil
+import tempfile
+import zipfile
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 
 # Imports Django
-from django.http import HttpResponse
+from django.conf import settings
+from django.http import FileResponse, HttpResponse
 from django.db.models import Q, Sum, OuterRef, Exists
 from django.utils import timezone
 from django.shortcuts import get_object_or_404 # Usado internamente
 from django.db import transaction
+from django.utils.text import get_valid_filename
 
 # Imports Django REST Framework
 from rest_framework import viewsets, status, serializers # Importa serializers para ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.exceptions import APIException
 import logging
 
 logger = logging.getLogger(__name__)
@@ -59,6 +69,11 @@ from ..services.pagamento_service import (
 from ..tasks import notificar_gestor_pagamento_async
 
 
+class ComprovanteDownloadLimitExceeded(APIException):
+    status_code = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    default_code = 'limite_download_excedido'
+
+
 def _validar_exclusividade_pagamento_cte(cte):
     """Retorna Response de erro 400 se o CT-e já possuir ambos os tipos de pagamento."""
     if not cte:
@@ -71,6 +86,150 @@ def _validar_exclusividade_pagamento_cte(cte):
             status=status.HTTP_400_BAD_REQUEST,
         )
     return None
+
+
+class ComprovanteDownloadMixin:
+    """Entrega comprovantes privados individualmente ou em um ZIP autenticado."""
+
+    comprovante_tipo = 'pagamentos'
+
+    def _comprovantes_queryset(self, request):
+        queryset = (
+            self.get_queryset()
+            .exclude(comprovante='')
+            .exclude(comprovante__isnull=True)
+        )
+        baixar_todos = request.data.get('todos') is True
+        ids = request.data.get('ids', [])
+
+        if baixar_todos and ids:
+            raise serializers.ValidationError(
+                {'detail': "Informe 'todos' ou 'ids', nunca os dois ao mesmo tempo."}
+            )
+        if not baixar_todos:
+            if not isinstance(ids, list) or not ids:
+                raise serializers.ValidationError(
+                    {'detail': "Informe uma lista não vazia em 'ids' ou use {'todos': true}."}
+                )
+            try:
+                ids = [int(item) for item in ids]
+                if any(item <= 0 for item in ids):
+                    raise ValueError
+            except (TypeError, ValueError, AttributeError):
+                raise serializers.ValidationError(
+                    {'detail': 'A lista contém um identificador inválido.'}
+                )
+            queryset = queryset.filter(pk__in=ids)
+
+        limite = int(getattr(settings, 'COMPROVANTES_ZIP_MAX_FILES', 50))
+        total = queryset.count()
+        if total > limite:
+            raise ComprovanteDownloadLimitExceeded(
+                f'A seleção possui {total} arquivos. O limite por download é {limite}. Refine os filtros.'
+            )
+
+        limite_bytes = int(
+            getattr(settings, 'COMPROVANTES_ZIP_MAX_TOTAL_BYTES', 100 * 1024 * 1024)
+        )
+        total_bytes = 0
+        tamanho_queryset = queryset.select_related(None).only('pk', 'comprovante')
+        for pagamento in tamanho_queryset.iterator(chunk_size=100):
+            try:
+                total_bytes += pagamento.comprovante.size
+            except Exception as exc:
+                logger.warning(
+                    'Não foi possível obter tamanho do comprovante %s: %s',
+                    pagamento.pk,
+                    exc,
+                )
+                continue
+            if total_bytes > limite_bytes:
+                limite_mb = limite_bytes // (1024 * 1024)
+                raise ComprovanteDownloadLimitExceeded(
+                    f'Os comprovantes excedem o limite de {limite_mb} MB por download. Refine os filtros.'
+                )
+        return queryset
+
+    def _nome_comprovante(self, pagamento, indice):
+        campo = pagamento.comprovante
+        nome_original = get_valid_filename(os.path.basename(campo.name or 'comprovante'))
+        raiz, extensao = os.path.splitext(nome_original)
+        raiz = raiz or 'comprovante'
+        return f'{indice:04d}_{str(pagamento.pk)[:8]}_{raiz}{extensao.lower()}'
+
+    @action(detail=True, methods=['get'], url_path='comprovante')
+    def comprovante(self, request, pk=None):
+        pagamento = self.get_object()
+        campo = pagamento.comprovante
+        if not campo:
+            return Response(
+                {'detail': 'Este pagamento não possui comprovante.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            arquivo = campo.open('rb')
+        except Exception:
+            logger.exception('Comprovante indisponível para pagamento %s', pagamento.pk)
+            return Response(
+                {'detail': 'O comprovante não está disponível no armazenamento.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        nome = get_valid_filename(os.path.basename(campo.name or 'comprovante'))
+        content_type = mimetypes.guess_type(nome)[0] or 'application/octet-stream'
+        resposta = FileResponse(
+            arquivo,
+            as_attachment=True,
+            filename=nome,
+            content_type=content_type,
+        )
+        resposta['Cache-Control'] = 'private, no-store'
+        resposta['Pragma'] = 'no-cache'
+        return resposta
+
+    @action(detail=False, methods=['post'], url_path='comprovantes/download')
+    def download_comprovantes(self, request):
+        queryset = self._comprovantes_queryset(request)
+        arquivo_zip = tempfile.SpooledTemporaryFile(max_size=16 * 1024 * 1024, mode='w+b')
+        manifest = io.StringIO()
+        manifest_writer = csv.writer(manifest)
+        manifest_writer.writerow(['pagamento_id', 'arquivo', 'status'])
+        incluidos = 0
+
+        with zipfile.ZipFile(arquivo_zip, mode='w', compression=zipfile.ZIP_DEFLATED) as zip_saida:
+            for indice, pagamento in enumerate(queryset.iterator(chunk_size=100), start=1):
+                nome = self._nome_comprovante(pagamento, indice)
+                try:
+                    with pagamento.comprovante.open('rb') as origem:
+                        with zip_saida.open(nome, mode='w') as destino:
+                            shutil.copyfileobj(origem, destino, length=1024 * 1024)
+                    manifest_writer.writerow([pagamento.pk, nome, 'incluído'])
+                    incluidos += 1
+                except Exception:
+                    logger.exception('Falha ao incluir comprovante do pagamento %s', pagamento.pk)
+                    manifest_writer.writerow([pagamento.pk, nome, 'indisponível'])
+
+            zip_saida.writestr('manifesto.csv', manifest.getvalue().encode('utf-8-sig'))
+
+        if incluidos == 0:
+            arquivo_zip.close()
+            return Response(
+                {'detail': 'Nenhum comprovante disponível para os pagamentos informados.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        arquivo_zip.seek(0)
+        agora = timezone.now().strftime('%Y%m%d_%H%M%S')
+        resposta = FileResponse(
+            arquivo_zip,
+            as_attachment=True,
+            filename=f'comprovantes_{self.comprovante_tipo}_{agora}.zip',
+            content_type='application/zip',
+        )
+        resposta['X-Comprovantes-Incluidos'] = str(incluidos)
+        resposta['Cache-Control'] = 'private, no-store'
+        resposta['Pragma'] = 'no-cache'
+        return resposta
 
 
 # ===============================================================
@@ -170,11 +329,12 @@ class FaixaKMViewSet(viewsets.ModelViewSet):
         })
 
 
-class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
+class PagamentoAgregadoViewSet(ComprovanteDownloadMixin, viewsets.ModelViewSet):
     """API para gerenciar pagamentos a motoristas agregados."""
     queryset = PagamentoAgregado.objects.all().order_by('-data_prevista')
     serializer_class = PagamentoAgregadoSerializer
     permission_classes = [IsAuthenticated, TransportModelPermission]
+    comprovante_tipo = 'agregados'
 
     def perform_update(self, serializer):
         """Sincroniza CTeDocumento.pago ao alterar status do pagamento agregado."""
@@ -558,11 +718,12 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         })
 
 
-class PagamentoProprioViewSet(viewsets.ModelViewSet):
+class PagamentoProprioViewSet(ComprovanteDownloadMixin, viewsets.ModelViewSet):
     """API para gerenciar pagamentos a motoristas próprios."""
     queryset = PagamentoProprio.objects.all().order_by('-periodo')
     serializer_class = PagamentoProprioSerializer
     permission_classes = [IsAuthenticated, TransportModelPermission]
+    comprovante_tipo = 'proprios'
 
     def perform_update(self, serializer):
         """Sincroniza CTeDocumento.pago ao alterar status do pagamento proprio."""
@@ -622,7 +783,14 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             )
 
         # Selecionar/Prefetch dados relacionados para otimizar
-        queryset = queryset.select_related('veiculo', 'cte', 'cte__identificacao')
+        queryset = queryset.select_related(
+            'veiculo',
+            'cte',
+            'cte__identificacao',
+            'cte__remetente',
+            'cte__destinatario',
+            'cte__prestacao',
+        )
 
         return queryset
 
@@ -970,8 +1138,12 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         condutor_nome = request.data.get('condutor_nome')
         condutor_cpf = request.data.get('condutor_cpf', '')
 
-        # Preserva o valor líquido a pagar usando repasse de 100%
-        percentual_repasse = Decimal('100.00')
+        # Preserva o valor líquido a pagar. Permite informar percentual no request;
+        # se não informado, usa 100% para manter o valor_repassado igual ao próprio.
+        try:
+            percentual_repasse = Decimal(str(request.data.get('percentual_repasse', '100.00')))
+        except (InvalidOperation, TypeError, ValueError):
+            percentual_repasse = Decimal('100.00')
 
         data_prevista_str = request.data.get('data_prevista')
         if data_prevista_str:

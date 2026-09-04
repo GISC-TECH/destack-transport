@@ -24,6 +24,11 @@ from logger_setup import setup_logger
 
 logger = setup_logger('daily_download')
 
+DOCUMENT_DOWNLOAD_ATTEMPTS = 3
+GRID_LOAD_ATTEMPTS = 4
+GRID_STATE_TIMEOUT = 30
+DOWNLOAD_TIMEOUT = 180
+
 
 def download_daily_xmls(target_date: str = None):
     """
@@ -76,29 +81,37 @@ def download_daily_xmls(target_date: str = None):
         logger.info("-" * 40)
         logger.info("Baixando CT-e...")
         logger.info("-" * 40)
-        cte_count = download_cte_daily(client, output_folder)
-        logger.info(f"CT-e: {cte_count} XMLs baixados")
+        cte_count = download_document_with_retries(
+            "CT-e", download_cte_daily, client, output_folder
+        )
+        logger.info(f"CT-e: {max(cte_count, 0)} XMLs baixados")
 
         # Baixar MDF-e
         logger.info("-" * 40)
         logger.info("Baixando MDF-e...")
         logger.info("-" * 40)
-        mdfe_count = download_mdfe_daily(client, output_folder)
-        logger.info(f"MDF-e: {mdfe_count} XMLs baixados")
+        mdfe_count = download_document_with_retries(
+            "MDF-e", download_mdfe_daily, client, output_folder
+        )
+        logger.info(f"MDF-e: {max(mdfe_count, 0)} XMLs baixados")
 
         # Resultado do download
-        total_downloaded = cte_count + mdfe_count
+        download_failed = cte_count < 0 or mdfe_count < 0
+        safe_cte_count = max(cte_count, 0)
+        safe_mdfe_count = max(mdfe_count, 0)
+        total_downloaded = safe_cte_count + safe_mdfe_count
         logger.info("")
         logger.info("=" * 60)
-        logger.info("DOWNLOAD CONCLUÍDO!")
+        logger.info("DOWNLOAD CONCLUÍDO!" if not download_failed else "DOWNLOAD INCOMPLETO!")
         logger.info(f"Data: {target_date}")
-        logger.info(f"CT-e: {cte_count} XMLs")
-        logger.info(f"MDF-e: {mdfe_count} XMLs")
+        logger.info(f"CT-e: {safe_cte_count} XMLs")
+        logger.info(f"MDF-e: {safe_mdfe_count} XMLs")
         logger.info(f"Total: {total_downloaded} XMLs")
         logger.info(f"Pasta: {output_folder}")
         logger.info("=" * 60)
 
         # Enviar XMLs para a API do Destack
+        upload_failed = False
         if total_downloaded > 0:
             logger.info("")
             logger.info("-" * 40)
@@ -106,6 +119,7 @@ def download_daily_xmls(target_date: str = None):
             logger.info("-" * 40)
             upload_result = upload_xmls_to_api(output_folder)
             logger.info(f"Enviados: {upload_result['success']} | Ignorados (já existem): {upload_result['skipped']} | Duplicados: {upload_result['duplicates']} | Falhas: {upload_result['failed']}")
+            upload_failed = upload_result['failed'] > 0
         else:
             logger.info("Nenhum XML para enviar")
 
@@ -114,7 +128,12 @@ def download_daily_xmls(target_date: str = None):
         logger.info("PROCESSO DIÁRIO FINALIZADO!")
         logger.info("=" * 60)
 
-        return True
+        if download_failed:
+            logger.error("Job incompleto: CT-e ou MDF-e falhou após todas as tentativas")
+        if upload_failed:
+            logger.error("Job incompleto: houve falha no envio de XMLs para a API")
+
+        return not download_failed and not upload_failed
 
     except Exception as e:
         logger.error(f"Erro durante download: {e}")
@@ -126,15 +145,40 @@ def download_daily_xmls(target_date: str = None):
         if browser:
             logger.info("Fechando browser...")
             try:
-                browser.driver.quit()
-            except:
-                pass
+                browser.stop()
+            except Exception as e:
+                logger.warning(f"Erro ao fechar browser: {e}")
 
 
 def extract_chave_from_filename(filename: str):
     """Extrai chave de 44 dígitos do nome do arquivo."""
     match = re.search(r'(\d{44})', filename)
     return match.group(1) if match else None
+
+
+def download_document_with_retries(
+    doc_type: str,
+    download_func,
+    client: EGSClient,
+    output_folder: str,
+) -> int:
+    """Executa o download e diferencia uma lista vazia de uma falha real."""
+    for attempt in range(1, DOCUMENT_DOWNLOAD_ATTEMPTS + 1):
+        count = download_func(client, output_folder)
+        if count >= 0:
+            return count
+
+        if attempt < DOCUMENT_DOWNLOAD_ATTEMPTS:
+            logger.warning(
+                f"{doc_type} falhou na tentativa {attempt}/"
+                f"{DOCUMENT_DOWNLOAD_ATTEMPTS}; tentando novamente"
+            )
+            time.sleep(10)
+
+    logger.error(
+        f"{doc_type} falhou após {DOCUMENT_DOWNLOAD_ATTEMPTS} tentativas"
+    )
+    return -1
 
 
 def is_event_xml_file(file_path: str) -> bool:
@@ -309,7 +353,7 @@ def download_cte_daily(client: EGSClient, output_folder: str) -> int:
             logger.warning("Sessão expirada! Redirecionado para /login. Tentando re-login...")
             if not client.login():
                 logger.error("Re-login falhou!")
-                return 0
+                return -1
             # Navegar novamente após re-login
             close_banner(client)
             time.sleep(1)
@@ -321,69 +365,39 @@ def download_cte_daily(client: EGSClient, output_folder: str) -> int:
             logger.info(f"URL após re-login: {current_url}")
             if 'login' in current_url.lower():
                 logger.error("Ainda na página de login após re-login!")
-                return 0
+                return -1
 
-        # Aguardar grid (timeout maior para conexões lentas)
-        client._wait_for_devexpress_grid(timeout=90)
-
-        # Verificar contagem
-        try:
-            page_info = client.browser.driver.find_element(By.CSS_SELECTOR, '.dx-pager .dx-info').text
-            logger.info(f"Registros na grid: {page_info}")
-        except:
-            pass
-
-        # Verificar se há dados
-        no_data = client.browser.find_element_safe(By.CSS_SELECTOR, ".dx-datagrid-nodata")
-        if no_data and no_data.is_displayed():
+        record_count = wait_for_valid_grid(client, "CT-e")
+        if record_count < 0:
+            return -1
+        if record_count == 0:
             logger.info("Nenhum CT-e encontrado")
             return 0
 
-        # Selecionar todos (mesma abordagem do MDF-e)
-        client.browser.driver.execute_script("""
-            var headerCheckbox = document.querySelector('.dx-header-row .dx-checkbox');
-            if (headerCheckbox) headerCheckbox.click();
-        """)
-        time.sleep(2)
-
-        # Verificar seleção
-        selected = client.browser.driver.execute_script("""
-            return document.querySelectorAll('.dx-datagrid-rowsview .dx-checkbox-checked').length;
-        """)
-        logger.info(f"Registros selecionados: {selected}")
-
-        if selected == 0:
-            logger.warning("Nenhum registro selecionado")
-            return 0
+        selected = select_all_grid_rows(client, "CT-e")
+        if selected <= 0:
+            return -1
 
         # Clicar no botão de download XML
-        # Usa seletor para botão com ícone fa-download (funciona na página cte-tela-xml)
-        download_clicked = client.browser.driver.execute_script("""
-            var selectors = [
-                "button:has(i.fa-download)",
-                "button[ng-click='downloadXml()']",
-                "button[ng-click*='download']",
-                "button.btn-download"
-            ];
-            for (var i = 0; i < selectors.length; i++) {
-                var btn = document.querySelector(selectors[i]);
-                if (btn) {
-                    btn.click();
-                    return 'clicked: ' + selectors[i];
-                }
-            }
-            return 'not found';
-        """)
+        download_started_at = time.time()
+        download_clicked = click_download_button(client)
         logger.info(f"Botão de download: {download_clicked}")
+        if not download_clicked:
+            return -1
         time.sleep(2)
 
         # Aguardar download
-        count = wait_and_extract_zip(output_folder, 'cte')
+        count = wait_and_extract_zip(
+            output_folder,
+            'cte',
+            timeout=DOWNLOAD_TIMEOUT,
+            started_at=download_started_at,
+        )
         return count
 
     except Exception as e:
         logger.error(f"Erro ao baixar CT-e: {e}")
-        return 0
+        return -1
 
 
 def download_mdfe_daily(client: EGSClient, output_folder: str) -> int:
@@ -410,7 +424,7 @@ def download_mdfe_daily(client: EGSClient, output_folder: str) -> int:
             logger.warning("Sessão expirada no MDF-e! Tentando re-login...")
             if not client.login():
                 logger.error("Re-login falhou!")
-                return 0
+                return -1
             close_banner(client)
             time.sleep(1)
             client.browser.driver.get('https://app.egssistemas.com.br/mdfe')
@@ -420,54 +434,39 @@ def download_mdfe_daily(client: EGSClient, output_folder: str) -> int:
             current_url = client.browser.driver.current_url
             if 'login' in current_url.lower():
                 logger.error("Ainda na página de login após re-login no MDF-e!")
-                return 0
+                return -1
 
-        # Aguardar grid (timeout maior para conexões lentas)
-        client._wait_for_devexpress_grid(timeout=90)
-
-        # Verificar contagem
-        try:
-            page_info = client.browser.driver.find_element(By.CSS_SELECTOR, '.dx-pager .dx-info').text
-            logger.info(f"Registros na grid: {page_info}")
-        except:
-            pass
-
-        # Verificar se há dados
-        no_data = client.browser.find_element_safe(By.CSS_SELECTOR, ".dx-datagrid-nodata")
-        if no_data and no_data.is_displayed():
+        record_count = wait_for_valid_grid(client, "MDF-e")
+        if record_count < 0:
+            return -1
+        if record_count == 0:
             logger.info("Nenhum MDF-e encontrado")
             return 0
 
-        # Selecionar todos
-        client.browser.driver.execute_script("""
-            var headerCheckbox = document.querySelector('.dx-header-row .dx-checkbox');
-            if (headerCheckbox) headerCheckbox.click();
-        """)
-        time.sleep(2)
-
-        # Verificar seleção
-        selected = client.browser.driver.execute_script("""
-            return document.querySelectorAll('.dx-datagrid-rowsview .dx-checkbox-checked').length;
-        """)
-        logger.info(f"Registros selecionados: {selected}")
-
-        if selected == 0:
-            return 0
+        selected = select_all_grid_rows(client, "MDF-e")
+        if selected <= 0:
+            return -1
 
         # Clicar em Baixar XML
-        client.browser.driver.execute_script("""
-            var btn = document.querySelector("button[ng-click='downloadXml()']");
-            if (btn) btn.click();
-        """)
+        download_started_at = time.time()
+        download_clicked = click_download_button(client)
+        logger.info(f"Botão de download: {download_clicked}")
+        if not download_clicked:
+            return -1
         time.sleep(2)
 
         # Aguardar download
-        count = wait_and_extract_zip(output_folder, 'mdfe')
+        count = wait_and_extract_zip(
+            output_folder,
+            'mdfe',
+            timeout=DOWNLOAD_TIMEOUT,
+            started_at=download_started_at,
+        )
         return count
 
     except Exception as e:
         logger.error(f"Erro ao baixar MDF-e: {e}")
-        return 0
+        return -1
 
 
 def close_banner(client):
@@ -485,14 +484,177 @@ def close_banner(client):
         pass
 
 
-def wait_and_extract_zip(output_folder: str, doc_type: str, timeout: int = 120) -> int:
+def parse_grid_record_count(page_info: str):
+    """Extrai a quantidade da paginação DevExpress."""
+    match = re.search(r'\((-?\d+)\s+registros?\)', page_info or '', re.IGNORECASE)
+    return int(match.group(1)) if match else None
+
+
+def wait_for_valid_grid(client: EGSClient, doc_type: str) -> int:
+    """Aguarda paginação conclusiva; ausência de estado nunca significa lista vazia."""
+    from selenium.webdriver.common.by import By
+
+    for attempt in range(1, GRID_LOAD_ATTEMPTS + 1):
+        if not client._wait_for_devexpress_grid(timeout=90):
+            logger.warning(
+                f"{doc_type}: grid não carregou ({attempt}/{GRID_LOAD_ATTEMPTS})"
+            )
+
+        deadline = time.time() + GRID_STATE_TIMEOUT
+        last_page_info = ''
+        while time.time() < deadline:
+            try:
+                last_page_info = client.browser.driver.find_element(
+                    By.CSS_SELECTOR, '.dx-pager .dx-info'
+                ).text.strip()
+            except Exception:
+                last_page_info = ''
+
+            record_count = parse_grid_record_count(last_page_info)
+            if record_count is not None and record_count >= 0:
+                logger.info(f"Registros na grid: {last_page_info}")
+                return record_count
+
+            time.sleep(2)
+
+        logger.warning(
+            f"{doc_type}: estado inconclusivo da grid "
+            f"({last_page_info or 'paginação ausente'}); "
+            f"recarregando ({attempt}/{GRID_LOAD_ATTEMPTS})"
+        )
+        if attempt < GRID_LOAD_ATTEMPTS:
+            client.browser.driver.refresh()
+            time.sleep(8)
+            close_banner(client)
+
+    logger.error(
+        f"{doc_type}: grid permaneceu inválida após "
+        f"{GRID_LOAD_ATTEMPTS} tentativas"
+    )
+    return -1
+
+
+def selected_grid_row_count(client: EGSClient) -> int:
+    """Conta linhas visíveis efetivamente marcadas."""
+    return int(client.browser.driver.execute_script("""
+        return document.querySelectorAll(
+            '.dx-datagrid-rowsview .dx-checkbox.dx-checkbox-checked'
+        ).length;
+    """) or 0)
+
+
+def select_all_grid_rows(client: EGSClient, doc_type: str) -> int:
+    """Seleciona todos e só confirma quando a grade reflete a seleção."""
+    from selenium.webdriver.common.by import By
+
+    for attempt in range(1, 5):
+        selected = selected_grid_row_count(client)
+        if selected > 0:
+            logger.info(f"Registros selecionados: {selected}")
+            return selected
+
+        # Primeiro usa o widget DevExpress, que é mais estável que um click cru.
+        client.browser.driver.execute_script("""
+            document.querySelectorAll('.dx-datagrid').forEach(function (element) {
+                try {
+                    var instance = window.jQuery
+                        ? window.jQuery(element).dxDataGrid('instance')
+                        : null;
+                    if (instance) instance.selectAll();
+                } catch (error) {}
+            });
+        """)
+        time.sleep(2)
+        selected = selected_grid_row_count(client)
+        if selected > 0:
+            logger.info(f"Registros selecionados: {selected}")
+            return selected
+
+        header_checkbox = client.browser.find_element_safe(
+            By.CSS_SELECTOR, '.dx-header-row .dx-checkbox'
+        )
+        if header_checkbox:
+            try:
+                if 'dx-checkbox-checked' not in (
+                    header_checkbox.get_attribute('class') or ''
+                ):
+                    client._safe_click(header_checkbox)
+            except Exception as exc:
+                logger.debug(f"{doc_type}: clique Selenium falhou: {exc}")
+
+        time.sleep(2)
+        selected = selected_grid_row_count(client)
+        if selected > 0:
+            logger.info(f"Registros selecionados: {selected}")
+            return selected
+
+        client.browser.driver.execute_script("""
+            var icon = document.querySelector(
+                '.dx-header-row .dx-checkbox .dx-checkbox-icon'
+            );
+            if (icon) {
+                icon.dispatchEvent(new MouseEvent('mousedown', {bubbles: true}));
+                icon.dispatchEvent(new MouseEvent('mouseup', {bubbles: true}));
+                icon.click();
+            }
+        """)
+        time.sleep(2)
+        selected = selected_grid_row_count(client)
+        if selected > 0:
+            logger.info(f"Registros selecionados: {selected}")
+            return selected
+
+        logger.warning(
+            f"{doc_type}: seleção não confirmada ({attempt}/4)"
+        )
+
+    logger.error(f"{doc_type}: não foi possível selecionar os registros")
+    return -1
+
+
+def click_download_button(client: EGSClient) -> str:
+    """Clica no download e retorna o seletor usado, ou string vazia."""
+    result = client.browser.driver.execute_script("""
+        var selectors = [
+            "button[ng-click='downloadXml()']",
+            "button:has(i.fa-download)",
+            "button[ng-click*='download']",
+            "button.btn-download"
+        ];
+        for (var i = 0; i < selectors.length; i++) {
+            var button = document.querySelector(selectors[i]);
+            if (button && !button.disabled) {
+                button.click();
+                return 'clicked: ' + selectors[i];
+            }
+        }
+        return '';
+    """)
+    if not result:
+        logger.error("Botão de download não encontrado ou desabilitado")
+    return result or ''
+
+
+def wait_and_extract_zip(
+    output_folder: str,
+    doc_type: str,
+    timeout: int = DOWNLOAD_TIMEOUT,
+    started_at: float = None,
+) -> int:
     """Aguarda download e extrai XMLs, retornando a contagem"""
 
+    started_at = started_at or time.time()
     start_time = time.time()
 
     while time.time() - start_time < timeout:
-        zip_files = glob.glob(os.path.join(DOWNLOAD_DIR, "*.zip"))
-        downloading = glob.glob(os.path.join(DOWNLOAD_DIR, "*.crdownload"))
+        zip_files = [
+            path for path in glob.glob(os.path.join(DOWNLOAD_DIR, "*.zip"))
+            if os.path.getmtime(path) >= started_at - 1
+        ]
+        downloading = [
+            path for path in glob.glob(os.path.join(DOWNLOAD_DIR, "*.crdownload"))
+            if os.path.getmtime(path) >= started_at - 1
+        ]
 
         if downloading:
             time.sleep(2)
@@ -534,12 +696,12 @@ def wait_and_extract_zip(output_folder: str, doc_type: str, timeout: int = 120) 
 
             except Exception as e:
                 logger.error(f"Erro ao extrair: {e}")
-                return 0
+                return -1
 
         time.sleep(2)
 
-    logger.warning("Timeout aguardando download")
-    return 0
+    logger.error(f"{doc_type}: timeout aguardando download após {timeout}s")
+    return -1
 
 
 if __name__ == "__main__":

@@ -1,0 +1,13 @@
+services:
+  scraper:
+    # tini adota e recolhe Chrome/crashpad encerrados a cada ciclo.
+    init: true
+    pids_limit: 512
+
+  celery_worker:
+    init: true
+    pids_limit: 256
+
+  celery_beat:
+    init: true
+    pids_limit: 64

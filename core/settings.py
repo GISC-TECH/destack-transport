@@ -600,3 +600,52 @@ NOMINATIM_DELAY_SECONDS = float(os.getenv('NOMINATIM_DELAY_SECONDS', '1.1'))
 EVOLUTION_API_URL = os.getenv('EVOLUTION_API_URL', '')
 EVOLUTION_API_KEY = os.getenv('EVOLUTION_API_KEY', '')
 EVOLUTION_INSTANCE_NAME = os.getenv('EVOLUTION_INSTANCE_NAME', 'destack')
+
+# =============================================================================
+# ARMAZENAMENTO DE MÍDIA — MinIO (S3-compatible) ou local
+# =============================================================================
+USE_MINIO = os.getenv('USE_MINIO', 'False').lower() == 'true'
+COMPROVANTES_ZIP_MAX_FILES = int(os.getenv('COMPROVANTES_ZIP_MAX_FILES', '50'))
+COMPROVANTES_ZIP_MAX_TOTAL_BYTES = int(
+    os.getenv('COMPROVANTES_ZIP_MAX_TOTAL_BYTES', str(100 * 1024 * 1024))
+)
+
+# Expõe para commands/management caso necessário
+MINIO_ENABLED = USE_MINIO
+
+if USE_MINIO:
+    INSTALLED_APPS += ['storages']
+
+    def _required_minio_env(name):
+        value = os.getenv(name, '').strip()
+        if not value:
+            raise RuntimeError(f'{name} must be set when USE_MINIO=True.')
+        return value
+
+    AWS_ACCESS_KEY_ID = _required_minio_env('MINIO_ACCESS_KEY')
+    AWS_SECRET_ACCESS_KEY = _required_minio_env('MINIO_SECRET_KEY')
+    AWS_STORAGE_BUCKET_NAME = _required_minio_env('MINIO_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = _required_minio_env('MINIO_ENDPOINT_URL')
+    AWS_S3_REGION_NAME = os.getenv('MINIO_REGION_NAME', 'us-east-1')
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = True
+    AWS_QUERYSTRING_EXPIRE = int(os.getenv('MINIO_QUERYSTRING_EXPIRE', '300'))
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_VERIFY = os.getenv('MINIO_VERIFY_SSL', 'True').lower() == 'true'
+    AWS_S3_ADDRESSING_STYLE = 'path'
+
+    # Host externo usado apenas para gerar links S3 temporários e assinados.
+    MINIO_PUBLIC_URL = _required_minio_env('MINIO_PUBLIC_URL').rstrip('/')
+
+    STORAGES = {
+        'default': {
+            'BACKEND': 'transport.storage.PrivateMinioStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+
+    MEDIA_URL = '/media/'
+
+# Fallback local já definido em MEDIA_ROOT e MEDIA_URL acima quando USE_MINIO=False

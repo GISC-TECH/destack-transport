@@ -40,7 +40,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser # IsAdminUse
 from rest_framework import serializers # Para ValidationError
 
 # Imports Locais
-from ..permissions import TransportModelPermission, ReadOnlyPermission
+from ..permissions import CapabilityPermission, TransportModelPermission
 from ..serializers.config_serializers import ( # Use .. para voltar um nível
     ParametroSistemaSerializer,
     ConfiguracaoEmpresaSerializer,
@@ -524,7 +524,8 @@ class RelatorioAPIView(APIView):
     Suporta diferentes tipos de relatórios e formatos de saída.
     Funcionalidade pendente de implementação.
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'dashboard.relatorios'
 
     def get(self, request, format=None):
         """

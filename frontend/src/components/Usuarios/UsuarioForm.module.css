@@ -126,6 +126,23 @@
   margin-top: var(--space-1);
 }
 
+.protectedHint {
+  display: block;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--warning-light);
+  color: var(--warning-dark);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.accessShortcut {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+
 /* Password input */
 .passwordWrapper {
   position: relative;

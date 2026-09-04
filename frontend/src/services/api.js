@@ -110,8 +110,8 @@ async function refreshCSRFToken() {
 }
 
 // Wrapper para requisições com retry automático em caso de CSRF failure (403)
-async function fetchWithCSRFRetry(url, options, retried = false) {
-  const response = await fetchWithTimeout(url, options);
+async function fetchWithCSRFRetry(url, options, retried = false, timeout = DEFAULT_TIMEOUT) {
+  const response = await fetchWithTimeout(url, options, timeout);
 
   // Se for 403 e ainda não tentamos retry, atualizar CSRF e tentar novamente
   if (response.status === 403 && !retried) {
@@ -125,7 +125,7 @@ async function fetchWithCSRFRetry(url, options, retried = false) {
           'X-CSRFToken': getCSRFToken(),
         }
       };
-      return fetchWithCSRFRetry(url, newOptions, true);
+      return fetchWithCSRFRetry(url, newOptions, true, timeout);
     }
   }
 
@@ -172,28 +172,32 @@ const triggerDownload = async (response, filename) => {
 
 // Helper para tratar erros HTTP com mensagens específicas
 const handleHttpError = async (response, defaultMsg) => {
-  if (response.status === 404) {
-    throw new Error('Recurso não encontrado. Verifique se o registro existe.');
-  }
-  if (response.status === 403) {
-    throw new Error('Acesso negado. Você não tem permissão para esta ação.');
-  }
+  let payload;
   try {
-    const error = await response.json();
-    // Extract meaningful message
-    if (error.detail) throw new Error(error.detail);
-    if (error.message) throw new Error(error.message);
-    if (error.error) throw new Error(error.error);
-    // Handle field errors
-    const firstField = Object.keys(error)[0];
-    if (firstField && Array.isArray(error[firstField])) {
-      throw new Error(`${firstField}: ${error[firstField][0]}`);
-    }
-    throw new Error(defaultMsg);
-  } catch (e) {
-    if (e.message && !e.message.includes('Unexpected')) throw e;
-    throw new Error(defaultMsg, { cause: e });
+    payload = await response.json();
+  } catch {
+    payload = null;
   }
+
+  let message = extractErrorMessage(payload, defaultMsg);
+  if (!payload && response.status === 404) {
+    message = 'Recurso não encontrado. Verifique se o registro existe.';
+  } else if (!payload && response.status === 403) {
+    message = 'Acesso negado. Você não tem permissão para esta ação.';
+  } else if (!payload && response.status === 409) {
+    message = 'Os dados foram alterados por outra sessão. Recarregue e tente novamente.';
+  }
+
+  const error = new Error(message || defaultMsg);
+  error.status = response.status;
+  error.code = payload?.code || payload?.error_code || null;
+  error.data = payload;
+  if (response.status === 403 && typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('auth:permissions-changed', {
+      detail: { status: 403, code: error.code },
+    }));
+  }
+  throw error;
 };
 
 // ======================================
@@ -265,6 +269,11 @@ export const authAPI = {
   getPermissions: async () => {
     const response = await fetchWithTimeout(`${API_BASE}/users/me/permissions/`, defaultOptions);
     if (!response.ok) {
+      if (response.status === 401) {
+        const err = new Error('Sessão expirada');
+        err.status = 401;
+        throw err;
+      }
       return { superuser: false, modulos: {} };
     }
     return response.json();
@@ -289,16 +298,11 @@ export const perfisAPI = {
   },
 
   update: async (nome, data) => {
-    const response = await fetchWithTimeout(`${API_BASE}/perfis/${encodeURIComponent(nome)}/`, {
-      ...defaultOptions,
-      method: 'PUT',
-      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || err.detail || 'Erro ao atualizar perfil');
-    }
+    const response = await fetchWithCSRFRetry(
+      `${API_BASE}/perfis/${encodeURIComponent(nome)}/`,
+      mutationOptions('PUT', data)
+    );
+    if (!response.ok) await handleHttpError(response, 'Erro ao atualizar perfil');
     return response.json();
   },
 
@@ -309,12 +313,11 @@ export const perfisAPI = {
   },
 
   sincronizar: async () => {
-    const response = await fetchWithTimeout(`${API_BASE}/perfis/sincronizar/`, {
-      ...defaultOptions,
-      method: 'POST',
-      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-    });
-    if (!response.ok) throw new Error('Erro ao sincronizar perfis');
+    const response = await fetchWithCSRFRetry(
+      `${API_BASE}/perfis/sincronizar/`,
+      mutationOptions('POST')
+    );
+    if (!response.ok) await handleHttpError(response, 'Erro ao sincronizar perfis');
     return response.json();
   }
 };
@@ -878,6 +881,18 @@ export const pagamentosAPI = {
       await triggerDownload(response, `pagamentos_agregados_${new Date().toISOString().split('T')[0]}.csv`);
     },
 
+    baixarComprovantes: async (payload, filters = {}) => {
+      const params = new URLSearchParams(filters);
+      const response = await fetchWithCSRFRetry(
+        `${API_BASE}/pagamentos/agregados/comprovantes/download/?${params}`,
+        mutationOptions('POST', payload),
+        false,
+        120000,
+      );
+      if (!response.ok) await handleHttpError(response, 'Erro ao baixar comprovantes');
+      await triggerDownload(response, `comprovantes_agregados_${new Date().toISOString().split('T')[0]}.zip`);
+    },
+
     // Converte pagamento agregado para próprio
     converterParaProprio: async (id, data = {}) => {
       const response = await fetchWithTimeout(`${API_BASE}/pagamentos/agregados/${id}/converter-para-proprio/`, mutationOptions('POST', data));
@@ -974,6 +989,18 @@ export const pagamentosAPI = {
       const response = await fetchWithTimeout(`${API_BASE}/pagamentos/proprios/export/?${params}`, defaultOptions);
       if (!response.ok) throw new Error('Erro ao exportar pagamentos');
       await triggerDownload(response, `pagamentos_proprios_${new Date().toISOString().split('T')[0]}.csv`);
+    },
+
+    baixarComprovantes: async (payload, filters = {}) => {
+      const params = new URLSearchParams(filters);
+      const response = await fetchWithCSRFRetry(
+        `${API_BASE}/pagamentos/proprios/comprovantes/download/?${params}`,
+        mutationOptions('POST', payload),
+        false,
+        120000,
+      );
+      if (!response.ok) await handleHttpError(response, 'Erro ao baixar comprovantes');
+      await triggerDownload(response, `comprovantes_proprios_${new Date().toISOString().split('T')[0]}.zip`);
     },
 
     // Converte pagamento próprio para agregado
@@ -2060,6 +2087,12 @@ export const documentosAPI = {
     return response.blob();
   },
 
+  view: async (id) => {
+    const response = await fetchWithTimeout(`${API_BASE}/documentos/${id}/download/?inline=1`, defaultOptions);
+    if (!response.ok) throw new Error('Erro ao visualizar documento');
+    return response.blob();
+  },
+
   // Documentos de Clientes
   clientes: {
     list: async (clienteId) => {
@@ -2296,6 +2329,37 @@ export const usuariosAPI = {
     return response.json();
   },
 
+  listAll: async (filters = {}) => {
+    const firstPage = await usuariosAPI.list(filters);
+    if (Array.isArray(firstPage)) return firstPage;
+
+    const users = [...(firstPage.results || [])];
+    let next = firstPage.next;
+    let pageCount = 1;
+    const maxPages = 100;
+
+    while (next && pageCount < maxPages) {
+      const nextUrl = new URL(next, window.location.origin);
+      if (nextUrl.origin !== window.location.origin) {
+        throw new Error('A paginação de usuários retornou um endereço inválido.');
+      }
+      const response = await fetchWithTimeout(
+        `${nextUrl.pathname}${nextUrl.search}`,
+        defaultOptions
+      );
+      if (!response.ok) await handleHttpError(response, 'Erro ao buscar todos os usuários');
+      const page = await response.json();
+      users.push(...(page.results || []));
+      next = page.next;
+      pageCount += 1;
+    }
+
+    if (next) {
+      throw new Error('A lista de usuários excedeu o limite seguro de paginação. Refine os filtros.');
+    }
+    return users;
+  },
+
   get: async (id) => {
     const response = await fetchWithTimeout(`${API_BASE}/usuarios/${id}/`, defaultOptions);
     if (!response.ok) throw new Error('Erro ao buscar usuário');
@@ -2303,7 +2367,7 @@ export const usuariosAPI = {
   },
 
   create: async (data) => {
-    const response = await fetchWithTimeout(`${API_BASE}/usuarios/`, mutationOptions('POST', data));
+    const response = await fetchWithCSRFRetry(`${API_BASE}/usuarios/`, mutationOptions('POST', data));
     if (!response.ok) {
       const error = await response.json();
       throw new Error(extractErrorMessage(error));
@@ -2312,25 +2376,81 @@ export const usuariosAPI = {
   },
 
   update: async (id, data) => {
-    const response = await fetchWithTimeout(`${API_BASE}/usuarios/${id}/`, mutationOptions('PUT', data));
-    if (!response.ok) throw new Error('Erro ao atualizar usuário');
+    const response = await fetchWithCSRFRetry(`${API_BASE}/usuarios/${id}/`, mutationOptions('PUT', data));
+    if (!response.ok) await handleHttpError(response, 'Erro ao atualizar usuário');
     return response.json();
   },
 
   patch: async (id, data) => {
-    const response = await fetchWithTimeout(`${API_BASE}/usuarios/${id}/`, mutationOptions('PATCH', data));
-    if (!response.ok) throw new Error('Erro ao atualizar usuário');
+    const response = await fetchWithCSRFRetry(`${API_BASE}/usuarios/${id}/`, mutationOptions('PATCH', data));
+    if (!response.ok) await handleHttpError(response, 'Erro ao atualizar usuário');
     return response.json();
   },
 
-  delete: async (id) => {
-    const response = await fetchWithTimeout(`${API_BASE}/usuarios/${id}/`, {
-      ...defaultOptions,
-      method: 'DELETE',
-      headers: { ...defaultOptions.headers, 'X-CSRFToken': getCSRFToken() },
-    });
-    if (!response.ok) throw new Error('Erro ao deletar usuário');
-    return true;
+  delete: async (id, data) => {
+    const response = await fetchWithCSRFRetry(
+      `${API_BASE}/usuarios/${validateId(id, 'Usuário')}/`,
+      mutationOptions('DELETE', data)
+    );
+    if (!response.ok) await handleHttpError(response, 'Erro ao remover usuário');
+    if (response.status === 204) return { success: true, is_active: false };
+    return response.json();
+  },
+
+  getAccessCatalog: async () => {
+    const response = await fetchWithTimeout(
+      `${API_BASE}/usuarios/catalogo-acessos/`,
+      defaultOptions
+    );
+    if (!response.ok) await handleHttpError(response, 'Erro ao buscar catálogo de acessos');
+    return response.json();
+  },
+
+  getAccess: async (id) => {
+    const response = await fetchWithTimeout(
+      `${API_BASE}/usuarios/${validateId(id, 'Usuário')}/acessos/`,
+      defaultOptions
+    );
+    if (!response.ok) await handleHttpError(response, 'Erro ao buscar acessos do usuário');
+    return response.json();
+  },
+
+  updateAccess: async (id, data) => {
+    const response = await fetchWithCSRFRetry(
+      `${API_BASE}/usuarios/${validateId(id, 'Usuário')}/acessos/`,
+      mutationOptions('PUT', data)
+    );
+    if (!response.ok) await handleHttpError(response, 'Erro ao atualizar acessos do usuário');
+    return response.json();
+  },
+
+  updateStatus: async (id, data) => {
+    const response = await fetchWithCSRFRetry(
+      `${API_BASE}/usuarios/${validateId(id, 'Usuário')}/status/`,
+      mutationOptions('PATCH', data)
+    );
+    if (!response.ok) await handleHttpError(response, 'Erro ao alterar status do usuário');
+    return response.json();
+  },
+
+  resetPassword: async (id, data) => {
+    const response = await fetchWithCSRFRetry(
+      `${API_BASE}/usuarios/${validateId(id, 'Usuário')}/redefinir-senha/`,
+      mutationOptions('POST', data)
+    );
+    if (!response.ok) await handleHttpError(response, 'Erro ao redefinir senha do usuário');
+    return response.json();
+  },
+
+  getAccessAudit: async (id, filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const query = params.toString();
+    const response = await fetchWithTimeout(
+      `${API_BASE}/usuarios/${validateId(id, 'Usuário')}/auditoria/${query ? `?${query}` : ''}`,
+      defaultOptions
+    );
+    if (!response.ok) await handleHttpError(response, 'Erro ao buscar histórico de acessos');
+    return response.json();
   },
 
   // Endpoint para o usuario atual gerenciar seu proprio perfil

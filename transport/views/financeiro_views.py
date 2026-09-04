@@ -29,7 +29,7 @@ from ..models import (
     PagamentoAgregado,
     PagamentoProprio,
 )
-from ..permissions import TransportModelPermission
+from ..permissions import CapabilityPermission, TransportModelPermission
 from ..serializers.conciliacao_serializers import ContaPagarSerializer
 from ..serializers.fatura_serializers import (
     FaturaCreateUpdateSerializer,
@@ -300,7 +300,8 @@ class InadimplenciaAPIView(APIView):
     Lista faturas (duplicatas) em atraso agrupadas por cliente e o total em aberto.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'financeiro.inadimplencia'
 
     def get(self, request):
         try:
@@ -419,7 +420,8 @@ class FluxoCaixaAPIView(APIView):
     Agrupamento por dia, semana ou mês.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'financeiro.fluxo_caixa'
 
     def get(self, request):
         try:
@@ -565,7 +567,8 @@ class DREAPIView(APIView):
     Custos: pagamentos agregados, pagamentos próprios e manutenções.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'financeiro.dre'
 
     def get(self, request):
         try:

@@ -16,6 +16,18 @@ from rest_framework.permissions import BasePermission
 
 CTE_EDITAR_VALOR_PERMISSION = 'editar_valor_frete_cte'
 CTE_EXCLUIR_PERMISSION = 'excluir_cte_importado'
+ACCESS_MANAGE_PERMISSION = 'gerenciar_acessos_usuarios'
+
+
+def has_direct_transport_permission(user, codename, model_name):
+    """Verifica uma permissão protegida sem bypass de grupo/superusuário."""
+    if not user or not user.is_authenticated or not user.is_active:
+        return False
+    return user.user_permissions.filter(
+        content_type__app_label='transport',
+        content_type__model=model_name,
+        codename=codename,
+    ).exists()
 
 
 def has_direct_cte_permission(user, codename):
@@ -25,13 +37,57 @@ def has_direct_cte_permission(user, codename):
     Não usa ``has_perm`` de propósito: superusuários e grupos não devem obter
     automaticamente estas duas operações sensíveis de CT-e.
     """
-    if not user or not user.is_authenticated:
-        return False
-    return user.user_permissions.filter(
-        content_type__app_label='transport',
-        content_type__model='ctedocumento',
-        codename=codename,
-    ).exists()
+    return has_direct_transport_permission(user, codename, 'ctedocumento')
+
+
+def can_manage_user_access(user):
+    """A administração de acessos exige concessão direta e explícita."""
+    return has_direct_transport_permission(
+        user,
+        ACCESS_MANAGE_PERMISSION,
+        'configuracaoacessousuario',
+    )
+
+
+class CanManageUserAccessPermission(BasePermission):
+    """Restringe CRUD de usuários/perfis ao administrador operacional direto."""
+
+    message = 'Você não possui autorização direta para gerenciar usuários e acessos.'
+
+    def has_permission(self, request, view):
+        return can_manage_user_access(request.user)
+
+
+class CapabilityPermission(BasePermission):
+    """Protege APIViews/actions por uma chave declarativa do catálogo."""
+
+    message = 'Você não possui permissão para executar esta função.'
+
+    def has_permission(self, request, view):
+        from transport.services.permissao_service import user_has_capability
+
+        capability = getattr(view, 'required_capability', None)
+        if not capability:
+            return False
+        return user_has_capability(request.user, capability)
+
+
+class CanSendCommunicationPermission(BasePermission):
+    def has_permission(self, request, view):
+        from transport.services.permissao_service import user_has_capability
+        return user_has_capability(request.user, 'comunicacao.enviar')
+
+
+class CanTestCommunicationPermission(BasePermission):
+    def has_permission(self, request, view):
+        from transport.services.permissao_service import user_has_capability
+        return user_has_capability(request.user, 'comunicacao.testar')
+
+
+class CanViewGPSPermission(BasePermission):
+    def has_permission(self, request, view):
+        from transport.services.permissao_service import user_has_capability
+        return user_has_capability(request.user, 'frota.visualizar_gps')
 
 
 class CanEditCTeFreightValuePermission(BasePermission):
@@ -70,15 +126,12 @@ class TransportModelPermission(BasePermission):
     SAFE_ACTIONS = frozenset({
         'export', 'vencimentos', 'estatisticas', 'buscar_por_km',
         'valores', 'download', 'indicadores', 'graficos', 'ultimos',
-        'tendencias', 'calcular_km',
+        'tendencias', 'calcular_km', 'download_comprovantes', 'comprovante',
     })
 
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        if request.user.is_superuser:
-            return True
-
         action = getattr(view, 'action', None)
         perm_type = self._map_action(request, action)
         if perm_type is None:
@@ -89,7 +142,12 @@ class TransportModelPermission(BasePermission):
             return False
 
         perm = f"{model_cls._meta.app_label}.{perm_type}_{model_cls._meta.model_name}"
-        return request.user.has_perm(perm)
+        from transport.services.permissao_service import user_has_model_permission
+        return user_has_model_permission(
+            request.user,
+            perm,
+            content_type_model=model_cls._meta.model_name,
+        )
 
     def _map_action(self, request, action):
         """Mapeia a ação atual para o tipo de permissão Django."""
@@ -159,11 +217,10 @@ class CanUploadXMLPermission(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        if request.user.is_superuser:
-            return True
+        from transport.services.permissao_service import user_has_model_permission
         return (
-            request.user.has_perm('transport.add_ctedocumento') or
-            request.user.has_perm('transport.add_mdfedocumento')
+            user_has_model_permission(request.user, 'transport.add_ctedocumento', 'ctedocumento') or
+            user_has_model_permission(request.user, 'transport.add_mdfedocumento', 'mdfedocumento')
         )
 
 
@@ -178,10 +235,9 @@ class CanUpdatePagamentoCTePermission(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        if request.user.is_superuser:
-            return True
+        from transport.services.permissao_service import user_has_model_permission
         return (
-            request.user.has_perm('transport.change_ctedocumento') or
-            request.user.has_perm('transport.change_pagamentoagregado') or
-            request.user.has_perm('transport.change_pagamentoproprio')
+            user_has_model_permission(request.user, 'transport.change_ctedocumento', 'ctedocumento') or
+            user_has_model_permission(request.user, 'transport.change_pagamentoagregado', 'pagamentoagregado') or
+            user_has_model_permission(request.user, 'transport.change_pagamentoproprio', 'pagamentoproprio')
         )

@@ -20,7 +20,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 # Imports Locais
-from ..permissions import ReadOnlyPermission, TransportModelPermission
+from ..permissions import CapabilityPermission, TransportModelPermission
 from ..serializers.dashboard_serializers import (  # Use .. para voltar um nível
     DashboardGeralDataSerializer, FinanceiroPainelSerializer, FinanceiroMensalSerializer,
     FinanceiroDetalheSerializer, CtePainelSerializer, MdfePainelSerializer,
@@ -100,7 +100,8 @@ class DashboardGeralAPIView(APIView):
     """
     API para obter dados consolidados para o dashboard geral.
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'dashboard.geral'
 
     def _parse_periodo(self, params):
         """Extrai e valida data_inicio/data_fim. Retorna (periodo, data_inicio, data_fim) ou Response de erro."""
@@ -316,7 +317,8 @@ class FinanceiroPainelAPIView(APIView):
     """
     API para o painel financeiro. Mostra dados sobre faturamento, valores CIF/FOB, etc.
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'financeiro.painel'
 
     def get(self, request):
         params = request.query_params
@@ -442,7 +444,8 @@ class FinanceiroMensalAPIView(APIView):
     """
     API para obter dados financeiros mensais específicos (usado pelo gráfico financeiro).
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'financeiro.painel'
 
     def get(self, request):
         params = request.query_params
@@ -514,7 +517,8 @@ class FinanceiroDetalheAPIView(APIView):
     """
     API para obter detalhes financeiros por clientes, veículos, etc.
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'financeiro.painel'
 
     def get(self, request):
         params = request.query_params
@@ -638,7 +642,8 @@ class CtePainelAPIView(APIView):
     """
     API para o painel de CT-e. Mostra dados sobre CT-es emitidos.
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'cte.painel'
 
     def get(self, request):
         params = request.query_params
@@ -751,7 +756,8 @@ class MdfePainelAPIView(APIView):
     """
     API para o painel de MDF-e. Mostra dados sobre MDF-es emitidos.
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'mdfe.painel'
 
     def get(self, request):
         params = request.query_params
@@ -860,7 +866,8 @@ class GeograficoPainelAPIView(APIView):
     """
     API para o painel geográfico. Mostra dados sobre origens e destinos.
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'dashboard.geral'
 
     def get(self, request):
         params = request.query_params
@@ -976,7 +983,8 @@ class AlertasPagamentoAPIView(APIView):
     """
     API para obter alertas do sistema (pagamentos pendentes, etc.).
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'pagamentos.view'
 
     def get(self, request, format=None):
         params = request.query_params
@@ -1102,7 +1110,8 @@ class FrotaPainelAPIView(APIView):
     """
     API para o painel de frota. Mostra dados sobre veiculos e motoristas ativos.
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'frota.painel'
 
     def get(self, request):
         params = request.query_params
@@ -1213,7 +1222,8 @@ class PerformancePainelAPIView(APIView):
     """
     API para o painel de performance. Mostra metricas de desempenho operacional.
     """
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'frota.painel'
 
     def get(self, request):
         params = request.query_params

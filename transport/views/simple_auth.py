@@ -84,6 +84,8 @@ def simple_login(request):
 
         if user is not None:
             login(request, user)
+            from transport.services.permissao_service import obter_configuracao_acesso
+            request.session['access_control_version'] = obter_configuracao_acesso(user).versao
 
             # Se for requisicao JSON, retorna JSON
             if 'application/json' in content_type:
@@ -96,6 +98,7 @@ def simple_login(request):
                         'first_name': user.first_name,
                         'last_name': user.last_name,
                         'is_staff': user.is_staff,
+                        'is_superuser': user.is_superuser,
                     }
                 })
             else:

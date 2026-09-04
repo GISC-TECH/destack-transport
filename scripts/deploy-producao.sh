@@ -3,7 +3,7 @@
 # Requer acesso SSH ao host de produção e um .env preenchido no servidor remoto.
 #
 # Uso:
-#   PROD_SSH=root@31.97.247.165 VERSION=v1.1.0 ./scripts/deploy-producao.sh
+#   PROD_SSH=root@207.180.255.150 VERSION=v1.1.0 ./scripts/deploy-producao.sh
 
 set -euo pipefail
 
@@ -13,11 +13,11 @@ REMOTE_DIR="${REMOTE_DIR:-/root/apps/destack}"
 POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-destack_postgres}"
 POSTGRES_DB="${POSTGRES_DB:-destack_db}"
 POSTGRES_USER="${POSTGRES_USER:-destack_user}"
-COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.server.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.contabo.yml}"
 
 if [ -z "$PROD_SSH" ]; then
     echo "ERRO: defina PROD_SSH, exemplo:"
-    echo "  PROD_SSH=root@31.97.247.165 $0"
+    echo "  PROD_SSH=root@207.180.255.150 $0"
     exit 1
 fi
 
@@ -85,7 +85,7 @@ echo ""
 echo "[7/7] Verificando saúde da aplicação..."
 sleep 10
 ssh -o StrictHostKeyChecking=no "$PROD_SSH" \
-    "curl -sf https://destacktransporte.site/api/health/ >/dev/null && echo 'Health OK' || echo 'Health check falhou'" \
+    "curl -sf https://destacktransporte.com/api/health/ >/dev/null && echo 'Health OK' || echo 'Health check falhou'" \
     || { echo "AVISO: health check não retornou 200"; }
 
 echo ""

@@ -22,6 +22,7 @@ function Perfis() {
   const [saving, setSaving] = useState(false);
   const [perfilEdicao, setPerfilEdicao] = useState(null);
   const [permissoesEdicao, setPermissoesEdicao] = useState({});
+  const [showSyncConfirm, setShowSyncConfirm] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -103,7 +104,8 @@ function Perfis() {
       setLoading(true);
       await perfisAPI.sincronizar();
       toast.success('Perfis sincronizados com sucesso!');
-      loadData();
+      setShowSyncConfirm(false);
+      await loadData();
     } catch (err) {
       toast.error(err.message || 'Erro ao sincronizar perfis');
     } finally {
@@ -126,7 +128,7 @@ function Perfis() {
           </svg>
         )}
         actions={(
-          <Button variant="outline" onClick={handleSincronizar} disabled={loading}>
+          <Button variant="outline" onClick={() => setShowSyncConfirm(true)} disabled={loading}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3" />
             </svg>
@@ -203,6 +205,29 @@ function Perfis() {
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={showSyncConfirm}
+        onClose={loading ? undefined : () => setShowSyncConfirm(false)}
+        closeOnOverlayClick={!loading}
+        title="Sincronizar perfis padrão"
+        size="sm"
+        footer={(
+          <div className={styles.confirmActions}>
+            <Button variant="outline" onClick={() => setShowSyncConfirm(false)} disabled={loading}>
+              Cancelar
+            </Button>
+            <Button variant="warning" onClick={handleSincronizar} loading={loading}>
+              Sincronizar
+            </Button>
+          </div>
+        )}
+      >
+        <p className={styles.confirmText}>
+          Os perfis Leitura, Operacional, Financeiro e Administrativo serão recriados a partir do padrão do sistema.
+          Usuários no modo personalizado não serão alterados.
+        </p>
       </Modal>
     </div>
   );

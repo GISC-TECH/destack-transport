@@ -5,14 +5,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ..models import Cliente, MensagemComunicacao, Motorista, OrdemViagem
-from ..permissions import TransportModelPermission
+from ..permissions import (
+    CanSendCommunicationPermission,
+    CanTestCommunicationPermission,
+    TransportModelPermission,
+)
 from ..serializers.comunicacao_serializers import MensagemComunicacaoSerializer
 from ..services.comunicacao_service import enviar_email, enviar_whatsapp
 from ..services.whatsapp_service import testar_conexao
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, CanSendCommunicationPermission])
 def enviar_comunicacao(request):
     """
     Endpoint para enviar e-mail ou WhatsApp.
@@ -63,7 +67,7 @@ def enviar_comunicacao(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, CanTestCommunicationPermission])
 def testar_whatsapp(request):
     """Endpoint para testar conexão com a Evolution API."""
     resultado = testar_conexao()

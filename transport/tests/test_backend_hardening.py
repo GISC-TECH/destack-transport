@@ -1,9 +1,18 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.test import TestCase
 from datetime import date, timedelta
 from decimal import Decimal
 
 from transport.models import CTeDocumento, PagamentoAgregado, PagamentoProprio, Veiculo
+
+
+def _grant_transport_permission(user, model, codename):
+    permission = Permission.objects.get(
+        content_type__app_label="transport",
+        content_type__model=model,
+        codename=codename,
+    )
+    user.user_permissions.add(permission)
 
 
 class DashboardGeralEndpointTests(TestCase):
@@ -12,6 +21,11 @@ class DashboardGeralEndpointTests(TestCase):
             username="tester",
             email="tester@example.com",
             password="test-password-123",
+        )
+        _grant_transport_permission(
+            self.user,
+            "configuracaoacessousuario",
+            "visualizar_dashboard_geral",
         )
         self.client.force_login(self.user)
 
@@ -77,6 +91,11 @@ class AlertasPagamentoEndpointTests(TestCase):
             username="tester",
             email="tester@example.com",
             password="test-password-123",
+        )
+        _grant_transport_permission(
+            self.user,
+            "pagamentoagregado",
+            "view_pagamentoagregado",
         )
         self.client.force_login(self.user)
 

@@ -3,7 +3,12 @@ import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
-const DEFAULT_PERMISSIONS = { superuser: false, modulos: {} };
+const DEFAULT_PERMISSIONS = {
+  superuser: false,
+  modulos: {},
+  capabilities: {},
+  version: null,
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -13,9 +18,23 @@ export function AuthProvider({ children }) {
   const loadPermissions = useCallback(async () => {
     try {
       const perms = await authAPI.getPermissions();
-      setPermissions(perms || DEFAULT_PERMISSIONS);
-    } catch {
+      const nextPermissions = { ...DEFAULT_PERMISSIONS, ...(perms || {}) };
+      setPermissions(nextPermissions);
+      setUser((currentUser) => currentUser ? {
+        ...currentUser,
+        is_superuser: !!nextPermissions.superuser,
+      } : currentUser);
+      return nextPermissions;
+    } catch (error) {
+      // Se a sessão expirou (401), desloga e redireciona para login.
+      if (error?.status === 401 || error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
+        setUser(null);
+        setPermissions(DEFAULT_PERMISSIONS);
+        window.location.href = '/login?expired=1';
+        return;
+      }
       setPermissions(DEFAULT_PERMISSIONS);
+      return DEFAULT_PERMISSIONS;
     }
   }, []);
 
@@ -46,6 +65,31 @@ export function AuthProvider({ children }) {
 
     initializeAuth();
   }, [initializeAuth]);
+
+  // Recarrega permissões quando a aba/janela volta ao foco.
+  // Isso garante que mudanças de perfil feitas em outra sessão/admin
+  // sejam refletidas sem precisar de logout/login manual.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && user) {
+        loadPermissions();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [user, loadPermissions]);
+
+  // Revalida a autorização quando uma chamada informa que as permissões da
+  // sessão mudaram. O backend continua sendo a fonte de verdade.
+  useEffect(() => {
+    const handlePermissionsChanged = () => {
+      if (user) loadPermissions();
+    };
+
+    window.addEventListener('auth:permissions-changed', handlePermissionsChanged);
+    return () => window.removeEventListener('auth:permissions-changed', handlePermissionsChanged);
+  }, [user, loadPermissions]);
 
   // Escuta sessão expirada durante uso da aplicação e redireciona para login
   // Não redireciona se estiver na landing page (/) ou na página de login (/login)
@@ -117,6 +161,7 @@ export function AuthProvider({ children }) {
       logout,
       checkAuth,
       refreshPermissions,
+      permissionsVersion: permissions?.version ?? null,
     }}>
       {children}
     </AuthContext.Provider>

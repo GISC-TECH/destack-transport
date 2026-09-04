@@ -11,6 +11,7 @@ from decimal import Decimal
 from django.test import TestCase
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 
 from rest_framework.test import APIRequestFactory, force_authenticate
 
@@ -71,11 +72,18 @@ def _cte(chave, numero, valor, data_emissao=None, pago=False):
     return cte
 
 
-def _autenticar_request(request, user=None):
-    if user is None:
-        user = User.objects.create_user(username='financeiro', password='teste123')
-    user.is_staff = True
-    user.save()
+def _usuario_com_capability(username, codename):
+    user = User.objects.create_user(username=username, password='teste123')
+    permission = Permission.objects.get(
+        content_type__app_label='transport',
+        content_type__model='configuracaoacessousuario',
+        codename=codename,
+    )
+    user.user_permissions.add(permission)
+    return user
+
+
+def _autenticar_request(request, user):
     force_authenticate(request, user=user)
     return request
 
@@ -85,6 +93,10 @@ class InadimplenciaAPITests(TestCase):
         self.factory = APIRequestFactory()
         self.view = InadimplenciaAPIView.as_view()
         self.hoje = date.today()
+        self.user = _usuario_com_capability(
+            'financeiro-inadimplencia',
+            'visualizar_inadimplencia',
+        )
 
     def test_lista_faturas_atrasadas_por_cliente(self):
         cte = _cte('29250924633774000118570010000000011012180001', '1', '1500.00')
@@ -96,7 +108,7 @@ class InadimplenciaAPITests(TestCase):
         )
 
         request = self.factory.get('/api/financeiro/inadimplencia/')
-        _autenticar_request(request)
+        _autenticar_request(request, self.user)
         response = self.view(request)
 
         self.assertEqual(response.status_code, 200)
@@ -116,7 +128,7 @@ class InadimplenciaAPITests(TestCase):
         )
 
         request = self.factory.get('/api/financeiro/inadimplencia/')
-        _autenticar_request(request)
+        _autenticar_request(request, self.user)
         response = self.view(request)
 
         self.assertEqual(response.status_code, 200)
@@ -133,7 +145,7 @@ class InadimplenciaAPITests(TestCase):
         )
 
         request = self.factory.get('/api/financeiro/inadimplencia/')
-        _autenticar_request(request)
+        _autenticar_request(request, self.user)
         response = self.view(request)
 
         self.assertEqual(response.status_code, 200)
@@ -148,6 +160,10 @@ class FluxoCaixaAPITests(TestCase):
         self.hoje = date.today()
         self.inicio = self.hoje - timedelta(days=5)
         self.fim = self.hoje + timedelta(days=5)
+        self.user = _usuario_com_capability(
+            'financeiro-fluxo-caixa',
+            'visualizar_fluxo_caixa',
+        )
 
     def test_projecao_receitas_e_despesas(self):
         # Receita
@@ -178,7 +194,7 @@ class FluxoCaixaAPITests(TestCase):
                 'agrupamento': 'dia',
             },
         )
-        _autenticar_request(request)
+        _autenticar_request(request, self.user)
         response = self.view(request)
 
         self.assertEqual(response.status_code, 200)
@@ -211,7 +227,7 @@ class FluxoCaixaAPITests(TestCase):
                 'agrupamento': 'mes',
             },
         )
-        _autenticar_request(request)
+        _autenticar_request(request, self.user)
         response = self.view(request)
 
         self.assertEqual(response.status_code, 200)
@@ -227,7 +243,7 @@ class FluxoCaixaAPITests(TestCase):
                 'agrupamento': 'invalido',
             },
         )
-        _autenticar_request(request)
+        _autenticar_request(request, self.user)
         response = self.view(request)
 
         self.assertEqual(response.status_code, 400)
@@ -240,6 +256,10 @@ class DREAPITests(TestCase):
         self.hoje = date.today()
         self.inicio = date(self.hoje.year, self.hoje.month, 1)
         self.fim = date(self.hoje.year, self.hoje.month + 1, 1) - timedelta(days=1)
+        self.user = _usuario_com_capability(
+            'financeiro-dre',
+            'visualizar_dre',
+        )
 
     def test_dre_calcula_receita_custos_e_margem(self):
         cte = _cte(
@@ -275,7 +295,7 @@ class DREAPITests(TestCase):
                 'data_fim': self.fim.isoformat(),
             },
         )
-        _autenticar_request(request)
+        _autenticar_request(request, self.user)
         response = self.view(request)
 
         self.assertEqual(response.status_code, 200)
@@ -302,7 +322,7 @@ class DREAPITests(TestCase):
                 'formato': 'csv',
             },
         )
-        _autenticar_request(request)
+        _autenticar_request(request, self.user)
         response = self.view(request)
 
         self.assertEqual(response.status_code, 200)
@@ -327,7 +347,7 @@ class DREAPITests(TestCase):
                 'data_fim': self.fim.isoformat(),
             },
         )
-        _autenticar_request(request)
+        _autenticar_request(request, self.user)
         response = self.view(request)
 
         self.assertEqual(response.status_code, 200)

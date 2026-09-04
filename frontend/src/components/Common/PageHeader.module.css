@@ -79,11 +79,11 @@
   width: 48px;
   height: 48px;
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  border-radius: var(--radius-md);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(64, 145, 108, 0.25);
+  box-shadow: 0 8px 20px rgba(64, 145, 108, 0.3);
   flex-shrink: 0;
 }
 

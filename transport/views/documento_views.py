@@ -1,5 +1,7 @@
 # transport/views/documento_views.py
 
+from datetime import date, datetime
+
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -10,6 +12,9 @@ from django.http import FileResponse, Http404
 from ..permissions import TransportModelPermission, ReadOnlyPermission
 from django.shortcuts import get_object_or_404
 import mimetypes
+import logging
+
+logger = logging.getLogger(__name__)
 
 from ..models import DocumentoAnexo, Cliente, Motorista, Veiculo, CTeDocumento
 from ..serializers.documento_serializers import (
@@ -17,6 +22,25 @@ from ..serializers.documento_serializers import (
     DocumentoAnexoListSerializer,
     DocumentoAnexoUploadSerializer
 )
+
+
+def _parse_date_local(value):
+    """
+    Converte um valor de entrada em datetime.date sem aplicar conversao de timezone.
+    Aceita strings no formato YYYY-MM-DD ou objetos date/datetime.
+    """
+    if not value:
+        return None
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        # Remove possivel parte de hora/timezone (ex: 2025-06-17T00:00:00-03:00)
+        date_part = value.split('T')[0].split(' ')[0]
+        try:
+            return datetime.strptime(date_part, '%Y-%m-%d').date()
+        except ValueError:
+            return None
+    return None
 
 
 # Mapeamento de tipos de documentos anexos para campos de validade do Veiculo.
@@ -111,11 +135,21 @@ class DocumentoAnexoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
-        """Download do arquivo anexo."""
+        """Download ou visualização do arquivo anexo."""
         documento = self.get_object()
 
         if not documento.arquivo:
             raise Http404("Arquivo não encontrado")
+
+        # Verifica existência física do arquivo no storage
+        if not documento.arquivo.storage.exists(documento.arquivo.name):
+            logger.warning(
+                "Arquivo físico ausente para DocumentoAnexo id=%s: %s",
+                documento.id, documento.arquivo.name
+            )
+            raise Http404(
+                "Arquivo não encontrado no servidor. O documento pode ter sido enviado durante uma instabilidade e não foi salvo corretamente."
+            )
 
         try:
             file_handle = documento.arquivo.open('rb')
@@ -125,9 +159,15 @@ class DocumentoAnexoViewSet(viewsets.ModelViewSet):
                 file_handle,
                 content_type=content_type
             )
-            response['Content-Disposition'] = f'attachment; filename="{documento.nome or documento.arquivo.name}"'
+            inline = request.query_params.get('inline') in ('1', 'true', 'True')
+            disposition = 'inline' if inline else 'attachment'
+            filename = documento.nome or documento.arquivo.name
+            response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+            response['Cache-Control'] = 'private, no-store'
+            response['Pragma'] = 'no-cache'
             return response
         except Exception as e:
+            logger.exception("Erro ao servir arquivo do DocumentoAnexo id=%s", documento.id)
             raise Http404(f"Erro ao acessar arquivo: {str(e)}")
 
 
@@ -183,7 +223,7 @@ class ClienteDocumentoViewSet(viewsets.ViewSet):
 
         # Campos permitidos para atualização
         if 'validade' in request.data:
-            documento.validade = request.data['validade'] or None
+            documento.validade = _parse_date_local(request.data['validade'])
         if 'nome' in request.data:
             documento.nome = request.data['nome']
         if 'tipo' in request.data:
@@ -265,7 +305,7 @@ class MotoristaDocumentoViewSet(viewsets.ViewSet):
 
         # Campos permitidos para atualização
         if 'validade' in request.data:
-            documento.validade = request.data['validade'] or None
+            documento.validade = _parse_date_local(request.data['validade'])
         if 'nome' in request.data:
             documento.nome = request.data['nome']
         if 'tipo' in request.data:
@@ -351,7 +391,7 @@ class VeiculoDocumentoViewSet(viewsets.ViewSet):
 
         # Campos permitidos para atualização
         if 'validade' in request.data:
-            documento.validade = request.data['validade'] or None
+            documento.validade = _parse_date_local(request.data['validade'])
         if 'nome' in request.data:
             documento.nome = request.data['nome']
         if 'tipo' in request.data:
@@ -431,7 +471,7 @@ class CTeDocumentoAnexoViewSet(viewsets.ViewSet):
         documento = get_object_or_404(DocumentoAnexo, pk=pk, cte=cte)
 
         if 'validade' in request.data:
-            documento.validade = request.data['validade'] or None
+            documento.validade = _parse_date_local(request.data['validade'])
         if 'nome' in request.data:
             documento.nome = request.data['nome']
         if 'tipo' in request.data:

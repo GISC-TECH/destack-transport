@@ -7,6 +7,7 @@ import PageHeader from '../Common/PageHeader';
 import Button from '../Common/Button';
 import StatusPill from '../Common/StatusPill';
 import TableContainer from '../Common/TableContainer';
+import { handleCPFInputChange, handleCPFInputBlur, formatCNPJ, onlyDigits } from '../../utils/formatters';
 import styles from './CIOTManager.module.css';
 
 const STATUS_OPTIONS = [
@@ -99,6 +100,18 @@ function CIOTManager() {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleCpfChange = (e) => {
+    handleCPFInputChange(e, (value) => setForm(prev => ({ ...prev, responsavel_cpf: value })));
+  };
+
+  const handleCpfBlur = (e) => {
+    handleCPFInputBlur(e, (value) => setForm(prev => ({ ...prev, responsavel_cpf: value })));
+  };
+
+  const handleCnpjChange = (e) => {
+    setForm(prev => ({ ...prev, responsavel_cnpj: formatCNPJ(e.target.value) }));
+  };
+
   const resetForm = () => {
     setForm({
       codigo: '',
@@ -146,6 +159,8 @@ function CIOTManager() {
     try {
       const payload = {
         ...form,
+        responsavel_cpf: form.responsavel_cpf ? onlyDigits(form.responsavel_cpf) : undefined,
+        responsavel_cnpj: form.responsavel_cnpj ? onlyDigits(form.responsavel_cnpj) : undefined,
         cliente: form.cliente || undefined,
         motorista: form.motorista || undefined,
         valor: form.valor ? parseFloat(form.valor) : undefined,
@@ -285,9 +300,10 @@ function CIOTManager() {
                   type="text"
                   name="responsavel_cnpj"
                   value={form.responsavel_cnpj}
-                  onChange={handleChange}
-                  maxLength={14}
-                  placeholder="Apenas números"
+                  onChange={handleCnpjChange}
+                  maxLength={18}
+                  placeholder="00.000.000/0000-00"
+                  inputMode="numeric"
                 />
               </div>
               <div className={styles.formGroup}>
@@ -297,9 +313,11 @@ function CIOTManager() {
                   type="text"
                   name="responsavel_cpf"
                   value={form.responsavel_cpf}
-                  onChange={handleChange}
-                  maxLength={11}
-                  placeholder="Apenas números"
+                  onChange={handleCpfChange}
+                  onBlur={handleCpfBlur}
+                  maxLength={14}
+                  placeholder="000.000.000-00"
+                  inputMode="numeric"
                 />
               </div>
               <div className={styles.formGroup}>

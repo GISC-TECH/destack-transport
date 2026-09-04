@@ -52,7 +52,7 @@ const MODULO_POR_ROTA = {
 };
 
 export function usePermission() {
-  const { permissions } = useAuth();
+  const { permissions, user } = useAuth();
 
   const modulos = useMemo(() => {
     return permissions?.modulos || {};
@@ -62,11 +62,52 @@ export function usePermission() {
     return !!permissions?.superuser;
   }, [permissions]);
 
+  const isStaff = useMemo(() => {
+    return !!user?.is_staff;
+  }, [user]);
+
+  const capabilities = useMemo(() => {
+    const raw = permissions?.capabilities;
+    if (!raw) return {};
+
+    if (Array.isArray(raw)) {
+      return raw.reduce((result, capability) => {
+        if (typeof capability === 'string') {
+          result[capability] = true;
+        } else if (capability?.key) {
+          result[capability.key] = capability.enabled !== false;
+        }
+        return result;
+      }, {});
+    }
+
+    return Object.entries(raw).reduce((result, [key, value]) => {
+      result[key] = typeof value === 'object' ? value?.enabled === true : value === true;
+      return result;
+    }, {});
+  }, [permissions]);
+
   const hasPermission = useCallback((modulo, acao) => {
     if (isSuperuser) return true;
     if (!modulo || !acao) return false;
     return !!modulos[modulo]?.[acao];
   }, [isSuperuser, modulos]);
+
+  // Capabilities são decisões finais do backend. Não há bypass implícito para
+  // superuser/staff, pois algumas operações são deliberadamente diretas e
+  // exclusivas (por exemplo, administrar acessos de outros usuários).
+  const canCapability = useCallback((key) => {
+    if (!key) return false;
+    return capabilities[key] === true;
+  }, [capabilities]);
+
+  const canAnyCapabilities = useCallback((keys = []) => {
+    return keys.some((key) => canCapability(key));
+  }, [canCapability]);
+
+  const canAllCapabilities = useCallback((keys = []) => {
+    return keys.length > 0 && keys.every((key) => canCapability(key));
+  }, [canCapability]);
 
   const canView = useCallback((modulo) => hasPermission(modulo, 'view'), [hasPermission]);
   const canAdd = useCallback((modulo) => hasPermission(modulo, 'add'), [hasPermission]);
@@ -76,14 +117,19 @@ export function usePermission() {
   const canAccessRoute = useCallback((route) => {
     const normalized = route.replace(/\/+$/, '').split('?')[0];
     const modulo = MODULO_POR_ROTA[normalized];
-    if (!modulo) return true; // Rotas não mapeadas são liberadas por padrão
+    if (!modulo) return false;
     return canView(modulo);
   }, [canView]);
 
   return {
     isSuperuser,
+    isStaff,
     modulos,
+    capabilities,
     hasPermission,
+    canCapability,
+    canAnyCapabilities,
+    canAllCapabilities,
     canView,
     canAdd,
     canChange,

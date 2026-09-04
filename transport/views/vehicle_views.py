@@ -18,7 +18,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 # Imports Locais
-from ..permissions import TransportModelPermission, ReadOnlyPermission
+from ..permissions import CapabilityPermission, TransportModelPermission
 from ..serializers.vehicle_serializers import ( # Use .. para voltar um nível
     VeiculoSerializer,
     ManutencaoVeiculoSerializer,
@@ -289,7 +289,8 @@ class ManutencaoVeiculoViewSet(viewsets.ModelViewSet):
 
 class ManutencaoPainelViewSet(viewsets.ViewSet):
     """ViewSet para o painel de indicadores de manutenção."""
-    permission_classes = [IsAuthenticated, ReadOnlyPermission]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'veiculos.view'
 
     def list(self, request):
         """Retorna indicadores gerais (rota padrão GET /api/manutencao/painel/)."""
@@ -522,4 +523,3 @@ class CompartimentacaoVeiculoViewSet(viewsets.ModelViewSet):
         """Associa compartimento ao veículo da URL."""
         veiculo_pk = self.kwargs.get('veiculo_pk')
         serializer.save(veiculo_id=veiculo_pk)
-

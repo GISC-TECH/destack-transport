@@ -1,6 +1,7 @@
 # transport/serializers/documento_serializers.py
 
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 from ..models import DocumentoAnexo
 
 
@@ -8,10 +9,19 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
     """Serializer completo para DocumentoAnexo."""
 
     arquivo_url = serializers.SerializerMethodField(read_only=True)
+    arquivo = serializers.FileField(write_only=True, required=True)
     tamanho_formatado = serializers.SerializerMethodField(read_only=True)
     tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
     entidade_tipo = serializers.SerializerMethodField(read_only=True)
     entidade_nome = serializers.SerializerMethodField(read_only=True)
+    # Garante que a data de validade seja tratada como data local (sem deslocamento de timezone)
+    # e serializada no formato ISO YYYY-MM-DD para o frontend.
+    validade = serializers.DateField(
+        format='%Y-%m-%d',
+        input_formats=['%Y-%m-%d'],
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
         model = DocumentoAnexo
@@ -26,9 +36,13 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'tamanho', 'tipo_mime', 'criado_em', 'criado_por')
 
     def get_arquivo_url(self, obj):
-        """Retorna URL do arquivo (caminho relativo para evitar host interno)."""
+        """Retorna a rota autenticada de download do documento."""
         if obj.arquivo:
-            return obj.arquivo.url
+            return reverse(
+                'documento-anexo-download',
+                kwargs={'pk': obj.pk},
+                request=self.context.get('request'),
+            )
         return None
 
     def get_tamanho_formatado(self, obj):
@@ -135,6 +149,12 @@ class DocumentoAnexoListSerializer(serializers.ModelSerializer):
     arquivo_url = serializers.SerializerMethodField(read_only=True)
     tamanho_formatado = serializers.SerializerMethodField(read_only=True)
     tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
+    validade = serializers.DateField(
+        format='%Y-%m-%d',
+        input_formats=['%Y-%m-%d'],
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
         model = DocumentoAnexo
@@ -144,9 +164,13 @@ class DocumentoAnexoListSerializer(serializers.ModelSerializer):
         ]
 
     def get_arquivo_url(self, obj):
-        """Retorna URL do arquivo (caminho relativo para evitar host interno)."""
+        """Retorna a rota autenticada de download do documento."""
         if obj.arquivo:
-            return obj.arquivo.url
+            return reverse(
+                'documento-anexo-download',
+                kwargs={'pk': obj.pk},
+                request=self.context.get('request'),
+            )
         return None
 
     def get_tamanho_formatado(self, obj):
@@ -166,7 +190,13 @@ class DocumentoAnexoUploadSerializer(serializers.Serializer):
     arquivo = serializers.FileField(required=True)
     tipo = serializers.ChoiceField(choices=DocumentoAnexo.TIPO_DOCUMENTO_CHOICES, default='outro')
     nome = serializers.CharField(max_length=255, required=False)
-    validade = serializers.DateField(required=False, allow_null=True)
+    # Forca parse da data como local para evitar deslocamento de timezone.
+    validade = serializers.DateField(
+        format='%Y-%m-%d',
+        input_formats=['%Y-%m-%d'],
+        required=False,
+        allow_null=True
+    )
     observacoes = serializers.CharField(required=False, allow_blank=True)
 
     def validate_arquivo(self, value):
