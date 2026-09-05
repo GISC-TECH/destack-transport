@@ -67,7 +67,7 @@ class RegistroBackupSerializer(serializers.ModelSerializer):
         # Inclui todos os campos do modelo, incluindo o campo calculado
         fields = [
             'id', 'data_hora', 'nome_arquivo', 'tamanho_bytes', 'tamanho_formatado',
-            'md5_hash', 'disponivel', 'usuario', 'status', 'detalhes'
+            'md5_hash', 'disponivel', 'usuario', 'status'
         ]
         # Todos os campos são apenas leitura, pois são gerenciados internamente
         read_only_fields = fields

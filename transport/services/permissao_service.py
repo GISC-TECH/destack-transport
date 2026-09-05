@@ -231,7 +231,7 @@ PERFIS = {
         "acoes_por_modulo": {
             modulo: ["view"]
             for modulo in MODULOS_PERMISSOES
-            if modulo != "usuarios"
+            if modulo not in {"usuarios", "backup"}
         },
     },
     "Operacional": {
@@ -251,7 +251,6 @@ PERFIS = {
             "documentos": ["view", "add", "change", "delete"],
             "recepcao": ["view", "add", "change"],
             "configuracoes": ["view"],
-            "backup": ["view"],
             "alertas": ["view", "change"],
         },
     },
@@ -272,7 +271,6 @@ PERFIS = {
             "documentos": ["view"],
             "recepcao": ["view"],
             "configuracoes": ["view"],
-            "backup": ["view"],
             "alertas": ["view", "change"],
         },
     },
@@ -397,6 +395,10 @@ def atualizar_permissoes_grupo(
     for modulo, acoes in modulos_acoes.items():
         if modulo not in MODULOS_PERMISSOES:
             raise ValueError(f"Módulo '{modulo}' inválido.")
+        if modulo == 'backup' and nome_perfil != 'Administrativo' and acoes:
+            raise ValueError(
+                'O acesso a backup nao pode ser concedido a perfis nao administrativos.'
+            )
         acoes_invalidas = set(acoes) - set(ACOES_PERMITIDAS)
         if acoes_invalidas:
             raise ValueError(

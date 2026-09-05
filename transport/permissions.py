@@ -17,6 +17,7 @@ from rest_framework.permissions import BasePermission
 CTE_EDITAR_VALOR_PERMISSION = 'editar_valor_frete_cte'
 CTE_EXCLUIR_PERMISSION = 'excluir_cte_importado'
 ACCESS_MANAGE_PERMISSION = 'gerenciar_acessos_usuarios'
+BACKUP_MODEL_NAME = 'registrobackup'
 
 
 def has_direct_transport_permission(user, codename, model_name):
@@ -56,6 +57,38 @@ class CanManageUserAccessPermission(BasePermission):
 
     def has_permission(self, request, view):
         return can_manage_user_access(request.user)
+
+
+class CanManageBackupsPermission(BasePermission):
+    """Restringe dumps completos a administradores ou concessao direta."""
+
+    message = 'Voce nao possui autorizacao administrativa para acessar backups.'
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or not user.is_authenticated or not user.is_active:
+            return False
+        if user.is_superuser:
+            return True
+
+        action = getattr(view, 'action', None)
+        permission_type = (
+            'view'
+            if action in {'list', 'download'}
+            or request.method in {'GET', 'HEAD', 'OPTIONS'}
+            else 'change'
+        )
+        codename = f'{permission_type}_{BACKUP_MODEL_NAME}'
+
+        if has_direct_transport_permission(user, codename, BACKUP_MODEL_NAME):
+            return True
+
+        return user.groups.filter(
+            name='Administrativo',
+            permissions__content_type__app_label='transport',
+            permissions__content_type__model=BACKUP_MODEL_NAME,
+            permissions__codename=codename,
+        ).exists()
 
 
 class CapabilityPermission(BasePermission):

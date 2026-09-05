@@ -187,13 +187,18 @@ function Perfis() {
                     {ACOES.map((acao) => {
                       const infoAcoes = info.acoes_padrao || ['view', 'add', 'change', 'delete'];
                       if (!infoAcoes.includes(acao.key)) return null;
+                      const backupRestrito = key === 'backup' && perfilEdicao.nome !== 'Administrativo';
                       return (
-                        <label key={acao.key} className={styles.acaoCheck}>
+                        <label
+                          key={acao.key}
+                          className={styles.acaoCheck}
+                          title={backupRestrito ? 'Backup e restrito ao perfil Administrativo.' : undefined}
+                        >
                           <input
                             type="checkbox"
                             checked={!!permissoesEdicao[key]?.[acao.key]}
                             onChange={() => toggleAcao(key, acao.key)}
-                            disabled={saving}
+                            disabled={saving || backupRestrito}
                           />
                           <span>{acao.label}</span>
                         </label>

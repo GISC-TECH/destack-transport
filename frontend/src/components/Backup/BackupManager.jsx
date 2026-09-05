@@ -5,6 +5,7 @@ import PageHeader from '../Common/PageHeader';
 import Button from '../Common/Button';
 import StatusPill from '../Common/StatusPill';
 import TableContainer from '../Common/TableContainer';
+import PermissionGuard from '../Common/PermissionGuard';
 import styles from './Backup.module.css';
 
 // Formata bytes para tamanho legível
@@ -71,7 +72,7 @@ function BackupManager() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!window.confirm('ATENÇÃO: Restaurar um backup irá substituir todos os dados atuais. Deseja continuar?')) {
+    if (!window.confirm('Esta checagem valida somente a extensão .sql e não restaura dados. Deseja continuar?')) {
       e.target.value = '';
       return;
     }
@@ -81,11 +82,11 @@ function BackupManager() {
       setMessage(null);
 
       const result = await backupAPI.restaurar(file);
-      setMessage({ type: 'success', text: result.message || 'Arquivo de backup validado com sucesso!' });
+      setMessage({ type: 'success', text: result.message || 'Formato do arquivo conferido.' });
       loadBackups();
     } catch (err) {
       console.error('Erro ao restaurar backup:', err);
-      setMessage({ type: 'error', text: 'Erro ao restaurar backup. Verifique o arquivo.' });
+      setMessage({ type: 'error', text: 'Não foi possível conferir o arquivo.' });
     } finally {
       setRestaurando(false);
       e.target.value = '';
@@ -125,7 +126,8 @@ function BackupManager() {
 
       {/* Ações */}
       <div className={styles.actions}>
-        <div className={styles.actionCard}>
+        <PermissionGuard modulo="backup" acao="change">
+          <div className={styles.actionCard}>
           <div className={`${styles.actionIcon} ${styles.actionGerar}`}>
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -142,9 +144,9 @@ function BackupManager() {
           >
             Gerar Novo Backup
           </Button>
-        </div>
+          </div>
 
-        <div className={styles.actionCard}>
+          <div className={styles.actionCard}>
           <div className={`${styles.actionIcon} ${styles.actionRestaurar}`}>
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -152,10 +154,10 @@ function BackupManager() {
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
           </div>
-          <h3>Validar Backup</h3>
-          <p>Enviar um arquivo SQL para validação antes da restauração manual</p>
+          <h3>Conferir formato</h3>
+          <p>Confere somente a extensão .sql. A restauração continua sendo manual.</p>
           <label className={styles.downloadButton} style={{ cursor: restaurando ? 'not-allowed' : 'pointer', opacity: restaurando ? 0.6 : 1 }}>
-            {restaurando ? 'Restaurando...' : 'Selecionar Arquivo'}
+            {restaurando ? 'Conferindo...' : 'Conferir Arquivo SQL'}
             <input
               type="file"
               className={styles.fileInputHidden}
@@ -164,7 +166,8 @@ function BackupManager() {
               disabled={restaurando}
             />
           </label>
-        </div>
+          </div>
+        </PermissionGuard>
       </div>
 
       {/* Lista de Backups */}

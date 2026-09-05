@@ -9,6 +9,7 @@ import tempfile
 import hashlib
 import shutil
 import shlex
+import secrets
 import traceback
 from io import StringIO, BytesIO
 import openpyxl
@@ -30,6 +31,7 @@ from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from django.core.cache import cache
 
 # Imports Django REST Framework
 from rest_framework import viewsets, status
@@ -40,7 +42,11 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser # IsAdminUse
 from rest_framework import serializers # Para ValidationError
 
 # Imports Locais
-from ..permissions import CapabilityPermission, TransportModelPermission
+from ..permissions import (
+    CanManageBackupsPermission,
+    CapabilityPermission,
+    TransportModelPermission,
+)
 from ..services.backup_service import resolve_registered_backup_path
 from ..serializers.config_serializers import ( # Use .. para voltar um nível
     ParametroSistemaSerializer,
@@ -246,7 +252,7 @@ class BackupAPIView(viewsets.ViewSet):
     Ações disponíveis: list, gerar, download, restaurar (simulado).
     Permissões: Apenas usuários do grupo Administrativo.
     """
-    permission_classes = [IsAuthenticated, TransportModelPermission] # Apenas Administrativo
+    permission_classes = [IsAuthenticated, CanManageBackupsPermission]
     queryset = RegistroBackup.objects.all()
     serializer_class = RegistroBackupSerializer
 
@@ -265,7 +271,16 @@ class BackupAPIView(viewsets.ViewSet):
     def gerar(self, request):
         """Gerar um novo backup do banco de dados e registrar."""
         timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+        unique_id = secrets.token_hex(6)
         registro = None # Para guardar o registro criado
+        lock_key = 'backup:database:generation'
+        lock_token = unique_id
+
+        if not cache.add(lock_key, lock_token, timeout=15 * 60):
+            return Response(
+                {"detail": "Ja existe uma geracao de backup em andamento."},
+                status=status.HTTP_409_CONFLICT,
+            )
 
         try:
             # --- Lógica Real de Backup (Adaptar ao seu banco) ---
@@ -277,7 +292,7 @@ class BackupAPIView(viewsets.ViewSet):
             # Define diretório e nome do arquivo
             backup_dir = os.path.join(settings.MEDIA_ROOT, 'backups')
             os.makedirs(backup_dir, exist_ok=True) # Cria o diretório se não existir
-            filename = f"backup_{db_name}_{timestamp}.sql" # Nome mais descritivo
+            filename = f"backup_{db_name}_{timestamp}_{unique_id}.sql"
             filepath = os.path.join(backup_dir, filename)
 
             env = os.environ.copy() # Copia variáveis de ambiente
@@ -304,7 +319,10 @@ class BackupAPIView(viewsets.ViewSet):
                     # Isso evita expor a senha em `ps aux`
                     if db_password:
                         import stat
-                        pgpass_file = os.path.join(tempfile.gettempdir(), f'.pgpass_{timestamp}')
+                        pgpass_file = os.path.join(
+                            tempfile.gettempdir(),
+                            f'.pgpass_{timestamp}_{unique_id}',
+                        )
                         with open(pgpass_file, 'w') as f:
                             # Formato: hostname:port:database:username:password
                             f.write(f"{db_host}:{db_port}:{db_name}:{db_user}:{db_password}\n")
@@ -416,6 +434,9 @@ class BackupAPIView(viewsets.ViewSet):
                     logger.warning("Falha ao registrar erro de backup no banco: %s", db_err)
             return Response({"detail": f"Erro inesperado ao gerar backup: {str(e)}"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        finally:
+            if cache.get(lock_key) == lock_token:
+                cache.delete(lock_key)
 
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
@@ -503,7 +524,7 @@ class BackupAPIView(viewsets.ViewSet):
             # Retorna mensagem indicando que a restauração é manual
             # NÃO expõe o caminho temporário na resposta
             return Response({
-                "message": "Arquivo de backup recebido com sucesso. A restauração do banco de dados deve ser realizada manualmente por um administrador utilizando este arquivo.",
+                "message": "Extensao do arquivo conferida. Nenhuma restauracao foi executada; guarde o arquivo original para restauracao manual por um administrador.",
                 "arquivo_recebido": backup_file.name,
                 "tamanho_bytes": backup_file.size,
             }, status=status.HTTP_202_ACCEPTED) # 202 Accepted indica que a requisição foi aceita, mas a ação principal (restauração) não foi feita aqui.
