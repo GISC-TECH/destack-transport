@@ -41,6 +41,7 @@ from rest_framework import serializers # Para ValidationError
 
 # Imports Locais
 from ..permissions import CapabilityPermission, TransportModelPermission
+from ..services.backup_service import resolve_registered_backup_path
 from ..serializers.config_serializers import ( # Use .. para voltar um nível
     ParametroSistemaSerializer,
     ConfiguracaoEmpresaSerializer,
@@ -246,6 +247,8 @@ class BackupAPIView(viewsets.ViewSet):
     Permissões: Apenas usuários do grupo Administrativo.
     """
     permission_classes = [IsAuthenticated, TransportModelPermission] # Apenas Administrativo
+    queryset = RegistroBackup.objects.all()
+    serializer_class = RegistroBackupSerializer
 
     def list(self, request):
         """Listar backups registrados no banco de dados."""
@@ -359,7 +362,14 @@ class BackupAPIView(viewsets.ViewSet):
             logger.info("INFO: Backup %s gerado e registrado com sucesso.", filename)
             # --- Fim da Lógica Real ---
 
-            # Retorna FileResponse para download direto do backup gerado
+            if request.query_params.get('response') == 'json':
+                return Response({
+                    "success": True,
+                    "message": "Backup gerado com sucesso!",
+                    "backup": RegistroBackupSerializer(registro).data,
+                }, status=status.HTTP_201_CREATED)
+
+            # Mantém compatibilidade com clientes que esperam o arquivo diretamente.
             response = FileResponse(
                 open(filepath, 'rb'),
                 as_attachment=True,
@@ -368,6 +378,7 @@ class BackupAPIView(viewsets.ViewSet):
             # Opcional: Adicionar headers com informações do registro
             response['X-Backup-ID'] = registro.id
             response['X-Backup-Status'] = registro.status
+            response['Cache-Control'] = 'private, no-store'
             return response
 
         except subprocess.CalledProcessError as cpe:
@@ -410,30 +421,20 @@ class BackupAPIView(viewsets.ViewSet):
     def download(self, request, pk=None):
         """Baixar um arquivo de backup existente pelo ID do registro."""
         registro = get_object_or_404(RegistroBackup, pk=pk)
+        backup_path = resolve_registered_backup_path(registro.localizacao)
 
-        # Verifica se o arquivo ainda existe na localização registrada
-        if not registro.localizacao or not os.path.exists(registro.localizacao):
+        if backup_path is None:
              return Response({"detail": f"Arquivo de backup '{registro.nome_arquivo}' não encontrado na localização registrada."},
                             status=status.HTTP_404_NOT_FOUND)
 
         try:
-            # Abre o arquivo com context manager para garantir fechamento em caso de erro
-            file_handle = open(registro.localizacao, 'rb')
-            # FileResponse fecha o arquivo automaticamente após enviar (Django 4.2+)
-            # mas precisamos garantir que se houver erro na criação do FileResponse,
-            # o arquivo seja fechado
-            try:
-                response = FileResponse(
-                    file_handle,
-                    as_attachment=True,
-                    filename=registro.nome_arquivo  # Usa o nome original para o download
-                )
-                # Define flag para FileResponse gerenciar o fechamento
-                response.file_to_stream.close_on_del = True
-                return response
-            except (IOError, OSError):
-                file_handle.close()
-                raise
+            response = FileResponse(
+                backup_path.open('rb'),
+                as_attachment=True,
+                filename=registro.nome_arquivo,
+            )
+            response['Cache-Control'] = 'private, no-store'
+            return response
         except FileNotFoundError:
             return Response({"detail": f"Arquivo de backup não encontrado: {registro.nome_arquivo}"},
                             status=status.HTTP_404_NOT_FOUND)

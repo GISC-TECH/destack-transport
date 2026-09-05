@@ -136,10 +136,11 @@ function Login() {
               <button
                 type="button"
                 className={styles.toggle}
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-controls="password"
                 aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 aria-pressed={showPassword}
+                title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
               >
                 {showPassword ? (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

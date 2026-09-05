@@ -215,10 +215,11 @@
 .toggle {
   position: absolute;
   top: 50%;
-  right: 8px;
+  right: 4px;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--text-muted);
@@ -228,11 +229,14 @@
   cursor: pointer;
   border-radius: var(--radius-md);
   transition: color 0.15s ease, background 0.15s ease;
+  touch-action: manipulation;
+  z-index: 2;
 }
 
 .toggle svg {
   width: 19px;
   height: 19px;
+  flex: 0 0 auto;
 }
 
 .toggle:hover {
@@ -526,17 +530,17 @@
   }
 
   .pass input {
-    padding-right: 40px;
+    padding-right: 54px;
   }
 
   .toggle {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
   }
 
   .toggle svg {
-    width: 17px;
-    height: 17px;
+    width: 20px;
+    height: 20px;
   }
 
   .row {

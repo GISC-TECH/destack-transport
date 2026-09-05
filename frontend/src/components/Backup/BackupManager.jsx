@@ -7,34 +7,6 @@ import StatusPill from '../Common/StatusPill';
 import TableContainer from '../Common/TableContainer';
 import styles from './Backup.module.css';
 
-// Mock data para backups (usa mesmos campos do backend: RegistroBackupSerializer)
-const mockBackups = [
-  {
-    id: 1,
-    nome_arquivo: 'backup_2024-12-01_10-30-00.sql',
-    tamanho_bytes: 15900000,
-    data_hora: '2024-12-01T10:30:00',
-    status: 'completo',
-    usuario: 'admin'
-  },
-  {
-    id: 2,
-    nome_arquivo: 'backup_2024-11-25_14-15-00.sql',
-    tamanho_bytes: 14800000,
-    data_hora: '2024-11-25T14:15:00',
-    status: 'completo',
-    usuario: 'admin'
-  },
-  {
-    id: 3,
-    nome_arquivo: 'backup_2024-11-20_09-00-00.sql',
-    tamanho_bytes: 14500000,
-    data_hora: '2024-11-20T09:00:00',
-    status: 'completo',
-    usuario: 'admin'
-  }
-];
-
 // Formata bytes para tamanho legível
 const formatBytes = (bytes) => {
   if (!bytes || bytes === 0) return '0 B';
@@ -49,7 +21,6 @@ function BackupManager() {
   const [loading, setLoading] = useState(true);
   const [gerando, setGerando] = useState(false);
   const [restaurando, setRestaurando] = useState(false);
-  const [usingMockData, setUsingMockData] = useState(false);
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -62,11 +33,10 @@ function BackupManager() {
       const result = await backupAPI.list();
       // API já retorna array normalizado
       setBackups(Array.isArray(result) ? result : []);
-      setUsingMockData(false);
     } catch (err) {
       console.error('Erro ao carregar backups:', err);
-      setBackups(mockBackups);
-      setUsingMockData(true);
+      setBackups([]);
+      setMessage({ type: 'error', text: err.message || 'Não foi possível carregar os backups.' });
     } finally {
       setLoading(false);
     }
@@ -77,65 +47,23 @@ function BackupManager() {
       setGerando(true);
       setMessage(null);
 
-      if (usingMockData) {
-        // Simular geração
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const novoBackup = {
-          id: Date.now(),
-          nome_arquivo: `backup_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.sql`,
-          tamanho_bytes: 15500000,
-          data_hora: new Date().toISOString(),
-          status: 'completo',
-          usuario: 'admin'
-        };
-        setBackups([novoBackup, ...backups]);
-        setMessage({ type: 'success', text: 'Backup gerado com sucesso!' });
-      } else {
-        const result = await backupAPI.gerar();
-        setMessage({ type: 'success', text: result.message || 'Backup gerado com sucesso!' });
+      const result = await backupAPI.gerar();
+      setMessage({ type: 'success', text: result.message || 'Backup gerado com sucesso!' });
+      await loadBackups();
 
-        // Se retornou blob, fazer download automaticamente
-        if (result.blob) {
-          const url = window.URL.createObjectURL(result.blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `backup_${new Date().toISOString().split('T')[0]}.sql`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-        }
-
-        loadBackups();
+      if (result.backup?.id) {
+        const a = document.createElement('a');
+        a.href = backupAPI.downloadUrl(result.backup.id);
+        a.download = result.backup.nome_arquivo;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
     } catch (err) {
       console.error('Erro ao gerar backup:', err);
       setMessage({ type: 'error', text: err.message || 'Erro ao gerar backup. Tente novamente.' });
     } finally {
       setGerando(false);
-    }
-  };
-
-  const handleDownload = async (backup) => {
-    try {
-      if (usingMockData) {
-        setMessage({ type: 'info', text: 'Download simulado em modo demonstração.' });
-        return;
-      }
-
-      // Usa ID do backup para download
-      const blob = await backupAPI.download(backup.id);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = backup.nome_arquivo;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Erro ao baixar backup:', err);
-      setMessage({ type: 'error', text: 'Erro ao baixar backup.' });
     }
   };
 
@@ -152,14 +80,9 @@ function BackupManager() {
       setRestaurando(true);
       setMessage(null);
 
-      if (usingMockData) {
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        setMessage({ type: 'success', text: 'Backup restaurado com sucesso (simulado)!' });
-      } else {
-        const result = await backupAPI.restaurar(file);
-        setMessage({ type: 'success', text: result.message || 'Backup restaurado com sucesso!' });
-        loadBackups();
-      }
+      const result = await backupAPI.restaurar(file);
+      setMessage({ type: 'success', text: result.message || 'Arquivo de backup validado com sucesso!' });
+      loadBackups();
     } catch (err) {
       console.error('Erro ao restaurar backup:', err);
       setMessage({ type: 'error', text: 'Erro ao restaurar backup. Verifique o arquivo.' });
@@ -188,7 +111,7 @@ function BackupManager() {
     <div className={styles.page}>
       <PageHeader
         title="Gerenciamento de Backup"
-        subtitle={usingMockData ? "Crie e restaure backups do sistema (Modo Demonstração)" : "Crie e restaure backups do sistema"}
+        subtitle="Crie e baixe cópias de segurança do sistema"
         icon={backupIcon}
         breadcrumbs={[{ label: 'Sistema' }, { label: 'Backup' }]}
       />
@@ -229,14 +152,14 @@ function BackupManager() {
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
           </div>
-          <h3>Restaurar Backup</h3>
-          <p>Restaurar sistema a partir de um arquivo de backup</p>
+          <h3>Validar Backup</h3>
+          <p>Enviar um arquivo SQL para validação antes da restauração manual</p>
           <label className={styles.downloadButton} style={{ cursor: restaurando ? 'not-allowed' : 'pointer', opacity: restaurando ? 0.6 : 1 }}>
             {restaurando ? 'Restaurando...' : 'Selecionar Arquivo'}
             <input
               type="file"
               className={styles.fileInputHidden}
-              accept=".zip,.sql,.json"
+              accept=".sql"
               onChange={handleRestaurar}
               disabled={restaurando}
             />
@@ -282,19 +205,21 @@ function BackupManager() {
                       </td>
                       <td data-label="Usuário">{backup.usuario || '-'}</td>
                       <td>
-                        <button
-                          className={styles.downloadButton}
-                          onClick={() => handleDownload(backup)}
-                          title="Baixar backup"
-                          disabled={backup.status === 'erro'}
+                        <a
+                          className={`${styles.downloadButton} ${backup.disponivel === false ? styles.downloadDisabled : ''}`}
+                          href={backup.disponivel === false ? undefined : backupAPI.downloadUrl(backup.id)}
+                          download={backup.nome_arquivo}
+                          title={backup.disponivel === false ? 'Arquivo não está mais disponível no servidor' : 'Baixar backup'}
+                          aria-disabled={backup.disponivel === false}
+                          onClick={backup.disponivel === false ? (event) => event.preventDefault() : undefined}
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                           </svg>
-                          Baixar
-                        </button>
+                          {backup.disponivel === false ? 'Indisponível' : 'Baixar'}
+                        </a>
                       </td>
                     </tr>
                   ))
@@ -309,9 +234,9 @@ function BackupManager() {
       <div className={styles.info}>
         <h3>Informações Importantes</h3>
         <ul>
-          <li>Os backups são armazenados em formato compactado (ZIP)</li>
+          <li>Os backups manuais são armazenados em formato SQL</li>
           <li>Recomenda-se fazer backup regularmente antes de atualizações</li>
-          <li>Ao restaurar um backup, todos os dados atuais serão substituídos</li>
+          <li>A restauração é executada manualmente por um administrador após validação</li>
           <li>Mantenha cópias dos backups em local seguro fora do servidor</li>
         </ul>
       </div>

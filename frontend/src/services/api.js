@@ -1893,26 +1893,16 @@ export const backupAPI = {
   },
 
   gerar: async () => {
-    const response = await fetchWithTimeout(`${API_BASE}/backup/gerar/`, mutationOptions('POST'));
-    // Backend retorna FileResponse (blob) em caso de sucesso
+    const response = await fetchWithTimeout(`${API_BASE}/backup/gerar/?response=json`, mutationOptions('POST'));
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Erro ao gerar backup');
+      await handleHttpError(response, 'Erro ao gerar backup');
     }
-    // Se sucesso, pode ser blob ou JSON
-    const contentType = response.headers.get('Content-Type') || '';
-    if (contentType.includes('application/json')) {
-      return response.json();
-    }
-    // Se for arquivo, retorna blob
-    return { success: true, message: 'Backup gerado com sucesso!', blob: await response.blob() };
+    return response.json();
   },
 
-  download: async (backupId) => {
-    // Backend usa ID do registro: /backup/{id}/download/
-    const response = await fetchWithTimeout(`${API_BASE}/backup/${backupId}/download/`, defaultOptions);
-    if (!response.ok) throw new Error('Erro ao baixar backup');
-    return response.blob();
+  downloadUrl: (backupId) => {
+    const normalizedId = validateId(backupId, 'Backup');
+    return `${API_BASE}/backup/${encodeURIComponent(normalizedId)}/download/`;
   },
 
   restaurar: async (file) => {

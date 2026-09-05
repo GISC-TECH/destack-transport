@@ -161,6 +161,7 @@
   transition: all 0.2s;
   background: var(--content-bg);
   color: var(--text-secondary);
+  text-decoration: none;
 }
 
 .downloadButton:hover:not(:disabled) {
@@ -171,6 +172,12 @@
 .downloadButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.downloadDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Info Section */
