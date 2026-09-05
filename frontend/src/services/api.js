@@ -248,6 +248,14 @@ export const authAPI = {
       return { authenticated: false, user: null };
     }
     const data = await response.json();
+
+    // O endpoint também usa HTTP 200 para representar uma sessão anônima.
+    // Respeitar o campo explícito evita tratar { authenticated: false } como
+    // usuário e consultar permissões que exigem autenticação.
+    if (data.authenticated === false) {
+      return { authenticated: false, user: null };
+    }
+
     return { authenticated: true, user: data.user || data };
   },
 
