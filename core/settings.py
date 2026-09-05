@@ -520,10 +520,13 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = False  # Nginx já faz o redirect
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    # HSTS - HTTP Strict Transport Security
-    SECURE_HSTS_SECONDS = 31536000  # 1 ano
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    # HSTS inicia com janela curta e sem preload. Aumente gradualmente apenas
+    # depois de confirmar que todos os subdomínios funcionam exclusivamente em HTTPS.
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '86400'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = (
+        os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'False').lower() == 'true'
+    )
+    SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False').lower() == 'true'
 
 # Headers de cache específicos para Django (complementam o Nginx)
 CACHE_MIDDLEWARE_SECONDS = 0  # Desabilita cache middleware
