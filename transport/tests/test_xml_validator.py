@@ -63,3 +63,30 @@ class XMLValidatorTests(SimpleTestCase):
         resultado = validar_xml(xml)
         self.assertTrue(resultado['valido'], resultado['erros'])
         self.assertEqual(resultado['tipo'], 'mdfe')
+
+    def test_mdfe_egs_com_campos_opcionais_do_ide_eh_aceito(self):
+        """Aceita a ordem de campos emitida pelo EGS no leiaute MDF-e 3.00."""
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+        <MDFe xmlns="http://www.portalfiscal.inf.br/mdfe" versao="3.00">
+          <infMDFe Id="MDFe29000000000000000000580010000015251003376395" versao="3.00">
+            <ide>
+              <cUF>29</cUF>
+              <tpAmb>1</tpAmb>
+              <tpEmit>1</tpEmit>
+              <tpTransp>1</tpTransp>
+              <mod>58</mod>
+              <serie>1</serie>
+              <nMDF>1525</nMDF>
+              <cMDF>10033763</cMDF>
+              <cDV>5</cDV>
+              <modal>1</modal>
+              <dhEmi>2026-09-04T10:00:00-03:00</dhEmi>
+            </ide>
+          </infMDFe>
+        </MDFe>
+        """
+
+        resultado = validar_xml(xml)
+
+        self.assertTrue(resultado['valido'], resultado['erros'])
+        self.assertEqual(resultado['tipo'], 'mdfe')

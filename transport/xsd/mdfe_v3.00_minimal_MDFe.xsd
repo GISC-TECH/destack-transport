@@ -11,9 +11,13 @@
       <xs:element name="cUF" type="xs:string" minOccurs="1"/>
       <xs:element name="tpAmb" type="xs:string" minOccurs="1"/>
       <xs:element name="tpEmit" type="xs:string" minOccurs="1"/>
+      <xs:element name="tpTransp" type="xs:string" minOccurs="0"/>
       <xs:element name="mod" type="xs:string" minOccurs="1"/>
       <xs:element name="serie" type="xs:string" minOccurs="1"/>
       <xs:element name="nMDF" type="xs:string" minOccurs="1"/>
+      <xs:element name="cMDF" type="xs:string" minOccurs="0"/>
+      <xs:element name="cDV" type="xs:string" minOccurs="0"/>
+      <xs:element name="modal" type="xs:string" minOccurs="0"/>
       <xs:element name="dhEmi" type="xs:string" minOccurs="1"/>
       <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
     </xs:sequence>
