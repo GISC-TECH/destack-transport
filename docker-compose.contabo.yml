@@ -89,12 +89,16 @@ services:
     pids_limit: 64
     mem_limit: 128m
     cpus: "0.5"
+    read_only: true
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    tmpfs:
+      - /tmp:size=16m,mode=1777
     entrypoint: ["/bin/sh", "/scripts/init-minio.sh"]
     environment:
+      - MC_CONFIG_DIR=/tmp/.mc
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:?set MINIO_ROOT_USER in .env}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:?set MINIO_ACCESS_KEY in .env}
