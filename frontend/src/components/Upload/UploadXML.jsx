@@ -145,40 +145,43 @@ function UploadXML() {
 
     setUploading(true);
     setResults([]);
+    let uploadResults;
 
     try {
       const result = await uploadAPI.batch(files);
 
       // Mapear resultados_detalhados do backend para o formato esperado
       if (result.resultados_detalhados && result.resultados_detalhados.length > 0) {
-        const mappedResults = result.resultados_detalhados.map(item => ({
+        uploadResults = result.resultados_detalhados.map(item => ({
           file: item.arquivo_principal_nome || 'N/A',
           success: item.status === 'sucesso',
           message: item.message || item.erro || item.status,
           tipo: item.chave ? (item.chave.length === 44 ? 'Documento' : '') : '',
           numero: item.chave || ''
         }));
-        setResults(mappedResults);
+        setResults(uploadResults);
       } else {
-        setResults([{
+        uploadResults = [{
           file: 'Lote',
           success: true,
           message: `${result.sucesso || 0} sucesso, ${result.erros || 0} erros, ${result.ignorados || 0} ignorados`
-        }]);
+        }];
+        setResults(uploadResults);
       }
     } catch (error) {
-      setResults([{
+      uploadResults = [{
         file: 'Lote',
         success: false,
         message: error.message || 'Erro ao processar lote'
-      }]);
+      }];
+      setResults(uploadResults);
     }
 
     setUploading(false);
     setFiles([]);
 
-    const hasSuccess = results.some(r => r.success);
-    const hasError = results.some(r => !r.success);
+    const hasSuccess = uploadResults.some(r => r.success);
+    const hasError = uploadResults.some(r => !r.success);
     if (!hasError && hasSuccess) {
       toast.success('Lote processado com sucesso!');
     } else if (hasError && hasSuccess) {
@@ -208,10 +211,20 @@ function UploadXML() {
       <div className={styles.container}>
         <div
           className={`${styles.dropzone} ${dragOver ? styles.dragOver : ''}`}
+          data-testid="upload-dropzone"
+          role="button"
+          tabIndex={0}
+          aria-label="Selecionar arquivos XML"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
         >
           <div className={styles.dropzoneContent}>
             <div className={styles.dropzoneIcon}>
@@ -262,6 +275,7 @@ function UploadXML() {
                       e.stopPropagation();
                       removeFile(index);
                     }}
+                    aria-label={`Remover ${file.name}`}
                   >
                     ×
                   </button>
@@ -300,7 +314,7 @@ function UploadXML() {
         )}
 
         {results.length > 0 && (
-          <div className={styles.resultsSection}>
+          <div className={styles.resultsSection} data-testid="upload-results" aria-live="polite">
             <h3>Resultados do Upload</h3>
             <div className={styles.resultsList}>
               {results.map((result, index) => (

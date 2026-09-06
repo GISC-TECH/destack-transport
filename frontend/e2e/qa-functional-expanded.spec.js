@@ -110,8 +110,8 @@ test.describe('CRUD Expandido', () => {
     await page.waitForTimeout(500);
 
     const descricao = `Serviço de transporte ${Date.now()}`;
-    await page.locator('.item-row input[type="text"]').first().fill(descricao);
-    await page.locator('.item-row input[type="number"]').first().fill('2500.00');
+    await page.locator('#item_descricao_0').fill(descricao);
+    await page.locator('#item_valor_0').fill('2500.00');
 
     await page.locator('form button[type="submit"]').click();
 
@@ -134,12 +134,12 @@ test.describe('CRUD Expandido', () => {
     // Busca e seleciona veículo
     await page.locator('input[placeholder*="placa"]').fill(veiculo.placa.substring(0, 3));
     await page.waitForTimeout(800);
-    await page.locator('.veiculo-search-item').first().click();
+    await page.getByText(veiculo.placa, { exact: true }).first().click();
 
     // Busca e seleciona condutor
     await page.locator('input[placeholder*="motorista"]').fill(motorista.nome.substring(0, 4));
     await page.waitForTimeout(800);
-    await page.locator('.condutor-search-item').first().click();
+    await page.getByText(motorista.nome, { exact: true }).first().click();
 
     await page.locator('input[name="valor_frete_total"]').fill('3000.00');
     await page.locator('input[name="percentual_repasse"]').fill('25');
@@ -329,14 +329,14 @@ test.describe('Upload em lote', () => {
     }
 
     await page.goto(`${BASE_URL}/upload`);
-    await page.waitForSelector('.upload-dropzone', { timeout: 10000 });
+    await expect(page.getByTestId('upload-dropzone')).toBeVisible({ timeout: 10000 });
     await page.locator('input[type="file"]').setInputFiles(files);
 
     await page.waitForTimeout(2000);
     await page.getByRole('button', { name: /enviar em lote/i }).click();
 
     await page.waitForTimeout(3000);
-    const result = page.locator('.results-section, .result-item').first();
+    const result = page.getByTestId('upload-results');
     await expect(result).toBeVisible({ timeout: 15000 });
 
     files.forEach(f => fs.unlinkSync(f));
@@ -351,15 +351,15 @@ test.describe('Responsividade', () => {
     await page.waitForTimeout(1000);
 
     // Em mobile a sidebar é substituída por bottom navigation
-    const bottomNav = page.locator('.bottom-nav').first();
+    const bottomNav = page.getByRole('navigation', { name: 'Navegacao inferior' });
     await expect(bottomNav).toBeVisible();
 
     // Clica no menu de cadastros na bottom nav
-    const cadastrosItem = bottomNav.locator('.bottom-nav-item').filter({ hasText: /cadastros/i }).first();
+    const cadastrosItem = bottomNav.getByRole('button', { name: 'Cadastros' });
     if (await cadastrosItem.isVisible().catch(() => false)) {
       await cadastrosItem.click();
       await page.waitForTimeout(500);
-      await expect(page.locator('.bottom-sheet').first()).toBeVisible();
+      await expect(page.getByRole('dialog', { name: /Menu Cadastros/i })).toBeVisible();
     }
   });
 });

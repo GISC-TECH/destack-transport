@@ -14,10 +14,11 @@ async function login(page) {
 }
 
 async function navigateTo(page, menuLabel, subItemLabel) {
-  const menuButton = page.locator('aside.sidebar').getByRole('menuitem', { name: new RegExp(menuLabel, 'i') }).first();
+  const sidebar = page.getByRole('complementary', { name: 'Menu principal' });
+  const menuButton = sidebar.getByRole('menuitem', { name: new RegExp(menuLabel, 'i') }).first();
   await menuButton.click();
   if (subItemLabel) {
-    await page.locator('aside.sidebar').getByRole('menuitem', { name: subItemLabel, exact: true }).click();
+    await sidebar.getByRole('menuitem', { name: subItemLabel, exact: true }).click();
   }
 }
 
@@ -35,7 +36,7 @@ test.describe('QA Visual - Telas principais', () => {
 
   test('Dashboard', async ({ page }) => {
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
-    await expect(page.locator('aside.sidebar').getByRole('menuitem', { name: 'Dashboard' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('complementary', { name: 'Menu principal' }).getByRole('menuitem', { name: 'Dashboard' })).toBeVisible({ timeout: 10000 });
     await waitAndScreenshot(page, '01-dashboard');
   });
 

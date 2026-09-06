@@ -1,0 +1,19 @@
+[Unit]
+Description=Backup externo verificado do Destack Transport
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+Environment=BACKUP_OFFSITE_CONFIG=/etc/destack/backup-offsite.env
+ExecStart=/root/apps/destack/scripts/backup-offsite.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=2h
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

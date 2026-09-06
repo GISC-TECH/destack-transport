@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+from hashlib import sha256
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -11,6 +12,17 @@ from django.core.mail import send_mail
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
+
+
+def _bounded_alert_reference(*parts, max_length=60):
+    """Cria uma referencia idempotente que sempre cabe no campo do alerta."""
+    raw_reference = "_".join(str(part) for part in parts)
+    if len(raw_reference) <= max_length:
+        return raw_reference
+
+    digest = sha256(raw_reference.encode("utf-8")).hexdigest()[:20]
+    prefix_length = max_length - len(digest) - 1
+    return f"{raw_reference[:prefix_length]}_{digest}"
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
@@ -57,7 +69,7 @@ def gerar_alertas_inteligentes(self):
         for doc in docs:
             _, created = AlertaSistema.objects.get_or_create(
                 tipo='documento_veiculo_vencendo',
-                referencia=f"{veiculo.id}_{doc['documento']}",
+                referencia=_bounded_alert_reference(veiculo.id, doc['documento']),
                 defaults={
                     'prioridade': 'alta' if doc['vencido'] else 'media',
                     'mensagem': f"Documento '{doc['documento']}' do veículo {veiculo.placa} vence em {doc['dias_restantes']} dias.",
@@ -79,7 +91,7 @@ def gerar_alertas_inteligentes(self):
         for doc in docs:
             _, created = AlertaSistema.objects.get_or_create(
                 tipo='documento_motorista_vencendo',
-                referencia=f"{motorista.id}_{doc['documento']}",
+                referencia=_bounded_alert_reference(motorista.id, doc['documento']),
                 defaults={
                     'prioridade': 'alta' if doc['vencido'] else 'media',
                     'mensagem': f"Documento '{doc['documento']}' do motorista {motorista.nome} vence em {doc['dias_restantes']} dias.",
@@ -153,6 +165,11 @@ def gerar_alertas_inteligentes(self):
         if created:
             criados += 1
 
+    cache.set(
+        "operations:alerts:last_success",
+        timezone.now().isoformat(),
+        timeout=48 * 60 * 60,
+    )
     return {"status": "success", "alertas_criados": criados}
 
 
@@ -170,6 +187,9 @@ def backup_database(self):
 
     timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
     backup_path = backup_dir / f"{timestamp}.dump"
+    temporary_path = backup_dir / f".{timestamp}.dump.tmp"
+    checksum_path = backup_dir / f"{timestamp}.dump.sha256"
+    temporary_checksum_path = backup_dir / f".{timestamp}.dump.sha256.tmp"
 
     db = settings.DATABASES["default"]
 
@@ -183,7 +203,7 @@ def backup_database(self):
         "-U", db.get("USER", ""),
         "-d", db.get("NAME", ""),
         "-F", "c",
-        "-f", str(backup_path),
+        "-f", str(temporary_path),
     ]
 
     try:
@@ -196,12 +216,36 @@ def backup_database(self):
             check=True,
         )
 
+        if not temporary_path.is_file() or temporary_path.stat().st_size == 0:
+            raise RuntimeError("pg_dump terminou sem criar um arquivo de backup valido")
+
+        subprocess.run(
+            ["pg_restore", "--list", str(temporary_path)],
+            capture_output=True,
+            text=True,
+            shell=False,
+            check=True,
+        )
+
+        checksum = _file_sha256(temporary_path)
+        temporary_checksum_path.write_text(
+            f"{checksum}  {backup_path.name}\n",
+            encoding="utf-8",
+        )
+        temporary_path.chmod(0o600)
+        temporary_checksum_path.chmod(0o600)
+        temporary_path.replace(backup_path)
+        temporary_checksum_path.replace(checksum_path)
+
         removed_count = _cleanup_old_backups(backup_dir)
+
+        _set_backup_failure_alert(None)
 
         _send_notification(
             subject="[Destack Transport] Backup diario concluido",
             message=(
                 f"Backup criado com sucesso: {backup_path}\n"
+                f"SHA-256: {checksum}\n"
                 f"Backups antigos removidos: {removed_count}"
             ),
         )
@@ -209,23 +253,90 @@ def backup_database(self):
         return {
             "status": "success",
             "path": str(backup_path),
+            "sha256": checksum,
             "removed": removed_count,
         }
 
     except subprocess.CalledProcessError as exc:
+        temporary_path.unlink(missing_ok=True)
+        temporary_checksum_path.unlink(missing_ok=True)
+        backup_path.unlink(missing_ok=True)
+        checksum_path.unlink(missing_ok=True)
         error_msg = exc.stderr or str(exc)
+        _set_backup_failure_alert(error_msg)
         _send_notification(
             subject="[Destack Transport] Falha no backup diario",
             message=f"pg_dump retornou erro (code {exc.returncode}):\n{error_msg}",
         )
-        raise
+        if getattr(self.request, "called_directly", False):
+            raise
+        raise self.retry(exc=exc)
 
     except Exception as exc:
+        temporary_path.unlink(missing_ok=True)
+        temporary_checksum_path.unlink(missing_ok=True)
+        backup_path.unlink(missing_ok=True)
+        checksum_path.unlink(missing_ok=True)
+        _set_backup_failure_alert(str(exc))
         _send_notification(
             subject="[Destack Transport] Falha no backup diario",
             message=f"Erro inesperado durante o backup:\n{exc}",
         )
-        raise
+        if getattr(self.request, "called_directly", False):
+            raise
+        raise self.retry(exc=exc)
+
+
+def _file_sha256(file_path):
+    digest = sha256()
+    with file_path.open("rb") as backup_file:
+        for chunk in iter(lambda: backup_file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _set_backup_failure_alert(error_message):
+    """Mantem um unico alerta operacional enquanto o backup estiver falhando."""
+    try:
+        from .models import AlertaSistema
+
+        queryset = AlertaSistema.objects.filter(
+            tipo="backup_diario_falhou",
+            referencia="backup_database_daily",
+            resolvido=False,
+        )
+
+        if error_message is None:
+            queryset.update(resolvido=True, data_resolucao=timezone.now())
+            return
+
+        message = f"O backup diario do banco falhou: {error_message}"[:1000]
+        alerta = queryset.first()
+        if alerta:
+            alerta.prioridade = "alta"
+            alerta.mensagem = message
+            alerta.lido = False
+            alerta.dados_adicionais = {"erro": str(error_message)[:500]}
+            alerta.save(
+                update_fields=[
+                    "prioridade",
+                    "mensagem",
+                    "lido",
+                    "dados_adicionais",
+                ]
+            )
+            return
+
+        AlertaSistema.objects.create(
+            tipo="backup_diario_falhou",
+            referencia="backup_database_daily",
+            prioridade="alta",
+            modulo="Backup",
+            mensagem=message,
+            dados_adicionais={"erro": str(error_message)[:500]},
+        )
+    except Exception:
+        logger.warning("Nao foi possivel atualizar o alerta de falha do backup", exc_info=True)
 
 
 def _cleanup_old_backups(backup_dir, retention_days=7):
@@ -237,6 +348,7 @@ def _cleanup_old_backups(backup_dir, retention_days=7):
             mtime = timezone.make_aware(datetime.fromtimestamp(file_path.stat().st_mtime))
             if mtime < cutoff:
                 file_path.unlink()
+                file_path.with_name(f"{file_path.name}.sha256").unlink(missing_ok=True)
                 removed += 1
         except OSError:
             continue

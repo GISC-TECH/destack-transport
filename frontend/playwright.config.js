@@ -17,6 +17,22 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: '**/mobile-responsive.spec.js',
+    },
+    {
+      name: 'mobile-320',
+      testMatch: '**/mobile-responsive.spec.js',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 320, height: 568 }, hasTouch: true, isMobile: true },
+    },
+    {
+      name: 'mobile-360',
+      testMatch: '**/mobile-responsive.spec.js',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 360, height: 800 }, hasTouch: true, isMobile: true },
+    },
+    {
+      name: 'mobile-390',
+      testMatch: '**/mobile-responsive.spec.js',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true },
     },
   ],
 });

@@ -157,6 +157,10 @@ async function createPagamentoPendente() {
 // ---------- 1. Aba Sistema + criação de usuários (Lidiane) ----------
 test.describe('Aba Sistema - Lidiane', () => {
   test('deve exibir menu Sistema, submenu Usuários e botão Novo Usuário', async ({ page }) => {
+    test.skip(
+      !LIDIANE_E2E_USERNAME || !LIDIANE_E2E_PASSWORD,
+      'Credenciais E2E da Lidiane nao configuradas.',
+    );
     await dismissUnexpectedPopups(page);
     const credentials = getLidianeCredentials();
     await login(page, credentials.username, credentials.password);

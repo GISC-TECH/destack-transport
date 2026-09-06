@@ -70,7 +70,7 @@ test.describe('Autenticação', () => {
     await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible();
 
     // Abre menu do usuário e clica em Sair
-    const logoutBtn = page.locator('aside.sidebar').getByRole('button', { name: /sair/i });
+    const logoutBtn = page.getByRole('complementary', { name: 'Menu principal' }).getByRole('button', { name: /sair/i });
     await logoutBtn.scrollIntoViewIfNeeded();
     await logoutBtn.click();
     await page.waitForURL(/\/login/, { timeout: 10000 });
@@ -318,14 +318,14 @@ test.describe('Upload de XML', () => {
     fs.writeFileSync(filePath, xmlContent);
 
     await page.goto(`${BASE_URL}/upload`);
-    await page.waitForSelector('.upload-dropzone', { timeout: 10000 });
+    await expect(page.getByTestId('upload-dropzone')).toBeVisible({ timeout: 10000 });
 
     await page.locator('input[type="file"]').setInputFiles(filePath);
 
     // Aguarda processamento (pode haver toast ou mudança de status)
     await page.waitForTimeout(3000);
 
-    const successToast = page.locator('.toast, [role="alert"]').filter({ hasText: /sucesso|processado|enviado/i }).first();
+    const successToast = page.getByRole('alert').filter({ hasText: /sucesso|processado|enviado/i }).first();
     const cteCard = page.locator('text=/CT-e|123|processado/i').first();
 
     await expect(successToast.or(cteCard)).toBeVisible({ timeout: 15000 });

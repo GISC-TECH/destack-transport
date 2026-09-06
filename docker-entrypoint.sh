@@ -11,13 +11,15 @@ while ! pg_isready -h postgres -U ${POSTGRES_USER:-destack_user} -d ${POSTGRES_D
 done
 echo "PostgreSQL está disponível!"
 
-# Aplicar migrações
-echo "Aplicando migrações do Django..."
-python manage.py migrate --noinput
+if [ "${RUN_STARTUP_MAINTENANCE:-true}" = "true" ]; then
+    echo "Aplicando migrações do Django..."
+    python manage.py migrate --noinput
 
-# Coletar arquivos estáticos
-echo "Coletando arquivos estáticos..."
-python manage.py collectstatic --noinput
+    echo "Coletando arquivos estáticos..."
+    python manage.py collectstatic --noinput
+else
+    echo "Migrações e collectstatic serão executados pelo fluxo de deploy."
+fi
 
 # Criar superusuário apenas quando solicitado explicitamente.
 if [ "${DJANGO_CREATE_SUPERUSER:-false}" = "true" ]; then

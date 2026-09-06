@@ -469,6 +469,8 @@ else:
     DEFAULT_FROM_EMAIL = os.environ.get('DJANGO_DEFAULT_FROM_EMAIL', 'webmaster@localhost')
     SERVER_EMAIL = os.environ.get('DJANGO_SERVER_EMAIL', DEFAULT_FROM_EMAIL) # For error reports
 
+BACKUP_NOTIFICATION_EMAIL = os.environ.get('BACKUP_NOTIFICATION_EMAIL')
+
 # Configurações de Upload (Django as usa para MultiPartParser)
 # Limit uploads to realistic sizes to reduce memory exhaustion / DoS risk.
 FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('FILE_UPLOAD_MAX_MEMORY_SIZE', str(10 * 1024 * 1024)))  # 10MB
@@ -618,6 +620,7 @@ MINIO_ENABLED = USE_MINIO
 
 if USE_MINIO:
     INSTALLED_APPS += ['storages']
+    from botocore.config import Config
 
     def _required_minio_env(name):
         value = os.getenv(name, '').strip()
@@ -636,6 +639,11 @@ if USE_MINIO:
     AWS_S3_FILE_OVERWRITE = False
     AWS_S3_VERIFY = os.getenv('MINIO_VERIFY_SSL', 'True').lower() == 'true'
     AWS_S3_ADDRESSING_STYLE = 'path'
+    AWS_S3_CLIENT_CONFIG = Config(
+        connect_timeout=2,
+        read_timeout=3,
+        retries={'total_max_attempts': 2, 'mode': 'standard'},
+    )
 
     # Host externo usado apenas para gerar links S3 temporários e assinados.
     MINIO_PUBLIC_URL = _required_minio_env('MINIO_PUBLIC_URL').rstrip('/')
