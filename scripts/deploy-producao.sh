@@ -172,17 +172,51 @@ chown -R 10001:10001 "$remote_dir/logs" "$remote_dir/backups/daily"
 docker compose -f "$compose_file" --profile contabo-scraper config --quiet
 docker compose -f "$compose_file" --profile contabo-scraper build \
     web frontend celery_worker celery_beat scraper
+docker compose -f "$compose_file" --profile contabo-scraper up -d \
+    postgres redis minio minio_init
+for attempt in $(seq 1 60); do
+    init_state="$(docker inspect --format '{{.State.Status}} {{.State.ExitCode}}' destack_minio_init 2>/dev/null || true)"
+    if [[ "$init_state" == "exited 0" ]]; then
+        break
+    fi
+    if [[ "$init_state" == exited\ * && "$init_state" != "exited 0" ]]; then
+        echo "ERRO: inicializacao do MinIO falhou ($init_state)" >&2
+        false
+    fi
+    if [[ "$attempt" == 60 ]]; then
+        echo "ERRO: inicializacao do MinIO nao concluiu no prazo" >&2
+        false
+    fi
+    sleep 2
+done
+for attempt in $(seq 1 60); do
+    infra_healthy=true
+    for container in destack_postgres destack_redis destack_minio; do
+        health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container" 2>/dev/null || true)"
+        if [[ "$health" != "healthy" ]]; then
+            infra_healthy=false
+        fi
+    done
+    if [[ "$infra_healthy" == true ]]; then
+        break
+    fi
+    if [[ "$attempt" == 60 ]]; then
+        echo "ERRO: PostgreSQL, Redis ou MinIO nao ficaram saudaveis no prazo" >&2
+        false
+    fi
+    sleep 2
+done
 docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
     --user 0:0 --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add DAC_READ_SEARCH \
     --entrypoint chown web \
     -R 10001:10001 /app/staticfiles /app/media /app/logs /app/backups/daily
-docker compose -f "$compose_file" --profile contabo-scraper run --rm \
+docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
     --entrypoint python web manage.py migrate --noinput
-docker compose -f "$compose_file" --profile contabo-scraper run --rm \
+docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
     --entrypoint python web manage.py collectstatic --noinput
-docker compose -f "$compose_file" --profile contabo-scraper run --rm \
+docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
     --entrypoint python web manage.py gerar_alertas
-docker compose -f "$compose_file" --profile contabo-scraper run --rm \
+docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
     --entrypoint python web manage.py backup_now
 docker compose -f "$compose_file" --profile contabo-scraper up -d \
     web frontend celery_worker celery_beat scraper
@@ -193,7 +227,7 @@ for attempt in $(seq 1 40); do
     fi
     if [[ "$attempt" == 40 ]]; then
         echo "ERRO: servicos nao ficaram saudaveis no prazo" >&2
-        exit 1
+        false
     fi
     sleep 3
 done
@@ -204,7 +238,7 @@ for attempt in $(seq 1 60); do
     fi
     if [[ "$attempt" == 60 ]]; then
         echo "ERRO: scraper nao ficou operacional no prazo" >&2
-        exit 1
+        false
     fi
     sleep 10
 done
