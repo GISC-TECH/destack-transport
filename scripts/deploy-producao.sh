@@ -142,6 +142,7 @@ rollback() {
         docker image tag "${previous_image_ids[$container]}" "${previous_image_refs[$container]}"
     done
     docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
+        -T --interactive=false \
         --entrypoint python web manage.py collectstatic --noinput
     docker compose -f "$compose_file" --profile contabo-scraper up -d --no-build \
         web frontend celery_worker celery_beat scraper
@@ -207,16 +208,21 @@ for attempt in $(seq 1 60); do
     sleep 2
 done
 docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
+    -T --interactive=false \
     --user 0:0 --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add DAC_READ_SEARCH \
     --entrypoint chown web \
     -R 10001:10001 /app/staticfiles /app/media /app/logs /app/backups/daily
 docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
+    -T --interactive=false \
     --entrypoint python web manage.py migrate --noinput
 docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
+    -T --interactive=false \
     --entrypoint python web manage.py collectstatic --noinput
 docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
+    -T --interactive=false \
     --entrypoint python web manage.py gerar_alertas
 docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
+    -T --interactive=false \
     --entrypoint python web manage.py backup_now
 docker compose -f "$compose_file" --profile contabo-scraper up -d \
     web frontend celery_worker celery_beat scraper
