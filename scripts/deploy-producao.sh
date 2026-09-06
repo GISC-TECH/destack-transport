@@ -172,8 +172,9 @@ chown -R 10001:10001 "$remote_dir/logs" "$remote_dir/backups/daily"
 docker compose -f "$compose_file" --profile contabo-scraper config --quiet
 docker compose -f "$compose_file" --profile contabo-scraper build \
     web frontend celery_worker celery_beat scraper
-docker compose -f "$compose_file" --profile contabo-scraper run --rm \
-    --user 0:0 --cap-add CHOWN --entrypoint chown web \
+docker compose -f "$compose_file" --profile contabo-scraper run --rm --no-deps \
+    --user 0:0 --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add DAC_READ_SEARCH \
+    --entrypoint chown web \
     -R 10001:10001 /app/staticfiles /app/media /app/logs /app/backups/daily
 docker compose -f "$compose_file" --profile contabo-scraper run --rm \
     --entrypoint python web manage.py migrate --noinput
