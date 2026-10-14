@@ -19,6 +19,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Imports Locais
+from ..permissions import TransportModelPermission
 from ..serializers.mdfe_serializers import ( # Use .. para voltar um nível
     MDFeDocumentoListSerializer,
     MDFeDocumentoDetailSerializer
@@ -48,7 +49,7 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
     """API para consulta de MDF-es."""
     # queryset definido em get_queryset
     # serializer_class definido em get_serializer_class
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def get_serializer_class(self):
         """Define o serializer com base na ação."""
@@ -103,11 +104,20 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         
         params = self.request.query_params
 
+        # Filtro por status do MDF-e
+        status_param = params.get('status')
+        if status_param:
+            queryset = queryset.filter(status__iexact=status_param)
+
         # Filtro por período (data_emissao dh_emi)
         data_inicio = params.get('data_inicio')
         data_fim = params.get('data_fim')
         if data_inicio:
-            queryset = queryset.filter(identificacao__dh_emi__date__gte=data_inicio)
+            try:
+                data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                queryset = queryset.filter(identificacao__dh_emi__date__gte=data_inicio_obj)
+            except ValueError:
+                logger.warning(f"Data início inválida no filtro MDF-e: {data_inicio}")
         if data_fim:
             try:
                 data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date() + timedelta(days=1)
@@ -168,13 +178,23 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
              is_closed = encerrado.lower() == 'true'
              queryset = queryset.filter(encerrado=is_closed)
 
-        # Filtro por texto (chave, número MDF-e, placa)
+        # Filtro por condutor/motorista (nome ou CPF do vínculo automático)
+        condutor = params.get('condutor')
+        if condutor:
+            queryset = queryset.filter(condutores__nome__icontains=condutor)
+        motorista_cpf = params.get('motorista_cpf')
+        if motorista_cpf:
+            cpf_digits = ''.join(ch for ch in str(motorista_cpf) if ch.isdigit())
+            queryset = queryset.filter(condutores__cpf=cpf_digits)
+
+        # Filtro por texto (chave, número MDF-e, placa, condutor)
         texto = params.get('q')
         if texto:
             queryset = queryset.filter(
                 Q(chave__icontains=texto) |
                 Q(identificacao__n_mdf__icontains=texto) |
-                Q(modal_rodoviario__veiculo_tracao__placa__icontains=texto)
+                Q(modal_rodoviario__veiculo_tracao__placa__icontains=texto) |
+                Q(condutores__nome__icontains=texto)
             )
 
         return queryset.distinct()
@@ -301,7 +321,8 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 if modelo == '57': tipo_doc = 'CT-e'
                 elif modelo == '55': tipo_doc = 'NF-e'
                 elif modelo == '67': tipo_doc = 'CT-e OS'
-            except: pass
+            except (IndexError, TypeError):
+                pass
 
             # Prepara dados básicos do documento
             item = {
@@ -343,3 +364,67 @@ class MDFeDocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             resultados.append(item)
 
         return Response(resultados)
+
+    @action(detail=True, methods=['post'], url_path='encerrar')
+    def encerrar(self, request, pk=None):
+        """
+        Registra encerramento lógico do MDF-e.
+        Em produção, deve integrar com SEFAZ antes de alterar o status.
+        """
+        mdfe = self.get_object()
+        data_encerramento = request.data.get('data_encerramento')
+        municipio = request.data.get('municipio_encerramento_cod')
+        uf = request.data.get('uf_encerramento')
+
+        if mdfe.status == 'encerrado':
+            return Response(
+                {'erro': 'MDF-e já está encerrado.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        mdfe.status = 'encerrado'
+        mdfe.encerrado = True
+        if data_encerramento:
+            mdfe.data_encerramento = data_encerramento
+        if municipio:
+            mdfe.municipio_encerramento_cod = municipio
+        if uf:
+            mdfe.uf_encerramento = uf
+        mdfe.protocolo_encerramento = request.data.get('protocolo_encerramento') or '0'
+        mdfe.save(update_fields=[
+            'status', 'encerrado', 'data_encerramento',
+            'municipio_encerramento_cod', 'uf_encerramento', 'protocolo_encerramento'
+        ])
+
+        return Response({
+            'status': 'encerrado',
+            'id': str(mdfe.id),
+            'chave': mdfe.chave,
+            'observacao': 'Status alterado para encerrado. Integração SEFAZ não realizada neste ambiente.'
+        })
+
+    @action(detail=True, methods=['post'], url_path='cancelar')
+    def cancelar(self, request, pk=None):
+        """
+        Registra cancelamento lógico do MDF-e.
+        Em produção, deve integrar com SEFAZ antes de alterar o status.
+        """
+        mdfe = self.get_object()
+        motivo = request.data.get('motivo') or request.data.get('justificativa', 'Cancelamento solicitado pelo usuário')
+
+        if mdfe.status == 'cancelado':
+            return Response(
+                {'erro': 'MDF-e já está cancelado.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        mdfe.status = 'cancelado'
+        mdfe.save(update_fields=['status'])
+
+        return Response({
+            'status': 'cancelado',
+            'id': str(mdfe.id),
+            'chave': mdfe.chave,
+            'motivo': motivo,
+            'observacao': 'Status alterado para cancelado. Integração SEFAZ não realizada neste ambiente.'
+        })

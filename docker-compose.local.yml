@@ -25,6 +25,8 @@ services:
       - destack_local
 
   # Redis Cache
+  # Ambiente local: Redis sem senha para simplificar o desenvolvimento.
+  # Em produção utilize REDIS_PASSWORD conforme docker-compose.yml.
   redis:
     image: redis:7-alpine
     container_name: destack_redis_local
@@ -68,7 +70,7 @@ services:
     volumes:
       - .:/app # Código local montado (hot reload)
       - static_volume_local:/app/staticfiles_collected
-      - media_volume_local:/app/mediafiles
+      - media_volume_local:/app/media
     ports:
       - "8001:8000" # Acessível em http://localhost:8001
     depends_on:
@@ -86,7 +88,8 @@ services:
     container_name: destack_frontend_local
     restart: unless-stopped
     environment:
-      - VITE_API_URL=http://web:8000
+      # Sinaliza que o Vite está rodando dentro do Docker; o proxy aponta para o nginx.
+      - DOCKER_ENV=1
     volumes:
       - ./frontend:/app
       - /app/node_modules # Evita sobrescrever node_modules
@@ -97,60 +100,104 @@ services:
     networks:
       - destack_local
 
-  # Celery Worker (opcional - descomente se necessário)
-  # celery_worker:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.local
-  #   container_name: destack_celery_local
-  #   restart: unless-stopped
-  #   command: celery -A core worker -l info
-  #   env_file:
-  #     - .env.local
-  #   volumes:
-  #     - .:/app
-  #   depends_on:
-  #     - redis
-  #     - postgres
-  #   networks:
-  #     - destack_local
+  # Evolution API - Gateway de WhatsApp self-hosted
+  evolution_api:
+    image: evoapicloud/evolution-api:v2.2.2
+    container_name: destack_evolution_api_local
+    restart: unless-stopped
+    init: true
+    pids_limit: 256
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_URL=${EVOLUTION_SERVER_URL:-http://localhost:8080}
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-destack-local-key-change-in-production}
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=${EVOLUTION_DATABASE_PROVIDER:-sqlite}
+      - DATABASE_CONNECTION_URI=${EVOLUTION_DATABASE_URI:-file:./evolution-api.db}
+      - DATABASE_SAVE_DATA_INSTANCE=true
+      - DATABASE_SAVE_LOGS=true
+      - WEBHOOK_GLOBAL_ENABLED=false
+      - REDIS_ENABLED=true
+      - REDIS_HOST=${REDIS_HOST:-destack_redis_local}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_DB=${REDIS_DB:-1}
+    volumes:
+      - evolution_api_data_local:/evolution/instances
+      - evolution_api_db_local:/evolution/db
+    networks:
+      - destack_local
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
 
-  # Celery Beat (opcional - descomente se necessário)
-  # celery_beat:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.local
-  #   container_name: destack_beat_local
-  #   restart: unless-stopped
-  #   command: celery -A core beat -l info
-  #   env_file:
-  #     - .env.local
-  #   volumes:
-  #     - .:/app
-  #   depends_on:
-  #     - redis
-  #     - postgres
-  #   networks:
-  #     - destack_local
+  # Celery Worker
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: destack_celery_local
+    restart: unless-stopped
+    init: true
+    pids_limit: 256
+    command: celery -A core worker -l info
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app
+      - ./backups:/app/backups
+    depends_on:
+      - redis
+      - postgres
+      - evolution_api
+    networks:
+      - destack_local
+
+  # Celery Beat
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: destack_beat_local
+    restart: unless-stopped
+    init: true
+    pids_limit: 64
+    command: celery -A core beat -l info
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app
+      - ./backups:/app/backups
+    depends_on:
+      - redis
+      - postgres
+      - celery_worker
+    networks:
+      - destack_local
 
   # EGS XML Collector - Robot para coleta automatica de XMLs
   scraper:
+    # Google Chrome so tem build amd64; em hosts arm64 (Apple Silicon) roda via emulacao.
+    platform: linux/amd64
     build:
       context: ./scraper
       dockerfile: Dockerfile
     container_name: destack_scraper_local
     restart: unless-stopped
+    # docker-init (tini) recolhe processos Chrome orfaos ao fim de cada job.
+    init: true
+    pids_limit: 512
+    env_file:
+      - .env.local
     environment:
-      # EGS Sistemas
+      # EGS Sistemas (credenciais via .env.local)
       - EGS_BASE_URL=https://app.egssistemas.com.br
       - EGS_LOGIN_URL=https://app.egssistemas.com.br/login
-      - EGS_USERNAME=DESTACK
-      - EGS_PASSWORD=1234567
-      - EGS_ACCESS_KEY=57226
-      # Destack API
+      # Destack API (credenciais via .env.local)
       - DESTACK_API_URL=http://web:8000/api
-      - DESTACK_USERNAME=admin
-      - DESTACK_PASSWORD=admin123
       # Collector
       - COLLECT_INTERVAL_MINUTES=60
       - DAYS_LOOKBACK=7
@@ -161,6 +208,22 @@ services:
       - scraper_logs_local:/app/logs
     depends_on:
       - web
+    networks:
+      - destack_local
+
+  # Nginx - gerenciador de midias e gateway unificado para desenvolvimento
+  nginx:
+    image: nginx:alpine
+    container_name: destack_nginx_local
+    restart: unless-stopped
+    ports:
+      - "8003:80" # Acessivel em http://localhost:8003
+    volumes:
+      - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
+      - media_volume_local:/app/mediafiles:ro
+    depends_on:
+      - web
+      - frontend
     networks:
       - destack_local
 
@@ -176,6 +239,10 @@ volumes:
   scraper_data_local:
     driver: local
   scraper_logs_local:
+    driver: local
+  evolution_api_data_local:
+    driver: local
+  evolution_api_db_local:
     driver: local
 
 networks:

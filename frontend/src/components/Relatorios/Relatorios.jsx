@@ -2,7 +2,8 @@ import { useState, useCallback } from 'react';
 import { relatoriosAPI } from '../../services/api';
 import PageHeader from '../Common/PageHeader';
 import DateFilter from '../Common/DateFilter';
-import './Relatorios.css';
+import Button from '../Common/Button';
+import styles from './Relatorios.module.css';
 
 function Relatorios() {
   const [tipoRelatorio, setTipoRelatorio] = useState('');
@@ -11,10 +12,18 @@ function Relatorios() {
     data_inicio: '',
     data_fim: '',
     status: '',
-    cliente: ''
+    modalidade: '',
+    placa: '',
+    condutor: '',
+    tipo: '',
+    ativo: '',
+    pendentes: '',
+    incluir_cancelados: '',
+    encerrado: ''
   });
   const [gerando, setGerando] = useState(false);
   const [error, setError] = useState(null);
+  const [sucesso, setSucesso] = useState(null);
 
   const handleDateFilterChange = useCallback((newFiltros) => {
     setFiltros(prev => ({
@@ -22,6 +31,10 @@ function Relatorios() {
       data_inicio: newFiltros.data_inicio,
       data_fim: newFiltros.data_fim
     }));
+  }, []);
+
+  const handleFiltroChange = useCallback((campo, valor) => {
+    setFiltros(prev => ({ ...prev, [campo]: valor }));
   }, []);
 
   // Tipos de relatorios suportados pelo backend (RelatorioAPIView)
@@ -52,7 +65,7 @@ function Relatorios() {
     },
     {
       id: 'veiculos',
-      nome: 'Veiculos',
+      nome: 'Veículos',
       descricao: 'Relatorio da frota de veiculos cadastrados',
       icon: 'truck'
     },
@@ -67,10 +80,108 @@ function Relatorios() {
       nome: 'KM Rodado',
       descricao: 'Relatorio de quilometragem por veiculo',
       icon: 'compass'
+    },
+    {
+      id: 'motoristas',
+      nome: 'Motoristas',
+      descricao: 'Cadastro, viagens, repasses e validades (CNH/NR/MOPP/ASO) vencendo',
+      icon: 'user'
     }
   ];
 
-  const [sucesso, setSucesso] = useState(null);
+  // Configuração de filtros específicos por tipo de relatório
+  const filtrosPorTipo = {
+    ctes: [
+      { campo: 'status', label: 'Status', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'autorizado', label: 'Autorizado' },
+        { value: 'cancelado', label: 'Cancelado' },
+        { value: 'encerrado', label: 'Encerrado' },
+        { value: 'denegado', label: 'Denegado' },
+        { value: 'inutilizado', label: 'Inutilizado' }
+      ]},
+      { campo: 'modalidade', label: 'Modalidade', tipo: 'select', opcoes: [
+        { value: '', label: 'Todas' },
+        { value: 'CIF', label: 'CIF' },
+        { value: 'FOB', label: 'FOB' }
+      ]},
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' },
+      { campo: 'condutor', label: 'Condutor', tipo: 'text', placeholder: 'Nome do condutor' },
+      { campo: 'incluir_cancelados', label: 'Incluir cancelados', tipo: 'select', opcoes: [
+        { value: '', label: 'Não' },
+        { value: '1', label: 'Sim' }
+      ]}
+    ],
+    mdfes: [
+      { campo: 'status', label: 'Status', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'autorizado', label: 'Autorizado' },
+        { value: 'cancelado', label: 'Cancelado' },
+        { value: 'encerrado', label: 'Encerrado' },
+        { value: 'denegado', label: 'Denegado' },
+        { value: 'inutilizado', label: 'Inutilizado' }
+      ]},
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' },
+      { campo: 'condutor', label: 'Condutor', tipo: 'text', placeholder: 'Nome do condutor' },
+      { campo: 'encerrado', label: 'Encerrado', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'true', label: 'Sim' },
+        { value: 'false', label: 'Não' }
+      ]}
+    ],
+    pagamentos: [
+      { campo: 'tipo', label: 'Tipo', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'agregado', label: 'Agregado' },
+        { value: 'proprio', label: 'Próprio' }
+      ]},
+      { campo: 'status', label: 'Status', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'pendente', label: 'Pendente' },
+        { value: 'pago', label: 'Pago' }
+      ]},
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' },
+      { campo: 'condutor', label: 'Condutor', tipo: 'text', placeholder: 'Nome do condutor' }
+    ],
+    veiculos: [
+      { campo: 'ativo', label: 'Ativo', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'true', label: 'Sim' },
+        { value: 'false', label: 'Não' }
+      ]},
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' }
+    ],
+    manutencoes: [
+      { campo: 'status', label: 'Status', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'agendada', label: 'Agendada' },
+        { value: 'em_andamento', label: 'Em Andamento' },
+        { value: 'concluida', label: 'Concluída' },
+        { value: 'cancelada', label: 'Cancelada' }
+      ]},
+      { campo: 'tipo', label: 'Tipo', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'preventiva', label: 'Preventiva' },
+        { value: 'corretiva', label: 'Corretiva' },
+        { value: 'preditiva', label: 'Preditiva' }
+      ]},
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' }
+    ],
+    km_rodado: [
+      { campo: 'placa', label: 'Placa', tipo: 'text', placeholder: 'Ex: ABC1D23' }
+    ],
+    motoristas: [
+      { campo: 'ativo', label: 'Ativo', tipo: 'select', opcoes: [
+        { value: '', label: 'Todos' },
+        { value: 'true', label: 'Sim' },
+        { value: 'false', label: 'Não' }
+      ]},
+      { campo: 'pendentes', label: 'Somente pendentes', tipo: 'select', opcoes: [
+        { value: '', label: 'Não' },
+        { value: '1', label: 'Sim' }
+      ]}
+    ]
+  };
 
   const handleGerarRelatorio = async () => {
     if (!tipoRelatorio) {
@@ -203,8 +314,43 @@ function Relatorios() {
     </svg>
   );
 
+  const renderFiltro = (config) => {
+    const { campo, label, tipo, opcoes, placeholder } = config;
+    const inputId = `filtro_${campo}`;
+
+    if (tipo === 'select') {
+      return (
+        <div key={campo} className={styles.formGroup}>
+          <label htmlFor={inputId}>{label}</label>
+          <select
+            id={inputId}
+            value={filtros[campo] || ''}
+            onChange={(e) => handleFiltroChange(campo, e.target.value)}
+          >
+            {opcoes.map(op => (
+              <option key={op.value} value={op.value}>{op.label}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    return (
+      <div key={campo} className={styles.formGroup}>
+        <label htmlFor={inputId}>{label}</label>
+        <input
+          id={inputId}
+          type="text"
+          value={filtros[campo] || ''}
+          placeholder={placeholder || ''}
+          onChange={(e) => handleFiltroChange(campo, e.target.value)}
+        />
+      </div>
+    );
+  };
+
   return (
-    <div className="relatorios-page">
+    <div className={styles.page}>
       <PageHeader
         title="Relatórios"
         subtitle="Gere relatórios personalizados do sistema"
@@ -212,24 +358,34 @@ function Relatorios() {
         breadcrumbs={[{ label: 'Relatórios' }]}
       />
 
-      <div className="relatorios-container">
+      <div className={styles.container}>
         {/* Seleção de Relatório */}
-        <div className="relatorios-grid">
+        <div className={styles.grid}>
           {relatoriosDisponiveis.map((rel) => (
             <div
               key={rel.id}
-              className={`relatorio-card ${tipoRelatorio === rel.id ? 'selected' : ''}`}
+              role="button"
+              tabIndex={0}
+              aria-pressed={tipoRelatorio === rel.id}
+              aria-label={`Selecionar relatório ${rel.nome}`}
+              className={`${styles.card} ${tipoRelatorio === rel.id ? styles.cardSelected : ''}`}
               onClick={() => setTipoRelatorio(rel.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setTipoRelatorio(rel.id);
+                }
+              }}
             >
-              <div className="relatorio-icon">
+              <div className={styles.icon}>
                 {getIcon(rel.icon)}
               </div>
-              <div className="relatorio-info">
+              <div className={styles.info}>
                 <h3>{rel.nome}</h3>
                 <p>{rel.descricao}</p>
               </div>
               {tipoRelatorio === rel.id && (
-                <div className="selected-check">✓</div>
+                <div className={styles.selectedCheck} aria-hidden="true">✓</div>
               )}
             </div>
           ))}
@@ -237,19 +393,21 @@ function Relatorios() {
 
         {/* Filtros */}
         {tipoRelatorio && (
-          <div className="filtros-relatorio">
+          <div className={styles.filtros}>
             <h3>Filtros do Relatório</h3>
-            <div className="filtros-grid">
-              <div className="form-group form-group-full">
-                <label>Período</label>
+            <div className={styles.filtrosGrid}>
+              <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                 <DateFilter
                   onFilterChange={handleDateFilterChange}
                   defaultPeriodo="mes"
+                  variant="flat"
                 />
               </div>
-              <div className="form-group">
-                <label>Formato</label>
+              {filtrosPorTipo[tipoRelatorio]?.map(renderFiltro)}
+              <div className={styles.formGroup}>
+                <label htmlFor="formato">Formato</label>
                 <select
+                  id="formato"
                   value={formato}
                   onChange={(e) => setFormato(e.target.value)}
                 >
@@ -261,35 +419,29 @@ function Relatorios() {
             </div>
 
             {error && (
-              <div className="error-message">{error}</div>
+              <div className={styles.errorMessage} role="alert" aria-live="polite">{error}</div>
             )}
 
             {sucesso && (
-              <div className="success-message">{sucesso}</div>
+              <div className={styles.successMessage} role="status" aria-live="polite">{sucesso}</div>
             )}
 
-            <div className="relatorio-actions">
-              <button
-                className="btn-primary btn-large"
-                onClick={handleGerarRelatorio}
+            <div className={styles.actions}>
+              <Button
+                size="lg"
+                loading={gerando}
                 disabled={gerando}
+                onClick={handleGerarRelatorio}
               >
-                {gerando ? (
-                  <>
-                    <span className="spinner"></span>
-                    Gerando...
-                  </>
-                ) : (
-                  <>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="7 10 12 15 17 10"></polyline>
-                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Gerar Relatório
-                  </>
+                {!gerando && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
                 )}
-              </button>
+                Gerar Relatório
+              </Button>
             </div>
           </div>
         )}

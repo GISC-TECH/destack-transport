@@ -1,0 +1,345 @@
+.page {
+  padding: 0;
+}
+
+.page :global(.page-header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.page :global(.header-title) h1 {
+  margin: 0;
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+}
+
+.page :global(.header-title) p {
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+}
+
+.resumo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.resumoCard {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid var(--text-secondary);
+}
+
+.resumoCard.statusSuccess { border-left-color: var(--success-color); }
+.resumoCard.statusInfo { border-left-color: var(--info-color); }
+.resumoCard.statusWarning { border-left-color: var(--warning-color); }
+.resumoCard.statusDanger { border-left-color: var(--danger-color); }
+
+.resumoValue {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.resumoLabel {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.formCard,
+.listCard {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+}
+
+.formCard h3,
+.listCard h3 {
+  margin: 0 0 20px 0;
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+.filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-end;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.formGroup label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 6px;
+}
+
+.btnIcon {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background var(--transition-fast);
+}
+
+.btnIcon:hover {
+  background: var(--content-bg);
+}
+
+.btnIcon.danger:hover {
+  background: var(--danger-light);
+}
+
+.emptyText {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 30px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.table th {
+  background: var(--content-bg);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+}
+
+.table td {
+  color: var(--text-primary);
+  font-size: var(--text-base);
+}
+
+.table tr:hover {
+  background: var(--content-bg);
+}
+
+.filterSearch {
+  flex: 1;
+}
+
+.mobileCards {
+  display: none;
+}
+
+.mobileCard {
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.mobileCard:last-child {
+  margin-bottom: 0;
+}
+
+.mobileCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--green-100);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.mobileCardTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mobileCardPrimary {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.mobileCardSecondary {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+.mobileCardBody {
+  padding: 12px 16px;
+}
+
+.mobileCardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.mobileCardRow:last-child {
+  border-bottom: none;
+}
+
+.mobileCardLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.mobileCardValue {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.mobileCardFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--content-bg);
+  border-top: 1px solid var(--border-light);
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 0;
+  }
+
+  .page :global(.page-header) {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .formCard,
+  .listCard {
+    padding: 16px;
+  }
+
+  .filterSearch {
+    width: 100%;
+  }
+
+  .mobileCards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+  }
+
+  .formActions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobileCardHeader,
+  .mobileCardBody,
+  .mobileCardFooter {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .mobileCardRow {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .mobileCardValue {
+    text-align: left;
+  }
+
+  .resumo {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

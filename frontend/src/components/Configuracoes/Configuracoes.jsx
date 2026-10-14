@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import { configAPI } from '../../services/api';
+import { useState, useEffect, useCallback } from 'react';
+import { configAPI, comunicacaoAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
-import './Configuracoes.css';
+import Button from '../Common/Button';
+import styles from './Configuracoes.module.css';
 
 function Configuracoes() {
   const [activeTab, setActiveTab] = useState('empresa');
@@ -13,17 +14,30 @@ function Configuracoes() {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const [whatsappStatus, setWhatsappStatus] = useState(null);
+  const [testingWhatsapp, setTestingWhatsapp] = useState(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (activeTab === 'empresa') {
-      loadEmpresa();
-    } else {
-      loadParametros();
-    }
-  }, [activeTab]);
+  const getEmpresaVazia = useCallback(() => ({
+    razao_social: '',
+    nome_fantasia: '',
+    cnpj: '',
+    ie: '',
+    rntrc: '',
+    email: '',
+    telefone: '',
+    telefone_gestor: '',
+    telefone_financeiro: '',
+    telefone_operacional: '',
+    cep: '',
+    logradouro: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    municipio: '',
+    uf: ''
+  }), []);
 
-  const loadEmpresa = async () => {
+  const loadEmpresa = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -41,26 +55,9 @@ function Configuracoes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getEmpresaVazia]);
 
-  const getEmpresaVazia = () => ({
-    razao_social: '',
-    nome_fantasia: '',
-    cnpj: '',
-    ie: '',
-    rntrc: '',
-    email: '',
-    telefone: '',
-    cep: '',
-    logradouro: '',
-    numero: '',
-    complemento: '',
-    bairro: '',
-    municipio: '',
-    uf: ''
-  });
-
-  const loadParametros = async () => {
+  const loadParametros = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -71,7 +68,15 @@ function Configuracoes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'empresa') {
+      loadEmpresa();
+    } else {
+      loadParametros();
+    }
+  }, [activeTab, loadEmpresa, loadParametros]);
 
   const handleEmpresaChange = (field, value) => {
     setEmpresa(prev => ({ ...prev, [field]: value }));
@@ -114,6 +119,19 @@ function Configuracoes() {
     }
   };
 
+  const testarWhatsapp = async () => {
+    try {
+      setTestingWhatsapp(true);
+      setWhatsappStatus(null);
+      const resultado = await comunicacaoAPI.testarWhatsapp();
+      setWhatsappStatus({ type: 'success', ...resultado });
+    } catch (err) {
+      setWhatsappStatus({ type: 'error', erro: err.message });
+    } finally {
+      setTestingWhatsapp(false);
+    }
+  };
+
   if (loading) return <Loading message="Carregando configurações..." />;
   if (error) return <ErrorMessage message={error} onRetry={activeTab === 'empresa' ? loadEmpresa : loadParametros} />;
 
@@ -125,7 +143,7 @@ function Configuracoes() {
   );
 
   return (
-    <div className="configuracoes-page">
+    <div className={styles.page}>
       <PageHeader
         title="Configurações"
         subtitle="Gerencie os dados da empresa e parâmetros do sistema"
@@ -134,9 +152,9 @@ function Configuracoes() {
       />
 
       {/* Tabs */}
-      <div className="config-tabs">
+      <div className={styles.tabs}>
         <button
-          className={`config-tab ${activeTab === 'empresa' ? 'active' : ''}`}
+          className={`${styles.tab} ${activeTab === 'empresa' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('empresa')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -146,76 +164,95 @@ function Configuracoes() {
           Dados da Empresa
         </button>
         <button
-          className={`config-tab ${activeTab === 'parametros' ? 'active' : ''}`}
+          className={`${styles.tab} ${activeTab === 'parametros' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('parametros')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
           Parâmetros do Sistema
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'whatsapp' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('whatsapp')}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+          WhatsApp
         </button>
       </div>
 
       {message && (
-        <div className={`message-box ${message.type}`}>
+        <div
+          className={`${styles.messageBox} ${message.type === 'success' ? styles.messageSuccess : styles.messageError}`}
+          role={message.type === 'error' ? 'alert' : 'status'}
+          aria-live="polite"
+        >
           {message.text}
         </div>
       )}
 
       {/* Conteúdo */}
-      <div className="config-content">
+      <div className={styles.content}>
         {activeTab === 'empresa' && empresa && (
-          <div className="config-section">
-            <div className="form-grid">
-              <div className="form-group full">
-                <label>Razão Social</label>
+          <div className={styles.section}>
+            <div className={styles.formGrid}>
+              <div className={`${styles.formGroup} ${styles.full}`}>
+                <label htmlFor="razao_social">Razão Social</label>
                 <input
+                  id="razao_social"
                   type="text"
                   value={empresa.razao_social || ''}
                   onChange={(e) => handleEmpresaChange('razao_social', e.target.value)}
                   placeholder="Razão Social da Empresa"
                 />
               </div>
-              <div className="form-group">
-                <label>Nome Fantasia</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="nome_fantasia">Nome Fantasia</label>
                 <input
+                  id="nome_fantasia"
                   type="text"
                   value={empresa.nome_fantasia || ''}
                   onChange={(e) => handleEmpresaChange('nome_fantasia', e.target.value)}
                   placeholder="Nome Fantasia"
                 />
               </div>
-              <div className="form-group">
-                <label>CNPJ</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="cnpj">CNPJ</label>
                 <input
+                  id="cnpj"
                   type="text"
                   value={empresa.cnpj || ''}
                   onChange={(e) => handleEmpresaChange('cnpj', e.target.value)}
                   placeholder="00.000.000/0000-00"
                 />
               </div>
-              <div className="form-group">
-                <label>Inscrição Estadual</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="ie">Inscrição Estadual</label>
                 <input
+                  id="ie"
                   type="text"
                   value={empresa.ie || ''}
                   onChange={(e) => handleEmpresaChange('ie', e.target.value)}
                   placeholder="IE"
                 />
               </div>
-              <div className="form-group">
-                <label>Telefone</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="telefone">Telefone</label>
                 <input
+                  id="telefone"
                   type="text"
                   value={empresa.telefone || ''}
                   onChange={(e) => handleEmpresaChange('telefone', e.target.value)}
                   placeholder="(00) 00000-0000"
                 />
               </div>
-              <div className="form-group full">
-                <label>E-mail</label>
+              <div className={`${styles.formGroup} ${styles.full}`}>
+                <label htmlFor="email">E-mail</label>
                 <input
+                  id="email"
                   type="email"
                   value={empresa.email || ''}
                   onChange={(e) => handleEmpresaChange('email', e.target.value)}
@@ -223,49 +260,92 @@ function Configuracoes() {
                 />
               </div>
 
-              <div className="form-divider">
+              <div className={styles.divider}>
+                <span>Telefones para Notificações</span>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="telefone_gestor">Telefone do Gestor</label>
+                <input
+                  id="telefone_gestor"
+                  type="text"
+                  value={empresa.telefone_gestor || ''}
+                  onChange={(e) => handleEmpresaChange('telefone_gestor', e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+                <small>Recebe alertas de pagamentos e situações críticas</small>
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="telefone_financeiro">Telefone do Financeiro</label>
+                <input
+                  id="telefone_financeiro"
+                  type="text"
+                  value={empresa.telefone_financeiro || ''}
+                  onChange={(e) => handleEmpresaChange('telefone_financeiro', e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+                <small>Recebe alertas de cobranças e faturamentos</small>
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="telefone_operacional">Telefone do Operacional</label>
+                <input
+                  id="telefone_operacional"
+                  type="text"
+                  value={empresa.telefone_operacional || ''}
+                  onChange={(e) => handleEmpresaChange('telefone_operacional', e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+                <small>Recebe alertas de manutenções e vencimentos</small>
+              </div>
+
+              <div className={styles.divider}>
                 <span>Endereço</span>
               </div>
 
-              <div className="form-group" style={{gridColumn: 'span 2'}}>
-                <label>Logradouro</label>
+              <div className={`${styles.formGroup} ${styles.span2}`}>
+                <label htmlFor="logradouro">Logradouro</label>
                 <input
+                  id="logradouro"
                   type="text"
                   value={empresa.logradouro || ''}
                   onChange={(e) => handleEmpresaChange('logradouro', e.target.value)}
                   placeholder="Rua, Avenida..."
                 />
               </div>
-              <div className="form-group">
-                <label>Número</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="numero">Número</label>
                 <input
+                  id="numero"
                   type="text"
                   value={empresa.numero || ''}
                   onChange={(e) => handleEmpresaChange('numero', e.target.value)}
                   placeholder="Nº"
                 />
               </div>
-              <div className="form-group">
-                <label>Bairro</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="bairro">Bairro</label>
                 <input
+                  id="bairro"
                   type="text"
                   value={empresa.bairro || ''}
                   onChange={(e) => handleEmpresaChange('bairro', e.target.value)}
                   placeholder="Bairro"
                 />
               </div>
-              <div className="form-group">
-                <label>Cidade/Municipio</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="municipio">Cidade/Município</label>
                 <input
+                  id="municipio"
                   type="text"
                   value={empresa.municipio || ''}
                   onChange={(e) => handleEmpresaChange('municipio', e.target.value)}
-                  placeholder="Municipio"
+                  placeholder="Município"
                 />
               </div>
-              <div className="form-group">
-                <label>UF</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="uf">UF</label>
                 <input
+                  id="uf"
                   type="text"
                   value={empresa.uf || ''}
                   onChange={(e) => handleEmpresaChange('uf', e.target.value)}
@@ -273,9 +353,10 @@ function Configuracoes() {
                   maxLength={2}
                 />
               </div>
-              <div className="form-group">
-                <label>CEP</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="cep">CEP</label>
                 <input
+                  id="cep"
                   type="text"
                   value={empresa.cep || ''}
                   onChange={(e) => handleEmpresaChange('cep', e.target.value)}
@@ -284,42 +365,45 @@ function Configuracoes() {
               </div>
             </div>
 
-            <div className="form-actions">
-              <button className="btn-primary" onClick={saveEmpresa} disabled={saving}>
-                {saving ? 'Salvando...' : 'Salvar Dados'}
-              </button>
+            <div className={styles.actions}>
+              <Button onClick={saveEmpresa} loading={saving} disabled={saving}>
+                Salvar Dados
+              </Button>
             </div>
           </div>
         )}
 
         {activeTab === 'parametros' && (
-          <div className="config-section">
-            <div className="parametros-list">
+          <div className={styles.section}>
+            <div className={styles.parametrosList}>
               {parametros.length === 0 ? (
-                <p className="no-data">Nenhum parâmetro configurado</p>
+                <p className={styles.noData}>Nenhum parâmetro configurado</p>
               ) : (
                 parametros.map((param) => (
-                  <div key={param.id} className="parametro-item">
-                    <div className="parametro-info">
-                      <span className="parametro-nome">{param.nome}</span>
-                      <span className="parametro-desc">{param.descricao || ''}</span>
+                  <div key={param.id} className={styles.parametroItem}>
+                    <div className={styles.parametroInfo}>
+                      <span className={styles.parametroNome}>{param.nome}</span>
+                      <span className={styles.parametroDesc}>{param.descricao || ''}</span>
                     </div>
-                    <div className="parametro-valor">
+                    <div className={styles.parametroValor}>
                       {param.tipo_dado === 'bool' ? (
-                        <label className="switch">
+                        <label className={styles.switch} htmlFor={`param_${param.id}`}>
                           <input
+                            id={`param_${param.id}`}
                             type="checkbox"
                             checked={param.valor === 'true' || param.valor === true}
                             onChange={(e) => handleParametroChange(param.id, e.target.checked.toString())}
                           />
-                          <span className="slider"></span>
+                          <span className={styles.slider}></span>
                         </label>
                       ) : (
                         <input
+                          id={`param_${param.id}`}
                           type={param.tipo_dado === 'int' || param.tipo_dado === 'float' ? 'number' : 'text'}
                           value={param.valor || ''}
                           onChange={(e) => handleParametroChange(param.id, e.target.value)}
                           disabled={!param.editavel}
+                          aria-label={param.nome}
                         />
                       )}
                     </div>
@@ -329,10 +413,62 @@ function Configuracoes() {
             </div>
 
             {parametros.length > 0 && (
-              <div className="form-actions">
-                <button className="btn-primary" onClick={saveParametros} disabled={saving}>
-                  {saving ? 'Salvando...' : 'Salvar Parâmetros'}
-                </button>
+              <div className={styles.actions}>
+                <Button onClick={saveParametros} loading={saving} disabled={saving}>
+                  Salvar Parâmetros
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'whatsapp' && (
+          <div className={styles.section}>
+            <div className={styles.whatsappHeader}>
+              <h3>Integração WhatsApp (Evolution API)</h3>
+              <p>
+                O envio de mensagens utiliza a Evolution API hospedada no próprio servidor.
+                As credenciais (URL, API Key e nome da instância) são configuradas via variáveis de ambiente no arquivo <code>.env</code>.
+              </p>
+            </div>
+
+            <div className={styles.whatsappInfo}>
+              <div className={styles.infoItem}>
+                <strong>Para ativar:</strong>
+                <ol>
+                  <li>Configure <code>EVOLUTION_API_URL</code>, <code>EVOLUTION_API_KEY</code> e <code>EVOLUTION_INSTANCE_NAME</code> no <code>.env</code></li>
+                  <li>Reinicie os containers</li>
+                  <li>Pareie o celular/WhatsApp acessando o painel da Evolution API</li>
+                  <li>Cadastre o <strong>Telefone do Gestor</strong> na aba "Dados da Empresa"</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className={styles.actions}>
+              <Button onClick={testarWhatsapp} loading={testingWhatsapp} disabled={testingWhatsapp}>
+                Testar Conexão WhatsApp
+              </Button>
+            </div>
+
+            {whatsappStatus && (
+              <div
+                className={`${styles.messageBox} ${whatsappStatus.type === 'success' ? styles.messageSuccess : styles.messageError}`}
+                role={whatsappStatus.type === 'error' ? 'alert' : 'status'}
+                aria-live="polite"
+              >
+                {whatsappStatus.type === 'success' ? (
+                  <>
+                    <strong>Conectado!</strong>
+                    <p>Instância: {whatsappStatus.instancia || '-'}</p>
+                    <p>Estado: {whatsappStatus.estado || '-'}</p>
+                    <p>{whatsappStatus.mensagem}</p>
+                  </>
+                ) : (
+                  <>
+                    <strong>Falha na conexão</strong>
+                    <p>{whatsappStatus.erro}</p>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motoristasAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
+import Button from '../Common/Button';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
-import './MotoristaForm.css';
+import PageHeader from '../Common/PageHeader';
+import { handleCPFInputChange, handleCPFInputBlur, onlyDigits } from '../../utils/formatters';
+import styles from './MotoristaForm.module.css';
 
 function MotoristaForm() {
   const navigate = useNavigate();
@@ -28,17 +31,17 @@ function MotoristaForm() {
     aso_validade: '',
     telefone: '',
     email: '',
+    tipo_chave_pix: '',
+    chave_pix: '',
+    banco: '',
+    agencia: '',
+    conta: '',
+    tipo_conta: '',
+    favorecido: '',
     ativo: true
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (isEdit) {
-      loadMotorista();
-    }
-  }, [id]);
-
-  const loadMotorista = async () => {
+  const loadMotorista = useCallback(async () => {
     try {
       setLoading(true);
       const data = await motoristasAPI.get(id);
@@ -52,14 +55,27 @@ function MotoristaForm() {
         toxicologico_validade: data.toxicologico_validade || '',
         aso_validade: data.aso_validade || '',
         telefone: data.telefone || '',
-        email: data.email || ''
+        email: data.email || '',
+        tipo_chave_pix: data.tipo_chave_pix || '',
+        chave_pix: data.chave_pix || '',
+        banco: data.banco || '',
+        agencia: data.agencia || '',
+        conta: data.conta || '',
+        tipo_conta: data.tipo_conta || '',
+        favorecido: data.favorecido || ''
       });
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEdit) {
+      loadMotorista();
+    }
+  }, [isEdit, loadMotorista]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -69,17 +85,12 @@ function MotoristaForm() {
     }));
   };
 
-  const formatCPF = (value) => {
-    const digits = value.replace(/\D/g, '').substring(0, 11);
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  const handleCPFChange = (e) => {
+    handleCPFInputChange(e, (value) => setFormData(prev => ({ ...prev, cpf: value })));
   };
 
-  const handleCPFChange = (e) => {
-    const formatted = formatCPF(e.target.value);
-    setFormData(prev => ({ ...prev, cpf: formatted }));
+  const handleCPFBlur = (e) => {
+    handleCPFInputBlur(e, (value) => setFormData(prev => ({ ...prev, cpf: value })));
   };
 
   const handleSubmit = async (e) => {
@@ -92,13 +103,20 @@ function MotoristaForm() {
       // Converte strings vazias para null nos campos de data
       const dataToSend = {
         ...formData,
-        cpf: formData.cpf.replace(/\D/g, ''),
+        cpf: onlyDigits(formData.cpf),
         validade_cnh: formData.validade_cnh || null,
         nr20_validade: formData.nr20_validade || null,
         nr35_validade: formData.nr35_validade || null,
         mopp_validade: formData.mopp_validade || null,
         toxicologico_validade: formData.toxicologico_validade || null,
-        aso_validade: formData.aso_validade || null
+        aso_validade: formData.aso_validade || null,
+        tipo_chave_pix: formData.tipo_chave_pix || null,
+        chave_pix: formData.chave_pix || null,
+        banco: formData.banco || null,
+        agencia: formData.agencia || null,
+        conta: formData.conta || null,
+        tipo_conta: formData.tipo_conta || null,
+        favorecido: formData.favorecido || null
       };
 
       if (isEdit) {
@@ -124,23 +142,29 @@ function MotoristaForm() {
   }
 
   return (
-    <div className="motorista-form-container">
-      <div className="form-header">
-        <h2>{isEdit ? 'Editar Motorista' : 'Novo Motorista'}</h2>
-        <button type="button" className="btn-back" onClick={() => navigate('/motoristas')}>
-          ← Voltar
-        </button>
-      </div>
+    <div className={styles.motoristaFormContainer}>
+      <PageHeader
+        title={isEdit ? 'Editar Motorista' : 'Novo Motorista'}
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate('/motoristas')}
+          >
+            ← Voltar
+          </Button>
+        }
+      />
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
 
-      <form onSubmit={handleSubmit} className="motorista-form">
-        <fieldset>
-          <legend>Dados Pessoais</legend>
+      <form onSubmit={handleSubmit} className={styles.motoristaForm}>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Dados Pessoais</legend>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="nome">Nome Completo <span className="required">*</span></label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="nome">Nome Completo <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 id="nome"
@@ -152,22 +176,25 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="cpf">CPF <span className="required">*</span></label>
+            <div className={styles.formGroup}>
+              <label htmlFor="cpf">CPF <span className={styles.required}>*</span></label>
               <input
                 type="text"
+                inputMode="numeric"
                 id="cpf"
                 name="cpf"
                 value={formData.cpf}
                 onChange={handleCPFChange}
+                onBlur={handleCPFBlur}
                 required
+                maxLength={14}
                 placeholder="000.000.000-00"
               />
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="telefone">Telefone</label>
               <input
                 type="tel"
@@ -179,7 +206,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="email">E-mail</label>
               <input
                 type="email"
@@ -193,12 +220,12 @@ function MotoristaForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>Documentação</legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Documentação</legend>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="cnh">CNH <span className="required">*</span></label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="cnh">CNH <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 id="cnh"
@@ -210,8 +237,8 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="categoria_cnh">Categoria CNH <span className="required">*</span></label>
+            <div className={styles.formGroup}>
+              <label htmlFor="categoria_cnh">Categoria CNH <span className={styles.required}>*</span></label>
               <select
                 id="categoria_cnh"
                 name="categoria_cnh"
@@ -227,7 +254,7 @@ function MotoristaForm() {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="validade_cnh">Validade CNH</label>
               <input
                 type="date"
@@ -239,8 +266,8 @@ function MotoristaForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="nr20_validade">Validade NR20</label>
               <input
                 type="date"
@@ -251,7 +278,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="nr35_validade">Validade NR35</label>
               <input
                 type="date"
@@ -262,7 +289,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="mopp_validade">Validade MOPP</label>
               <input
                 type="date"
@@ -274,8 +301,8 @@ function MotoristaForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="toxicologico_validade">Validade Exame Toxicol.</label>
               <input
                 type="date"
@@ -286,7 +313,7 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="aso_validade">Validade ASO</label>
               <input
                 type="date"
@@ -297,10 +324,11 @@ function MotoristaForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label className="checkbox-label">
+            <div className={styles.formGroup}>
+              <label className={styles.checkboxLabel} htmlFor="ativo">
                 <input
                   type="checkbox"
+                  id="ativo"
                   name="ativo"
                   checked={formData.ativo}
                   onChange={handleChange}
@@ -311,18 +339,125 @@ function MotoristaForm() {
           </div>
         </fieldset>
 
-        <div className="form-actions">
-          <button
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>Dados Bancários / Pix</legend>
+
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="tipo_chave_pix">Tipo de Chave Pix</label>
+              <select
+                id="tipo_chave_pix"
+                name="tipo_chave_pix"
+                value={formData.tipo_chave_pix || ''}
+                onChange={handleChange}
+              >
+                <option value="">Selecione...</option>
+                <option value="cpf">CPF</option>
+                <option value="cnpj">CNPJ</option>
+                <option value="celular">Celular</option>
+                <option value="email">E-mail</option>
+                <option value="aleatoria">Chave Aleatória</option>
+              </select>
+            </div>
+
+            <div className={`${styles.formGroup} ${styles.span2}`}>
+              <label htmlFor="chave_pix">Chave Pix</label>
+              <input
+                type="text"
+                id="chave_pix"
+                name="chave_pix"
+                value={formData.chave_pix || ''}
+                onChange={handleChange}
+                placeholder="Digite a chave Pix"
+              />
+            </div>
+          </div>
+
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="banco">Banco</label>
+              <input
+                type="text"
+                id="banco"
+                name="banco"
+                value={formData.banco || ''}
+                onChange={handleChange}
+                placeholder="Nome do banco"
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="agencia">Agência</label>
+              <input
+                type="text"
+                id="agencia"
+                name="agencia"
+                value={formData.agencia || ''}
+                onChange={handleChange}
+                placeholder="Agência"
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="conta">Conta</label>
+              <input
+                type="text"
+                id="conta"
+                name="conta"
+                value={formData.conta || ''}
+                onChange={handleChange}
+                placeholder="Conta"
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="tipo_conta">Tipo de Conta</label>
+              <select
+                id="tipo_conta"
+                name="tipo_conta"
+                value={formData.tipo_conta || ''}
+                onChange={handleChange}
+              >
+                <option value="">Selecione...</option>
+                <option value="corrente">Corrente</option>
+                <option value="poupanca">Poupança</option>
+                <option value="salario">Salário</option>
+              </select>
+            </div>
+          </div>
+
+          <div className={styles.formRow}>
+            <div className={`${styles.formGroup} ${styles.full}`}>
+              <label htmlFor="favorecido">Favorecido</label>
+              <input
+                type="text"
+                id="favorecido"
+                name="favorecido"
+                value={formData.favorecido || ''}
+                onChange={handleChange}
+                placeholder="Nome do titular da conta, se diferente do motorista"
+              />
+            </div>
+          </div>
+        </fieldset>
+
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-cancel"
+            variant="secondary"
             onClick={() => navigate('/motoristas')}
             disabled={loading}
           >
             Cancelar
-          </button>
-          <button type="submit" className="btn-submit" disabled={loading}>
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={loading}
+            disabled={loading}
+          >
             {loading ? 'Salvando...' : (isEdit ? 'Atualizar' : 'Cadastrar')}
-          </button>
+          </Button>
         </div>
       </form>
 

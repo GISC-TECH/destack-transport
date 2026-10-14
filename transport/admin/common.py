@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.db.models import Sum, Count
 from django.contrib.admin import SimpleListFilter
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 # Import all models
 from ..models import (
@@ -79,7 +80,7 @@ class ManutencoesVeiculoFilter(SimpleListFilter):
         elif self.value() == 'sem_manutencao':
             return queryset.filter(manutencoes__isnull=True)
         elif self.value() == 'manutencao_pendente':
-            return queryset.filter(manutencoes__status='PENDENTE').distinct()
+            return queryset.filter(manutencoes__status__in=['agendada', 'em_andamento']).distinct()
         return queryset
 
 class StatusEncerramentoMDFeFilter(SimpleListFilter):
@@ -235,7 +236,8 @@ class MDFeDocumentosVinculadosInline(admin.TabularInline):
             if modelo == '57': return 'CT-e'
             if modelo == '55': return 'NF-e'
             if modelo == '67': return 'CT-e OS'
-        except: pass
+        except (IndexError, TypeError):
+            pass
         return 'Outro'
 
     def has_add_permission(self, request, obj=None):

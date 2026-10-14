@@ -3,8 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { clientesAPI, externalAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
+import Button from '../Common/Button';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
-import './ClientesList.css';
+import PageHeader from '../Common/PageHeader';
+import styles from './ClienteForm.module.css';
 
 function ClienteForm() {
   const navigate = useNavigate();
@@ -98,8 +100,8 @@ function ClienteForm() {
       }));
     } catch (err) {
       console.error('Erro ao buscar CEP:', err);
-      if (err.message === 'CEP nao encontrado') {
-        toast.warning('CEP nao encontrado');
+      if (err.message === 'CEP não encontrado') {
+        toast.warning('CEP não encontrado');
       } else {
         toast.error(err.message || 'Erro ao buscar CEP. Tente novamente.');
       }
@@ -192,83 +194,82 @@ function ClienteForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="cliente-form-page">
-      <div className="page-header">
-        <div className="header-title">
-          <h1>{isEditing ? 'Editar Cliente' : 'Novo Cliente'}</h1>
-          <p>{isEditing ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente'}</p>
-        </div>
-      </div>
+    <div className={styles.clienteFormPage}>
+      <PageHeader
+        title={isEditing ? 'Editar Cliente' : 'Novo Cliente'}
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate('/clientes')}
+          >
+            ← Voltar
+          </Button>
+        }
+      />
 
       {error && (
-        <div className="alert alert-error">
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-container">
-        <div className="form-section">
-          <h3>Identificacao</h3>
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
+          <h3>Identificação</h3>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>CNPJ *</label>
-              <div style={{ display: 'flex', gap: '10px' }}>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="cnpj">CNPJ <span className={styles.required}>*</span></label>
+              <div className={styles.cnpjInputGroup}>
                 <input
                   type="text"
+                  id="cnpj"
                   name="cnpj"
+                  className={styles.cnpjInput}
                   value={formData.cnpj}
                   onChange={(e) => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})}
                   required
                   placeholder="00.000.000/0000-00"
-                  style={{ flex: 1 }}
                 />
                 <button
                   type="button"
+                  className={`${styles.btnCnpj} ${buscandoCnpj ? styles.loading : ''}`}
                   onClick={buscarCnpj}
                   disabled={buscandoCnpj || formData.cnpj.replace(/\D/g, '').length !== 14}
-                  style={{
-                    padding: '10px 20px',
-                    background: buscandoCnpj ? '#95a5a6' : '#3498db',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: buscandoCnpj ? 'wait' : 'pointer',
-                    fontWeight: '600',
-                    whiteSpace: 'nowrap',
-                    minWidth: '120px'
-                  }}
                 >
                   {buscandoCnpj ? 'Buscando...' : 'Buscar CNPJ'}
                 </button>
               </div>
-              <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+              <small className={styles.fieldHelp}>
                 Digite o CNPJ e clique em "Buscar CNPJ" para preencher automaticamente
               </small>
             </div>
 
-            <div className="form-group">
-              <label>Inscricao Estadual</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="ie">Inscrição Estadual</label>
               <input
                 type="text"
+                id="ie"
                 name="ie"
                 value={formData.ie}
                 onChange={handleChange}
-                placeholder="Isento ou numero"
+                placeholder="Isento ou número"
                 maxLength={20}
               />
-              <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
-                A IE nao esta disponivel na consulta CNPJ (registro estadual)
+              <small className={`${styles.fieldHelp} ${styles.muted}`}>
+                A IE não está disponível na consulta CNPJ (registro estadual)
               </small>
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Razao Social *</label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="razao_social">Razão Social <span className={styles.required}>*</span></label>
               <input
                 type="text"
+                id="razao_social"
                 name="razao_social"
                 value={formData.razao_social}
                 onChange={handleChange}
@@ -277,10 +278,11 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Nome Fantasia</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="nome_fantasia">Nome Fantasia</label>
               <input
                 type="text"
+                id="nome_fantasia"
                 name="nome_fantasia"
                 value={formData.nome_fantasia}
                 onChange={handleChange}
@@ -289,10 +291,11 @@ function ClienteForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Tipo de Frete *</label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="tipo_frete">Tipo de Frete <span className={styles.required}>*</span></label>
               <select
+                id="tipo_frete"
                 name="tipo_frete"
                 value={formData.tipo_frete}
                 onChange={handleChange}
@@ -303,10 +306,11 @@ function ClienteForm() {
               </select>
             </div>
 
-            <div className="form-group">
-              <label>Distancia (km)</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="distancia">Distancia (km)</label>
               <input
                 type="number"
+                id="distancia"
                 name="distancia"
                 value={formData.distancia}
                 onChange={handleChange}
@@ -317,14 +321,15 @@ function ClienteForm() {
           </div>
         </div>
 
-        <div className="form-section">
-          <h3>Endereco</h3>
+        <div className={styles.formSection}>
+          <h3>Endereço</h3>
 
-          <div className="form-row">
-            <div className="form-group" style={{ maxWidth: '150px' }}>
-              <label>CEP</label>
+          <div className={styles.formRow}>
+            <div className={`${styles.formGroup} ${styles.formGroupCep}`}>
+              <label htmlFor="cep">CEP</label>
               <input
                 type="text"
+                id="cep"
                 name="cep"
                 value={formData.cep}
                 onChange={(e) => setFormData({...formData, cep: formatCEP(e.target.value)})}
@@ -333,10 +338,11 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group" style={{ flex: 2 }}>
-              <label>Logradouro</label>
+            <div className={`${styles.formGroup} ${styles.formGroupLogradouro}`}>
+              <label htmlFor="logradouro">Logradouro</label>
               <input
                 type="text"
+                id="logradouro"
                 name="logradouro"
                 value={formData.logradouro}
                 onChange={handleChange}
@@ -345,10 +351,11 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group" style={{ maxWidth: '100px' }}>
-              <label>Numero</label>
+            <div className={`${styles.formGroup} ${styles.formGroupNumero}`}>
+              <label htmlFor="numero">Número</label>
               <input
                 type="text"
+                id="numero"
                 name="numero"
                 value={formData.numero}
                 onChange={handleChange}
@@ -357,11 +364,12 @@ function ClienteForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Complemento</label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="complemento">Complemento</label>
               <input
                 type="text"
+                id="complemento"
                 name="complemento"
                 value={formData.complemento}
                 onChange={handleChange}
@@ -370,10 +378,11 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Bairro</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="bairro">Bairro</label>
               <input
                 type="text"
+                id="bairro"
                 name="bairro"
                 value={formData.bairro}
                 onChange={handleChange}
@@ -382,11 +391,12 @@ function ClienteForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 2 }}>
-              <label>Cidade</label>
+          <div className={styles.formRow}>
+            <div className={`${styles.formGroup} ${styles.formGroupCidade}`}>
+              <label htmlFor="cidade">Cidade</label>
               <input
                 type="text"
+                id="cidade"
                 name="cidade"
                 value={formData.cidade}
                 onChange={handleChange}
@@ -394,9 +404,10 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group" style={{ maxWidth: '100px' }}>
-              <label>UF</label>
+            <div className={`${styles.formGroup} ${styles.formGroupUf}`}>
+              <label htmlFor="estado">UF</label>
               <select
+                id="estado"
                 name="estado"
                 value={formData.estado}
                 onChange={handleChange}
@@ -409,11 +420,12 @@ function ClienteForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>E-mail</label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="email">E-mail</label>
               <input
                 type="email"
+                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
@@ -422,10 +434,11 @@ function ClienteForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Telefone</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="telefone">Telefone</label>
               <input
                 type="text"
+                id="telefone"
                 name="telefone"
                 value={formData.telefone}
                 onChange={handleChange}
@@ -436,24 +449,26 @@ function ClienteForm() {
           </div>
         </div>
 
-        <div className="form-section">
-          <h3>Informacoes Adicionais</h3>
+        <div className={styles.formSection}>
+          <h3>Informações Adicionais</h3>
 
-          <div className="form-group">
-            <label>Observacoes</label>
+          <div className={styles.formGroup}>
+            <label htmlFor="observacoes">Observações</label>
             <textarea
+              id="observacoes"
               name="observacoes"
               value={formData.observacoes}
               onChange={handleChange}
               rows="3"
-              placeholder="Observacoes sobre o cliente..."
+              placeholder="Observações sobre o cliente..."
             />
           </div>
 
-          <div className="form-group checkbox-group">
-            <label>
+          <div className={`${styles.formGroup} ${styles.checkboxGroup}`}>
+            <label htmlFor="ativo">
               <input
                 type="checkbox"
+                id="ativo"
                 name="ativo"
                 checked={formData.ativo}
                 onChange={handleChange}
@@ -463,21 +478,22 @@ function ClienteForm() {
           </div>
         </div>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
             onClick={() => navigate('/clientes')}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="btn-primary"
+            variant="primary"
+            loading={saving}
             disabled={saving}
           >
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Cadastrar')}
-          </button>
+          </Button>
         </div>
       </form>
 

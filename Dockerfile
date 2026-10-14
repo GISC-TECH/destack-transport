@@ -1,5 +1,5 @@
 # Backend Django - Dockerfile
-FROM python:3.11-slim
+FROM python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
 
 # Variáveis de ambiente
 ENV PYTHONUNBUFFERED=1 \
@@ -26,24 +26,26 @@ RUN pip install --upgrade pip
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install gunicorn
-RUN pip install gunicorn
-
 # Verify Django installation
 RUN python -c "import django; print(f'Django version: {django.get_version()}')"
 
 # Copy project files
 COPY . .
 
-# Create directories for static/media files
-RUN mkdir -p /app/staticfiles /app/media /app/logs
+# Create an unprivileged runtime user and writable application directories.
+RUN groupadd --gid 10001 destack \
+    && useradd --uid 10001 --gid destack --create-home --shell /usr/sbin/nologin destack \
+    && mkdir -p /app/staticfiles /app/media /app/logs /app/backups \
+    && chown -R destack:destack /app
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# Set permissions for app directory
-RUN chmod -R 755 /app
+# Preserve writable ownership without marking every source file executable.
+RUN chmod -R u=rwX,go=rX /app
+
+USER destack
 
 # Expose port
 EXPOSE 8000

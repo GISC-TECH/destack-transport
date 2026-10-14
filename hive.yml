@@ -1,0 +1,16 @@
+name: destack-transport
+bees:
+  Server:
+    command: python manage.py runserver
+    auto_start: true
+    auto_restart: false
+  Docker:
+    command: docker compose up
+    auto_start: true
+    auto_restart: false
+  Kimi:
+    command: kimi --auto
+    auto_start: false
+    auto_restart: false
+    type: agent
+    auto_rename: true

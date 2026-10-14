@@ -101,6 +101,11 @@ class AlertaPagamentoSerializer(serializers.Serializer):
     proprios_pendentes = PagamentoProprioSerializer(many=True, required=False, read_only=True)
     # Campo informativo sobre o filtro de dias aplicado
     dias_alerta = serializers.IntegerField(required=False, read_only=True)
+    limite = serializers.IntegerField(required=False, allow_null=True, read_only=True)
+    total_agregados_pendentes = serializers.IntegerField(required=False, read_only=True)
+    total_proprios_pendentes = serializers.IntegerField(required=False, read_only=True)
+    total_pendentes = serializers.IntegerField(required=False, read_only=True)
+    resultado_limitado = serializers.BooleanField(required=False, read_only=True)
 
 
 class AlertaSistemaSerializer(serializers.ModelSerializer):
@@ -110,5 +115,6 @@ class AlertaSistemaSerializer(serializers.ModelSerializer):
         model = AlertaSistema
         fields = [
             'id', 'prioridade', 'data_hora', 'tipo', 'mensagem',
-            'dados_adicionais', 'modulo', 'usuario', 'referencia'
+            'dados_adicionais', 'modulo', 'usuario', 'referencia',
+            'lido', 'resolvido', 'data_resolucao'
         ]

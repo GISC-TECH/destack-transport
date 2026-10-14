@@ -58,7 +58,22 @@ class EGSClient:
 
                 # Navegar para página de login
                 if not self.browser.get(EGS_LOGIN_URL):
-                    logger.error("Falha ao carregar página de login")
+                    logger.error(
+                        "Falha ao carregar página de login (proxy/Tor timeout?). "
+                        "proxy=%s",
+                        getattr(self.browser, 'proxy_url', None) or os.getenv('CHROME_PROXY_URL'),
+                    )
+                    # Backoff maior em falha de rede
+                    if attempt < max_retries:
+                        time.sleep(5 * attempt)
+                    continue
+
+                # Pagina de erro do Chrome mascarada como "login"
+                if self.browser.is_chrome_network_error():
+                    logger.error("Pagina de erro de rede do Chrome ao abrir EGS")
+                    self.browser.screenshot('login_network_error.png')
+                    if attempt < max_retries:
+                        time.sleep(5 * attempt)
                     continue
 
                 time.sleep(3)  # Aguardar Angular carregar
@@ -66,6 +81,9 @@ class EGSClient:
 
                 # Preencher credenciais
                 if not self._fill_login_form():
+                    # Distingue timeout de rede vs seletor quebrado
+                    if self.browser.is_chrome_network_error():
+                        logger.error("Campos ausentes porque a pagina nao carregou (rede/proxy)")
                     continue
 
                 # Clicar no botão de login
@@ -289,16 +307,19 @@ class EGSClient:
                     logger.info(f"Indicador de conflito encontrado: '{indicator}'")
                     return True
 
-            # Verificar se há modal de conflito
-            conflict_modal = self._find_element_multiple_strategies([
-                (By.CSS_SELECTOR, '.modal.show'),
-                (By.CSS_SELECTOR, '.modal[style*="display: block"]'),
-                (By.CSS_SELECTOR, '[class*="session-conflict"]'),
-                (By.XPATH, '//div[contains(@class, "modal")]//span[contains(text(), "acessos")]'),
-            ])
-
-            if conflict_modal:
-                return True
+            # Um modal genérico não significa conflito. O EGS abre comunicados
+            # depois do login (ex.: Reforma Tributária), e tratá-los como sessão
+            # concorrente faz o robô desfazer um login que já funcionou.
+            conflict_modals = self.browser.driver.find_elements(
+                By.CSS_SELECTOR,
+                '[class*="session-conflict"], .modal.show, '
+                '.modal[style*="display: block"]',
+            )
+            for modal in conflict_modals:
+                modal_text = (modal.text or '').lower()
+                if any(indicator in modal_text for indicator in conflict_indicators):
+                    logger.info("Modal de conflito de sessão confirmado pelo conteúdo")
+                    return True
 
             return False
 

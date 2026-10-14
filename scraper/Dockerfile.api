@@ -1,0 +1,26 @@
+# EGS XML Collector - modo API (cliente HTTP, sem Chrome). ~150MB contra ~1.5GB da imagem Selenium.
+FROM python:3.13-slim
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir --upgrade pip
+COPY requirements-api.txt .
+RUN pip install --no-cache-dir -r requirements-api.txt
+
+COPY . .
+RUN mkdir -p /app/downloads /app/logs /app/data
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    TZ=America/Sao_Paulo \
+    EGS_MODE=api \
+    RUN_ON_START=true \
+    SCRAPER_STATE_DIR=/app/data \
+    PROCESSED_FILE=/app/data/processed_xmls.json \
+    DOWNLOAD_DIR=/app/downloads \
+    LOG_DIR=/app/logs
+
+HEALTHCHECK --interval=5m --timeout=10s --start-period=2m --retries=3 \
+    CMD ["python", "-c", "import os,sys,time; p='/app/data/last_job_failed'; sys.exit(1 if os.path.exists(p) else 0)"]
+
+CMD ["python", "scheduler.py"]

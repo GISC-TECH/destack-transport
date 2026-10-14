@@ -1,0 +1,256 @@
+.faturasList {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.faturaFormPage {
+  padding: 0;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.pageHeader h1 {
+  margin: 0;
+  font-size: 28px;
+  color: var(--text-primary);
+}
+
+.headerTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.headerTitle p {
+  margin: 5px 0 0 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.faturaFormPage .formContainer {
+  background-color: var(--card-bg, #fff);
+  border-radius: 14px;
+  border: 1px solid var(--border-light, #e0e0e0);
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.faturaFormPage .formSection {
+  margin-bottom: 28px;
+}
+
+.faturaFormPage .formSection > h3,
+.faturaFormPage .formSection .sectionHeader h3 {
+  margin: 0 0 18px 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light, #e0e0e0);
+  padding-bottom: 10px;
+}
+
+.faturaFormPage .formRow {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.faturaFormPage .formGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.faturaFormPage .formGroup label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary, #374151);
+}
+
+.faturaFormPage .formGroup input,
+.faturaFormPage .formGroup select,
+.faturaFormPage .formGroup textarea {
+  padding: 11px 14px;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--input-bg, #fff);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.faturaFormPage .formGroup input:focus,
+.faturaFormPage .formGroup select:focus,
+.faturaFormPage .formGroup textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(39, 164, 106, 0.1);
+}
+
+.faturaFormPage .formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-light, #e0e0e0);
+}
+
+.headerActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* CT-e checkbox list */
+.cteCheckboxList {
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--border-light, #e0e0e0);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.cteCheckbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cteCheckbox:hover {
+  background: var(--hover-bg, #f5f5f5);
+}
+
+.cteCheckbox input {
+  margin-top: 4px;
+}
+
+/* Form sections */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.valorTotal {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-color, #2d6a4f);
+}
+
+.itemRow {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr auto;
+  gap: 12px;
+  align-items: flex-end;
+  padding: 16px;
+  border: 1px solid var(--border-light, #e0e0e0);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: var(--card-bg, #fff);
+}
+
+.itemCte,
+.itemDescricao,
+.itemValor {
+  min-width: 0;
+}
+
+.btnRemove {
+  margin-bottom: 8px;
+}
+
+.hint {
+  color: var(--text-secondary, #666);
+  font-size: 14px;
+}
+
+.filtrosContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.mobileCards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .mobileCards {
+    display: flex;
+  }
+}
+
+.mobileCard {
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.mobileCard:last-child {
+  margin-bottom: 0;
+}
+
+.mobileCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.mobileCardTitle {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mobileCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.mobileCardActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .itemRow {
+    grid-template-columns: 1fr;
+  }
+
+  .filtrosContainer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

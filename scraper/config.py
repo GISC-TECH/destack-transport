@@ -48,7 +48,16 @@ DAYS_LOOKBACK = int(os.getenv('DAYS_LOOKBACK', '7'))
 # ===========================================
 SELENIUM_HEADLESS = os.getenv('SELENIUM_HEADLESS', 'false').lower() == 'true'
 SELENIUM_TIMEOUT = int(os.getenv('SELENIUM_TIMEOUT', '30'))
-PAGE_LOAD_TIMEOUT = int(os.getenv('PAGE_LOAD_TIMEOUT', '120'))
+# Com Tor/Privoxy o EGS demora mais; 120s era curto em circuitos lentos
+PAGE_LOAD_TIMEOUT = int(os.getenv('PAGE_LOAD_TIMEOUT', '180'))
+
+# Proxy do Chrome: SEMPRE HTTP (Privoxy no container tor ou pproxy local).
+# Nao usar socks5:// direto no Chrome — causa ERR_TIMED_OUT no container.
+CHROME_PROXY_URL = os.getenv('CHROME_PROXY_URL', '')
+# Upstream SOCKS do Tor (usado pelo entrypoint/pproxy se necessario)
+TOR_SOCKS_URL = os.getenv('TOR_SOCKS_URL', 'socks5://destack_tor:9050')
+# HTTP Privoxy exposto pelo container tor
+TOR_HTTP_PROXY = os.getenv('TOR_HTTP_PROXY', 'http://destack_tor:8118')
 
 # ===========================================
 # LOGGING

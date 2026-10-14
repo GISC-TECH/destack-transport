@@ -8,6 +8,8 @@ import subprocess
 import tempfile
 import hashlib
 import shutil
+import shlex
+import secrets
 import traceback
 from io import StringIO, BytesIO
 import openpyxl
@@ -29,6 +31,7 @@ from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from django.core.cache import cache
 
 # Imports Django REST Framework
 from rest_framework import viewsets, status
@@ -39,6 +42,12 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser # IsAdminUse
 from rest_framework import serializers # Para ValidationError
 
 # Imports Locais
+from ..permissions import (
+    CanManageBackupsPermission,
+    CapabilityPermission,
+    TransportModelPermission,
+)
+from ..services.backup_service import resolve_registered_backup_path
 from ..serializers.config_serializers import ( # Use .. para voltar um nível
     ParametroSistemaSerializer,
     ConfiguracaoEmpresaSerializer,
@@ -60,6 +69,7 @@ from ..models import (
     PagamentoAgregado,
     PagamentoProprio,
     ManutencaoVeiculo,
+    Motorista,
 )
 
 # ===============================================================
@@ -69,19 +79,12 @@ from ..models import (
 class ParametroSistemaViewSet(viewsets.ModelViewSet):
     """
     API para gerenciar parâmetros do sistema.
-    Apenas usuários autenticados podem ver, admins podem modificar.
+    Usuários do grupo Administrativo podem modificar; demais usuários autenticados
+    podem apenas consultar.
     """
     queryset = ParametroSistema.objects.all().order_by('grupo', 'nome')
     serializer_class = ParametroSistemaSerializer
-    permission_classes = [IsAuthenticated] # Permite leitura para todos autenticados
-
-    def get_permissions(self):
-        """ Permissões mais restritas para escrita. """
-        if self.action in ['create', 'update', 'partial_update', 'destroy', 'atualizar_multiplos']:
-            # Apenas admins podem modificar
-            return [IsAuthenticated(), IsAdminUser()]
-        # Permite leitura (list, retrieve, valores) para qualquer autenticado
-        return [IsAuthenticated()]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def get_queryset(self):
         """Permite filtrar parâmetros por grupo e editabilidade."""
@@ -120,7 +123,7 @@ class ParametroSistemaViewSet(viewsets.ModelViewSet):
 
         return Response(parametros)
 
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, IsAdminUser])
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, TransportModelPermission])
     @transaction.atomic # Garante atomicidade na atualização múltipla
     def atualizar_multiplos(self, request):
         """
@@ -191,17 +194,12 @@ class ParametroSistemaViewSet(viewsets.ModelViewSet):
 class ConfiguracaoEmpresaViewSet(viewsets.ModelViewSet):
     """
     API para gerenciar configurações da empresa (dados da empresa usuária).
-    Assume que haverá apenas UMA instância deste modelo.
+    Usuários do grupo Administrativo podem modificar; demais usuários autenticados
+    podem apenas consultar.
     """
     queryset = ConfiguracaoEmpresa.objects.all()
     serializer_class = ConfiguracaoEmpresaSerializer
-    permission_classes = [IsAuthenticated] # Leitura para autenticados
-
-    def get_permissions(self):
-        """ Permissões mais restritas para escrita (apenas Admin). """
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAuthenticated(), IsAdminUser()]
-        return [IsAuthenticated()]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def list(self, request, *args, **kwargs):
         """
@@ -252,9 +250,11 @@ class BackupAPIView(viewsets.ViewSet):
     """
     API para gerenciar backups do banco de dados do sistema.
     Ações disponíveis: list, gerar, download, restaurar (simulado).
-    Permissões: Apenas Administradores.
+    Permissões: Apenas usuários do grupo Administrativo.
     """
-    permission_classes = [IsAuthenticated, IsAdminUser] # Apenas Admins
+    permission_classes = [IsAuthenticated, CanManageBackupsPermission]
+    queryset = RegistroBackup.objects.all()
+    serializer_class = RegistroBackupSerializer
 
     def list(self, request):
         """Listar backups registrados no banco de dados."""
@@ -271,7 +271,16 @@ class BackupAPIView(viewsets.ViewSet):
     def gerar(self, request):
         """Gerar um novo backup do banco de dados e registrar."""
         timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+        unique_id = secrets.token_hex(6)
         registro = None # Para guardar o registro criado
+        lock_key = 'backup:database:generation'
+        lock_token = unique_id
+
+        if not cache.add(lock_key, lock_token, timeout=15 * 60):
+            return Response(
+                {"detail": "Ja existe uma geracao de backup em andamento."},
+                status=status.HTTP_409_CONFLICT,
+            )
 
         try:
             # --- Lógica Real de Backup (Adaptar ao seu banco) ---
@@ -283,51 +292,67 @@ class BackupAPIView(viewsets.ViewSet):
             # Define diretório e nome do arquivo
             backup_dir = os.path.join(settings.MEDIA_ROOT, 'backups')
             os.makedirs(backup_dir, exist_ok=True) # Cria o diretório se não existir
-            filename = f"backup_{db_name}_{timestamp}.sql" # Nome mais descritivo
+            filename = f"backup_{db_name}_{timestamp}_{unique_id}.sql"
             filepath = os.path.join(backup_dir, filename)
 
-            command = None
             env = os.environ.copy() # Copia variáveis de ambiente
+            pgpass_file = None
 
-            # Comando para SQLite
-            if 'sqlite3' in db_engine:
-                command = f"sqlite3 \"{db_name}\" .dump > \"{filepath}\""
-            # Comando para PostgreSQL (exemplo)
-            elif 'postgresql' in db_engine:
-                db_user = db_settings.get('USER')
-                db_host = db_settings.get('HOST', 'localhost')
-                db_port = db_settings.get('PORT', '5432')
-                db_password = db_settings.get('PASSWORD')
-
-                # Usar arquivo .pgpass temporário em vez de variável de ambiente
-                # Isso evita expor a senha em `ps aux`
-                pgpass_file = None
-                if db_password:
-                    import stat
-                    pgpass_file = os.path.join(tempfile.gettempdir(), f'.pgpass_{timestamp}')
-                    with open(pgpass_file, 'w') as f:
-                        # Formato: hostname:port:database:username:password
-                        f.write(f"{db_host}:{db_port}:{db_name}:{db_user}:{db_password}\n")
-                    os.chmod(pgpass_file, stat.S_IRUSR | stat.S_IWUSR)  # 600 - somente owner
-                    env['PGPASSFILE'] = pgpass_file
-
-                command = f"pg_dump -U {db_user} -h {db_host} -p {db_port} -d {db_name} -f \"{filepath}\""
-            # Adicionar comandos para outros bancos (MySQL, etc.) se necessário
-            else:
-                raise NotImplementedError(f"Backup não implementado para o banco de dados: {db_engine}")
-
-            # Executa o comando
-            logger.info("Executando comando de backup: %s", command)
             try:
-                result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True, encoding='utf-8', errors='ignore', env=env)
-                logger.info(
-                    "Comando de backup concluído. Saída: %s, Erro: %s",
-                    result.stdout,
-                    result.stderr,
-                )
+                # Comando para SQLite (sem shell, evitando command injection)
+                if 'sqlite3' in db_engine:
+                    logger.info("Executando comando de backup SQLite: sqlite3 %s .dump", db_name)
+                    with open(filepath, 'w') as out_f:
+                        result = subprocess.run(
+                            ['sqlite3', str(db_name), '.dump'],
+                            shell=False, check=True, stdout=out_f,
+                            text=True, encoding='utf-8', errors='ignore', env=env
+                        )
+                # Comando para PostgreSQL (sem shell, evitando command injection)
+                elif 'postgresql' in db_engine:
+                    db_user = db_settings.get('USER')
+                    db_host = db_settings.get('HOST', 'localhost')
+                    db_port = db_settings.get('PORT', '5432')
+                    db_password = db_settings.get('PASSWORD')
+
+                    # Usar arquivo .pgpass temporário em vez de variável de ambiente
+                    # Isso evita expor a senha em `ps aux`
+                    if db_password:
+                        import stat
+                        pgpass_file = os.path.join(
+                            tempfile.gettempdir(),
+                            f'.pgpass_{timestamp}_{unique_id}',
+                        )
+                        with open(pgpass_file, 'w') as f:
+                            # Formato: hostname:port:database:username:password
+                            f.write(f"{db_host}:{db_port}:{db_name}:{db_user}:{db_password}\n")
+                        os.chmod(pgpass_file, stat.S_IRUSR | stat.S_IWUSR)  # 600 - somente owner
+                        env['PGPASSFILE'] = pgpass_file
+
+                    command = [
+                        'pg_dump',
+                        '-U', str(db_user),
+                        '-h', str(db_host),
+                        '-p', str(db_port),
+                        '-d', str(db_name),
+                        '-f', str(filepath),
+                    ]
+                    logger.info("Executando comando de backup: %s", ' '.join(shlex.quote(str(arg)) for arg in command))
+                    result = subprocess.run(
+                        command, shell=False, check=True, capture_output=True,
+                        text=True, encoding='utf-8', errors='ignore', env=env
+                    )
+                    logger.info(
+                        "Comando de backup concluído. Saída: %s, Erro: %s",
+                        result.stdout,
+                        result.stderr,
+                    )
+                # Adicionar comandos para outros bancos (MySQL, etc.) se necessário
+                else:
+                    raise NotImplementedError(f"Backup não implementado para o banco de dados: {db_engine}")
             finally:
                 # Limpa arquivo .pgpass temporário (se existir)
-                if 'pgpass_file' in dir() and pgpass_file and os.path.exists(pgpass_file):
+                if pgpass_file and os.path.exists(pgpass_file):
                     try:
                         os.remove(pgpass_file)
                     except OSError:
@@ -355,7 +380,14 @@ class BackupAPIView(viewsets.ViewSet):
             logger.info("INFO: Backup %s gerado e registrado com sucesso.", filename)
             # --- Fim da Lógica Real ---
 
-            # Retorna FileResponse para download direto do backup gerado
+            if request.query_params.get('response') == 'json':
+                return Response({
+                    "success": True,
+                    "message": "Backup gerado com sucesso!",
+                    "backup": RegistroBackupSerializer(registro).data,
+                }, status=status.HTTP_201_CREATED)
+
+            # Mantém compatibilidade com clientes que esperam o arquivo diretamente.
             response = FileResponse(
                 open(filepath, 'rb'),
                 as_attachment=True,
@@ -364,6 +396,7 @@ class BackupAPIView(viewsets.ViewSet):
             # Opcional: Adicionar headers com informações do registro
             response['X-Backup-ID'] = registro.id
             response['X-Backup-Status'] = registro.status
+            response['Cache-Control'] = 'private, no-store'
             return response
 
         except subprocess.CalledProcessError as cpe:
@@ -401,35 +434,28 @@ class BackupAPIView(viewsets.ViewSet):
                     logger.warning("Falha ao registrar erro de backup no banco: %s", db_err)
             return Response({"detail": f"Erro inesperado ao gerar backup: {str(e)}"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        finally:
+            if cache.get(lock_key) == lock_token:
+                cache.delete(lock_key)
 
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
         """Baixar um arquivo de backup existente pelo ID do registro."""
         registro = get_object_or_404(RegistroBackup, pk=pk)
+        backup_path = resolve_registered_backup_path(registro.localizacao)
 
-        # Verifica se o arquivo ainda existe na localização registrada
-        if not registro.localizacao or not os.path.exists(registro.localizacao):
+        if backup_path is None:
              return Response({"detail": f"Arquivo de backup '{registro.nome_arquivo}' não encontrado na localização registrada."},
                             status=status.HTTP_404_NOT_FOUND)
 
         try:
-            # Abre o arquivo com context manager para garantir fechamento em caso de erro
-            file_handle = open(registro.localizacao, 'rb')
-            # FileResponse fecha o arquivo automaticamente após enviar (Django 4.2+)
-            # mas precisamos garantir que se houver erro na criação do FileResponse,
-            # o arquivo seja fechado
-            try:
-                response = FileResponse(
-                    file_handle,
-                    as_attachment=True,
-                    filename=registro.nome_arquivo  # Usa o nome original para o download
-                )
-                # Define flag para FileResponse gerenciar o fechamento
-                response.file_to_stream.close_on_del = True
-                return response
-            except Exception:
-                file_handle.close()
-                raise
+            response = FileResponse(
+                backup_path.open('rb'),
+                as_attachment=True,
+                filename=registro.nome_arquivo,
+            )
+            response['Cache-Control'] = 'private, no-store'
+            return response
         except FileNotFoundError:
             return Response({"detail": f"Arquivo de backup não encontrado: {registro.nome_arquivo}"},
                             status=status.HTTP_404_NOT_FOUND)
@@ -463,34 +489,44 @@ class BackupAPIView(viewsets.ViewSet):
             # O ideal é salvar o arquivo e instruir o admin a restaurar manualmente.
 
             logger.info(
-                "INFO: Solicitação de restauração recebida com arquivo %s (%s bytes) pelo usuário %s.",
+                "AUDIT: Solicitação de restauração recebida com arquivo %s (%s bytes) pelo usuário %s (ID: %s).",
                 backup_file.name,
                 backup_file.size,
                 request.user.username,
+                request.user.id,
             )
 
-            # Exemplo Simulado: Salva o arquivo temporariamente para inspeção
+            # Salva o arquivo temporariamente para inspeção/validação e limpa em finally
             temp_dir = tempfile.mkdtemp(prefix="backup_restore_")
-            temp_path = os.path.join(temp_dir, backup_file.name)
             try:
+                temp_path = os.path.join(temp_dir, backup_file.name)
                 with open(temp_path, 'wb+') as destination:
                     for chunk in backup_file.chunks():
                         destination.write(chunk)
-                logger.info("INFO: Arquivo de backup salvo temporariamente em %s.", temp_path)
+                logger.info(
+                    "AUDIT: Arquivo de backup salvo temporariamente em %s pelo usuário %s.",
+                    temp_path, request.user.username
+                )
                 # Aqui, você poderia adicionar lógica para notificar o admin
             finally:
-                 # É importante limpar o diretório temporário depois,
-                 # a menos que o admin precise do arquivo lá.
-                # shutil.rmtree(temp_dir) # Descomentar se quiser limpar automaticamente
-                logger.info("INFO: Limpeza do diretório temporário %s pode ser necessária.", temp_dir)
-
+                # Sempre remove o diretório temporário para não expor dados sensíveis
+                try:
+                    shutil.rmtree(temp_dir)
+                    logger.info(
+                        "AUDIT: Diretório temporário %s removido após restauração pelo usuário %s.",
+                        temp_dir, request.user.username
+                    )
+                except OSError as cleanup_err:
+                    logger.warning(
+                        "Falha ao remover diretório temporário %s: %s", temp_dir, cleanup_err
+                    )
 
             # Retorna mensagem indicando que a restauração é manual
+            # NÃO expõe o caminho temporário na resposta
             return Response({
-                "message": "Arquivo de backup recebido com sucesso. A restauração do banco de dados deve ser realizada manualmente por um administrador utilizando este arquivo.",
+                "message": "Extensao do arquivo conferida. Nenhuma restauracao foi executada; guarde o arquivo original para restauracao manual por um administrador.",
                 "arquivo_recebido": backup_file.name,
                 "tamanho_bytes": backup_file.size,
-                "local_temporario": temp_path # Informa onde foi salvo (APENAS PARA DEBUG/ADMIN)
             }, status=status.HTTP_202_ACCEPTED) # 202 Accepted indica que a requisição foi aceita, mas a ação principal (restauração) não foi feita aqui.
             # --- Fim da Lógica (Simulada) ---
 
@@ -510,7 +546,8 @@ class RelatorioAPIView(APIView):
     Suporta diferentes tipos de relatórios e formatos de saída.
     Funcionalidade pendente de implementação.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'dashboard.relatorios'
 
     def get(self, request, format=None):
         """
@@ -568,6 +605,8 @@ class RelatorioAPIView(APIView):
                 dados = self._gerar_relatorio_km_rodado(data_inicio, data_fim, filtros)
             elif tipo == 'manutencoes':
                 dados = self._gerar_relatorio_manutencoes(data_inicio, data_fim, filtros)
+            elif tipo == 'motoristas':
+                dados = self._gerar_relatorio_motoristas(data_inicio, data_fim, filtros)
             else:
                  return Response({"detail": f"Tipo de relatório '{tipo}' não suportado ou não implementado."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -587,15 +626,20 @@ class RelatorioAPIView(APIView):
                  return Response({"detail": f"Formato '{formato}' não suportado."}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            logger.warning("Erro ao gerar relatório '%s': %s", tipo, e)
-            traceback.print_exc()
-            return Response({"detail": f"Erro interno ao gerar relatório: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.exception("Erro ao gerar relatório '%s': %s", tipo, e)
+            return Response({"detail": "Erro interno ao gerar relatório."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    # --- Métodos Auxiliares de Geração (NÃO IMPLEMENTADOS) ---
+    # --- Métodos Auxiliares de Geração ---
     def _gerar_relatorio_faturamento(self, data_inicio, data_fim, filtros):
-        """Gera dados agregados de faturamento por mês."""
+        """Gera dados agregados de faturamento por mês.
+
+        Exclui CT-es cancelados (cancelamento homologado, cStat 135), que não
+        representam receita efetiva.
+        """
         from datetime import timedelta
         qs = CTePrestacaoServico.objects.select_related('cte__identificacao')
+        # Não conta documentos cancelados na receita
+        qs = qs.exclude(cte__cancelamento__c_stat=135)
         if data_inicio:
             qs = qs.filter(cte__identificacao__data_emissao__date__gte=data_inicio)
         if data_fim:
@@ -621,6 +665,8 @@ class RelatorioAPIView(APIView):
             qs = qs.filter(ativo=bool(filtros['ativo']))
         if 'placa' in filtros:
             qs = qs.filter(placa__icontains=filtros['placa'])
+        if filtros.get('tipo_proprietario'):
+            qs = qs.filter(tipo_proprietario=filtros['tipo_proprietario'])
         serializer = VeiculoSerializer(qs, many=True)
         return serializer.data
 
@@ -633,8 +679,9 @@ class RelatorioAPIView(APIView):
         qs = CTeDocumento.objects.filter(
             identificacao__isnull=False
         ).select_related(
-            'identificacao', 'emitente', 'remetente', 'destinatario', 'prestacao'
-        )
+            'identificacao', 'emitente', 'remetente', 'destinatario', 'prestacao',
+            'cancelamento', 'modal_rodoviario'
+        ).prefetch_related('modal_rodoviario__motoristas')
 
         # Filtros por data
         if data_inicio:
@@ -653,45 +700,84 @@ class RelatorioAPIView(APIView):
             qs = qs.filter(emitente__razao_social__icontains=filtros['emitente'])
         if 'modalidade' in filtros and filtros['modalidade']:
             qs = qs.filter(modalidade=filtros['modalidade'])
+        if 'status' in filtros and filtros['status']:
+            qs = qs.filter(status=filtros['status'])
         if 'processado' in filtros:
             qs = qs.filter(processado=bool(filtros['processado']))
+        # Filtro por condutor/motorista (nome ou CPF do vínculo automático)
+        if filtros.get('condutor'):
+            qs = qs.filter(modal_rodoviario__motoristas__nome__icontains=filtros['condutor'])
+        if filtros.get('motorista_cpf'):
+            cpf_digits = ''.join(ch for ch in str(filtros['motorista_cpf']) if ch.isdigit())
+            qs = qs.filter(modal_rodoviario__motoristas__cpf=cpf_digits)
+        if filtros.get('placa'):
+            qs = qs.filter(modal_rodoviario__veiculos__placa__icontains=filtros['placa'])
+        # Exclui cancelados por padrão, salvo se incluir_cancelados=1
+        if not filtros.get('incluir_cancelados'):
+            qs = qs.exclude(cancelamento__c_stat=135)
 
         # Limita quantidade para performance
-        qs = qs.order_by('-identificacao__data_emissao')[:1000]
+        qs = qs.distinct().order_by('-identificacao__data_emissao')[:1000]
+
+        TIPO_CTE = {0: 'Normal', 1: 'Complementar', 2: 'Anulação', 3: 'Substituto'}
 
         dados = []
         for cte in qs:
+            ide = cte.identificacao
+            prest = cte.prestacao
+
             # Dados do CT-e
-            try:
-                numero = cte.identificacao.numero
-                data_emissao = cte.identificacao.data_emissao.strftime('%d/%m/%Y %H:%M')
-            except Exception:
-                numero = None
-                data_emissao = None
+            numero = getattr(ide, 'numero', None)
+            data_emissao = ide.data_emissao.strftime('%d/%m/%Y %H:%M') if getattr(ide, 'data_emissao', None) else None
+            remetente = getattr(cte.remetente, 'razao_social', None) if cte.remetente else None
+            destinatario = getattr(cte.destinatario, 'razao_social', None) if cte.destinatario else None
 
-            try:
-                remetente = cte.remetente.razao_social
-            except Exception:
-                remetente = None
+            valor_total = float(prest.valor_total_prestado) if prest and prest.valor_total_prestado else 0
+            valor_recebido = float(prest.valor_recebido) if prest and prest.valor_recebido else 0
+            valor_cif = float(prest.valor_cif) if prest and prest.valor_cif else 0
+            valor_fob = float(prest.valor_fob) if prest and prest.valor_fob else 0
 
+            # Condutor (vínculo automático do XML)
+            condutor = None
+            placa_tracao = None
             try:
-                destinatario = cte.destinatario.razao_social
+                if cte.modal_rodoviario:
+                    primeiro_moto = cte.modal_rodoviario.motoristas.first()
+                    condutor = primeiro_moto.nome if primeiro_moto else None
+                    tracao = cte.modal_rodoviario.veiculos.filter(tipo_veiculo='0').first()
+                    if not tracao:
+                        tracao = cte.modal_rodoviario.veiculos.first()
+                    placa_tracao = tracao.placa if tracao else None
             except Exception:
-                destinatario = None
+                pass
 
-            try:
-                valor_total = float(cte.prestacao.valor_total_prestado) if cte.prestacao.valor_total_prestado else 0
-            except Exception:
-                valor_total = 0
+            cancelado = bool(getattr(cte, 'cancelamento', None) and cte.cancelamento.c_stat == 135)
 
             dados.append({
+                'chave': cte.chave,
                 'numero': numero,
+                'serie': ide.serie if ide else None,
                 'data_emissao': data_emissao,
                 'remetente': remetente,
                 'destinatario': destinatario,
+                'condutor': condutor or '-',
+                'placa': placa_tracao or '-',
+                'uf_origem': ide.uf_ini if ide else None,
+                'municipio_origem': ide.nome_mun_ini if ide else None,
+                'uf_destino': ide.uf_fim if ide else None,
+                'municipio_destino': ide.nome_mun_fim if ide else None,
+                'dist_km': ide.dist_km if ide else 0,
                 'valor_total': valor_total,
+                'valor_recebido': valor_recebido,
+                'valor_cif': valor_cif,
+                'valor_fob': valor_fob,
                 'modalidade': cte.modalidade or 'N/A',
+                'tipo_cte': TIPO_CTE.get(ide.tipo_cte, 'N/A') if ide else 'N/A',
+                'cfop': ide.cfop if ide else None,
+                'natureza_operacao': ide.natureza_operacao if ide else None,
                 'pago': 'Sim' if cte.pago else 'Não',
+                'status': cte.get_status_display() if hasattr(cte, 'get_status_display') else cte.status,
+                'situacao': 'Cancelado' if cancelado else 'Ativo',
             })
 
         return dados
@@ -727,64 +813,74 @@ class RelatorioAPIView(APIView):
             qs = qs.filter(identificacao__n_mdf=filtros['numero'])
         if 'emitente' in filtros and filtros['emitente']:
             qs = qs.filter(emitente__razao_social__icontains=filtros['emitente'])
+        if 'status' in filtros and filtros['status']:
+            qs = qs.filter(status=filtros['status'])
         if 'encerrado' in filtros:
-            qs = qs.filter(encerrado=bool(filtros['encerrado']))
+            enc_val = str(filtros['encerrado']).lower()
+            qs = qs.filter(encerrado=(enc_val in ('true', '1', 'sim')))
         if 'processado' in filtros:
             qs = qs.filter(processado=bool(filtros['processado']))
+        # Filtros por veículo e condutor
+        if filtros.get('placa'):
+            qs = qs.filter(modal_rodoviario__veiculo_tracao__placa__icontains=filtros['placa'])
+        if filtros.get('condutor'):
+            qs = qs.filter(condutores__nome__icontains=filtros['condutor'])
+        if filtros.get('motorista_cpf'):
+            cpf_digits = ''.join(ch for ch in str(filtros['motorista_cpf']) if ch.isdigit())
+            qs = qs.filter(condutores__cpf=cpf_digits)
+        qs = qs.distinct()
 
         # Limita quantidade para performance
         qs = qs.order_by('-identificacao__dh_emi')[:1000]
 
+        MODAL_MDFE = {'1': 'Rodoviário', '2': 'Aéreo', '3': 'Aquaviário', '4': 'Ferroviário'}
+
         dados = []
         for mdfe in qs:
-            # Pega placa do veículo de tração
+            ide = mdfe.identificacao
+            totais = mdfe.totais
+
             placa_tracao = None
+            renavam = None
             try:
                 if mdfe.modal_rodoviario and mdfe.modal_rodoviario.veiculo_tracao:
                     placa_tracao = mdfe.modal_rodoviario.veiculo_tracao.placa
+                    renavam = mdfe.modal_rodoviario.veiculo_tracao.renavam
             except Exception:
                 pass
 
-            # Conta CT-es vinculados
-            try:
-                qtd_ctes = mdfe.docs_vinculados_mdfe.count()
-            except Exception:
-                qtd_ctes = 0
+            qtd_ctes = mdfe.docs_vinculados_mdfe.count() if hasattr(mdfe, 'docs_vinculados_mdfe') else 0
+            condutor = mdfe.condutores.first()
+            condutor_nome = condutor.nome if condutor else None
 
-            # Pega primeiro condutor
-            try:
-                condutor = mdfe.condutores.first()
-                condutor_nome = condutor.nome if condutor else None
-            except Exception:
-                condutor_nome = None
+            numero = ide.n_mdf if ide else None
+            data_emissao = ide.dh_emi.strftime('%d/%m/%Y %H:%M') if ide and ide.dh_emi else None
+            dh_ini_viagem = ide.dh_ini_viagem.strftime('%d/%m/%Y %H:%M') if ide and ide.dh_ini_viagem else None
 
-            # Dados do MDF-e
-            try:
-                numero = mdfe.identificacao.n_mdf
-                data_emissao = mdfe.identificacao.dh_emi.strftime('%d/%m/%Y %H:%M')
-                uf_inicio = mdfe.identificacao.uf_ini
-                uf_fim = mdfe.identificacao.uf_fim
-            except Exception:
-                numero = None
-                data_emissao = None
-                uf_inicio = None
-                uf_fim = None
-
-            try:
-                valor_carga = float(mdfe.totais.v_carga) if mdfe.totais.v_carga else 0
-            except Exception:
-                valor_carga = 0
+            valor_carga = float(totais.v_carga) if totais and totais.v_carga else 0
+            qtd_nfe = totais.q_nfe if totais else None
+            qtd_carga = float(totais.q_carga) if totais and totais.q_carga else 0
+            unidade_carga = totais.c_unid if totais else None
 
             dados.append({
+                'chave': mdfe.chave,
                 'numero': numero,
+                'serie': ide.serie if ide else None,
                 'data_emissao': data_emissao,
-                'uf_inicio': uf_inicio,
-                'uf_fim': uf_fim,
+                'dh_ini_viagem': dh_ini_viagem,
+                'uf_inicio': ide.uf_ini if ide else None,
+                'uf_fim': ide.uf_fim if ide else None,
                 'placa': placa_tracao or '-',
+                'renavam': renavam,
                 'condutor': condutor_nome or '-',
                 'qtd_ctes': qtd_ctes,
+                'qtd_nfe': qtd_nfe,
+                'peso_carga': qtd_carga,
+                'unidade_carga': unidade_carga,
                 'valor_carga': valor_carga,
+                'modal': MODAL_MDFE.get(ide.modal, ide.modal) if ide else None,
                 'encerrado': 'Sim' if mdfe.encerrado else 'Não',
+                'status': mdfe.get_status_display() if hasattr(mdfe, 'get_status_display') else mdfe.status,
             })
 
         return dados
@@ -825,12 +921,14 @@ class RelatorioAPIView(APIView):
                     'tipo': 'Agregado',
                     'id': pag.id,
                     'cte_numero': pag.cte.identificacao.numero if hasattr(pag.cte, 'identificacao') else None,
+                    'cte_chave': pag.cte.chave if pag.cte else None,
                     'placa': pag.placa,
                     'condutor': pag.condutor_nome,
                     'cpf_condutor': pag.condutor_cpf,
                     'valor_frete': float(pag.valor_frete_total),
                     'percentual_repasse': float(pag.percentual_repasse),
-                    'valor_repassado': float(pag.valor_repassado),
+                    'desconto': float(pag.desconto) if pag.desconto else 0,
+                    'valor_total_pagar': float(pag.valor_repassado),
                     'status': pag.status,
                     'data_prevista': pag.data_prevista.strftime('%Y-%m-%d'),
                     'data_pagamento': pag.data_pagamento.strftime('%Y-%m-%d') if pag.data_pagamento else None,
@@ -866,15 +964,17 @@ class RelatorioAPIView(APIView):
                 dados.append({
                     'tipo': 'Próprio',
                     'id': pag.id,
-                    'cte_numero': None,  # Não se aplica a pagamentos próprios
+                    'cte_numero': pag.cte_numero,
+                    'cte_chave': pag.cte.chave if pag.cte else None,
                     'placa': pag.veiculo.placa,
-                    'condutor': 'Condutor Próprio',
-                    'cpf_condutor': None,
-                    'valor_frete': None,  # Não se aplica
-                    'percentual_repasse': None,  # Não se aplica
-                    'valor_repassado': float(pag.valor_total_pagar),
+                    'condutor': pag.motorista_nome or 'Condutor Próprio',
+                    'cpf_condutor': pag.motorista_cpf,
+                    'valor_frete': None,
+                    'percentual_repasse': None,
+                    'desconto': None,
+                    'valor_total_pagar': float(pag.valor_total_pagar),
                     'status': pag.status,
-                    'data_prevista': None,  # Pagamentos próprios usam período
+                    'data_prevista': pag.data_prevista.strftime('%Y-%m-%d') if pag.data_prevista else None,
                     'data_pagamento': pag.data_pagamento.strftime('%Y-%m-%d') if pag.data_pagamento else None,
                     'observacoes': pag.obs or '',
                     'periodo': pag.periodo,
@@ -910,26 +1010,33 @@ class RelatorioAPIView(APIView):
         if 'placa' in filtros and filtros['placa']:
             qs_ctes = qs_ctes.filter(modal_rodoviario__veiculos__placa__icontains=filtros['placa'])
             
-        # Processa CT-es para somar KM
+        # Processa CT-es para somar KM.
+        # A distância (dist_km) é da viagem do CT-e e deve ser atribuída a UM
+        # veículo — o de tração (tpVeic='0'). Atribuir a todos os veículos do
+        # modal (tração + reboque) contava o KM em dobro. Sem tração explícita,
+        # usa o primeiro veículo.
         for cte in qs_ctes:
             if hasattr(cte, 'modal_rodoviario') and cte.modal_rodoviario:
-                for veiculo in cte.modal_rodoviario.veiculos.all():
-                    placa = veiculo.placa
-                    km = cte.identificacao.dist_km if hasattr(cte, 'identificacao') and cte.identificacao.dist_km else 0
-                    
-                    if placa not in km_por_placa:
-                        km_por_placa[placa] = {
-                            'placa': placa,
-                            'km_ctes': 0,
-                            'km_manutencoes': 0,
-                            'qtd_ctes': 0,
-                            'qtd_manutencoes': 0,
-                            'ultima_manutencao': None,
-                            'km_total_estimado': 0
-                        }
-                    
-                    km_por_placa[placa]['km_ctes'] += km
-                    km_por_placa[placa]['qtd_ctes'] += 1
+                veiculos = list(cte.modal_rodoviario.veiculos.all())
+                if not veiculos:
+                    continue
+                tracao = next((v for v in veiculos if v.tipo_veiculo == '0'), veiculos[0])
+                placa = tracao.placa
+                km = cte.identificacao.dist_km if hasattr(cte, 'identificacao') and cte.identificacao.dist_km else 0
+
+                if placa not in km_por_placa:
+                    km_por_placa[placa] = {
+                        'placa': placa,
+                        'km_ctes': 0,
+                        'km_manutencoes': 0,
+                        'qtd_ctes': 0,
+                        'qtd_manutencoes': 0,
+                        'ultima_manutencao': None,
+                        'km_total_estimado': 0
+                    }
+
+                km_por_placa[placa]['km_ctes'] += km
+                km_por_placa[placa]['qtd_ctes'] += 1
         
         # KM das manutenções (quilometragem registrada)
         qs_manutencoes = ManutencaoVeiculo.objects.select_related('veiculo')
@@ -1045,6 +1152,92 @@ class RelatorioAPIView(APIView):
                 'fornecedor': m.fornecedor or m.oficina or '-',
                 'quilometragem': m.quilometragem or '-',
                 'nota_fiscal': m.nota_fiscal or '-',
+            })
+
+        return dados
+
+    def _gerar_relatorio_motoristas(self, data_inicio, data_fim, filtros):
+        """Relatório de motoristas: cadastro, compliance (validades) e atividade.
+
+        Inclui contagem de viagens (via vínculo automático em CT-e/MDF-e),
+        total repassado no período e documentos vencidos/a vencer em 30 dias.
+        """
+        from datetime import timedelta, date
+        logger.info("INFO: Gerando relatório de motoristas com filtros: %s", filtros)
+
+        qs = Motorista.objects.all()
+        if 'ativo' in filtros:
+            qs = qs.filter(ativo=bool(filtros['ativo']))
+        if filtros.get('nome'):
+            qs = qs.filter(nome__icontains=filtros['nome'])
+        if filtros.get('cpf'):
+            cpf = ''.join(ch for ch in str(filtros['cpf']) if ch.isdigit())
+            qs = qs.filter(cpf=cpf)
+        if 'cadastro_automatico' in filtros:
+            qs = qs.filter(cadastro_automatico=bool(filtros['cadastro_automatico']))
+        # Apenas com pendência de compliance (validades vencidas/a vencer)
+        somente_pendentes = bool(filtros.get('pendentes'))
+
+        hoje = date.today()
+        limite = hoje + timedelta(days=30)
+        data_fim_query = (data_fim + timedelta(days=1)) if data_fim else None
+
+        dados = []
+        for m in qs.order_by('nome'):
+            viagens_cte = m.ctes_como_condutor.count()
+            viagens_mdfe = m.mdfes_como_condutor.count()
+
+            pagamentos = PagamentoAgregado.objects.filter(condutor_cpf=m.cpf, status='pago')
+            if data_inicio:
+                pagamentos = pagamentos.filter(data_prevista__gte=data_inicio)
+            if data_fim_query:
+                pagamentos = pagamentos.filter(data_prevista__lt=data_fim_query)
+            total_repassado = float(pagamentos.aggregate(s=Sum('valor_repassado'))['s'] or 0)
+
+            # Validades vencidas ou a vencer em 30 dias
+            pendencias = []
+            for label, val in (
+                ('CNH', m.validade_cnh), ('NR20', m.nr20_validade),
+                ('NR35', m.nr35_validade), ('MOPP', m.mopp_validade),
+                ('Toxicológico', m.toxicologico_validade), ('ASO', m.aso_validade),
+            ):
+                if val and val <= limite:
+                    estado = 'vencido' if val < hoje else 'a vencer'
+                    pendencias.append(f"{label} {estado} ({val.strftime('%d/%m/%Y')})")
+
+            if somente_pendentes and not pendencias:
+                continue
+
+            dados.append({
+                'nome': m.nome,
+                'cpf': f"{m.cpf[:3]}.{m.cpf[3:6]}.{m.cpf[6:9]}-{m.cpf[9:]}" if m.cpf and len(m.cpf) == 11 else m.cpf,
+                'cnh': m.cnh or '-',
+                'categoria_cnh': m.categoria_cnh or '-',
+                'validade_cnh': m.validade_cnh.strftime('%d/%m/%Y') if m.validade_cnh else '-',
+                'validade_nr20': m.nr20_validade.strftime('%d/%m/%Y') if m.nr20_validade else '-',
+                'validade_nr35': m.nr35_validade.strftime('%d/%m/%Y') if m.nr35_validade else '-',
+                'validade_mopp': m.mopp_validade.strftime('%d/%m/%Y') if m.mopp_validade else '-',
+                'validade_toxicologico': m.toxicologico_validade.strftime('%d/%m/%Y') if m.toxicologico_validade else '-',
+                'validade_aso': m.aso_validade.strftime('%d/%m/%Y') if m.aso_validade else '-',
+                'telefone': m.telefone or '-',
+                'email': m.email or '-',
+                'cidade': m.cidade or '-',
+                'estado': m.estado or '-',
+                'banco': m.banco or '-',
+                'agencia': m.agencia or '-',
+                'conta': m.conta or '-',
+                'tipo_conta': m.get_tipo_conta_display() if m.tipo_conta else '-',
+                'tipo_chave_pix': m.get_tipo_chave_pix_display() if m.tipo_chave_pix else '-',
+                'chave_pix': m.chave_pix or '-',
+                'favorecido': m.favorecido or '-',
+                'viagens_cte': viagens_cte,
+                'viagens_mdfe': viagens_mdfe,
+                'viagens_total': viagens_cte + viagens_mdfe,
+                'total_repassado': total_repassado,
+                'cadastro': 'Automático' if m.cadastro_automatico else 'Manual',
+                'cadastro_completo': 'Sim' if m.cadastro_completo else 'Não',
+                'pendencias': '; '.join(pendencias) if pendencias else '-',
+                'ativo': 'Sim' if m.ativo else 'Não',
             })
 
         return dados

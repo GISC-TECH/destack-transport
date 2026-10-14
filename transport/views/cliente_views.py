@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
+
+from ..permissions import TransportModelPermission
 from django.http import HttpResponse
 from django.utils import timezone
 import csv
@@ -27,7 +29,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
     """
 
     queryset = Cliente.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def get_serializer_class(self):
         """Retorna serializer apropriado para a action."""

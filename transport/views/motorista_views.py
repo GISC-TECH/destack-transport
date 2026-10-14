@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
+
+from ..permissions import TransportModelPermission
 from django.http import HttpResponse
 from django.utils import timezone
 from datetime import date, timedelta
@@ -29,7 +31,7 @@ class MotoristaViewSet(viewsets.ModelViewSet):
     """
 
     queryset = Motorista.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def get_serializer_class(self):
         """Retorna serializer apropriado para a action."""
@@ -51,6 +53,16 @@ class MotoristaViewSet(viewsets.ModelViewSet):
         categoria = params.get('categoria_cnh')
         if categoria:
             queryset = queryset.filter(categoria_cnh=categoria.upper())
+
+        # Filtro por origem do cadastro (automático via XML)
+        cadastro_automatico = params.get('cadastro_automatico')
+        if cadastro_automatico is not None:
+            queryset = queryset.filter(cadastro_automatico=cadastro_automatico.lower() == 'true')
+
+        # Filtro por cadastro incompleto (sem CNH ou sem validade de CNH)
+        incompletos = params.get('incompletos')
+        if incompletos is not None and incompletos.lower() == 'true':
+            queryset = queryset.filter(Q(cnh__isnull=True) | Q(cnh='') | Q(validade_cnh__isnull=True))
 
         # Busca geral (nome, CPF, CNH)
         q = params.get('q')

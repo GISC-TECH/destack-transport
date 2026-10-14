@@ -1,19 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { cteAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
 import DocumentosAnexos from '../Common/DocumentosAnexos';
-import './CTe.css';
+import Button from '../Common/Button';
+import Modal from '../Common/Modal';
+import StatusPill from '../Common/StatusPill';
+import PageHeader from '../Common/PageHeader';
+import styles from './CTeDetail.module.css';
 
 function CTeDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const toast = useToast();
   const [cte, setCte] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
+  const [editValueOpen, setEditValueOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [freightValue, setFreightValue] = useState('');
 
   const loadCTe = useCallback(async () => {
     try {
@@ -84,6 +92,46 @@ function CTeDetail() {
     }
   };
 
+  const openEditValue = () => {
+    setFreightValue(cte.prestacao?.valor_total_prestado ?? '');
+    setEditValueOpen(true);
+  };
+
+  const handleEditValue = async (event) => {
+    event.preventDefault();
+    const parsedValue = Number(freightValue);
+    if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+      toast.error('Informe um valor de frete maior que zero.');
+      return;
+    }
+
+    try {
+      setActionLoading('editar-valor');
+      await cteAPI.editarValorFrete(id, freightValue);
+      toast.success('Valor do frete atualizado com sucesso!');
+      setEditValueOpen(false);
+      await loadCTe();
+    } catch (err) {
+      toast.error(err.message || 'Erro ao atualizar o valor do frete.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setActionLoading('excluir');
+      await cteAPI.excluir(id);
+      toast.success('CT-e excluído com sucesso!');
+      navigate('/ctes', { replace: true });
+    } catch (err) {
+      toast.error(err.message || 'Erro ao excluir CT-e.');
+    } finally {
+      setActionLoading(null);
+      setDeleteOpen(false);
+    }
+  };
+
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -107,107 +155,136 @@ function CTeDetail() {
 
   const getStatusInfo = () => {
     if (cte.cancelamento) {
-      return { class: 'danger', text: 'Cancelado', icon: '✕' };
+      return { status: 'danger', class: styles.statusDanger, text: 'Cancelado', icon: '✕' };
     }
     if (cte.processado && cte.protocolo?.codigo_status === 100) {
-      return { class: 'success', text: 'Autorizado', icon: '✓' };
+      return { status: 'success', class: styles.statusSuccess, text: 'Autorizado', icon: '✓' };
     }
     if (cte.protocolo && cte.protocolo.codigo_status !== 100) {
-      return { class: 'warning', text: 'Rejeitado', icon: '!' };
+      return { status: 'warning', class: styles.statusWarning, text: 'Rejeitado', icon: '!' };
     }
-    return { class: 'secondary', text: 'Pendente', icon: '?' };
+    return { status: 'muted', class: styles.statusSecondary, text: 'Pendente', icon: '?' };
   };
 
   const status = getStatusInfo();
 
-  return (
-    <div className="cte-detail">
-      <div className="page-header">
-        <div>
-          <Link to="/ctes" className="back-link">← Voltar para lista</Link>
-          <h1>CT-e #{cte.identificacao?.numero}</h1>
-          <p className="chave-cte">{cte.chave}</p>
-        </div>
-        <div className="header-actions">
-          <div className={`status-badge status-${status.class}`}>
-            <span className="status-icon">{status.icon}</span>
-            {status.text}
-          </div>
-          <div className="action-buttons">
-            <button
-              className="btn-action btn-pdf"
-              onClick={handleDownloadPDF}
-              disabled={actionLoading === 'pdf'}
-            >
-              {actionLoading === 'pdf' ? 'Baixando...' : 'DACTE (PDF)'}
-            </button>
-            <button
-              className="btn-action btn-xml"
-              onClick={handleDownloadXML}
-              disabled={actionLoading === 'xml'}
-            >
-              {actionLoading === 'xml' ? 'Baixando...' : 'XML'}
-            </button>
-            <button
-              className="btn-action btn-reprocessar"
-              onClick={handleReprocessar}
-              disabled={actionLoading === 'reprocessar'}
-            >
-              {actionLoading === 'reprocessar' ? 'Processando...' : 'Reprocessar'}
-            </button>
-          </div>
-        </div>
-      </div>
+  const getModalidadePill = (modalidade) => ({
+    status: modalidade === 'CIF' ? 'info' : 'warning',
+    text: modalidade || '-'
+  });
 
-      <div className="detail-grid">
+  const cteIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="9" y1="15" x2="15" y2="15"></line>
+    </svg>
+  );
+
+  const headerActions = (
+    <>
+      <StatusPill status={status.status}>{status.icon} {status.text}</StatusPill>
+      {cte.permissoes_especiais?.editar_valor_frete && (
+        <Button
+          variant="gold"
+          onClick={openEditValue}
+          disabled={actionLoading !== null}
+        >
+          Editar valor
+        </Button>
+      )}
+      {cte.permissoes_especiais?.excluir_cte && (
+        <Button
+          variant="danger"
+          onClick={() => setDeleteOpen(true)}
+          disabled={actionLoading !== null}
+        >
+          Excluir CT-e
+        </Button>
+      )}
+      <Button
+        variant="danger"
+        onClick={handleDownloadPDF}
+        disabled={actionLoading === 'pdf'}
+      >
+        {actionLoading === 'pdf' ? 'Baixando...' : 'DACTE (PDF)'}
+      </Button>
+      <Button
+        variant="primary"
+        onClick={handleDownloadXML}
+        disabled={actionLoading === 'xml'}
+      >
+        {actionLoading === 'xml' ? 'Baixando...' : 'XML'}
+      </Button>
+      <Button
+        variant="warning"
+        onClick={handleReprocessar}
+        disabled={actionLoading === 'reprocessar'}
+      >
+        {actionLoading === 'reprocessar' ? 'Processando...' : 'Reprocessar'}
+      </Button>
+    </>
+  );
+
+  return (
+    <div className={styles.cteDetail}>
+      <PageHeader
+        title={`CT-e #${cte.identificacao?.numero}`}
+        subtitle={cte.chave}
+        icon={cteIcon}
+        breadcrumbs={[{ label: 'CT-e', path: '/ctes' }, { label: `CT-e #${cte.identificacao?.numero}` }]}
+        actions={headerActions}
+      />
+
+      <div className={styles.detailGrid}>
         {/* Identificação */}
-        <div className="detail-card">
+        <div className={styles.detailCard}>
           <h3>Identificação</h3>
-          <div className="detail-content">
-            <div className="detail-row">
-              <span className="label">Número:</span>
-              <span className="value">{cte.identificacao?.numero}</span>
+          <div className={styles.detailContent}>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Número:</span>
+              <span className={styles.value}>{cte.identificacao?.numero}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Série:</span>
-              <span className="value">{cte.identificacao?.serie}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Série:</span>
+              <span className={styles.value}>{cte.identificacao?.serie}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Data Emissão:</span>
-              <span className="value">{formatDate(cte.identificacao?.data_emissao)}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Data Emissão:</span>
+              <span className={styles.value}>{formatDate(cte.identificacao?.data_emissao)}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">CFOP:</span>
-              <span className="value">{cte.identificacao?.cfop}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>CFOP:</span>
+              <span className={styles.value}>{cte.identificacao?.cfop}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Natureza Operação:</span>
-              <span className="value">{cte.identificacao?.natureza_operacao}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Natureza Operação:</span>
+              <span className={styles.value}>{cte.identificacao?.natureza_operacao}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Modalidade:</span>
-              <span className={`badge badge-${cte.modalidade === 'CIF' ? 'info' : 'warning'}`}>
-                {cte.modalidade}
-              </span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Modalidade:</span>
+              <StatusPill status={getModalidadePill(cte.modalidade).status}>
+                {getModalidadePill(cte.modalidade).text}
+              </StatusPill>
             </div>
           </div>
         </div>
 
         {/* Remetente */}
-        <div className="detail-card">
+        <div className={styles.detailCard}>
           <h3>Remetente</h3>
-          <div className="detail-content">
-            <div className="detail-row">
-              <span className="label">Razão Social:</span>
-              <span className="value">{cte.remetente?.razao_social || '-'}</span>
+          <div className={styles.detailContent}>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Razão Social:</span>
+              <span className={styles.value}>{cte.remetente?.razao_social || '-'}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">CNPJ:</span>
-              <span className="value">{formatCNPJ(cte.remetente?.cnpj)}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>CNPJ:</span>
+              <span className={styles.value}>{formatCNPJ(cte.remetente?.cnpj)}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Endereço:</span>
-              <span className="value">
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Endereço:</span>
+              <span className={styles.value}>
                 {cte.remetente?.logradouro}, {cte.remetente?.numero}
                 <br />
                 {cte.remetente?.municipio} - {cte.remetente?.uf}
@@ -217,20 +294,20 @@ function CTeDetail() {
         </div>
 
         {/* Destinatário */}
-        <div className="detail-card">
+        <div className={styles.detailCard}>
           <h3>Destinatário</h3>
-          <div className="detail-content">
-            <div className="detail-row">
-              <span className="label">Razão Social:</span>
-              <span className="value">{cte.destinatario?.razao_social || '-'}</span>
+          <div className={styles.detailContent}>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Razão Social:</span>
+              <span className={styles.value}>{cte.destinatario?.razao_social || '-'}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">CNPJ:</span>
-              <span className="value">{formatCNPJ(cte.destinatario?.cnpj)}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>CNPJ:</span>
+              <span className={styles.value}>{formatCNPJ(cte.destinatario?.cnpj)}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Endereço:</span>
-              <span className="value">
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Endereço:</span>
+              <span className={styles.value}>
                 {cte.destinatario?.logradouro}, {cte.destinatario?.numero}
                 <br />
                 {cte.destinatario?.municipio} - {cte.destinatario?.uf}
@@ -240,50 +317,64 @@ function CTeDetail() {
         </div>
 
         {/* Valores */}
-        <div className="detail-card highlight">
+        <div className={`${styles.detailCard} ${styles.highlight}`}>
           <h3>Valores da Prestação</h3>
-          <div className="detail-content">
-            <div className="detail-row">
-              <span className="label">Valor Total:</span>
-              <span className="value valor-destaque">
+          <div className={styles.detailContent}>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Valor Total:</span>
+              <span className={`${styles.value} ${styles.valorDestaque}`}>
                 {formatCurrency(cte.prestacao?.valor_total_prestado)}
               </span>
             </div>
-            <div className="detail-row">
-              <span className="label">Valor Receber:</span>
-              <span className="value">{formatCurrency(cte.prestacao?.valor_receber)}</span>
+            {cte.valor_frete_editado_manualmente && (
+              <>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>Valor importado do EGS:</span>
+                  <span className={styles.value}>
+                    {formatCurrency(cte.valor_frete_importado)}
+                  </span>
+                </div>
+                <div className={styles.manualValueNotice}>
+                  Ajustado manualmente por {cte.valor_frete_editado_por_nome || 'usuário autorizado'}
+                  {cte.valor_frete_editado_em ? ` em ${formatDate(cte.valor_frete_editado_em)}` : ''}.
+                </div>
+              </>
+            )}
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Valor Receber:</span>
+              <span className={styles.value}>{formatCurrency(cte.prestacao?.valor_receber)}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Base Cálculo ICMS:</span>
-              <span className="value">{formatCurrency(cte.imposto?.icms_base_calculo)}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Base Cálculo ICMS:</span>
+              <span className={styles.value}>{formatCurrency(cte.tributos?.icms_vbc)}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Valor ICMS:</span>
-              <span className="value">{formatCurrency(cte.imposto?.icms_valor)}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Valor ICMS:</span>
+              <span className={styles.value}>{formatCurrency(cte.tributos?.icms_vicms)}</span>
             </div>
           </div>
         </div>
 
         {/* Protocolo */}
         {cte.protocolo && (
-          <div className="detail-card">
+          <div className={styles.detailCard}>
             <h3>Protocolo de Autorização</h3>
-            <div className="detail-content">
-              <div className="detail-row">
-                <span className="label">Número Protocolo:</span>
-                <span className="value">{cte.protocolo.numero_protocolo}</span>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Número Protocolo:</span>
+                <span className={styles.value}>{cte.protocolo.numero_protocolo}</span>
               </div>
-              <div className="detail-row">
-                <span className="label">Data Autorização:</span>
-                <span className="value">{formatDate(cte.protocolo.data_recebimento)}</span>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Data Autorização:</span>
+                <span className={styles.value}>{formatDate(cte.protocolo.data_recebimento)}</span>
               </div>
-              <div className="detail-row">
-                <span className="label">Código Status:</span>
-                <span className="value">{cte.protocolo.codigo_status}</span>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Código Status:</span>
+                <span className={styles.value}>{cte.protocolo.codigo_status}</span>
               </div>
-              <div className="detail-row">
-                <span className="label">Descrição:</span>
-                <span className="value">{cte.protocolo.motivo}</span>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Descrição:</span>
+                <span className={styles.value}>{cte.protocolo.motivo_status}</span>
               </div>
             </div>
           </div>
@@ -291,33 +382,33 @@ function CTeDetail() {
 
         {/* Cancelamento */}
         {cte.cancelamento && (
-          <div className="detail-card cancelamento-card">
+          <div className={`${styles.detailCard} ${styles.cancelamentoCard}`}>
             <h3>Cancelamento</h3>
-            <div className="detail-content">
-              <div className="detail-row">
-                <span className="label">Justificativa:</span>
-                <span className="value">{cte.cancelamento.x_just || '-'}</span>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Justificativa:</span>
+                <span className={styles.value}>{cte.cancelamento.x_just || '-'}</span>
               </div>
-              <div className="detail-row">
-                <span className="label">Data do Evento:</span>
-                <span className="value">{cte.cancelamento.dh_evento_formatada || formatDate(cte.cancelamento.dh_evento)}</span>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Data do Evento:</span>
+                <span className={styles.value}>{cte.cancelamento.dh_evento_formatada || formatDate(cte.cancelamento.dh_evento)}</span>
               </div>
-              <div className="detail-row">
-                <span className="label">Data do Registro:</span>
-                <span className="value">{cte.cancelamento.dh_reg_evento_formatada || formatDate(cte.cancelamento.dh_reg_evento)}</span>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Data do Registro:</span>
+                <span className={styles.value}>{cte.cancelamento.dh_reg_evento_formatada || formatDate(cte.cancelamento.dh_reg_evento)}</span>
               </div>
-              <div className="detail-row">
-                <span className="label">Código Status:</span>
-                <span className="value">{cte.cancelamento.c_stat}</span>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Código Status:</span>
+                <span className={styles.value}>{cte.cancelamento.c_stat}</span>
               </div>
-              <div className="detail-row">
-                <span className="label">Motivo:</span>
-                <span className="value">{cte.cancelamento.x_motivo || '-'}</span>
+              <div className={styles.detailRow}>
+                <span className={styles.label}>Motivo:</span>
+                <span className={styles.value}>{cte.cancelamento.x_motivo || '-'}</span>
               </div>
               {cte.cancelamento.n_prot_retorno && (
-                <div className="detail-row">
-                  <span className="label">Protocolo Cancelamento:</span>
-                  <span className="value">{cte.cancelamento.n_prot_retorno}</span>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>Protocolo Cancelamento:</span>
+                  <span className={styles.value}>{cte.cancelamento.n_prot_retorno}</span>
                 </div>
               )}
             </div>
@@ -325,36 +416,263 @@ function CTeDetail() {
         )}
 
         {/* Rota */}
-        <div className="detail-card">
+        <div className={styles.detailCard}>
           <h3>Rota</h3>
-          <div className="detail-content">
-            <div className="detail-row">
-              <span className="label">Origem:</span>
-              <span className="value">
+          <div className={styles.detailContent}>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Origem:</span>
+              <span className={styles.value}>
                 {cte.identificacao?.nome_mun_ini} - {cte.identificacao?.uf_ini}
               </span>
             </div>
-            <div className="detail-row">
-              <span className="label">Destino:</span>
-              <span className="value">
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Destino:</span>
+              <span className={styles.value}>
                 {cte.identificacao?.nome_mun_fim} - {cte.identificacao?.uf_fim}
               </span>
             </div>
-            <div className="detail-row">
-              <span className="label">Distância:</span>
-              <span className="value">{cte.identificacao?.dist_km || 0} km</span>
+            <div className={styles.detailRow}>
+              <span className={styles.label}>Distância:</span>
+              <span className={styles.value}>{cte.identificacao?.dist_km || 0} km</span>
             </div>
           </div>
         </div>
 
+        {/* ICMS detalhado */}
+        {cte.tributos?.icms_cst && (
+          <div className={styles.detailCard}>
+            <h3>ICMS</h3>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}><span className={styles.label}>CST:</span><span className={styles.value}>{cte.tributos.icms_cst}</span></div>
+              {cte.tributos.icms_vbc != null && <div className={styles.detailRow}><span className={styles.label}>Base de Cálculo:</span><span className={styles.value}>{formatCurrency(cte.tributos.icms_vbc)}</span></div>}
+              {cte.tributos.icms_picms != null && <div className={styles.detailRow}><span className={styles.label}>Alíquota:</span><span className={styles.value}>{cte.tributos.icms_picms}%</span></div>}
+              {cte.tributos.icms_vicms != null && <div className={styles.detailRow}><span className={styles.label}>Valor ICMS:</span><span className={styles.value}>{formatCurrency(cte.tributos.icms_vicms)}</span></div>}
+              {cte.tributos.valor_total_tributos != null && <div className={styles.detailRow}><span className={styles.label}>Total Tributos:</span><span className={styles.value}>{formatCurrency(cte.tributos.valor_total_tributos)}</span></div>}
+            </div>
+          </div>
+        )}
+
+        {/* CT-e OS (mod 67) */}
+        {cte.os_info && (
+          <div className={styles.detailCard}>
+            <h3>CT-e OS (Outros Serviços)</h3>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}><span className={styles.label}>Serviço:</span><span className={styles.value}>{cte.os_info.descricao_servico || '-'}</span></div>
+              {cte.os_info.quantidade_carga != null && <div className={styles.detailRow}><span className={styles.label}>Qtd. Carga:</span><span className={styles.value}>{cte.os_info.quantidade_carga}</span></div>}
+              {cte.os_info.seguradora && <div className={styles.detailRow}><span className={styles.label}>Seguradora:</span><span className={styles.value}>{cte.os_info.seguradora}</span></div>}
+            </div>
+          </div>
+        )}
+
+        {/* Modais não-rodoviários */}
+        {cte.modal_aereo && (
+          <div className={styles.detailCard}>
+            <h3>Modal Aéreo</h3>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}><span className={styles.label}>Minuta:</span><span className={styles.value}>{cte.modal_aereo.numero_minuta || '-'}</span></div>
+              <div className={styles.detailRow}><span className={styles.label}>Nº OCA:</span><span className={styles.value}>{cte.modal_aereo.numero_oca || '-'}</span></div>
+              {cte.modal_aereo.valor_tarifa != null && <div className={styles.detailRow}><span className={styles.label}>Tarifa:</span><span className={styles.value}>{formatCurrency(cte.modal_aereo.valor_tarifa)}</span></div>}
+            </div>
+          </div>
+        )}
+        {cte.modal_aquaviario && (
+          <div className={styles.detailCard}>
+            <h3>Modal Aquaviário</h3>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}><span className={styles.label}>Navio:</span><span className={styles.value}>{cte.modal_aquaviario.nome_navio || '-'}</span></div>
+              <div className={styles.detailRow}><span className={styles.label}>Viagem:</span><span className={styles.value}>{cte.modal_aquaviario.numero_viagem || '-'}</span></div>
+              <div className={styles.detailRow}><span className={styles.label}>Porto Emb./Dest.:</span><span className={styles.value}>{cte.modal_aquaviario.porto_embarque || '-'} → {cte.modal_aquaviario.porto_destino || '-'}</span></div>
+            </div>
+          </div>
+        )}
+        {cte.modal_ferroviario && (
+          <div className={styles.detailCard}>
+            <h3>Modal Ferroviário</h3>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}><span className={styles.label}>Trem:</span><span className={styles.value}>{cte.modal_ferroviario.id_trem || '-'}</span></div>
+              <div className={styles.detailRow}><span className={styles.label}>Fluxo:</span><span className={styles.value}>{cte.modal_ferroviario.fluxo || '-'}</span></div>
+              {cte.modal_ferroviario.valor_frete != null && <div className={styles.detailRow}><span className={styles.label}>Frete:</span><span className={styles.value}>{formatCurrency(cte.modal_ferroviario.valor_frete)}</span></div>}
+            </div>
+          </div>
+        )}
+        {cte.modal_dutoviario && (
+          <div className={styles.detailCard}>
+            <h3>Modal Dutoviário</h3>
+            <div className={styles.detailContent}>
+              {cte.modal_dutoviario.valor_tarifa != null && <div className={styles.detailRow}><span className={styles.label}>Tarifa:</span><span className={styles.value}>{formatCurrency(cte.modal_dutoviario.valor_tarifa)}</span></div>}
+              <div className={styles.detailRow}><span className={styles.label}>Período:</span><span className={styles.value}>{formatDate(cte.modal_dutoviario.data_inicio)} → {formatDate(cte.modal_dutoviario.data_fim)}</span></div>
+            </div>
+          </div>
+        )}
+        {cte.modal_multimodal && (
+          <div className={styles.detailCard}>
+            <h3>Modal Multimodal</h3>
+            <div className={styles.detailContent}>
+              <div className={styles.detailRow}><span className={styles.label}>COTM:</span><span className={styles.value}>{cte.modal_multimodal.numero_cotm || '-'}</span></div>
+              {cte.modal_multimodal.numero_apolice && <div className={styles.detailRow}><span className={styles.label}>Apólice:</span><span className={styles.value}>{cte.modal_multimodal.numero_apolice}</span></div>}
+            </div>
+          </div>
+        )}
+
+        {/* Cobrança / Duplicatas */}
+        {cte.cobranca && (
+          <div className={styles.detailCard}>
+            <h3>Cobrança</h3>
+            <div className={styles.detailContent}>
+              {cte.cobranca.numero_fatura && <div className={styles.detailRow}><span className={styles.label}>Fatura:</span><span className={styles.value}>{cte.cobranca.numero_fatura}</span></div>}
+              {cte.cobranca.valor_liquido != null && <div className={styles.detailRow}><span className={styles.label}>Valor Líquido:</span><span className={styles.value}>{formatCurrency(cte.cobranca.valor_liquido)}</span></div>}
+              {(cte.cobranca.duplicatas || []).map((d, i) => (
+                <div className={styles.detailRow} key={i}>
+                  <span className={styles.label}>Dup. {d.numero || i + 1}:</span>
+                  <span className={styles.value}>{formatCurrency(d.valor)} {d.data_vencimento ? `(venc. ${formatDate(d.data_vencimento)})` : ''}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Vale-Pedágio */}
+        {cte.vales_pedagio?.length > 0 && (
+          <div className={styles.detailCard}>
+            <h3>Vale-Pedágio</h3>
+            <div className={styles.detailContent}>
+              {cte.vales_pedagio.map((v, i) => (
+                <div className={styles.detailRow} key={i}>
+                  <span className={styles.label}>Comprovante {v.numero_comprovante || i + 1}:</span>
+                  <span className={styles.value}>{formatCurrency(v.valor)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Cartas de Correção */}
+        {cte.cartas_correcao?.length > 0 && (
+          <div className={styles.detailCard}>
+            <h3>Cartas de Correção</h3>
+            <div className={styles.detailContent}>
+              {cte.cartas_correcao.map((c, i) => (
+                <div key={i} className={styles.cartasCorrecaoItem}>
+                  <div className={styles.detailRow}><span className={styles.label}>Seq. {c.sequencia_evento}:</span><span className={styles.value}>{formatDate(c.data_evento)} · prot. {c.protocolo || '-'}</span></div>
+                  {(c.correcoes || []).map((cor, j) => (
+                    <div className={styles.detailRow} key={j}><span className={styles.label}>{cor.grupo}/{cor.campo}:</span><span className={styles.value}>{cor.valor}</span></div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Linha do tempo de eventos */}
+        {cte.eventos?.length > 0 && (
+          <div className={`${styles.detailCard} ${styles.detailCardFull}`}>
+            <h3>Eventos</h3>
+            <div className={styles.detailContent}>
+              {cte.eventos.map((e, i) => (
+                <div className={styles.detailRow} key={i}>
+                  <span className={styles.label}>{e.descricao_evento || e.tipo_evento} {e.sequencia_evento ? `#${e.sequencia_evento}` : ''}:</span>
+                  <span className={styles.value}>
+                    {formatDate(e.data_evento)} · {e.confirmado ? '✓ confirmado' : 'pendente'}
+                    {e.protocolo ? ` · prot. ${e.protocolo}` : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Documentos Anexos */}
-        <div className="detail-card" style={{gridColumn: '1 / -1'}}>
+        <div className={`${styles.detailCard} ${styles.detailCardFull}`}>
           <DocumentosAnexos
             entidadeTipo="cte"
             entidadeId={id}
           />
         </div>
       </div>
+
+      <Modal
+        isOpen={editValueOpen}
+        onClose={() => actionLoading !== 'editar-valor' && setEditValueOpen(false)}
+        title="Editar valor do frete"
+        size="sm"
+        closeOnOverlayClick={actionLoading !== 'editar-valor'}
+        footer={(
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setEditValueOpen(false)}
+              disabled={actionLoading === 'editar-valor'}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="edit-cte-freight-form"
+              variant="gold"
+              loading={actionLoading === 'editar-valor'}
+            >
+              Salvar valor
+            </Button>
+          </>
+        )}
+      >
+        <form id="edit-cte-freight-form" onSubmit={handleEditValue} className={styles.editForm}>
+          <label htmlFor="cte-freight-value">Novo valor negociado</label>
+          <div className={styles.currencyInput}>
+            <span>R$</span>
+            <input
+              id="cte-freight-value"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={freightValue}
+              onChange={(event) => setFreightValue(event.target.value)}
+              disabled={actionLoading === 'editar-valor'}
+              required
+              autoFocus
+            />
+          </div>
+          <p>
+            O valor importado do EGS será preservado para auditoria. Relatórios e painéis
+            passarão a usar o novo valor negociado.
+          </p>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={deleteOpen}
+        onClose={() => actionLoading !== 'excluir' && setDeleteOpen(false)}
+        title="Excluir CT-e"
+        size="sm"
+        closeOnOverlayClick={actionLoading !== 'excluir'}
+        footer={(
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteOpen(false)}
+              disabled={actionLoading === 'excluir'}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+              loading={actionLoading === 'excluir'}
+            >
+              Excluir definitivamente
+            </Button>
+          </>
+        )}
+      >
+        <div className={styles.deleteWarning}>
+          <p>
+            Tem certeza que deseja excluir permanentemente o CT-e
+            <strong> #{cte.identificacao?.numero || '-'}</strong>?
+          </p>
+          <p>Dados fiscais internos e anexos vinculados também serão removidos.</p>
+          <p>CT-es com pagamentos, faturas, CIOT, MDF-e ou ordem de viagem não podem ser excluídos.</p>
+        </div>
+      </Modal>
     </div>
   );
 }

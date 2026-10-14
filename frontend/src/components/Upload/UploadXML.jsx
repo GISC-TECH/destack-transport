@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { uploadAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import PageHeader from '../Common/PageHeader';
-import './Upload.css';
+import Button from '../Common/Button';
+import styles from './Upload.module.css';
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 function UploadXML() {
   const [files, setFiles] = useState([]);
@@ -14,23 +17,72 @@ function UploadXML() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const handleFileSelect = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    addFiles(selectedFiles);
+  const isXMLContentType = (type) => {
+    if (!type) return false;
+    const t = type.toLowerCase();
+    return t === 'text/xml' || t === 'application/xml' || t === 'application/xhtml+xml';
   };
 
-  const addFiles = (newFiles) => {
+  const startsWithXMLDeclaration = async (file) => {
+    const slice = file.slice(0, 100);
+    const text = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.readAsText(slice);
+    });
+    const trimmed = text.trimStart().toLowerCase();
+    return trimmed.startsWith('<?xml');
+  };
+
+  const validateXMLFile = async (file) => {
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error(`Arquivo "${file.name}" excede o tamanho máximo de 10MB`);
+    }
+    if (isXMLContentType(file.type)) {
+      return true;
+    }
+    const hasXmlDecl = await startsWithXMLDeclaration(file);
+    if (!hasXmlDecl) {
+      throw new Error(`Arquivo "${file.name}" não é um XML válido`);
+    }
+    return true;
+  };
+
+  const handleFileSelect = async (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    await addFiles(selectedFiles);
+  };
+
+  const addFiles = async (newFiles) => {
     const xmlFiles = newFiles.filter(file =>
       file.name.toLowerCase().endsWith('.xml')
     );
-    setFiles(prev => [...prev, ...xmlFiles]);
+
+    if (xmlFiles.length !== newFiles.length) {
+      toast.warning('Apenas arquivos .xml são permitidos');
+    }
+
+    const validFiles = [];
+    for (const file of xmlFiles) {
+      try {
+        await validateXMLFile(file);
+        validFiles.push(file);
+      } catch (error) {
+        toast.error(error.message);
+      }
+    }
+
+    if (validFiles.length > 0) {
+      setFiles(prev => [...prev, ...validFiles]);
+    }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     setDragOver(false);
     const droppedFiles = Array.from(e.dataTransfer.files);
-    addFiles(droppedFiles);
+    await addFiles(droppedFiles);
   };
 
   const handleDragOver = (e) => {
@@ -93,40 +145,43 @@ function UploadXML() {
 
     setUploading(true);
     setResults([]);
+    let uploadResults;
 
     try {
       const result = await uploadAPI.batch(files);
 
       // Mapear resultados_detalhados do backend para o formato esperado
       if (result.resultados_detalhados && result.resultados_detalhados.length > 0) {
-        const mappedResults = result.resultados_detalhados.map(item => ({
+        uploadResults = result.resultados_detalhados.map(item => ({
           file: item.arquivo_principal_nome || 'N/A',
           success: item.status === 'sucesso',
           message: item.message || item.erro || item.status,
           tipo: item.chave ? (item.chave.length === 44 ? 'Documento' : '') : '',
           numero: item.chave || ''
         }));
-        setResults(mappedResults);
+        setResults(uploadResults);
       } else {
-        setResults([{
+        uploadResults = [{
           file: 'Lote',
           success: true,
           message: `${result.sucesso || 0} sucesso, ${result.erros || 0} erros, ${result.ignorados || 0} ignorados`
-        }]);
+        }];
+        setResults(uploadResults);
       }
     } catch (error) {
-      setResults([{
+      uploadResults = [{
         file: 'Lote',
         success: false,
         message: error.message || 'Erro ao processar lote'
-      }]);
+      }];
+      setResults(uploadResults);
     }
 
     setUploading(false);
     setFiles([]);
 
-    const hasSuccess = results.some(r => r.success);
-    const hasError = results.some(r => !r.success);
+    const hasSuccess = uploadResults.some(r => r.success);
+    const hasError = uploadResults.some(r => !r.success);
     if (!hasError && hasSuccess) {
       toast.success('Lote processado com sucesso!');
     } else if (hasError && hasSuccess) {
@@ -145,7 +200,7 @@ function UploadXML() {
   );
 
   return (
-    <div className="upload-page">
+    <div className={styles.page}>
       <PageHeader
         title="Upload de XML"
         subtitle="Importe arquivos CT-e e MDF-e para o sistema"
@@ -153,26 +208,36 @@ function UploadXML() {
         breadcrumbs={[{ label: 'Documentos' }, { label: 'Upload XML' }]}
       />
 
-      <div className="upload-container">
+      <div className={styles.container}>
         <div
-          className={`upload-dropzone ${dragOver ? 'drag-over' : ''}`}
+          className={`${styles.dropzone} ${dragOver ? styles.dragOver : ''}`}
+          data-testid="upload-dropzone"
+          role="button"
+          tabIndex={0}
+          aria-label="Selecionar arquivos XML"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
         >
-          <div className="dropzone-content">
-            <div className="dropzone-icon">
+          <div className={styles.dropzoneContent}>
+            <div className={styles.dropzoneIcon}>
               <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
             </div>
-            <p className="dropzone-text">
+            <p className={styles.dropzoneText}>
               Arraste arquivos XML aqui ou clique para selecionar
             </p>
-            <p className="dropzone-hint">
+            <p className={styles.dropzoneHint}>
               Suporta CT-e e MDF-e (arquivos .xml)
             </p>
           </div>
@@ -187,29 +252,30 @@ function UploadXML() {
         </div>
 
         {files.length > 0 && (
-          <div className="files-list">
+          <div className={styles.filesList}>
             <h3>Arquivos selecionados ({files.length})</h3>
-            <div className="files-grid">
+            <div className={styles.filesGrid}>
               {files.map((file, index) => (
-                <div key={index} className="file-item">
-                  <div className="file-icon">
+                <div key={index} className={styles.fileItem}>
+                  <div className={styles.fileIcon}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                       <polyline points="14 2 14 8 20 8" />
                     </svg>
                   </div>
-                  <div className="file-info">
-                    <span className="file-name">{file.name}</span>
-                    <span className="file-size">
+                  <div className={styles.fileInfo}>
+                    <span className={styles.fileName}>{file.name}</span>
+                    <span className={styles.fileSize}>
                       {(file.size / 1024).toFixed(1)} KB
                     </span>
                   </div>
                   <button
-                    className="file-remove"
+                    className={styles.fileRemove}
                     onClick={(e) => {
                       e.stopPropagation();
                       removeFile(index);
                     }}
+                    aria-label={`Remover ${file.name}`}
                   >
                     ×
                   </button>
@@ -217,51 +283,53 @@ function UploadXML() {
               ))}
             </div>
 
-            <div className="upload-actions">
-              <button
-                className="btn-secondary"
+            <div className={styles.uploadActions}>
+              <Button
+                variant="secondary"
                 onClick={() => setFiles([])}
                 disabled={uploading}
               >
                 Limpar
-              </button>
-              <button
-                className="btn-primary"
+              </Button>
+              <Button
+                variant="primary"
                 onClick={handleUpload}
+                loading={uploading}
                 disabled={uploading}
               >
                 {uploading ? 'Enviando...' : 'Enviar Arquivos'}
-              </button>
+              </Button>
               {files.length > 1 && (
-                <button
-                  className="btn-success"
+                <Button
+                  variant="success"
                   onClick={handleBatchUpload}
+                  loading={uploading}
                   disabled={uploading}
                 >
                   Enviar em Lote
-                </button>
+                </Button>
               )}
             </div>
           </div>
         )}
 
         {results.length > 0 && (
-          <div className="results-section">
+          <div className={styles.resultsSection} data-testid="upload-results" aria-live="polite">
             <h3>Resultados do Upload</h3>
-            <div className="results-list">
+            <div className={styles.resultsList}>
               {results.map((result, index) => (
                 <div
                   key={index}
-                  className={`result-item ${result.success ? 'success' : 'error'}`}
+                  className={`${styles.resultItem} ${result.success ? styles.success : styles.error}`}
                 >
-                  <div className="result-icon">
+                  <div className={styles.resultIcon}>
                     {result.success ? '✓' : '✕'}
                   </div>
-                  <div className="result-info">
-                    <span className="result-file">{result.file}</span>
-                    <span className="result-message">{result.message}</span>
+                  <div className={styles.resultInfo}>
+                    <span className={styles.resultFile}>{result.file}</span>
+                    <span className={styles.resultMessage}>{result.message}</span>
                     {result.tipo && (
-                      <span className="result-tipo">
+                      <span className={styles.resultTipo}>
                         Tipo: {result.tipo} | Número: {result.numero}
                       </span>
                     )}
@@ -270,19 +338,19 @@ function UploadXML() {
               ))}
             </div>
 
-            <div className="results-actions">
-              <button
-                className="btn-primary"
+            <div className={styles.resultsActions}>
+              <Button
+                variant="primary"
                 onClick={() => navigate('/ctes')}
               >
                 Ver CT-es
-              </button>
-              <button
-                className="btn-secondary"
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={() => navigate('/mdfes')}
               >
                 Ver MDF-es
-              </button>
+              </Button>
             </div>
           </div>
         )}

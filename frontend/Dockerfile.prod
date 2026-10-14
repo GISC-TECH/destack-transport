@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-alpine as builder
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Serve with nginx
-FROM nginx:alpine
+FROM nginx:alpine@sha256:8b1e78743a03dbb2c95171cc58639fef29abc8816598e27fb910ed2e621e589a
 
 # Install wget for healthcheck
 RUN apk add --no-cache wget
@@ -24,21 +24,115 @@ RUN apk add --no-cache wget
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Create nginx config with health endpoint
+# Headers compartilhados. O include também é aplicado nas locations que definem
+# add_header próprio, pois o Nginx não herda os headers do bloco pai nesses casos.
+RUN mkdir -p /etc/nginx/snippets && cat > /etc/nginx/snippets/security-headers.conf << 'EOF'
+add_header Strict-Transport-Security "max-age=86400" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://media.destacktransporte.com; connect-src 'self' https://viacep.com.br https://brasilapi.com.br https://cloudflareinsights.com; frame-src https://www.google.com https://www.openstreetmap.org; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self' blob:" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "DENY" always;
+add_header Referrer-Policy "same-origin" always;
+add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+EOF
+
+# Preserva o esquema visto pelo visitante. Em SSL Flexible, a conexao
+# Cloudflare -> origem e HTTP, mas CF-Visitor continua informando HTTPS.
 RUN cat > /etc/nginx/conf.d/default.conf << 'EOF'
+map $http_x_forwarded_proto $forwarded_scheme {
+    default $http_x_forwarded_proto;
+    ""      $scheme;
+}
+
+map $http_cf_visitor $external_scheme {
+    default                   $forwarded_scheme;
+    ~*"scheme":"https"       https;
+    ~*"scheme":"http"        http;
+}
+
 server {
     listen 8000;
     root /usr/share/nginx/html;
     index index.html;
 
+    include /etc/nginx/snippets/security-headers.conf;
+
+    # Redireciona somente quando o Cloudflare confirma que o visitante usou
+    # HTTP. Isso evita loop quando o modo SSL Flexible estiver habilitado.
+    if ($http_cf_visitor ~* '"scheme":"http"') {
+        return 308 https://$host$request_uri;
+    }
+
+    # Resolver DNS do Docker com cache curto para tolerar reinicios de containers.
+    resolver 127.0.0.11 valid=10s;
+
     # Health check endpoint
     location /health {
         return 200 'OK';
         add_header Content-Type text/plain;
+        include /etc/nginx/snippets/security-headers.conf;
     }
 
-    # SPA routing
+    # Tamanho maximo de upload (anexos de documentos, XMLs, etc.)
+    client_max_body_size 50M;
+
+    # Proxy API requests to Django backend
+    location /api/ {
+        set $upstream_web web;
+        proxy_pass http://$upstream_web:8000;
+        proxy_hide_header Strict-Transport-Security;
+        proxy_hide_header X-Content-Type-Options;
+        proxy_hide_header X-Frame-Options;
+        proxy_hide_header Referrer-Policy;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $external_scheme;
+        proxy_set_header X-Forwarded-Host $host;
+    }
+
+    # Proxy admin requests to Django backend
+    location /admin/ {
+        set $upstream_web web;
+        proxy_pass http://$upstream_web:8000;
+        proxy_hide_header Strict-Transport-Security;
+        proxy_hide_header X-Content-Type-Options;
+        proxy_hide_header X-Frame-Options;
+        proxy_hide_header Referrer-Policy;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $external_scheme;
+        proxy_set_header X-Forwarded-Host $host;
+    }
+
+    # Serve Django static files directly (collected by web container)
+    location /static/ {
+        alias /app/staticfiles/;
+        expires 1y;
+        add_header Cache-Control "public, immutable" always;
+        include /etc/nginx/snippets/security-headers.conf;
+        try_files $uri =404;
+    }
+
+    # Uploads são privados e só podem sair por APIs autenticadas/URLs assinadas.
+    location /media/ {
+        return 404;
+    }
+
+    # Assets com hash no nome: cache longo e imutavel
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable" always;
+        include /etc/nginx/snippets/security-headers.conf;
+        try_files $uri =404;
+    }
+
+    # index.html e rotas da SPA: nunca cachear para evitar assets quebrados apos deploy
     location / {
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header Pragma "no-cache" always;
+        include /etc/nginx/snippets/security-headers.conf;
+        expires 0;
         try_files $uri $uri/ /index.html;
     }
 }

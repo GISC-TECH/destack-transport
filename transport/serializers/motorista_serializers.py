@@ -2,6 +2,7 @@
 
 from rest_framework import serializers
 from ..models import Motorista
+from ..validators import validar_cpf
 
 
 class MotoristaSerializer(serializers.ModelSerializer):
@@ -27,10 +28,12 @@ class MotoristaSerializer(serializers.ModelSerializer):
         return obj.get_documentos_vencendo(dias=30)
 
     def validate_cpf(self, value):
-        """Valida formato de CPF."""
+        """Valida CPF (formato e dígitos verificadores)."""
         cpf_limpo = ''.join(filter(str.isdigit, value))
-        if len(cpf_limpo) != 11:
-            raise serializers.ValidationError("CPF deve ter 11 dígitos.")
+        try:
+            validar_cpf(cpf_limpo)
+        except Exception as exc:
+            raise serializers.ValidationError(str(exc))
         return cpf_limpo
 
 
@@ -39,11 +42,13 @@ class MotoristaListSerializer(serializers.ModelSerializer):
 
     cpf_formatado = serializers.SerializerMethodField(read_only=True)
     validade_cnh_formatada = serializers.SerializerMethodField(read_only=True)
+    cadastro_completo = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Motorista
         fields = ['id', 'nome', 'cpf', 'cpf_formatado', 'cnh', 'categoria_cnh',
-                  'validade_cnh', 'validade_cnh_formatada', 'ativo']
+                  'validade_cnh', 'validade_cnh_formatada', 'ativo',
+                  'cadastro_automatico', 'cadastro_completo']
         read_only_fields = fields
 
     def get_cpf_formatado(self, obj):

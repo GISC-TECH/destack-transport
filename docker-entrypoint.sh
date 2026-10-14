@@ -11,25 +11,40 @@ while ! pg_isready -h postgres -U ${POSTGRES_USER:-destack_user} -d ${POSTGRES_D
 done
 echo "PostgreSQL está disponível!"
 
-# Aplicar migrações
-echo "Aplicando migrações do Django..."
-python manage.py migrate --noinput
+if [ "${RUN_STARTUP_MAINTENANCE:-true}" = "true" ]; then
+    echo "Aplicando migrações do Django..."
+    python manage.py migrate --noinput
 
-# Coletar arquivos estáticos
-echo "Coletando arquivos estáticos..."
-python manage.py collectstatic --noinput
+    echo "Coletando arquivos estáticos..."
+    python manage.py collectstatic --noinput
+else
+    echo "Migrações e collectstatic serão executados pelo fluxo de deploy."
+fi
 
-# Criar superusuário se não existir
-echo "Verificando superusuário..."
-python manage.py shell -c "
+# Criar superusuário apenas quando solicitado explicitamente.
+if [ "${DJANGO_CREATE_SUPERUSER:-false}" = "true" ]; then
+    echo "Verificando superusuário..."
+    python manage.py shell <<'PY'
+import os
 from django.contrib.auth import get_user_model
+
+username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@destack.local')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
+
+if not password:
+    raise SystemExit('DJANGO_SUPERUSER_PASSWORD must be set when DJANGO_CREATE_SUPERUSER=true.')
+
 User = get_user_model()
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@destack.local', 'admin123')
-    print('Superusuário admin criado!')
+if not User.objects.filter(username=username).exists():
+    User.objects.create_superuser(username, email, password)
+    print(f"Superusuário {username} criado.")
 else:
-    print('Superusuário admin já existe')
-"
+    print(f"Superusuário {username} já existe.")
+PY
+else
+    echo "Criação automática de superusuário desabilitada."
+fi
 
 echo "=== Iniciando aplicação ==="
 

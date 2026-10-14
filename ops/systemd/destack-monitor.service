@@ -1,0 +1,15 @@
+[Unit]
+Description=Monitor composto do Destack Transport
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/destack/monitor.env
+ExecStart=/root/apps/destack/scripts/monitor-producao.sh
+TimeoutStartSec=3m
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

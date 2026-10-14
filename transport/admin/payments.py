@@ -55,16 +55,30 @@ class PagamentoAgregadoAdmin(admin.ModelAdmin):
         ('Pagamento', {'fields': ('status', 'data_prevista', 'data_pagamento')}),
         ('Outros', {'fields': ('obs', 'criado_em', 'atualizado_em'), 'classes': ('collapse',)}),
     )
-    
+
     @admin.action(description="Marcar selecionados como pagos")
     def marcar_como_pago(self, request, queryset):
         from datetime import date
-        updated = queryset.update(status='pago', data_pagamento=date.today())
+        from transport.services.pagamento_service import sincronizar_status_pagamento_agregado
+        updated = 0
+        for pagamento in queryset:
+            pagamento.status = 'pago'
+            pagamento.data_pagamento = date.today()
+            pagamento.save(update_fields=['status', 'data_pagamento'])
+            sincronizar_status_pagamento_agregado(pagamento)
+            updated += 1
         self.message_user(request, f"{updated} pagamentos foram marcados como pagos.")
 
     @admin.action(description="Marcar selecionados como pendentes")
     def marcar_como_pendente(self, request, queryset):
-        updated = queryset.update(status='pendente', data_pagamento=None)
+        from transport.services.pagamento_service import sincronizar_status_pagamento_agregado
+        updated = 0
+        for pagamento in queryset:
+            pagamento.status = 'pendente'
+            pagamento.data_pagamento = None
+            pagamento.save(update_fields=['status', 'data_pagamento'])
+            sincronizar_status_pagamento_agregado(pagamento)
+            updated += 1
         self.message_user(request, f"{updated} pagamentos foram marcados como pendentes.")
 
 
@@ -92,16 +106,30 @@ class PagamentoProprioAdmin(admin.ModelAdmin):
         ('Pagamento', {'fields': ('status', 'data_pagamento')}),
         ('Outros', {'fields': ('obs', 'criado_em', 'atualizado_em'), 'classes': ('collapse',)}),
     )
-    
+
     @admin.action(description="Marcar selecionados como pagos")
     def marcar_como_pago(self, request, queryset):
         from datetime import date
-        updated = queryset.update(status='pago', data_pagamento=date.today())
+        from transport.services.pagamento_service import sincronizar_status_pagamento_proprio
+        updated = 0
+        for pagamento in queryset:
+            pagamento.status = 'pago'
+            pagamento.data_pagamento = date.today()
+            pagamento.save(update_fields=['status', 'data_pagamento'])
+            sincronizar_status_pagamento_proprio(pagamento)
+            updated += 1
         self.message_user(request, f"{updated} pagamentos foram marcados como pagos.")
 
     @admin.action(description="Marcar selecionados como pendentes")
     def marcar_como_pendente(self, request, queryset):
-        updated = queryset.update(status='pendente', data_pagamento=None)
+        from transport.services.pagamento_service import sincronizar_status_pagamento_proprio
+        updated = 0
+        for pagamento in queryset:
+            pagamento.status = 'pendente'
+            pagamento.data_pagamento = None
+            pagamento.save(update_fields=['status', 'data_pagamento'])
+            sincronizar_status_pagamento_proprio(pagamento)
+            updated += 1
         self.message_user(request, f"{updated} pagamentos foram marcados como pendentes.")
 
 

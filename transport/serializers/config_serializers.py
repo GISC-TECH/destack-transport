@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 # Importar modelos relevantes
 from ..models import ParametroSistema, ConfiguracaoEmpresa, RegistroBackup
+from ..services.backup_service import resolve_registered_backup_path
 
 # =====================================================
 # === Serializadores para Configurações do Sistema ===
@@ -41,6 +42,7 @@ class ConfiguracaoEmpresaSerializer(serializers.ModelSerializer):
             'id', 'razao_social', 'nome_fantasia', 'cnpj', 'ie', 'rntrc',
             'email', 'telefone', 'cep', 'logradouro', 'numero', 'complemento',
             'bairro', 'municipio', 'uf', 'logo', 'certificado_digital',
+            'telefone_gestor', 'telefone_financeiro', 'telefone_operacional',
             'responsavel_tecnico_cnpj', 'responsavel_tecnico_contato',
             'responsavel_tecnico_email', 'responsavel_tecnico_fone',
             'criado_em', 'atualizado_em'
@@ -58,13 +60,14 @@ class RegistroBackupSerializer(serializers.ModelSerializer):
     """Serializer para o modelo de registro de backups."""
     # Campo calculado para formatar o tamanho do arquivo
     tamanho_formatado = serializers.SerializerMethodField()
+    disponivel = serializers.SerializerMethodField()
 
     class Meta:
         model = RegistroBackup
         # Inclui todos os campos do modelo, incluindo o campo calculado
         fields = [
             'id', 'data_hora', 'nome_arquivo', 'tamanho_bytes', 'tamanho_formatado',
-            'md5_hash', 'localizacao', 'usuario', 'status', 'detalhes'
+            'md5_hash', 'disponivel', 'usuario', 'status'
         ]
         # Todos os campos são apenas leitura, pois são gerenciados internamente
         read_only_fields = fields
@@ -87,5 +90,8 @@ class RegistroBackupSerializer(serializers.ModelSerializer):
             return f"{bytes_size / mb:.2f} MB"
         else:
             return f"{bytes_size / gb:.2f} GB"
+
+    def get_disponivel(self, obj):
+        return resolve_registered_backup_path(obj.localizacao) is not None
 
 # Adicione aqui serializers para Relatórios se/quando forem implementados

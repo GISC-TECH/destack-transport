@@ -14,6 +14,7 @@ from ..models import (
     MDFeLacreRodoviario, MDFeAutXML, MDFeInformacoesAdicionais,
     MDFeResponsavelTecnico, MDFeProtocoloAutorizacao, MDFeSuplementar,
     MDFeCancelamento, MDFeCancelamentoEncerramento,
+    MDFeModalAereo, MDFeModalAquaviario, MDFeModalFerroviario, DocumentoEvento,
     # Modelo CT-e necessário para MDFeDocumentosVinculadosSerializer
     CTeDocumento
 )
@@ -248,12 +249,38 @@ class MDFeDocumentoListSerializer(serializers.ModelSerializer):
         except Exception:
             return 0
 
+class MDFeModalAereoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MDFeModalAereo
+        exclude = ['id', 'mdfe']
+
+class MDFeModalAquaviarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MDFeModalAquaviario
+        exclude = ['id', 'mdfe']
+
+class MDFeModalFerroviarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MDFeModalFerroviario
+        exclude = ['id', 'mdfe']
+
+class MDFeEventoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentoEvento
+        fields = ['tipo_evento', 'descricao_evento', 'sequencia_evento', 'data_evento',
+                  'protocolo', 'codigo_status', 'motivo_status', 'confirmado']
+
+
 class MDFeDocumentoDetailSerializer(serializers.ModelSerializer):
     """ Serializer para a visualização detalhada de um MDF-e processado. """
     # Usa os serializers detalhados definidos acima
     identificacao = MDFeIdentificacaoSerializer(read_only=True)
     emitente = MDFeEmitenteSerializer(read_only=True)
     modal_rodoviario = MDFeModalRodoviarioSerializer(read_only=True, allow_null=True)
+    modal_aereo = MDFeModalAereoSerializer(read_only=True, allow_null=True)
+    modal_aquaviario = MDFeModalAquaviarioSerializer(read_only=True, allow_null=True)
+    modal_ferroviario = MDFeModalFerroviarioSerializer(read_only=True, allow_null=True)
+    eventos = MDFeEventoSerializer(many=True, read_only=True)
     prod_pred = MDFeProdutoPredominanteSerializer(read_only=True, allow_null=True)
     totais = MDFeTotaisSerializer(read_only=True)
     adicional = MDFeInformacoesAdicionaisSerializer(read_only=True, allow_null=True)
@@ -280,10 +307,12 @@ class MDFeDocumentoDetailSerializer(serializers.ModelSerializer):
             'id', 'chave', 'versao', 'data_upload', 'processado', 'status_geral',
             'encerrado', 'data_encerramento', 'municipio_encerramento_cod',
             'uf_encerramento', 'protocolo_encerramento', 'encerramento_info',
-            'identificacao', 'emitente', 'modal_rodoviario', 'prod_pred', 'totais',
+            'identificacao', 'emitente', 'modal_rodoviario',
+            'modal_aereo', 'modal_aquaviario', 'modal_ferroviario',
+            'prod_pred', 'totais',
             'adicional', 'resp_tecnico', 'protocolo', 'suplementar', 'cancelamento',
             'cancelamento_encerramento', 'municipios_descarga', 'condutores',
-            'seguros_carga', 'lacres_rodoviarios', 'autorizados_xml',
+            'seguros_carga', 'lacres_rodoviarios', 'autorizados_xml', 'eventos',
             # 'xml_original' # Omitido
         ]
         read_only_fields = fields # Garante que a visualização detalhada seja apenas leitura

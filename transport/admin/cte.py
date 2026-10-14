@@ -1,3 +1,5 @@
+from django.core.exceptions import ObjectDoesNotExist
+
 from .common import *
 
 # === ModelAdmin para CT-e ===
@@ -106,7 +108,8 @@ class CTeDocumentoAdmin(admin.ModelAdmin):
                 link = reverse(f"admin:transport_{model_name_lower}_change", args=[related_obj.pk])
                 display_text = text if text else str(related_obj)
                 return format_html('<a href="{}" target="_blank">{}</a>', link, display_text)
-        except Exception as e: pass
+        except (AttributeError, ObjectDoesNotExist):
+            pass
         return "-"
 
     @admin.display(description='Identificação')
@@ -150,7 +153,7 @@ class CTeDocumentoAdmin(admin.ModelAdmin):
         from datetime import datetime
         
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="ctes_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        response['Content-Disposition'] = f'attachment; filename="ctes_export_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
         
         writer = csv.writer(response)
         # Cabeçalho

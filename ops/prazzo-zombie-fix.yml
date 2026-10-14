@@ -1,0 +1,8 @@
+services:
+  mongodb:
+    # tini recolhe processos curtos de healthcheck/mongosh que o mongod não adota.
+    init: true
+    deploy:
+      resources:
+        limits:
+          pids: 256

@@ -1,0 +1,11 @@
+[Unit]
+Description=Executa o monitor composto do Destack a cada cinco minutos
+
+[Timer]
+OnBootSec=5m
+OnUnitActiveSec=5m
+Persistent=true
+Unit=destack-monitor.service
+
+[Install]
+WantedBy=timers.target

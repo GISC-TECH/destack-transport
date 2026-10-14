@@ -1,0 +1,11 @@
+[Unit]
+Description=Agenda o backup externo diario do Destack Transport
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 America/Bahia
+Persistent=true
+RandomizedDelaySec=10m
+Unit=destack-backup-offsite.service
+
+[Install]
+WantedBy=timers.target

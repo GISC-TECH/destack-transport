@@ -2,10 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clientesAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
-import Loading from '../Common/Loading';
+import { SkeletonTable, SkeletonMobileCards } from '../Common/Skeleton';
+import EmptyState from '../Common/EmptyState';
 import ErrorMessage from '../Common/ErrorMessage';
 import PageHeader from '../Common/PageHeader';
-import './ClientesList.css';
+import Button from '../Common/Button';
+import StatusPill from '../Common/StatusPill';
+import TableContainer from '../Common/TableContainer';
+import PermissionGuard from '../Common/PermissionGuard';
+import styles from './ClientesList.module.css';
 
 function ClientesList() {
   const navigate = useNavigate();
@@ -30,7 +35,12 @@ function ClientesList() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(url, { credentials: 'include' });
+      // Converte URL absoluta do DRF para caminho relativo (passa pelo proxy)
+      const relativeUrl = url.startsWith('http')
+        ? new URL(url).pathname + new URL(url).search
+        : url;
+
+      const response = await fetch(relativeUrl, { credentials: 'include' });
       if (!response.ok) throw new Error('Erro ao carregar clientes');
       const data = await response.json();
 
@@ -123,10 +133,8 @@ function ClientesList() {
       ...prev,
       [field]: value
     }));
+    setPagination({ count: 0, next: null, previous: null });
   };
-
-  if (loading) return <Loading message="Carregando clientes..." />;
-  if (error) return <ErrorMessage message={error} onRetry={loadClientes} />;
 
   const clientesIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -137,18 +145,42 @@ function ClientesList() {
     </svg>
   );
 
+  if (loading) {
+    return (
+      <div className={styles.clientesList}>
+        <PageHeader
+          title="Clientes"
+          subtitle="Carregando..."
+          icon={clientesIcon}
+          breadcrumbs={[{ label: 'Cadastros' }, { label: 'Clientes' }]}
+        />
+        <div className={styles.desktopOnly}>
+          <TableContainer mobileCards={false}>
+            <SkeletonTable rows={5} columns={8} />
+          </TableContainer>
+        </div>
+        <div className={styles.mobileOnly}>
+          <SkeletonMobileCards count={4} />
+        </div>
+      </div>
+    );
+  }
+  if (error) return <ErrorMessage message={error} onRetry={loadClientes} />;
+
   const headerActions = (
-    <button className="btn btn-primary" onClick={() => navigate('/clientes/novo')}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
-      Novo Cliente
-    </button>
+    <PermissionGuard modulo="clientes" acao="add">
+      <Button variant="primary" onClick={() => navigate('/clientes/novo')}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Novo Cliente
+      </Button>
+    </PermissionGuard>
   );
 
   return (
-    <div className="clientes-list">
+    <div className={styles.clientesList}>
       <PageHeader
         title="Clientes"
         subtitle={`${pagination.count} registros`}
@@ -158,17 +190,17 @@ function ClientesList() {
       />
 
       {/* Filtros */}
-      <div className="filtros-container">
+      <div className={styles.filtrosContainer}>
         <input
           type="text"
-          className="input-filter"
+          className={styles.inputFilter}
           placeholder="Buscar por razão social, fantasia ou CNPJ..."
           value={filtros.q}
           onChange={(e) => handleFiltroChange('q', e.target.value)}
         />
 
         <select
-          className="select-filter"
+          className={styles.selectFilter}
           value={filtros.tipo_frete}
           onChange={(e) => handleFiltroChange('tipo_frete', e.target.value)}
         >
@@ -179,16 +211,15 @@ function ClientesList() {
 
         <input
           type="text"
-          className="input-filter"
+          className={`${styles.inputFilter} ${styles.ufFilter}`}
           placeholder="UF"
           maxLength="2"
           value={filtros.estado}
           onChange={(e) => handleFiltroChange('estado', e.target.value.toUpperCase())}
-          style={{ width: '80px' }}
         />
 
         <select
-          className="select-filter"
+          className={styles.selectFilter}
           value={filtros.ativo}
           onChange={(e) => handleFiltroChange('ativo', e.target.value)}
         >
@@ -197,27 +228,27 @@ function ClientesList() {
           <option value="">Todos</option>
         </select>
 
-        <button className="btn btn-outline" onClick={handleExport}>
+        <Button variant="outline" onClick={handleExport}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
           Exportar CSV
-        </button>
+        </Button>
       </div>
 
       {/* Tabela */}
       {clientes.length > 0 ? (
-        <div className="table-container">
-          <table className="clientes-table">
+        <TableContainer>
+          <table className={styles.clientesTable}>
             <thead>
               <tr>
                 <th>Razão Social</th>
                 <th>Nome Fantasia</th>
                 <th>CNPJ</th>
-                <th>Cidade</th>
-                <th>UF</th>
+                <th className={styles.hideTablet}>Cidade</th>
+                <th className={styles.hideTablet}>UF</th>
                 <th>Tipo Frete</th>
                 <th>Status</th>
                 <th>Ações</th>
@@ -226,61 +257,74 @@ function ClientesList() {
             <tbody>
               {clientes.map((cliente) => (
                 <tr key={cliente.id}>
-                  <td>{cliente.razao_social}</td>
-                  <td>{cliente.nome_fantasia || '-'}</td>
-                  <td>{cliente.cnpj_formatado || cliente.cnpj}</td>
-                  <td>{cliente.cidade || '-'}</td>
-                  <td>{cliente.estado || '-'}</td>
-                  <td>
-                    <span className={`badge badge-${cliente.tipo_frete?.toLowerCase()}`}>
+                  <td data-label="Razão Social">{cliente.razao_social}</td>
+                  <td data-label="Nome Fantasia">{cliente.nome_fantasia || '-'}</td>
+                  <td data-label="CNPJ">{cliente.cnpj_formatado || cliente.cnpj}</td>
+                  <td data-label="Cidade" className={styles.hideTablet}>{cliente.cidade || '-'}</td>
+                  <td data-label="UF" className={styles.hideTablet}>{cliente.estado || '-'}</td>
+                  <td data-label="Tipo Frete">
+                    <StatusPill status={cliente.tipo_frete?.toLowerCase()}>
                       {cliente.tipo_frete}
-                    </span>
+                    </StatusPill>
                   </td>
-                  <td>
-                    <span className={`status ${cliente.ativo ? 'ativo' : 'inativo'}`}>
+                  <td data-label="Status">
+                    <StatusPill status={cliente.ativo ? 'ativo' : 'inativo'}>
                       {cliente.ativo ? 'Ativo' : 'Inativo'}
-                    </span>
+                    </StatusPill>
                   </td>
-                  <td className="actions-cell">
-                    <button
-                      className="btn-action btn-edit"
-                      onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
-                      title="Editar"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                      </svg>
-                    </button>
+                  <td data-label="Ações" className={styles.actionsCell}>
+                    <PermissionGuard modulo="clientes" acao="change">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        iconOnly
+                        onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
+                        aria-label={`Editar ${cliente.razao_social}`}
+                        title="Editar"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </Button>
+                    </PermissionGuard>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </TableContainer>
       ) : (
-        <div className="empty-state">
-          <p>Nenhum cliente encontrado com os filtros selecionados.</p>
-        </div>
+        <EmptyState
+          title="Nenhum cliente encontrado"
+          description="Nao ha clientes com os filtros selecionados."
+          action={
+            <PermissionGuard modulo="clientes" acao="add">
+              <Button variant="primary" onClick={() => navigate('/clientes/novo')}>
+                Novo Cliente
+              </Button>
+            </PermissionGuard>
+          }
+        />
       )}
 
       {/* Botões de paginação */}
       {(pagination.previous || pagination.next) && (
-        <div className="pagination-buttons">
-          <button
-            className="btn-page"
+        <div className={styles.paginationButtons}>
+          <Button
+            variant="outline"
             disabled={!pagination.previous}
             onClick={handlePreviousPage}
           >
             Anterior
-          </button>
-          <button
-            className="btn-page"
+          </Button>
+          <Button
+            variant="outline"
             disabled={!pagination.next}
             onClick={handleNextPage}
           >
             Próxima
-          </button>
+          </Button>
         </div>
       )}
     </div>

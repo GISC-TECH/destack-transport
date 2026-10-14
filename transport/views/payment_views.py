@@ -1,27 +1,38 @@
 # transport/views/payment_views.py
 
 # Imports padrão
+import csv
+import io
+import mimetypes
+import os
 import re
+import shutil
+import tempfile
+import zipfile
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 
 # Imports Django
-from django.http import HttpResponse
+from django.conf import settings
+from django.http import FileResponse, HttpResponse
 from django.db.models import Q, Sum, OuterRef, Exists
 from django.utils import timezone
 from django.shortcuts import get_object_or_404 # Usado internamente
 from django.db import transaction
+from django.utils.text import get_valid_filename
 
 # Imports Django REST Framework
 from rest_framework import viewsets, status, serializers # Importa serializers para ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.exceptions import APIException
 import logging
 
 logger = logging.getLogger(__name__)
 from rest_framework.permissions import IsAuthenticated
 
 # Imports Locais
+from ..permissions import TransportModelPermission
 from ..serializers.payment_serializers import ( # Use .. para voltar um nível
     FaixaKMSerializer,
     PagamentoAgregadoSerializer,
@@ -49,6 +60,176 @@ from ..models import (  # Modelos usados pelos ViewSets
 # Ex: from ..utils import format_currency
 from ..utils import csv_response
 from ..constants import DEFAULT_PAYMENT_PERCENTAGE
+from ..validators import normalizar_placa
+from ..services.pagamento_service import (
+    ExclusividadePagamentoError,
+    _verificar_exclusividade_mutua,
+    notificar_gestor_pagamento,
+)
+from ..tasks import notificar_gestor_pagamento_async
+
+
+class ComprovanteDownloadLimitExceeded(APIException):
+    status_code = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    default_code = 'limite_download_excedido'
+
+
+def _validar_exclusividade_pagamento_cte(cte):
+    """Retorna Response de erro 400 se o CT-e já possuir ambos os tipos de pagamento."""
+    if not cte:
+        return None
+    try:
+        _verificar_exclusividade_mutua(cte)
+    except ExclusividadePagamentoError as exc:
+        return Response(
+            {"detail": str(exc)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return None
+
+
+class ComprovanteDownloadMixin:
+    """Entrega comprovantes privados individualmente ou em um ZIP autenticado."""
+
+    comprovante_tipo = 'pagamentos'
+
+    def _comprovantes_queryset(self, request):
+        queryset = (
+            self.get_queryset()
+            .exclude(comprovante='')
+            .exclude(comprovante__isnull=True)
+        )
+        baixar_todos = request.data.get('todos') is True
+        ids = request.data.get('ids', [])
+
+        if baixar_todos and ids:
+            raise serializers.ValidationError(
+                {'detail': "Informe 'todos' ou 'ids', nunca os dois ao mesmo tempo."}
+            )
+        if not baixar_todos:
+            if not isinstance(ids, list) or not ids:
+                raise serializers.ValidationError(
+                    {'detail': "Informe uma lista não vazia em 'ids' ou use {'todos': true}."}
+                )
+            try:
+                ids = [int(item) for item in ids]
+                if any(item <= 0 for item in ids):
+                    raise ValueError
+            except (TypeError, ValueError, AttributeError):
+                raise serializers.ValidationError(
+                    {'detail': 'A lista contém um identificador inválido.'}
+                )
+            queryset = queryset.filter(pk__in=ids)
+
+        limite = int(getattr(settings, 'COMPROVANTES_ZIP_MAX_FILES', 50))
+        total = queryset.count()
+        if total > limite:
+            raise ComprovanteDownloadLimitExceeded(
+                f'A seleção possui {total} arquivos. O limite por download é {limite}. Refine os filtros.'
+            )
+
+        limite_bytes = int(
+            getattr(settings, 'COMPROVANTES_ZIP_MAX_TOTAL_BYTES', 100 * 1024 * 1024)
+        )
+        total_bytes = 0
+        tamanho_queryset = queryset.select_related(None).only('pk', 'comprovante')
+        for pagamento in tamanho_queryset.iterator(chunk_size=100):
+            try:
+                total_bytes += pagamento.comprovante.size
+            except Exception as exc:
+                logger.warning(
+                    'Não foi possível obter tamanho do comprovante %s: %s',
+                    pagamento.pk,
+                    exc,
+                )
+                continue
+            if total_bytes > limite_bytes:
+                limite_mb = limite_bytes // (1024 * 1024)
+                raise ComprovanteDownloadLimitExceeded(
+                    f'Os comprovantes excedem o limite de {limite_mb} MB por download. Refine os filtros.'
+                )
+        return queryset
+
+    def _nome_comprovante(self, pagamento, indice):
+        campo = pagamento.comprovante
+        nome_original = get_valid_filename(os.path.basename(campo.name or 'comprovante'))
+        raiz, extensao = os.path.splitext(nome_original)
+        raiz = raiz or 'comprovante'
+        return f'{indice:04d}_{str(pagamento.pk)[:8]}_{raiz}{extensao.lower()}'
+
+    @action(detail=True, methods=['get'], url_path='comprovante')
+    def comprovante(self, request, pk=None):
+        pagamento = self.get_object()
+        campo = pagamento.comprovante
+        if not campo:
+            return Response(
+                {'detail': 'Este pagamento não possui comprovante.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            arquivo = campo.open('rb')
+        except Exception:
+            logger.exception('Comprovante indisponível para pagamento %s', pagamento.pk)
+            return Response(
+                {'detail': 'O comprovante não está disponível no armazenamento.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        nome = get_valid_filename(os.path.basename(campo.name or 'comprovante'))
+        content_type = mimetypes.guess_type(nome)[0] or 'application/octet-stream'
+        resposta = FileResponse(
+            arquivo,
+            as_attachment=True,
+            filename=nome,
+            content_type=content_type,
+        )
+        resposta['Cache-Control'] = 'private, no-store'
+        resposta['Pragma'] = 'no-cache'
+        return resposta
+
+    @action(detail=False, methods=['post'], url_path='comprovantes/download')
+    def download_comprovantes(self, request):
+        queryset = self._comprovantes_queryset(request)
+        arquivo_zip = tempfile.SpooledTemporaryFile(max_size=16 * 1024 * 1024, mode='w+b')
+        manifest = io.StringIO()
+        manifest_writer = csv.writer(manifest)
+        manifest_writer.writerow(['pagamento_id', 'arquivo', 'status'])
+        incluidos = 0
+
+        with zipfile.ZipFile(arquivo_zip, mode='w', compression=zipfile.ZIP_DEFLATED) as zip_saida:
+            for indice, pagamento in enumerate(queryset.iterator(chunk_size=100), start=1):
+                nome = self._nome_comprovante(pagamento, indice)
+                try:
+                    with pagamento.comprovante.open('rb') as origem:
+                        with zip_saida.open(nome, mode='w') as destino:
+                            shutil.copyfileobj(origem, destino, length=1024 * 1024)
+                    manifest_writer.writerow([pagamento.pk, nome, 'incluído'])
+                    incluidos += 1
+                except Exception:
+                    logger.exception('Falha ao incluir comprovante do pagamento %s', pagamento.pk)
+                    manifest_writer.writerow([pagamento.pk, nome, 'indisponível'])
+
+            zip_saida.writestr('manifesto.csv', manifest.getvalue().encode('utf-8-sig'))
+
+        if incluidos == 0:
+            arquivo_zip.close()
+            return Response(
+                {'detail': 'Nenhum comprovante disponível para os pagamentos informados.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        arquivo_zip.seek(0)
+        agora = timezone.now().strftime('%Y%m%d_%H%M%S')
+        resposta = FileResponse(
+            arquivo_zip,
+            as_attachment=True,
+            filename=f'comprovantes_{self.comprovante_tipo}_{agora}.zip',
+            content_type='application/zip',
+        )
+        resposta['X-Comprovantes-Incluidos'] = str(incluidos)
+        resposta['Cache-Control'] = 'private, no-store'
+        resposta['Pragma'] = 'no-cache'
+        return resposta
 
 
 # ===============================================================
@@ -59,7 +240,7 @@ class FaixaKMViewSet(viewsets.ModelViewSet):
     """API para CRUD de Faixas de KM para pagamento."""
     queryset = FaixaKM.objects.all().order_by('min_km')
     serializer_class = FaixaKMSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     def perform_create(self, serializer):
         """Validação adicional antes de salvar uma nova faixa."""
@@ -148,11 +329,18 @@ class FaixaKMViewSet(viewsets.ModelViewSet):
         })
 
 
-class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
+class PagamentoAgregadoViewSet(ComprovanteDownloadMixin, viewsets.ModelViewSet):
     """API para gerenciar pagamentos a motoristas agregados."""
     queryset = PagamentoAgregado.objects.all().order_by('-data_prevista')
     serializer_class = PagamentoAgregadoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
+    comprovante_tipo = 'agregados'
+
+    def perform_update(self, serializer):
+        """Sincroniza CTeDocumento.pago ao alterar status do pagamento agregado."""
+        from ..services.pagamento_service import sincronizar_status_pagamento_agregado
+        instance = serializer.save()
+        sincronizar_status_pagamento_agregado(instance)
 
     def get_queryset(self):
         """Permite filtrar pagamentos por diversos parâmetros."""
@@ -299,7 +487,9 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                     continue
 
                 # Buscar veículo no cadastro do sistema para obter tipo_proprietario correto
-                veiculo_cadastro = Veiculo.objects.filter(placa=veiculo.placa).first()
+                veiculo_cadastro = Veiculo.objects.filter(
+                    placa__iexact=normalizar_placa(veiculo.placa)
+                ).first()
 
                 # Filtrar por tipo de proprietário usando cadastro do sistema (se disponível)
                 # ou fallback para prop_tp do MDF-e
@@ -327,6 +517,15 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                 condutor_nome = condutor.nome if condutor else (veiculo.prop_razao_social or "Condutor não identificado")
                 condutor_cpf = condutor.cpf if condutor else veiculo.prop_cpf
 
+                # Verifica exclusividade mútua com pagamento próprio existente
+                erro_exclusividade = _validar_exclusividade_pagamento_cte(cte)
+                if erro_exclusividade:
+                    contador['erros'] += 1
+                    erros_detalhados.append(
+                        f"CT-e {cte.chave[-8:]}: {erro_exclusividade.data['detail']}"
+                    )
+                    continue
+
                 # Criar pagamento usando get_or_create para evitar race condition
                 # Se outro request já criou o pagamento para este CT-e, ignora
                 pagamento, created = PagamentoAgregado.objects.get_or_create(
@@ -344,6 +543,14 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
                 )
                 if created:
                     contador['criados'] += 1
+                    # Notifica gestor de forma assíncrona sobre novo pagamento
+                    try:
+                        notificar_gestor_pagamento_async.delay(str(pagamento.id), 'agregado')
+                    except Exception as exc:
+                        logger.warning(
+                            "Falha ao enfileirar notificação de pagamento agregado %s: %s",
+                            pagamento.id, exc
+                        )
                 else:
                     # Pagamento já existia (criado por outro request concorrente)
                     contador['avisos'] += 1
@@ -390,7 +597,9 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         pagamento_agregado = self.get_object()
 
         # Busca o veículo pela placa
-        veiculo = Veiculo.objects.filter(placa=pagamento_agregado.placa).first()
+        veiculo = Veiculo.objects.filter(
+            placa__iexact=normalizar_placa(pagamento_agregado.placa)
+        ).first()
         if not veiculo:
             return Response(
                 {"detail": f"Veículo com placa {pagamento_agregado.placa} não encontrado no cadastro. Cadastre o veículo primeiro."},
@@ -420,27 +629,43 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
         if pagamento_agregado.cte and hasattr(pagamento_agregado.cte, 'identificacao'):
             cte_numero = str(pagamento_agregado.cte.identificacao.numero)
 
+        # Verifica exclusividade mútua antes de criar o pagamento próprio
+        # (garante que não existe um pagamento próprio independente para o mesmo CT-e)
+        erro_exclusividade = _validar_exclusividade_pagamento_cte(pagamento_agregado.cte)
+        if erro_exclusividade:
+            return erro_exclusividade
+
+        # Armazena dados necessários antes de remover o agregado
+        agregado_cte = pagamento_agregado.cte
+        agregado_condutor_nome = pagamento_agregado.condutor_nome
+        agregado_condutor_cpf = pagamento_agregado.condutor_cpf
+        agregado_data_prevista = pagamento_agregado.data_prevista
+        agregado_valor_repassado = pagamento_agregado.valor_repassado
+        agregado_status = pagamento_agregado.status
+        agregado_data_pagamento = pagamento_agregado.data_pagamento
+        agregado_obs = pagamento_agregado.obs
+
+        # Remove o pagamento agregado ANTES de criar o próprio para respeitar a exclusividade mútua
+        pagamento_agregado.delete()
+
         # Sempre cria um novo registro individual (sem agregar)
         pagamento_proprio = PagamentoProprio.objects.create(
             veiculo=veiculo,
             periodo=periodo,
             # Novos campos de detalhamento
-            cte=pagamento_agregado.cte,
+            cte=agregado_cte,
             cte_numero=cte_numero,
-            motorista_nome=pagamento_agregado.condutor_nome,
-            motorista_cpf=pagamento_agregado.condutor_cpf,
-            data_prevista=pagamento_agregado.data_prevista,
+            motorista_nome=agregado_condutor_nome,
+            motorista_cpf=agregado_condutor_cpf,
+            data_prevista=agregado_data_prevista,
             # Valores
             km_total_periodo=0,  # Não tem KM associado
-            valor_base_faixa=pagamento_agregado.valor_repassado,
+            valor_base_faixa=agregado_valor_repassado,
             ajustes=ajustes,
-            status=pagamento_agregado.status,
-            data_pagamento=pagamento_agregado.data_pagamento,
-            obs=f"Convertido de Agregado. {pagamento_agregado.obs or ''}"
+            status=agregado_status,
+            data_pagamento=agregado_data_pagamento,
+            obs=f"Convertido de Agregado. {agregado_obs or ''}"
         )
-
-        # Remove o pagamento agregado
-        pagamento_agregado.delete()
 
         return Response({
             "message": "Pagamento convertido de Agregado para Próprio com sucesso.",
@@ -451,12 +676,60 @@ class PagamentoAgregadoViewSet(viewsets.ModelViewSet):
             "valor_total": float(pagamento_proprio.valor_total_pagar)
         }, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['post'], url_path='notificar-gestor')
+    def notificar_gestor(self, request, pk=None):
+        """Reenvia notificação WhatsApp para o gestor sobre o pagamento agregado."""
+        pagamento = self.get_object()
+        resultado = notificar_gestor_pagamento(pagamento, 'agregado')
+        http_status = status.HTTP_200_OK if resultado['status'] == 'enviado' else status.HTTP_502_BAD_GATEWAY
+        return Response(resultado, status=http_status)
 
-class PagamentoProprioViewSet(viewsets.ModelViewSet):
+    @action(detail=True, methods=['post'], url_path='reverter-baixa')
+    def reverter_baixa(self, request, pk=None):
+        """Reverte a baixa de um pagamento agregado, voltando para pendente."""
+        pagamento = self.get_object()
+
+        if pagamento.status != 'pago':
+            return Response(
+                {"detail": "Apenas pagamentos com status 'pago' podem ter a baixa revertida."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            # Remove comprovante se existir
+            if pagamento.comprovante:
+                try:
+                    pagamento.comprovante.delete(save=False)
+                except Exception as e:
+                    logger.warning(f"Erro ao remover comprovante do pagamento agregado {pagamento.id}: {e}")
+                pagamento.comprovante = None
+
+            pagamento.status = 'pendente'
+            pagamento.data_pagamento = None
+            pagamento.save(update_fields=['status', 'data_pagamento', 'comprovante'])
+
+            # Sincroniza CT-e
+            sincronizar_status_pagamento_agregado(pagamento)
+
+        return Response({
+            "message": "Baixa revertida com sucesso.",
+            "pagamento_id": str(pagamento.id),
+            "status": pagamento.status
+        })
+
+
+class PagamentoProprioViewSet(ComprovanteDownloadMixin, viewsets.ModelViewSet):
     """API para gerenciar pagamentos a motoristas próprios."""
     queryset = PagamentoProprio.objects.all().order_by('-periodo')
     serializer_class = PagamentoProprioSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
+    comprovante_tipo = 'proprios'
+
+    def perform_update(self, serializer):
+        """Sincroniza CTeDocumento.pago ao alterar status do pagamento proprio."""
+        from ..services.pagamento_service import sincronizar_status_pagamento_proprio
+        instance = serializer.save()
+        sincronizar_status_pagamento_proprio(instance)
 
     def get_queryset(self):
         """Permite filtrar pagamentos por diversos parâmetros."""
@@ -510,7 +783,14 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             )
 
         # Selecionar/Prefetch dados relacionados para otimizar
-        queryset = queryset.select_related('veiculo', 'cte', 'cte__identificacao')
+        queryset = queryset.select_related(
+            'veiculo',
+            'cte',
+            'cte__identificacao',
+            'cte__remetente',
+            'cte__destinatario',
+            'cte__prestacao',
+        )
 
         return queryset
 
@@ -548,7 +828,7 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             # Usar Coalesce(Sum(...), 0) para tratar caso de não haver CTes
             from django.db.models.functions import Coalesce
             km_total = CTeDocumento.objects.filter(
-                modal_rodoviario__veiculos__placa=veiculo.placa,
+                modal_rodoviario__veiculos__placa__iexact=normalizar_placa(veiculo.placa),
                 identificacao__data_emissao__date__gte=data_inicio,
                 identificacao__data_emissao__date__lte=data_fim,
                 processado=True,
@@ -763,16 +1043,36 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                          raise ValueError(f"Nenhuma faixa de KM encontrada para {km_total} KM.")
 
                     # Cria o registro de pagamento
-                    PagamentoProprio.objects.create(
+                    # data_prevista = último dia do mês do período
+                    from datetime import date
+                    # periodo_atual é sempre string 'AAAA-MM' ou 'AAAA-MM-XQ'
+                    partes = periodo_atual.split('-')
+                    ano_prev = int(partes[0])
+                    mes_prev = int(partes[1])
+                    if mes_prev < 12:
+                        data_prevista = date(ano_prev, mes_prev + 1, 1) - timedelta(days=1)
+                    else:
+                        data_prevista = date(ano_prev, 12, 31)
+
+                    pagamento_proprio = PagamentoProprio.objects.create(
                         veiculo=veiculo,
                         periodo=periodo_atual,
                         km_total_periodo=km_total,
                         valor_base_faixa=faixa.valor_pago,
                         ajustes=Decimal('0.00'), # Ajustes podem ser feitos depois
-                        status='pendente'
+                        status='pendente',
+                        data_prevista=data_prevista,
                         # valor_total_pagar é calculado no save()
                     )
                     resultados['criados'] += 1
+                    # Notifica gestor de forma assíncrona sobre novo pagamento
+                    try:
+                        notificar_gestor_pagamento_async.delay(str(pagamento_proprio.id), 'proprio')
+                    except Exception as exc:
+                        logger.warning(
+                            "Falha ao enfileirar notificação de pagamento próprio %s: %s",
+                            pagamento_proprio.id, exc
+                        )
                     resultados['detalhes'].append({
                         'veiculo': veiculo.placa,
                         'periodo': periodo_atual,
@@ -820,11 +1120,15 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         Converte um pagamento próprio para agregado.
         Remove o registro de próprio e cria um registro em agregado.
 
+        O valor_total_pagar do pagamento próprio representa o valor líquido a
+        pagar ao condutor. Para preservar esse valor financeiro na conversão,
+        o percentual de repasse é fixado em 100% e o valor do frete base é
+        igual ao valor_total_pagar original.
+
         Parâmetros no body:
-        - cte_id: ID do CT-e para associar (obrigatório se não houver CT-e vinculado)
+        - cte_id: ID do CT-e para associar (obrigatório)
         - condutor_nome: Nome do condutor (obrigatório)
         - condutor_cpf: CPF do condutor (opcional)
-        - percentual_repasse: Percentual de repasse (default: 25%)
         - data_prevista: Data prevista para pagamento (default: hoje)
         """
         pagamento_proprio = self.get_object()
@@ -834,10 +1138,12 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
         condutor_nome = request.data.get('condutor_nome')
         condutor_cpf = request.data.get('condutor_cpf', '')
 
+        # Preserva o valor líquido a pagar. Permite informar percentual no request;
+        # se não informado, usa 100% para manter o valor_repassado igual ao próprio.
         try:
-            percentual_repasse = Decimal(str(request.data.get('percentual_repasse', '25')))
-        except (InvalidOperation, TypeError):
-            percentual_repasse = Decimal('25.00')
+            percentual_repasse = Decimal(str(request.data.get('percentual_repasse', '100.00')))
+        except (InvalidOperation, TypeError, ValueError):
+            percentual_repasse = Decimal('100.00')
 
         data_prevista_str = request.data.get('data_prevista')
         if data_prevista_str:
@@ -881,11 +1187,27 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
                 "hint": "O modelo de pagamento agregado requer um CT-e associado."
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Verifica exclusividade mútua antes de criar o pagamento agregado
+        # (garante que não existe um pagamento agregado independente para o mesmo CT-e)
+        erro_exclusividade = _validar_exclusividade_pagamento_cte(cte)
+        if erro_exclusividade:
+            return erro_exclusividade
+
         # Obtém a placa do veículo
         placa = pagamento_proprio.veiculo.placa
 
-        # Calcula valor do frete baseado no valor total do pagamento próprio
+        # O valor_total_pagar do próprio é o líquido a pagar; usa-o como
+        # frete base e repasse de 100% para manter o valor_repassado igual.
         valor_frete = pagamento_proprio.valor_total_pagar
+
+        # Armazena dados necessários antes de remover o próprio
+        proprio_data_pagamento = pagamento_proprio.data_pagamento
+        proprio_status = pagamento_proprio.status
+        proprio_periodo = pagamento_proprio.periodo
+        proprio_obs = pagamento_proprio.obs
+
+        # Remove o pagamento próprio ANTES de criar o agregado para respeitar a exclusividade mútua
+        pagamento_proprio.delete()
 
         # Cria pagamento agregado
         pagamento_agregado = PagamentoAgregado.objects.create(
@@ -896,13 +1218,10 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             valor_frete_total=valor_frete,
             percentual_repasse=percentual_repasse,
             data_prevista=data_prevista,
-            data_pagamento=pagamento_proprio.data_pagamento,
-            status=pagamento_proprio.status,
-            obs=f"Convertido de Próprio período {pagamento_proprio.periodo}. {pagamento_proprio.obs or ''}"
+            data_pagamento=proprio_data_pagamento,
+            status=proprio_status,
+            obs=f"Convertido de Próprio período {proprio_periodo}. {proprio_obs or ''}"
         )
-
-        # Remove o pagamento próprio
-        pagamento_proprio.delete()
 
         return Response({
             "message": "Pagamento convertido de Próprio para Agregado com sucesso.",
@@ -910,3 +1229,44 @@ class PagamentoProprioViewSet(viewsets.ModelViewSet):
             "cte_chave": cte.chave if cte else None,
             "valor_repassado": float(pagamento_agregado.valor_repassado)
         }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='notificar-gestor')
+    def notificar_gestor(self, request, pk=None):
+        """Reenvia notificação WhatsApp para o gestor sobre o pagamento próprio."""
+        pagamento = self.get_object()
+        resultado = notificar_gestor_pagamento(pagamento, 'proprio')
+        http_status = status.HTTP_200_OK if resultado['status'] == 'enviado' else status.HTTP_502_BAD_GATEWAY
+        return Response(resultado, status=http_status)
+
+    @action(detail=True, methods=['post'], url_path='reverter-baixa')
+    def reverter_baixa(self, request, pk=None):
+        """Reverte a baixa de um pagamento próprio, voltando para pendente."""
+        pagamento = self.get_object()
+
+        if pagamento.status != 'pago':
+            return Response(
+                {"detail": "Apenas pagamentos com status 'pago' podem ter a baixa revertida."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            # Remove comprovante se existir
+            if pagamento.comprovante:
+                try:
+                    pagamento.comprovante.delete(save=False)
+                except Exception as e:
+                    logger.warning(f"Erro ao remover comprovante do pagamento próprio {pagamento.id}: {e}")
+                pagamento.comprovante = None
+
+            pagamento.status = 'pendente'
+            pagamento.data_pagamento = None
+            pagamento.save(update_fields=['status', 'data_pagamento', 'comprovante'])
+
+            # Sincroniza CT-e
+            sincronizar_status_pagamento_proprio(pagamento)
+
+        return Response({
+            "message": "Baixa revertida com sucesso.",
+            "pagamento_id": str(pagamento.id),
+            "status": pagamento.status
+        })

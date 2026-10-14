@@ -97,8 +97,9 @@ class VeiculoSerializer(serializers.ModelSerializer):
             'tipo_proprietario', 'proprietario_cnpj', 'proprietario_cpf',
             'proprietario_nome', 'rntrc_proprietario', 'uf_proprietario',
             'civ_validade', 'cipp_validade', 'afericao_validade',
-            'crlv_validade', 'cronotacografo_validade',
+            'crlv_validade', 'cronotacografo_validade', 'seguro_validade', 'laudo_vistoria_validade',
             'ativo', 'observacoes', 'compartimentos', 'documentos_vencendo',
+            'gps_identificador', 'gps_provedor', 'gps_ultima_sincronizacao',
             'criado_em', 'atualizado_em'
         ]
         # Campos de data/hora são apenas leitura

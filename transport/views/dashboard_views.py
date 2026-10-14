@@ -6,7 +6,9 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
 # Imports Django
+from django.core.cache import cache
 from django.db.models import Q, Sum, Count, Case, When, Value, CharField, DecimalField
+from django.utils import timezone
 from django.db.models.functions import Coalesce, TruncDate, TruncMonth
 from django.shortcuts import get_object_or_404 # Pode ser necessário em futuras expansões
 
@@ -18,6 +20,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 # Imports Locais
+from ..permissions import CapabilityPermission, TransportModelPermission
 from ..serializers.dashboard_serializers import (  # Use .. para voltar um nível
     DashboardGeralDataSerializer, FinanceiroPainelSerializer, FinanceiroMensalSerializer,
     FinanceiroDetalheSerializer, CtePainelSerializer, MdfePainelSerializer,
@@ -33,6 +36,62 @@ from ..models import (  # Modelos usados para consultas nos painéis
     Veiculo, Motorista,  # Para paineis de frota e performance
 )
 
+
+def parse_positive_int_query_param(params, name, default, max_value=None):
+    """
+    Parse a positive integer query parameter.
+
+    Invalid values are reported as client errors by callers instead of becoming
+    500 responses. Values lower than 1 are normalized to 1, matching the
+    existing behavior in dashboard endpoints.
+    """
+    raw_value = params.get(name, default)
+    try:
+        value = int(raw_value)
+    except (TypeError, ValueError):
+        raise ValueError(f"Parâmetro '{name}' deve ser um número inteiro.")
+
+    value = max(1, value)
+    if max_value is not None:
+        value = min(value, max_value)
+    return value
+
+
+# ===============================================================
+# ==> CACHE DOS DASHBOARDS
+# ===============================================================
+
+DASHBOARD_CACHE_TIMEOUT = 300  # 5 minutos
+
+
+def _dashboard_cache_key(prefix, user_id, params):
+    """Gera chave de cache única por usuário e parâmetros de query string."""
+    param_str = '&'.join(f"{k}={v}" for k, v in sorted(params.items()))
+    return f"destack:dashboard:{prefix}:user:{user_id}:{hash(param_str)}"
+
+
+def _get_or_set_dashboard_cache(prefix, user_id, params, builder):
+    """Busca dados em cache ou executa builder e armazena no Redis."""
+    key = _dashboard_cache_key(prefix, user_id, params)
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    data = builder()
+    cache.set(key, data, timeout=DASHBOARD_CACHE_TIMEOUT)
+    return data
+
+
+def invalidar_cache_dashboards():
+    """Invalida todas as chaves de dashboard. Chamada por signals após alteração de dados."""
+    try:
+        keys = cache.keys('destack:dashboard:*')
+        if keys:
+            cache.delete_many(keys)
+    except Exception:
+        # Falhas no cache não devem quebrar requisições
+        pass
+
+
 # ===============================================================
 # ==> APIS PARA DASHBOARDS e PAINÉIS
 # ===============================================================
@@ -41,30 +100,27 @@ class DashboardGeralAPIView(APIView):
     """
     API para obter dados consolidados para o dashboard geral.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'dashboard.geral'
 
-    def get(self, request, format=None):
-        """Retorna dados consolidados para o dashboard geral."""
-        params = request.query_params
-        periodo = params.get('periodo', 'mes')  # mes, trimestre, ano
+    def _parse_periodo(self, params):
+        """Extrai e valida data_inicio/data_fim. Retorna (periodo, data_inicio, data_fim) ou Response de erro."""
+        periodo = params.get('periodo', 'mes')
         data_inicio_str = params.get('data_inicio')
         data_fim_str = params.get('data_fim')
 
-        # Definir período padrão se não informado
         if not data_inicio_str or not data_fim_str:
             hoje = date.today()
             if periodo == 'mes':
                 data_inicio = date(hoje.year, hoje.month, 1)
                 data_fim = date(hoje.year, hoje.month + 1, 1) - timedelta(days=1) if hoje.month != 12 else date(hoje.year, 12, 31)
             elif periodo == 'trimestre':
-                trimestre = (hoje.month - 1) // 3  # 0=Q1, 1=Q2, 2=Q3, 3=Q4
-                mes_inicio_trimestre = trimestre * 3 + 1  # 1, 4, 7, 10
+                trimestre = (hoje.month - 1) // 3
+                mes_inicio_trimestre = trimestre * 3 + 1
                 data_inicio = date(hoje.year, mes_inicio_trimestre, 1)
-                # Calcula o próximo trimestre corretamente
                 if trimestre < 3:
                     prox_trimestre_inicio = date(hoje.year, (trimestre + 1) * 3 + 1, 1)
                 else:
-                    # Q4: próximo trimestre é Q1 do próximo ano
                     prox_trimestre_inicio = date(hoje.year + 1, 1, 1)
                 data_fim = prox_trimestre_inicio - timedelta(days=1)
             else:  # ano
@@ -75,14 +131,34 @@ class DashboardGeralAPIView(APIView):
                 data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
                 data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
             except ValueError:
-                return Response({"detail": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+                return None, Response({"detail": "Formato de data inválido. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Validar que data_fim >= data_inicio
             if data_fim < data_inicio:
-                return Response({"detail": "A data final deve ser maior ou igual à data inicial."}, status=status.HTTP_400_BAD_REQUEST)
+                return None, Response({"detail": "A data final deve ser maior ou igual à data inicial."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ajusta data_fim para incluir o dia inteiro
-        data_fim_query = data_fim + timedelta(days=1)
+        return (periodo, data_inicio, data_fim), None
+
+    def get(self, request, format=None):
+        """Retorna dados consolidados para o dashboard geral (com cache)."""
+        params = request.query_params
+        parsed, error = self._parse_periodo(params)
+        if error is not None:
+            return error
+
+        periodo, data_inicio, data_fim = parsed
+        data = _get_or_set_dashboard_cache(
+            'geral', request.user.id, params,
+            lambda: self._build_data(periodo, data_inicio, data_fim)
+        )
+        return Response(data)
+
+    def _build_data(self, periodo, data_inicio, data_fim):
+        """Constrói o payload do dashboard geral."""
+        # Ajusta data_fim para incluir o dia inteiro, com limite seguro
+        try:
+            data_fim_query = data_fim + timedelta(days=1)
+        except OverflowError:
+            data_fim_query = date.max
 
         # Construir filtros para consultas
         filtro_periodo_cte = Q(identificacao__data_emissao__date__gte=data_inicio, identificacao__data_emissao__date__lt=data_fim_query)
@@ -152,24 +228,32 @@ class DashboardGeralAPIView(APIView):
         # === Dados para metas (comparação com período anterior) ===
         try:
             delta = data_fim - data_inicio
-            data_inicio_anterior = data_inicio - (delta + timedelta(days=1))
-            data_fim_anterior = data_fim - (delta + timedelta(days=1))
-        except TypeError: # Caso data_inicio ou data_fim sejam None inicialmente
-            data_inicio_anterior = data_inicio - timedelta(days=30) # Exemplo fallback
-            data_fim_anterior = data_fim - timedelta(days=30)
-
-        data_fim_anterior_query = data_fim_anterior + timedelta(days=1)
-        filtro_anterior_cte = Q(identificacao__data_emissao__date__gte=data_inicio_anterior, identificacao__data_emissao__date__lt=data_fim_anterior_query)
-
-        valor_total_fretes_anterior = CTeDocumento.objects.filter(
-            filtro_anterior_cte & filtro_cte_valido
-        ).aggregate(total=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0')))['total']
+            intervalo_anterior = delta + timedelta(days=1)
+            data_inicio_anterior = data_inicio - intervalo_anterior
+            data_fim_anterior = data_fim - intervalo_anterior
+        except (TypeError, OverflowError):
+            # Período inválido ou muito grande para calcular período anterior
+            data_inicio_anterior = None
+            data_fim_anterior = None
 
         crescimento_percentual = 0.0
-        if valor_total_fretes_anterior > 0:
-            crescimento_percentual = float(((valor_total_fretes / valor_total_fretes_anterior) - 1) * 100)
-        elif valor_total_fretes > 0:
-            crescimento_percentual = 100.0
+        if data_inicio_anterior is not None and data_fim_anterior is not None:
+            data_fim_anterior_query = data_fim_anterior + timedelta(days=1)
+            filtro_anterior_cte = Q(
+                identificacao__data_emissao__date__gte=data_inicio_anterior,
+                identificacao__data_emissao__date__lt=data_fim_anterior_query
+            )
+
+            valor_total_fretes_anterior = CTeDocumento.objects.filter(
+                filtro_anterior_cte & filtro_cte_valido
+            ).aggregate(total=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0')))['total']
+
+            if valor_total_fretes_anterior > 0:
+                crescimento_percentual = float(((valor_total_fretes / valor_total_fretes_anterior) - 1) * 100)
+            elif valor_total_fretes > 0:
+                crescimento_percentual = 100.0
+        else:
+            valor_total_fretes_anterior = Decimal('0')
 
         # Compilar resposta final
         response_data = {
@@ -200,36 +284,51 @@ class DashboardGeralAPIView(APIView):
                 'ctes': [{
                     'id': str(cte.id),
                     'chave': cte.chave,
-                    'numero': getattr(cte.identificacao, 'numero', None),
-                    'data_emissao': getattr(cte.identificacao, 'data_emissao', None).strftime('%d/%m/%Y %H:%M') if getattr(cte.identificacao, 'data_emissao', None) else None,
-                    'remetente': getattr(cte.remetente, 'razao_social', None),
-                    'destinatario': getattr(cte.destinatario, 'razao_social', None),
-                    'valor': float(getattr(cte.prestacao, 'valor_total_prestado', 0)),
+                    'numero': getattr(getattr(cte, 'identificacao', None), 'numero', None),
+                    'data_emissao': (
+                        getattr(getattr(cte, 'identificacao', None), 'data_emissao', None).strftime('%d/%m/%Y %H:%M')
+                        if getattr(getattr(cte, 'identificacao', None), 'data_emissao', None) else None
+                    ),
+                    'remetente': getattr(getattr(cte, 'remetente', None), 'razao_social', None),
+                    'destinatario': getattr(getattr(cte, 'destinatario', None), 'razao_social', None),
+                    'valor': float(getattr(getattr(cte, 'prestacao', None), 'valor_total_prestado', 0)),
                     'modalidade': cte.modalidade
                 } for cte in ultimos_ctes],
                 'mdfes': [{
                     'id': str(mdfe.id),
                     'chave': mdfe.chave,
-                    'numero': getattr(mdfe.identificacao, 'n_mdf', None),
-                    'data_emissao': getattr(mdfe.identificacao, 'dh_emi', None).strftime('%d/%m/%Y %H:%M') if getattr(mdfe.identificacao, 'dh_emi', None) else None,
-                    'uf_ini': getattr(mdfe.identificacao, 'uf_ini', None),
-                    'uf_fim': getattr(mdfe.identificacao, 'uf_fim', None),
-                    'placa': getattr(getattr(mdfe.modal_rodoviario, 'veiculo_tracao', None), 'placa', None)
+                    'numero': getattr(getattr(mdfe, 'identificacao', None), 'n_mdf', None),
+                    'data_emissao': (
+                        getattr(getattr(mdfe, 'identificacao', None), 'dh_emi', None).strftime('%d/%m/%Y %H:%M')
+                        if getattr(getattr(mdfe, 'identificacao', None), 'dh_emi', None) else None
+                    ),
+                    'uf_ini': getattr(getattr(mdfe, 'identificacao', None), 'uf_ini', None),
+                    'uf_fim': getattr(getattr(mdfe, 'identificacao', None), 'uf_fim', None),
+                    'placa': getattr(getattr(getattr(mdfe, 'modal_rodoviario', None), 'veiculo_tracao', None), 'placa', None)
                 } for mdfe in ultimos_mdfes]
             }
         }
 
         serializer = DashboardGeralDataSerializer(response_data)
-        return Response(serializer.data)
+        return serializer.data
 
 
 class FinanceiroPainelAPIView(APIView):
     """
     API para o painel financeiro. Mostra dados sobre faturamento, valores CIF/FOB, etc.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'financeiro.painel'
 
     def get(self, request):
+        params = request.query_params
+        data = _get_or_set_dashboard_cache(
+            'financeiro', request.user.id, params,
+            lambda: self._build_data(request)
+        )
+        return Response(data)
+
+    def _build_data(self, request):
         params = request.query_params
         periodo = params.get('periodo', 'ano')
         data_inicio_str = params.get('data_inicio')
@@ -338,16 +437,25 @@ class FinanceiroPainelAPIView(APIView):
         }
 
         serializer = FinanceiroPainelSerializer(response_data)
-        return Response(serializer.data)
+        return serializer.data
 
 
 class FinanceiroMensalAPIView(APIView):
     """
     API para obter dados financeiros mensais específicos (usado pelo gráfico financeiro).
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'financeiro.painel'
 
     def get(self, request):
+        params = request.query_params
+        data = _get_or_set_dashboard_cache(
+            'financeiro-mensal', request.user.id, params,
+            lambda: self._build_data(request)
+        )
+        return Response(data)
+
+    def _build_data(self, request):
         # Obter mês/ano específico ou período
         mes_param = request.query_params.get('mes') # Formato AAAA-MM
         data_inicio_str = request.query_params.get('data_inicio')
@@ -402,16 +510,25 @@ class FinanceiroMensalAPIView(APIView):
                     'entregas': item['entregas']
                 })
 
-        return Response(resultados)
+        return resultados
 
 
 class FinanceiroDetalheAPIView(APIView):
     """
     API para obter detalhes financeiros por clientes, veículos, etc.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'financeiro.painel'
 
     def get(self, request):
+        params = request.query_params
+        data = _get_or_set_dashboard_cache(
+            'financeiro-detalhe', request.user.id, params,
+            lambda: self._build_data(request)
+        )
+        return Response(data)
+
+    def _build_data(self, request):
         params = request.query_params
         tipo = params.get('group', 'cliente') # cliente, veiculo, origem, destino
         data_inicio_str = params.get('data_inicio')
@@ -518,16 +635,25 @@ class FinanceiroDetalheAPIView(APIView):
 
         # Serializer não é estritamente necessário aqui, pois estamos construindo o dict manualmente
         # serializer = FinanceiroDetalheSerializer(resultados, many=True)
-        return Response(resultados)
+        return resultados
 
 
 class CtePainelAPIView(APIView):
     """
     API para o painel de CT-e. Mostra dados sobre CT-es emitidos.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'cte.painel'
 
     def get(self, request):
+        params = request.query_params
+        data = _get_or_set_dashboard_cache(
+            'cte-painel', request.user.id, params,
+            lambda: self._build_data(request)
+        )
+        return Response(data)
+
+    def _build_data(self, request):
         params = request.query_params
         data_inicio_str = params.get('data_inicio')
         data_fim_str = params.get('data_fim')
@@ -623,16 +749,25 @@ class CtePainelAPIView(APIView):
         }
 
         serializer = CtePainelSerializer(response_data)
-        return Response(serializer.data)
+        return serializer.data
 
 
 class MdfePainelAPIView(APIView):
     """
     API para o painel de MDF-e. Mostra dados sobre MDF-es emitidos.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'mdfe.painel'
 
     def get(self, request):
+        params = request.query_params
+        data = _get_or_set_dashboard_cache(
+            'mdfe-painel', request.user.id, params,
+            lambda: self._build_data(request)
+        )
+        return Response(data)
+
+    def _build_data(self, request):
         params = request.query_params
         data_inicio_str = params.get('data_inicio')
         data_fim_str = params.get('data_fim')
@@ -724,16 +859,25 @@ class MdfePainelAPIView(APIView):
         }
 
         serializer = MdfePainelSerializer(response_data)
-        return Response(serializer.data)
+        return serializer.data
 
 
 class GeograficoPainelAPIView(APIView):
     """
     API para o painel geográfico. Mostra dados sobre origens e destinos.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'dashboard.geral'
 
     def get(self, request):
+        params = request.query_params
+        data = _get_or_set_dashboard_cache(
+            'geografico', request.user.id, params,
+            lambda: self._build_data(request)
+        )
+        return Response(data)
+
+    def _build_data(self, request):
         params = request.query_params
         data_inicio_str = params.get('data_inicio')
         data_fim_str = params.get('data_fim')
@@ -832,66 +976,152 @@ class GeograficoPainelAPIView(APIView):
         }
 
         serializer = GeograficoPainelSerializer(response_data)
-        return Response(serializer.data)
+        return serializer.data
 
 
 class AlertasPagamentoAPIView(APIView):
     """
     API para obter alertas do sistema (pagamentos pendentes, etc.).
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'pagamentos.view'
 
     def get(self, request, format=None):
         params = request.query_params
-        dias_limite = int(params.get('dias', 7)) # Padrão: 7 dias
-        dias_limite = max(1, dias_limite) # Garante pelo menos 1 dia
+        try:
+            data = _get_or_set_dashboard_cache(
+                'alertas-pagamento', request.user.id, params,
+                lambda: self._build_data(request)
+            )
+            return Response(data)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
-        hoje = date.today()
-        data_limite = hoje + timedelta(days=dias_limite)
-
-        # Pagamentos agregados pendentes próximos do vencimento
-        pagamentos_agregados = PagamentoAgregado.objects.filter(
-            status='pendente',
-            data_prevista__lte=data_limite # Inclui até a data limite
-        ).order_by('data_prevista').select_related( # Ordena pelos mais próximos
-            'cte', 'cte__identificacao' # Otimiza consulta
+    def _build_data(self, request):
+        params = request.query_params
+        data_inicio_str = params.get('data_inicio')
+        data_fim_str = params.get('data_fim')
+        dias_limite = parse_positive_int_query_param(params, 'dias', 7, max_value=365)
+        limite = (
+            parse_positive_int_query_param(params, 'limite', 1000, max_value=1000)
+            if 'limite' in params
+            else None
         )
 
-        # Pagamentos próprios pendentes (todos, não apenas os próximos)
-        # A lógica de "próximo do vencimento" é mais complexa para período (ex: AAAA-MM-1Q)
-        pagamentos_proprios = PagamentoProprio.objects.filter(
-            status='pendente'
-        ).order_by('periodo').select_related('veiculo') # Ordena por período
+        hoje = date.today()
+
+        if data_inicio_str and data_fim_str:
+            try:
+                data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+                data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+            except ValueError:
+                raise ValueError("Formato de data inválido. Use YYYY-MM-DD.")
+
+            if data_fim < data_inicio:
+                raise ValueError("A data final deve ser maior ou igual à data inicial.")
+
+            data_limite = data_fim
+            filtro_agregados = Q(status='pendente', data_prevista__gte=data_inicio, data_prevista__lte=data_limite)
+        else:
+            data_limite = hoje + timedelta(days=dias_limite)
+            data_inicio = None
+            data_fim = None
+            filtro_agregados = Q(status='pendente', data_prevista__lte=data_limite)
+
+        # Pagamentos agregados pendentes no período (ou próximos do vencimento)
+        pagamentos_agregados_qs = PagamentoAgregado.objects.filter(
+            filtro_agregados
+        ).order_by('data_prevista').select_related(
+            'cte', 'cte__identificacao'
+        )
+        total_agregados = pagamentos_agregados_qs.count()
+
+        # Pagamentos próprios pendentes no período (ou todos, se não houver filtro de data)
+        filtro_proprios = Q(status='pendente')
+        if data_inicio and data_fim:
+            # Período do pagamento próprio: início/fim do mês do período informado
+            filtro_proprios &= Q(
+                periodo__gte=data_inicio.strftime('%Y-%m'),
+                periodo__lte=data_fim.strftime('%Y-%m')
+            )
+
+        pagamentos_proprios_qs = PagamentoProprio.objects.filter(
+            filtro_proprios
+        ).order_by('periodo').select_related('veiculo')
+        total_proprios = pagamentos_proprios_qs.count()
+
+        pagamentos_agregados = (
+            pagamentos_agregados_qs[:limite]
+            if limite is not None
+            else pagamentos_agregados_qs
+        )
+        pagamentos_proprios = (
+            pagamentos_proprios_qs[:limite]
+            if limite is not None
+            else pagamentos_proprios_qs
+        )
 
         # Serializar os resultados
         serializer = AlertaPagamentoSerializer({
             'agregados_pendentes': pagamentos_agregados,
             'proprios_pendentes': pagamentos_proprios,
-            'dias_alerta': dias_limite
+            'dias_alerta': dias_limite,
+            'limite': limite,
+            'total_agregados_pendentes': total_agregados,
+            'total_proprios_pendentes': total_proprios,
+            'total_pendentes': total_agregados + total_proprios,
+            'resultado_limitado': (
+                limite is not None
+                and (total_agregados > limite or total_proprios > limite)
+            ),
         })
 
-        return Response(serializer.data)
+        return serializer.data
 
 
 class AlertaSistemaViewSet(viewsets.ModelViewSet):
     """API para listar e limpar alertas do sistema."""
     queryset = AlertaSistema.objects.all()
     serializer_class = AlertaSistemaSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
 
     @action(detail=False, methods=['post'])
     def limpar_todos(self, request):
         AlertaSistema.objects.all().delete()
         return Response({'message': 'Alertas do sistema removidos.'})
 
+    @action(detail=True, methods=['patch'], url_path='marcar_lido')
+    def marcar_lido(self, request, pk=None):
+        alerta = self.get_object()
+        alerta.lido = True
+        alerta.save(update_fields=['lido'])
+        return Response({'status': 'ok', 'lido': True})
+
+    @action(detail=True, methods=['patch'], url_path='marcar_resolvido')
+    def marcar_resolvido(self, request, pk=None):
+        alerta = self.get_object()
+        alerta.resolvido = True
+        alerta.data_resolucao = timezone.now()
+        alerta.save(update_fields=['resolvido', 'data_resolucao'])
+        return Response({'status': 'ok', 'resolvido': True})
+
 
 class FrotaPainelAPIView(APIView):
     """
     API para o painel de frota. Mostra dados sobre veiculos e motoristas ativos.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'frota.painel'
 
     def get(self, request):
+        params = request.query_params
+        data = _get_or_set_dashboard_cache(
+            'frota', request.user.id, params,
+            lambda: self._build_data(request)
+        )
+        return Response(data)
+
+    def _build_data(self, request):
         params = request.query_params
         data_inicio_str = params.get('data_inicio')
         data_fim_str = params.get('data_fim')
@@ -985,16 +1215,25 @@ class FrotaPainelAPIView(APIView):
             'top_veiculos': top_veiculos_list
         }
 
-        return Response(response_data)
+        return response_data
 
 
 class PerformancePainelAPIView(APIView):
     """
     API para o painel de performance. Mostra metricas de desempenho operacional.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CapabilityPermission]
+    required_capability = 'frota.painel'
 
     def get(self, request):
+        params = request.query_params
+        data = _get_or_set_dashboard_cache(
+            'performance', request.user.id, params,
+            lambda: self._build_data(request)
+        )
+        return Response(data)
+
+    def _build_data(self, request):
         params = request.query_params
         data_inicio_str = params.get('data_inicio')
         data_fim_str = params.get('data_fim')
@@ -1041,12 +1280,21 @@ class PerformancePainelAPIView(APIView):
         # === KM Total e Custo por KM ===
         ctes_validos = CTeDocumento.objects.filter(filtro_periodo_cte & filtro_cte_valido)
         agregados_km = ctes_validos.aggregate(
-            km_total=Coalesce(Sum('identificacao__dist_km'), 0, output_field=DecimalField()),
-            valor_total=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0'))
+            km_total=Sum('identificacao__dist_km'),
+            valor_total=Coalesce(Sum('prestacao__valor_total_prestado'), Decimal('0')),
+            ctes_com_distancia=Count('id', filter=Q(identificacao__dist_km__isnull=False))
         )
-        km_total = float(agregados_km['km_total'] or 0)
+        km_total_raw = agregados_km['km_total']
         valor_total = float(agregados_km['valor_total'] or 0)
-        custo_por_km = (valor_total / km_total) if km_total > 0 else 0
+        ctes_com_distancia = agregados_km['ctes_com_distancia'] or 0
+
+        # Se não houver CT-es com distância preenchida, retorna null para exibir N/A
+        if km_total_raw is None or ctes_com_distancia == 0:
+            km_total = None
+            custo_por_km = None
+        else:
+            km_total = float(km_total_raw)
+            custo_por_km = (valor_total / km_total) if km_total > 0 else 0
 
         # === Ticket Medio ===
         ticket_medio = (valor_total / ctes_autorizados) if ctes_autorizados > 0 else 0
@@ -1099,4 +1347,4 @@ class PerformancePainelAPIView(APIView):
             'evolucao_diaria': evolucao_list
         }
 
-        return Response(response_data)
+        return response_data

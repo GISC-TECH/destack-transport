@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { usuariosAPI } from '../../services/api';
+import { usuariosAPI, perfisAPI } from '../../services/api';
 import Loading from '../Common/Loading';
 import ErrorMessage from '../Common/ErrorMessage';
-import './Usuarios.css';
+import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
+import styles from './UsuarioForm.module.css';
 
 function UsuarioForm() {
   const navigate = useNavigate();
@@ -13,6 +15,10 @@ function UsuarioForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [perfis, setPerfis] = useState([]);
+  const [perfisLoading, setPerfisLoading] = useState(true);
+  const [accessProtected, setAccessProtected] = useState(false);
+  const [protectionReason, setProtectionReason] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -21,32 +27,56 @@ function UsuarioForm() {
     password: '',
     password_confirm: '',
     is_active: true,
-    is_staff: false,
-    is_superuser: false
+    perfil: 'Operacional'
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (isEdit) {
-      loadUsuario();
-    }
-  }, [id]);
+  const detectarPerfil = (data) => {
+    const grupoPerfil = (data.groups || []).find(g =>
+      ['Leitura', 'Operacional', 'Financeiro', 'Administrativo'].includes(g)
+    );
+    return grupoPerfil || 'Operacional';
+  };
 
-  const loadUsuario = async () => {
+  const loadUsuario = useCallback(async () => {
     try {
       setLoading(true);
       const data = await usuariosAPI.get(id);
+      setAccessProtected(data.is_superuser || data.can_manage_access === false);
+      setProtectionReason(data.protection_reason || (data.is_superuser
+        ? 'A administração principal não pode ser rebaixada por este formulário.'
+        : 'O status e o perfil deste usuário estão protegidos.'));
       setFormData({
         ...data,
         password: '',
-        password_confirm: ''
+        password_confirm: '',
+        perfil: detectarPerfil(data)
       });
     } catch (err) {
       setError(err.message || 'Erro ao carregar usuário');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  const loadPerfis = useCallback(async () => {
+    try {
+      setPerfisLoading(true);
+      const data = await perfisAPI.list();
+      setPerfis(data.perfis || []);
+    } catch (err) {
+      console.error('Erro ao carregar perfis:', err);
+      setPerfis([]);
+    } finally {
+      setPerfisLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPerfis();
+    if (isEdit) {
+      loadUsuario();
+    }
+  }, [isEdit, loadUsuario, loadPerfis]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -113,13 +143,16 @@ function UsuarioForm() {
         email: formData.email,
         first_name: formData.first_name,
         last_name: formData.last_name,
-        is_active: formData.is_active,
-        is_staff: formData.is_staff,
-        is_superuser: formData.is_superuser
       };
 
-      // Só envia senha se foi preenchida
-      if (formData.password) {
+      if (!isEdit && !accessProtected) {
+        dataToSend.is_active = formData.is_active;
+        dataToSend.perfil = formData.perfil;
+      }
+
+      // Senhas de usuários existentes são alteradas somente pela ação dedicada,
+      // que possui autorização e auditoria próprias.
+      if (!isEdit && formData.password) {
         dataToSend.password = formData.password;
       }
 
@@ -150,26 +183,26 @@ function UsuarioForm() {
   );
 
   return (
-    <div className="usuario-form-container">
-      <div className="form-header">
-        <div className="form-title">
-          <span className="form-icon">{formIcon}</span>
-          <h2>{isEdit ? 'Editar Usuário' : 'Novo Usuário'}</h2>
-        </div>
-        <button type="button" className="btn-back" onClick={() => navigate('/usuarios')}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-          Voltar
-        </button>
-      </div>
+    <div className={styles.page}>
+      <PageHeader
+        title={isEdit ? 'Editar Usuário' : 'Novo Usuário'}
+        icon={formIcon}
+        actions={
+          <Button type="button" variant="outline" onClick={() => navigate('/usuarios')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Voltar
+          </Button>
+        }
+      />
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
 
-      <form onSubmit={handleSubmit} className="usuario-form">
-        <fieldset>
-          <legend>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
@@ -177,9 +210,9 @@ function UsuarioForm() {
             Dados de Acesso
           </legend>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="username">Nome de Usuário <span className="required">*</span></label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="username">Nome de Usuário <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 id="username"
@@ -191,11 +224,11 @@ function UsuarioForm() {
                 placeholder="Digite o nome de usuário"
                 autoComplete="username"
               />
-              <small className="field-hint">Usado para fazer login no sistema</small>
+              <small className={styles.fieldHint}>Usado para fazer login no sistema</small>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="email">E-mail <span className="required">*</span></label>
+            <div className={styles.formGroup}>
+              <label htmlFor="email">E-mail <span className={styles.required}>*</span></label>
               <input
                 type="email"
                 id="email"
@@ -210,12 +243,12 @@ function UsuarioForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          {!isEdit && <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="password">
-                Senha {!isEdit && <span className="required">*</span>}
+                Senha <span className={styles.required}>*</span>
               </label>
-              <div className="password-input-wrapper">
+              <div className={styles.passwordWrapper}>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
@@ -223,12 +256,12 @@ function UsuarioForm() {
                   value={formData.password}
                   onChange={handleChange}
                   minLength={8}
-                  placeholder={isEdit ? '(deixe em branco para manter)' : 'Mínimo 8 caracteres'}
+                  placeholder="Mínimo 8 caracteres"
                   autoComplete="new-password"
                 />
                 <button
                   type="button"
-                  className="btn-toggle-password"
+                  className={styles.btnTogglePassword}
                   onClick={() => setShowPassword(!showPassword)}
                   title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 >
@@ -245,12 +278,11 @@ function UsuarioForm() {
                   )}
                 </button>
               </div>
-              {isEdit && <small className="field-hint">Deixe em branco para manter a senha atual</small>}
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="password_confirm">
-                Confirmar Senha {!isEdit && formData.password && <span className="required">*</span>}
+                Confirmar Senha {formData.password && <span className={styles.required}>*</span>}
               </label>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -262,11 +294,11 @@ function UsuarioForm() {
                 autoComplete="new-password"
               />
             </div>
-          </div>
+          </div>}
         </fieldset>
 
-        <fieldset>
-          <legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -276,8 +308,8 @@ function UsuarioForm() {
             Informações Pessoais
           </legend>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label htmlFor="first_name">Nome</label>
               <input
                 type="text"
@@ -291,7 +323,7 @@ function UsuarioForm() {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="last_name">Sobrenome</label>
               <input
                 type="text"
@@ -307,69 +339,84 @@ function UsuarioForm() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.legend}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
-            Permissões
+            Status e Perfil de Acesso
           </legend>
 
-          <div className="permissions-grid">
-            <div className="permission-card">
-              <label className="checkbox-container">
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label className={styles.checkboxContainer} htmlFor="is_active">
                 <input
+                  id="is_active"
                   type="checkbox"
                   name="is_active"
                   checked={formData.is_active}
                   onChange={handleChange}
+                  disabled={accessProtected || isEdit}
                 />
-                <span className="checkmark"></span>
-                <div className="permission-info">
-                  <span className="permission-title">Usuário Ativo</span>
-                  <span className="permission-description">Permite acesso ao sistema</span>
-                </div>
-              </label>
-            </div>
-
-            <div className="permission-card">
-              <label className="checkbox-container">
-                <input
-                  type="checkbox"
-                  name="is_staff"
-                  checked={formData.is_staff}
-                  onChange={handleChange}
-                />
-                <span className="checkmark"></span>
-                <div className="permission-info">
-                  <span className="permission-title">Staff</span>
-                  <span className="permission-description">Acesso ao painel administrativo Django</span>
-                </div>
-              </label>
-            </div>
-
-            <div className="permission-card">
-              <label className="checkbox-container">
-                <input
-                  type="checkbox"
-                  name="is_superuser"
-                  checked={formData.is_superuser}
-                  onChange={handleChange}
-                />
-                <span className="checkmark"></span>
-                <div className="permission-info">
-                  <span className="permission-title">Superusuário</span>
-                  <span className="permission-description">Todas as permissões do sistema</span>
+                <span className={styles.checkmark}></span>
+                <div className={styles.permissionInfo}>
+                  <span className={styles.permissionTitle}>Usuário Ativo</span>
+                  <span className={styles.permissionDescription}>Permite acesso ao sistema</span>
                 </div>
               </label>
             </div>
           </div>
+
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="perfil">Perfil de Permissões <span className={styles.required}>*</span></label>
+              <select
+                id="perfil"
+                name="perfil"
+                value={formData.perfil}
+                onChange={handleChange}
+                disabled={perfisLoading || accessProtected || isEdit}
+                required
+              >
+                {perfisLoading && <option value="">Carregando perfis...</option>}
+                {!perfisLoading && perfis.map(perfil => (
+                  <option key={perfil.nome} value={perfil.nome}>
+                    {perfil.nome} — {perfil.descricao}
+                  </option>
+                ))}
+              </select>
+              <small className={styles.fieldHint}>
+                Define o que o usuário pode ver e fazer no sistema
+              </small>
+              {accessProtected && (
+                <small className={styles.protectedHint} role="status">
+                  {protectionReason}
+                </small>
+              )}
+              {isEdit && !accessProtected && (
+                <small className={styles.fieldHint}>
+                  Status e perfil são alterados na tela de gerenciamento de acessos.
+                </small>
+              )}
+            </div>
+          </div>
+          {isEdit && !accessProtected && (
+            <div className={styles.accessShortcut}>
+              <Button
+                type="button"
+                variant="gold"
+                onClick={() => navigate(`/usuarios/${id}/acessos`)}
+              >
+                Gerenciar acessos deste usuário
+              </Button>
+            </div>
+          )}
         </fieldset>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-cancel"
+            variant="outline"
             onClick={() => navigate('/usuarios')}
             disabled={loading}
           >
@@ -378,14 +425,9 @@ function UsuarioForm() {
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
             Cancelar
-          </button>
-          <button type="submit" className="btn-submit" disabled={loading}>
-            {loading ? (
-              <>
-                <span className="spinner"></span>
-                Salvando...
-              </>
-            ) : (
+          </Button>
+          <Button type="submit" loading={loading} disabled={loading}>
+            {loading ? 'Salvando...' : (
               <>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -395,7 +437,7 @@ function UsuarioForm() {
                 {isEdit ? 'Atualizar' : 'Cadastrar'}
               </>
             )}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

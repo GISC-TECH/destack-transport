@@ -24,6 +24,10 @@ class DestackUploader:
 
     def __init__(self, base_url: str, username: str, password: str):
         self.base_url = base_url.rstrip('/')
+        # Garante que a base termine com /api para manter compatibilidade
+        # com DESTACK_API_URL=http://destack:8000/api
+        if not self.base_url.endswith('/api'):
+            self.base_url = f"{self.base_url}/api"
         self.username = username
         self.password = password
         self.session = requests.Session()
@@ -37,7 +41,7 @@ class DestackUploader:
         try:
             # Testar autenticacao com endpoint simples
             response = self.session.get(
-                f"{self.base_url}/api/users/me/",
+                f"{self.base_url}/users/me/",
                 timeout=30
             )
 
@@ -63,7 +67,7 @@ class DestackUploader:
                 files = {'arquivo_xml': (filename, f, 'application/xml')}
 
                 response = self.session.post(
-                    f"{self.base_url}/api/upload/",
+                    f"{self.base_url}/upload/",
                     files=files,
                     timeout=60
                 )

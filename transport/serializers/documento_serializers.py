@@ -1,6 +1,7 @@
 # transport/serializers/documento_serializers.py
 
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 from ..models import DocumentoAnexo
 
 
@@ -8,15 +9,24 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
     """Serializer completo para DocumentoAnexo."""
 
     arquivo_url = serializers.SerializerMethodField(read_only=True)
+    arquivo = serializers.FileField(write_only=True, required=True)
     tamanho_formatado = serializers.SerializerMethodField(read_only=True)
     tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
     entidade_tipo = serializers.SerializerMethodField(read_only=True)
     entidade_nome = serializers.SerializerMethodField(read_only=True)
+    # Garante que a data de validade seja tratada como data local (sem deslocamento de timezone)
+    # e serializada no formato ISO YYYY-MM-DD para o frontend.
+    validade = serializers.DateField(
+        format='%Y-%m-%d',
+        input_formats=['%Y-%m-%d'],
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
         model = DocumentoAnexo
         fields = [
-            'id', 'cliente', 'motorista', 'veiculo',
+            'id', 'cliente', 'motorista', 'veiculo', 'cte',
             'tipo', 'tipo_display', 'nome', 'arquivo', 'arquivo_url',
             'tamanho', 'tamanho_formatado', 'tipo_mime',
             'validade', 'observacoes',
@@ -26,12 +36,13 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'tamanho', 'tipo_mime', 'criado_em', 'criado_por')
 
     def get_arquivo_url(self, obj):
-        """Retorna URL completa do arquivo."""
+        """Retorna a rota autenticada de download do documento."""
         if obj.arquivo:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.arquivo.url)
-            return obj.arquivo.url
+            return reverse(
+                'documento-anexo-download',
+                kwargs={'pk': obj.pk},
+                request=self.context.get('request'),
+            )
         return None
 
     def get_tamanho_formatado(self, obj):
@@ -53,6 +64,8 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
             return 'motorista'
         elif obj.veiculo:
             return 'veiculo'
+        elif obj.cte:
+            return 'cte'
         return None
 
     def get_entidade_nome(self, obj):
@@ -63,23 +76,34 @@ class DocumentoAnexoSerializer(serializers.ModelSerializer):
             return obj.motorista.nome
         elif obj.veiculo:
             return obj.veiculo.placa
+        elif obj.cte:
+            return obj.cte.chave
         return None
 
     def validate(self, data):
         """Valida que apenas uma entidade seja preenchida."""
-        cliente = data.get('cliente')
-        motorista = data.get('motorista')
-        veiculo = data.get('veiculo')
+        # Em atualizacoes parciais (PATCH), preserva a entidade ja vinculada
+        # para permitir edicao de campos como validade sem reenviar a entidade.
+        if self.instance:
+            cliente = data.get('cliente', self.instance.cliente)
+            motorista = data.get('motorista', self.instance.motorista)
+            veiculo = data.get('veiculo', self.instance.veiculo)
+            cte = data.get('cte', self.instance.cte)
+        else:
+            cliente = data.get('cliente')
+            motorista = data.get('motorista')
+            veiculo = data.get('veiculo')
+            cte = data.get('cte')
 
-        entidades = [e for e in [cliente, motorista, veiculo] if e is not None]
+        entidades = [e for e in [cliente, motorista, veiculo, cte] if e is not None]
 
         if len(entidades) == 0:
             raise serializers.ValidationError(
-                "Pelo menos uma entidade (cliente, motorista ou veiculo) deve ser informada."
+                "Pelo menos uma entidade (cliente, motorista, veiculo ou CT-e) deve ser informada."
             )
         if len(entidades) > 1:
             raise serializers.ValidationError(
-                "Apenas uma entidade (cliente, motorista ou veiculo) deve ser informada por vez."
+                "Apenas uma entidade (cliente, motorista, veiculo ou CT-e) deve ser informada por vez."
             )
 
         return data
@@ -125,6 +149,12 @@ class DocumentoAnexoListSerializer(serializers.ModelSerializer):
     arquivo_url = serializers.SerializerMethodField(read_only=True)
     tamanho_formatado = serializers.SerializerMethodField(read_only=True)
     tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
+    validade = serializers.DateField(
+        format='%Y-%m-%d',
+        input_formats=['%Y-%m-%d'],
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
         model = DocumentoAnexo
@@ -134,11 +164,13 @@ class DocumentoAnexoListSerializer(serializers.ModelSerializer):
         ]
 
     def get_arquivo_url(self, obj):
+        """Retorna a rota autenticada de download do documento."""
         if obj.arquivo:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.arquivo.url)
-            return obj.arquivo.url
+            return reverse(
+                'documento-anexo-download',
+                kwargs={'pk': obj.pk},
+                request=self.context.get('request'),
+            )
         return None
 
     def get_tamanho_formatado(self, obj):
@@ -158,7 +190,13 @@ class DocumentoAnexoUploadSerializer(serializers.Serializer):
     arquivo = serializers.FileField(required=True)
     tipo = serializers.ChoiceField(choices=DocumentoAnexo.TIPO_DOCUMENTO_CHOICES, default='outro')
     nome = serializers.CharField(max_length=255, required=False)
-    validade = serializers.DateField(required=False, allow_null=True)
+    # Forca parse da data como local para evitar deslocamento de timezone.
+    validade = serializers.DateField(
+        format='%Y-%m-%d',
+        input_formats=['%Y-%m-%d'],
+        required=False,
+        allow_null=True
+    )
     observacoes = serializers.CharField(required=False, allow_blank=True)
 
     def validate_arquivo(self, value):

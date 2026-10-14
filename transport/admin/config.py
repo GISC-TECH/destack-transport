@@ -41,7 +41,7 @@ class ConfiguracaoEmpresaAdmin(admin.ModelAdmin):
     readonly_fields = ('criado_em', 'atualizado_em')
     fieldsets = (
         ('Dados Principais', {'fields': ('razao_social', 'nome_fantasia', 'cnpj', 'ie', 'rntrc')}),
-        ('Contato', {'fields': ('email', 'telefone')}),
+        ('Contato', {'fields': ('email', 'telefone', 'telefone_gestor', 'telefone_financeiro', 'telefone_operacional')}),
         ('Endereço', {'fields': ('cep', 'logradouro', 'numero', 'complemento', 'bairro', 'municipio', 'uf')}),
         ('Visual', {'fields': ('logo',)}),
         ('Responsável Técnico', {'fields': ('responsavel_tecnico_cnpj', 'responsavel_tecnico_contato', 

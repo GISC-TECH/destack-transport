@@ -1,6 +1,14 @@
 # transport/serializers/cte_serializers.py
 
+from decimal import Decimal
+
 from rest_framework import serializers
+
+from ..permissions import (
+    CTE_EDITAR_VALOR_PERMISSION,
+    CTE_EXCLUIR_PERMISSION,
+    has_direct_cte_permission,
+)
 
 # Importar todos os modelos CT-e e o Endereco base
 from ..models import (
@@ -12,6 +20,10 @@ from ..models import (
     CTeModalRodoviario, CTeVeiculoRodoviario, CTeMotorista, CTeAutXML,
     CTeResponsavelTecnico, CTeProtocoloAutorizacao, CTeSuplementar,
     CTeCancelamento,
+    CTeModalAereo, CTeModalAquaviario, CTeModalFerroviario,
+    CTeModalDutoviario, CTeModalMultimodal, CTeOSInfo,
+    CTeCobranca, CTeDuplicata, CTeValePedagio, CTeFluxoPassagem,
+    CTeCartaCorrecao, DocumentoEvento,
 )
 
 # Importar serializers base (se houver - como EnderecoSerializer)
@@ -184,6 +196,13 @@ class CTeCancelamentoSerializer(serializers.ModelSerializer):
 
 # --- Serializers Principais para CT-e (Listagem e Detalhe) ---
 
+class CTeValorFreteManualSerializer(serializers.Serializer):
+    valor_total_prestado = serializers.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        min_value=Decimal('0.01'),
+    )
+
 class CTeDocumentoListSerializer(serializers.ModelSerializer):
     """ Serializer otimizado para listagem de CT-es (usado por CTeDocumentoViewSet). """
     # Campos derivados de relações para facilitar a exibição na lista
@@ -237,6 +256,69 @@ class CTeDocumentoListSerializer(serializers.ModelSerializer):
         return hasattr(obj, 'pagamento_agregado') and obj.pagamento_agregado is not None
 
 
+class CTeModalAereoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTeModalAereo
+        exclude = ['id', 'cte']
+
+class CTeModalAquaviarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTeModalAquaviario
+        exclude = ['id', 'cte']
+
+class CTeModalFerroviarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTeModalFerroviario
+        exclude = ['id', 'cte']
+
+class CTeModalDutoviarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTeModalDutoviario
+        exclude = ['id', 'cte']
+
+class CTeModalMultimodalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTeModalMultimodal
+        exclude = ['id', 'cte']
+
+class CTeOSInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTeOSInfo
+        exclude = ['id', 'cte']
+
+class CTeDuplicataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTeDuplicata
+        exclude = ['id', 'cobranca']
+
+class CTeCobrancaSerializer(serializers.ModelSerializer):
+    duplicatas = CTeDuplicataSerializer(many=True, read_only=True)
+    class Meta:
+        model = CTeCobranca
+        exclude = ['id', 'cte']
+
+class CTeValePedagioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTeValePedagio
+        exclude = ['id', 'cte']
+
+class CTeFluxoPassagemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTeFluxoPassagem
+        exclude = ['id', 'cte']
+
+class CTeCartaCorrecaoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTeCartaCorrecao
+        exclude = ['id', 'cte']
+
+class CTeEventoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentoEvento
+        fields = ['tipo_evento', 'descricao_evento', 'sequencia_evento', 'data_evento',
+                  'protocolo', 'codigo_status', 'motivo_status', 'confirmado']
+
+
 class CTeDocumentoDetailSerializer(serializers.ModelSerializer):
     """ Serializer para a visualização detalhada de um CT-e processado. """
     # Usa os serializers detalhados definidos acima para aninhar as informações
@@ -251,6 +333,14 @@ class CTeDocumentoDetailSerializer(serializers.ModelSerializer):
     tributos = CTeTributosSerializer(read_only=True, allow_null=True)
     carga = CTeCargaSerializer(read_only=True, allow_null=True)
     modal_rodoviario = CTeModalRodoviarioSerializer(read_only=True, allow_null=True)
+    # Demais modais (mod 57) e CT-e OS (mod 67)
+    modal_aereo = CTeModalAereoSerializer(read_only=True, allow_null=True)
+    modal_aquaviario = CTeModalAquaviarioSerializer(read_only=True, allow_null=True)
+    modal_ferroviario = CTeModalFerroviarioSerializer(read_only=True, allow_null=True)
+    modal_dutoviario = CTeModalDutoviarioSerializer(read_only=True, allow_null=True)
+    modal_multimodal = CTeModalMultimodalSerializer(read_only=True, allow_null=True)
+    os_info = CTeOSInfoSerializer(read_only=True, allow_null=True)
+    cobranca = CTeCobrancaSerializer(read_only=True, allow_null=True)
     resp_tecnico = CTeResponsavelTecnicoSerializer(read_only=True, allow_null=True)
     protocolo = CTeProtocoloAutorizacaoSerializer(read_only=True, allow_null=True)
     suplementar = CTeSuplementarSerializer(read_only=True, allow_null=True)
@@ -259,8 +349,18 @@ class CTeDocumentoDetailSerializer(serializers.ModelSerializer):
     documentos_transportados = CTeDocumentoTransportadoSerializer(many=True, read_only=True)
     seguros = CTeSeguroSerializer(many=True, read_only=True)
     autorizados_xml = CTeAutXMLSerializer(many=True, read_only=True)
+    vales_pedagio = CTeValePedagioSerializer(many=True, read_only=True)
+    fluxo_passagens = CTeFluxoPassagemSerializer(many=True, read_only=True)
+    cartas_correcao = CTeCartaCorrecaoSerializer(many=True, read_only=True)
+    eventos = CTeEventoSerializer(many=True, read_only=True)
     # Campo derivado
     status_geral = serializers.SerializerMethodField()
+    valor_frete_editado_por_nome = serializers.CharField(
+        source='valor_frete_editado_por.username',
+        read_only=True,
+        allow_null=True,
+    )
+    permissoes_especiais = serializers.SerializerMethodField()
 
     class Meta:
         model = CTeDocumento
@@ -268,10 +368,15 @@ class CTeDocumentoDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'chave', 'versao', 'modalidade', 'data_upload', 'processado', 'status_geral',
             'pago', 'data_pagamento', 'observacao_pagamento',
+            'valor_frete_importado', 'valor_frete_editado_manualmente',
+            'valor_frete_editado_por_nome', 'valor_frete_editado_em', 'permissoes_especiais',
             'identificacao', 'complemento', 'emitente', 'remetente', 'expedidor',
             'recebedor', 'destinatario', 'prestacao', 'tributos', 'carga',
-            'modal_rodoviario', 'resp_tecnico', 'protocolo', 'suplementar', 'cancelamento',
+            'modal_rodoviario', 'modal_aereo', 'modal_aquaviario', 'modal_ferroviario',
+            'modal_dutoviario', 'modal_multimodal', 'os_info', 'cobranca',
+            'resp_tecnico', 'protocolo', 'suplementar', 'cancelamento',
             'documentos_transportados', 'seguros', 'autorizados_xml',
+            'vales_pedagio', 'fluxo_passagens', 'cartas_correcao', 'eventos',
             # 'xml_original' # Omitido por padrão para não poluir, pode ser acessado via /xml/ endpoint
         ]
         read_only_fields = fields # Garante que a visualização detalhada seja apenas leitura
@@ -279,3 +384,13 @@ class CTeDocumentoDetailSerializer(serializers.ModelSerializer):
     def get_status_geral(self, obj):
         """ Reutiliza a lógica de status do serializer de lista. """
         return CTeDocumentoListSerializer().get_status(obj)
+
+    def get_permissoes_especiais(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        return {
+            'editar_valor_frete': has_direct_cte_permission(
+                user, CTE_EDITAR_VALOR_PERMISSION
+            ),
+            'excluir_cte': has_direct_cte_permission(user, CTE_EXCLUIR_PERMISSION),
+        }

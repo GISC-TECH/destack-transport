@@ -1,15 +1,22 @@
 # transport/views/documento_views.py
 
+from datetime import date, datetime
+
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.http import FileResponse, Http404
+
+from ..permissions import TransportModelPermission, ReadOnlyPermission
 from django.shortcuts import get_object_or_404
 import mimetypes
+import logging
 
-from ..models import DocumentoAnexo, Cliente, Motorista, Veiculo
+logger = logging.getLogger(__name__)
+
+from ..models import DocumentoAnexo, Cliente, Motorista, Veiculo, CTeDocumento
 from ..serializers.documento_serializers import (
     DocumentoAnexoSerializer,
     DocumentoAnexoListSerializer,
@@ -17,21 +24,41 @@ from ..serializers.documento_serializers import (
 )
 
 
-# Mapeamento de tipos de documentos anexos para campos de validade
+def _parse_date_local(value):
+    """
+    Converte um valor de entrada em datetime.date sem aplicar conversao de timezone.
+    Aceita strings no formato YYYY-MM-DD ou objetos date/datetime.
+    """
+    if not value:
+        return None
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        # Remove possivel parte de hora/timezone (ex: 2025-06-17T00:00:00-03:00)
+        date_part = value.split('T')[0].split(' ')[0]
+        try:
+            return datetime.strptime(date_part, '%Y-%m-%d').date()
+        except ValueError:
+            return None
+    return None
+
+
+# Mapeamento de tipos de documentos anexos para campos de validade do Veiculo.
+# As chaves devem corresponder a TIPO_DOCUMENTO_CHOICES do modelo DocumentoAnexo.
 VEICULO_TIPO_TO_CAMPO = {
     'crlv': 'crlv_validade',
-    'laudo_cronotacografo': 'cronotacografo_validade',
-    'laudo_inspecao': 'civ_validade',
-    'certificado_ibama': 'cipp_validade',
-    'afericao': 'afericao_validade',
+    'certificado_tacografo': 'cronotacografo_validade',
+    'civ': 'civ_validade',
+    'cipp': 'cipp_validade',
+    'seguro': 'seguro_validade',  # campo nao existente ainda; ignorado silenciosamente
+    'laudo_vistoria': 'laudo_vistoria_validade',  # campo nao existente ainda
 }
 
 MOTORISTA_TIPO_TO_CAMPO = {
     'cnh': 'validade_cnh',
     'certificado_nr20': 'nr20_validade',
-    'curso_mopp': 'mopp_validade',
+    'certificado_mopp': 'mopp_validade',
     'certificado_nr35': 'nr35_validade',
-    'exame_toxicologico': 'toxicologico_validade',
     'aso': 'aso_validade',
 }
 
@@ -70,8 +97,8 @@ class DocumentoAnexoViewSet(viewsets.ModelViewSet):
     """
 
     queryset = DocumentoAnexo.objects.all()
-    permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [IsAuthenticated, TransportModelPermission]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_serializer_class(self):
         """Retorna serializer apropriado para a action."""
@@ -108,11 +135,21 @@ class DocumentoAnexoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
-        """Download do arquivo anexo."""
+        """Download ou visualização do arquivo anexo."""
         documento = self.get_object()
 
         if not documento.arquivo:
             raise Http404("Arquivo não encontrado")
+
+        # Verifica existência física do arquivo no storage
+        if not documento.arquivo.storage.exists(documento.arquivo.name):
+            logger.warning(
+                "Arquivo físico ausente para DocumentoAnexo id=%s: %s",
+                documento.id, documento.arquivo.name
+            )
+            raise Http404(
+                "Arquivo não encontrado no servidor. O documento pode ter sido enviado durante uma instabilidade e não foi salvo corretamente."
+            )
 
         try:
             file_handle = documento.arquivo.open('rb')
@@ -122,9 +159,15 @@ class DocumentoAnexoViewSet(viewsets.ModelViewSet):
                 file_handle,
                 content_type=content_type
             )
-            response['Content-Disposition'] = f'attachment; filename="{documento.nome or documento.arquivo.name}"'
+            inline = request.query_params.get('inline') in ('1', 'true', 'True')
+            disposition = 'inline' if inline else 'attachment'
+            filename = documento.nome or documento.arquivo.name
+            response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+            response['Cache-Control'] = 'private, no-store'
+            response['Pragma'] = 'no-cache'
             return response
         except Exception as e:
+            logger.exception("Erro ao servir arquivo do DocumentoAnexo id=%s", documento.id)
             raise Http404(f"Erro ao acessar arquivo: {str(e)}")
 
 
@@ -138,8 +181,9 @@ class ClienteDocumentoViewSet(viewsets.ViewSet):
     - DELETE /api/clientes/{cliente_pk}/documentos/{id}/ - Remover documento do cliente
     """
 
-    permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    queryset = DocumentoAnexo.objects.all()
+    permission_classes = [IsAuthenticated, TransportModelPermission]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def list(self, request, cliente_pk=None):
         """Lista documentos do cliente."""
@@ -179,7 +223,7 @@ class ClienteDocumentoViewSet(viewsets.ViewSet):
 
         # Campos permitidos para atualização
         if 'validade' in request.data:
-            documento.validade = request.data['validade'] or None
+            documento.validade = _parse_date_local(request.data['validade'])
         if 'nome' in request.data:
             documento.nome = request.data['nome']
         if 'tipo' in request.data:
@@ -214,8 +258,9 @@ class MotoristaDocumentoViewSet(viewsets.ViewSet):
     - DELETE /api/motoristas/{motorista_pk}/documentos/{id}/ - Remover documento do motorista
     """
 
-    permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    queryset = DocumentoAnexo.objects.all()
+    permission_classes = [IsAuthenticated, TransportModelPermission]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def list(self, request, motorista_pk=None):
         """Lista documentos do motorista."""
@@ -260,7 +305,7 @@ class MotoristaDocumentoViewSet(viewsets.ViewSet):
 
         # Campos permitidos para atualização
         if 'validade' in request.data:
-            documento.validade = request.data['validade'] or None
+            documento.validade = _parse_date_local(request.data['validade'])
         if 'nome' in request.data:
             documento.nome = request.data['nome']
         if 'tipo' in request.data:
@@ -299,8 +344,9 @@ class VeiculoDocumentoViewSet(viewsets.ViewSet):
     - DELETE /api/veiculos/{veiculo_pk}/documentos/{id}/ - Remover documento do veiculo
     """
 
-    permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    queryset = DocumentoAnexo.objects.all()
+    permission_classes = [IsAuthenticated, TransportModelPermission]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def list(self, request, veiculo_pk=None):
         """Lista documentos do veiculo."""
@@ -345,7 +391,7 @@ class VeiculoDocumentoViewSet(viewsets.ViewSet):
 
         # Campos permitidos para atualização
         if 'validade' in request.data:
-            documento.validade = request.data['validade'] or None
+            documento.validade = _parse_date_local(request.data['validade'])
         if 'nome' in request.data:
             documento.nome = request.data['nome']
         if 'tipo' in request.data:
@@ -366,6 +412,81 @@ class VeiculoDocumentoViewSet(viewsets.ViewSet):
         """Remove documento do veiculo."""
         veiculo = get_object_or_404(Veiculo, pk=veiculo_pk)
         documento = get_object_or_404(DocumentoAnexo, pk=pk, veiculo=veiculo)
+
+        if documento.arquivo:
+            documento.arquivo.delete(save=False)
+
+        documento.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CTeDocumentoAnexoViewSet(viewsets.ViewSet):
+    """
+    ViewSet para documentos anexos de um CT-e específico.
+
+    Endpoints:
+    - GET /api/ctes/{cte_pk}/documentos/ - Listar documentos do CT-e
+    - POST /api/ctes/{cte_pk}/documentos/ - Adicionar documento ao CT-e
+    - DELETE /api/ctes/{cte_pk}/documentos/{id}/ - Remover documento do CT-e
+    """
+
+    queryset = DocumentoAnexo.objects.all()
+    permission_classes = [IsAuthenticated, TransportModelPermission]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def list(self, request, cte_pk=None):
+        """Lista documentos do CT-e."""
+        cte = get_object_or_404(CTeDocumento, pk=cte_pk)
+        documentos = DocumentoAnexo.objects.filter(cte=cte).order_by('-criado_em')
+        serializer = DocumentoAnexoListSerializer(documentos, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def create(self, request, cte_pk=None):
+        """Adiciona documento ao CT-e."""
+        cte = get_object_or_404(CTeDocumento, pk=cte_pk)
+
+        upload_serializer = DocumentoAnexoUploadSerializer(data=request.data)
+        if not upload_serializer.is_valid():
+            return Response(upload_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = upload_serializer.validated_data
+        arquivo = data['arquivo']
+
+        documento = DocumentoAnexo.objects.create(
+            cte=cte,
+            tipo=data.get('tipo', 'outro'),
+            nome=data.get('nome') or arquivo.name,
+            arquivo=arquivo,
+            validade=data.get('validade'),
+            observacoes=data.get('observacoes', ''),
+            criado_por=request.user if request.user.is_authenticated else None
+        )
+
+        serializer = DocumentoAnexoSerializer(documento, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, cte_pk=None, pk=None):
+        """Atualiza documento do CT-e (validade, nome, tipo, observacoes)."""
+        cte = get_object_or_404(CTeDocumento, pk=cte_pk)
+        documento = get_object_or_404(DocumentoAnexo, pk=pk, cte=cte)
+
+        if 'validade' in request.data:
+            documento.validade = _parse_date_local(request.data['validade'])
+        if 'nome' in request.data:
+            documento.nome = request.data['nome']
+        if 'tipo' in request.data:
+            documento.tipo = request.data['tipo']
+        if 'observacoes' in request.data:
+            documento.observacoes = request.data['observacoes']
+
+        documento.save()
+        serializer = DocumentoAnexoSerializer(documento, context={'request': request})
+        return Response(serializer.data)
+
+    def destroy(self, request, cte_pk=None, pk=None):
+        """Remove documento do CT-e."""
+        cte = get_object_or_404(CTeDocumento, pk=cte_pk)
+        documento = get_object_or_404(DocumentoAnexo, pk=pk, cte=cte)
 
         if documento.arquivo:
             documento.arquivo.delete(save=False)

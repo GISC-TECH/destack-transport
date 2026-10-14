@@ -1,0 +1,691 @@
+.financeiroPage {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: transparent;
+  min-height: auto;
+}
+
+.filterBar {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.filterBar > *:last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.agrupamentoSelect {
+  padding: 9px 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--card-bg);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  min-width: 130px;
+  height: fit-content;
+  margin-top: 0;
+}
+
+.dataCorteFilter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--space-5);
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  max-width: 220px;
+}
+
+.dataCorteFilter label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.dataCorteInput {
+  padding: 9px 12px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--card-bg);
+  font-family: var(--font-body);
+}
+
+.dataCorteInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.agrupamentoSelect:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Formulários compartilhados */
+.formContainer {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.formSection {
+  margin-bottom: var(--space-6);
+}
+
+.formSection > h3 {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: var(--space-2);
+}
+
+.formRow {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.formGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  padding: 11px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
+}
+
+/* Financeiro KPI Grid */
+.finKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.finKpiCard {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  border: 1px solid var(--border-light);
+  box-shadow: none;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+
+.finKpiCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-card);
+}
+
+.finKpiCard.principal {
+  background: linear-gradient(150deg, var(--green-700), var(--green-900));
+  border-color: transparent;
+  color: var(--card-bg);
+}
+
+.finKpiCard.principal .finKpiLabel {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.finKpiCard.principal .finKpiValue {
+  color: var(--card-bg);
+}
+
+.finKpiCard.principal .finKpiIcon {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--card-bg);
+}
+
+.finKpiIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.finKpiIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.finKpiIcon.cif {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.finKpiIcon.fob {
+  background: rgba(200, 169, 81, 0.16);
+  color: var(--gold-600);
+}
+
+.finKpiIcon.ticket {
+  background: rgba(45, 106, 79, 0.10);
+  color: var(--green-700);
+}
+
+.finKpiContent,
+.finKpiInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.finKpiLabel {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.finKpiValue {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.2;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.finKpiPercent {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.finKpiPercent.cif {
+  color: var(--info-color);
+}
+
+.finKpiPercent.fob {
+  color: var(--warning-dark);
+}
+
+.finKpiSubtext {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* Charts Grid - 2 colunas */
+.finChartsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+/* Charts Grid - 3 colunas */
+.finChartsGrid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.finChartCard {
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+}
+
+.finChartCard h3 {
+  margin: 0 0 var(--space-4) 0;
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+/* Custom Tooltip */
+.customTooltip {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-md);
+}
+
+.customTooltip .tooltipLabel {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-sm);
+}
+
+.customTooltip p {
+  margin: 4px 0;
+  font-size: var(--text-sm);
+}
+
+/* Pie Chart Legend */
+.finPieLegend {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.legendDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+/* Top Clientes / listas internas */
+.clientesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.clienteItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.clienteRank {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--success-color) 0%, var(--success-dark) 100%);
+  color: var(--card-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+}
+
+.clienteInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.clienteNome {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+
+.clienteBarContainer {
+  height: 6px;
+  background: var(--border-light);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.clienteBar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--success-color) 100%);
+  border-radius: var(--radius-sm);
+  transition: width 0.5s ease;
+}
+
+.clienteValor {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  text-align: right;
+  min-width: 80px;
+}
+
+/* Resumo Card */
+.resumoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.resumoItem {
+  background: var(--content-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.resumoLabel {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+.resumoValue {
+  display: block;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.resumoGrowth {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
+}
+
+.growthIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+}
+
+.growthIndicator.positive {
+  background: var(--success-light);
+}
+
+.growthText {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.growthIndicator.positive .growthText {
+  color: var(--success-color);
+}
+
+/* Filtros e tabela de listas */
+.filtrosSection {
+  margin-bottom: var(--space-6);
+}
+
+.filtrosForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.selectFilter,
+.inputFilter {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  min-height: 40px;
+}
+
+.selectFilter {
+  min-width: 160px;
+}
+
+.inputFilter {
+  min-width: 180px;
+  flex: 1;
+}
+
+.resultsInfo {
+  margin-bottom: var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.actionsCell {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.actionBtn {
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.actionBtn:hover {
+  background: var(--content-bg);
+}
+
+.actionBtn.view:hover {
+  color: var(--info-color);
+}
+
+.actionBtn.delete:hover {
+  color: var(--danger-color);
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+  .finKpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .finChartsGrid3 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .finChartCard.resumo {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .finChartsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .finChartsGrid3 {
+    grid-template-columns: 1fr;
+  }
+
+  .finChartCard.resumo {
+    grid-column: span 1;
+  }
+
+  .financeiroPage {
+    padding: 0;
+  }
+
+  .filterBar {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .filterBar > *:last-child {
+    width: 100%;
+  }
+
+  .agrupamentoSelect {
+    width: 100%;
+    text-align: center;
+  }
+
+  .finKpiGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  .finKpiCard {
+    padding: var(--space-4);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .finKpiIcon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .finKpiValue {
+    font-size: var(--text-xl);
+  }
+
+  .finKpiLabel {
+    font-size: var(--text-xs);
+  }
+
+  .finChartCard {
+    padding: var(--space-4);
+  }
+
+  .finChartCard h3 {
+    font-size: var(--text-md);
+    margin-bottom: var(--space-3);
+  }
+
+  .resumoGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .clienteNome {
+    font-size: var(--text-xs);
+  }
+
+  .clienteValor {
+    font-size: var(--text-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .finKpiGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  .finKpiCard {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--space-3);
+  }
+
+  .finKpiIcon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .finKpiValue {
+    font-size: var(--text-lg);
+  }
+
+  .finChartCard {
+    padding: var(--space-3);
+    margin: 0 -10px;
+    border-radius: 0;
+  }
+
+  .resumoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .resumoItem {
+    padding: var(--space-3);
+  }
+
+  .resumoValue {
+    font-size: var(--text-sm);
+  }
+
+  .finPieLegend {
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: flex-start;
+  }
+
+  .formContainer {
+    padding: var(--space-4);
+  }
+
+  .formRow {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .formGroup {
+    margin-bottom: var(--space-3);
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+  }
+}

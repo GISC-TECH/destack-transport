@@ -14,6 +14,7 @@ import qrcode
 import barcode
 from barcode.writer import ImageWriter
 from datetime import datetime
+from django.utils import timezone
 import textwrap
 
 class DAMDFEGenerator:
@@ -350,7 +351,7 @@ class DAMDFEGenerator:
             
         # Data/hora de impressão
         self.c.setFont("Helvetica", 7)
-        self.c.drawString(self.margin, y - 10 * mm, f"Impresso em: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+        self.c.drawString(self.margin, y - 10 * mm, f"Impresso em: {timezone.now().strftime('%d/%m/%Y %H:%M')}")
         
     def _generate_qr_code(self):
         """Gera o QR Code do MDF-e"""

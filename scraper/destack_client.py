@@ -166,11 +166,12 @@ class DestackClient:
 
         return results
 
-    def check_existing_chaves(self, chaves: List[str], chunk_size: int = 500) -> Dict:
+    def check_existing_chaves(self, chaves: List[str], chunk_size: int = 500, incluir_eventos: bool = True) -> Dict:
         """
         Consulta a API para verificar quais chaves já existem no banco.
         Retorna dict com sets 'existing' e 'missing'.
         Fallback seguro: se falhar, trata todas como novas.
+        Quando incluir_eventos=true, também considera chaves com eventos já processados.
         """
         all_existing = set()
         all_chaves = set(chaves)
@@ -180,7 +181,7 @@ class DestackClient:
                 chunk = chaves[i:i + chunk_size]
                 response = self.session.post(
                     f"{self.base_url}/upload/check_exists/",
-                    json={"chaves": chunk},
+                    json={"chaves": chunk, "incluir_eventos": incluir_eventos},
                     auth=(DESTACK_USERNAME, DESTACK_PASSWORD),
                     timeout=30
                 )
@@ -203,6 +204,35 @@ class DestackClient:
         missing = all_chaves - all_existing
         logger.info(f"Check exists: {len(all_existing)} existentes, {len(missing)} novas de {len(all_chaves)} total")
         return {'existing': all_existing, 'missing': missing}
+
+    def check_existing_eventos(self, chaves: List[str], chunk_size: int = 500) -> set:
+        """
+        Consulta a API para verificar quais chaves já possuem eventos processados.
+        Retorna set de chaves com eventos registrados.
+        """
+        all_existing = set()
+
+        try:
+            for i in range(0, len(chaves), chunk_size):
+                chunk = chaves[i:i + chunk_size]
+                response = self.session.post(
+                    f"{self.base_url}/upload/check_exists/",
+                    json={"chaves": chunk, "incluir_eventos": True},
+                    auth=(DESTACK_USERNAME, DESTACK_PASSWORD),
+                    timeout=30
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    # Subtrai documentos principais para ficar apenas com eventos
+                    principais = self.check_existing_chaves(chunk, chunk_size=chunk_size, incluir_eventos=False)
+                    eventos = set(data.get('existing', [])) - principais['existing']
+                    all_existing.update(eventos)
+
+        except Exception as e:
+            logger.warning(f"Erro ao consultar check_exists para eventos: {e}.")
+
+        return all_existing
 
     def check_health(self) -> bool:
         """Verifica se a API esta acessivel"""

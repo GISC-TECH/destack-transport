@@ -1,0 +1,14 @@
+[Unit]
+Description=Valida e sela backups recebidos do Destack
+
+[Service]
+Type=oneshot
+Environment=OFFSITE_SEAL_CONFIG=/etc/destack/offsite-seal.env
+ExecStart=/usr/local/sbin/destack-seal-offsite
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/srv/destack-backup /run/lock
+
+[Install]
+WantedBy=multi-user.target

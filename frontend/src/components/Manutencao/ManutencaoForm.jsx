@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { manutencaoAPI, veiculosAPI } from '../../services/api';
 import { useToast } from '../Common/Toast';
 import Loading from '../Common/Loading';
-import DocumentosAnexos from '../Common/DocumentosAnexos';
-import './Manutencao.css';
+import Button from '../Common/Button';
+import PageHeader from '../Common/PageHeader';
+import styles from './Manutencao.module.css';
 
 function ManutencaoForm() {
   const navigate = useNavigate();
@@ -32,15 +33,7 @@ function ManutencaoForm() {
   });
   const [arquivoNota, setArquivoNota] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadVeiculos();
-    if (isEditing) {
-      loadManutencao();
-    }
-  }, [id]);
-
-  const loadVeiculos = async () => {
+  const loadVeiculos = useCallback(async () => {
     try {
       // Filtra apenas veículos próprios (tipo_proprietario='00') para manutenção
       const result = await veiculosAPI.list({ tipo_proprietario: '00', ativo: true });
@@ -49,9 +42,9 @@ function ManutencaoForm() {
       console.error('Erro ao carregar veículos:', err);
       setVeiculos([]);
     }
-  };
+  }, []);
 
-  const loadManutencao = async () => {
+  const loadManutencao = useCallback(async () => {
     try {
       setLoading(true);
       const result = await manutencaoAPI.get(id);
@@ -78,7 +71,14 @@ function ManutencaoForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadVeiculos();
+    if (isEditing) {
+      loadManutencao();
+    }
+  }, [isEditing, loadVeiculos, loadManutencao]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -127,15 +127,15 @@ function ManutencaoForm() {
 
       if (isEditing) {
         await manutencaoAPI.update(id, dataToSend);
-        toast.success('Manutencao atualizada com sucesso!');
+        toast.success('Manutenção atualizada com sucesso!');
       } else {
         await manutencaoAPI.create(dataToSend);
-        toast.success('Manutencao agendada com sucesso!');
+        toast.success('Manutenção agendada com sucesso!');
       }
       setTimeout(() => navigate('/manutencoes'), 500);
     } catch (err) {
       console.error('Erro ao salvar manutenção:', err);
-      toast.error('Erro ao salvar manutencao. Verifique os dados.');
+      toast.error('Erro ao salvar manutenção. Verifique os dados.');
       setError('Erro ao salvar manutenção. Verifique os dados e tente novamente.');
     } finally {
       setSaving(false);
@@ -145,29 +145,28 @@ function ManutencaoForm() {
   if (loading) return <Loading message="Carregando..." />;
 
   return (
-    <div className="manutencao-form-page">
-      <div className="page-header">
-        <div className="header-title">
-          <h1>{isEditing ? 'Editar Manutenção' : 'Nova Manutenção'}</h1>
-          <p>{isEditing ? 'Atualize os dados da manutenção' : 'Agende uma nova manutenção para o veículo'}</p>
-        </div>
-      </div>
+    <div className={styles.formPage}>
+      <PageHeader
+        title={isEditing ? 'Editar Manutenção' : 'Nova Manutenção'}
+        subtitle={isEditing ? 'Atualize os dados da manutenção' : 'Agende uma nova manutenção para o veículo'}
+      />
 
       {error && (
-        <div className="alert alert-error">
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert" aria-live="polite">
           {error}
-          <button className="alert-close" onClick={() => setError(null)}>&times;</button>
+          <button className={styles.alertClose} onClick={() => setError(null)} aria-label="Fechar mensagem de erro">&times;</button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-container">
-        <div className="form-section">
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={styles.formSection}>
           <h3>Informações Básicas</h3>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Veículo *</label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="veiculo">Veículo *</label>
               <select
+                id="veiculo"
                 name="veiculo"
                 value={formData.veiculo}
                 onChange={handleChange}
@@ -182,9 +181,10 @@ function ManutencaoForm() {
               </select>
             </div>
 
-            <div className="form-group">
-              <label>Tipo de Manutenção *</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="tipo">Tipo de Manutenção *</label>
               <select
+                id="tipo"
                 name="tipo"
                 value={formData.tipo}
                 onChange={handleChange}
@@ -197,9 +197,10 @@ function ManutencaoForm() {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Descrição *</label>
+          <div className={styles.formGroup}>
+            <label htmlFor="descricao">Descrição *</label>
             <textarea
+              id="descricao"
               name="descricao"
               value={formData.descricao}
               onChange={handleChange}
@@ -210,13 +211,14 @@ function ManutencaoForm() {
           </div>
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Agendamento</h3>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Data Agendada *</label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="data_agendada">Data Agendada *</label>
               <input
+                id="data_agendada"
                 type="date"
                 name="data_agendada"
                 value={formData.data_agendada}
@@ -225,9 +227,10 @@ function ManutencaoForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Data Realizada</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="data_realizada">Data Realizada</label>
               <input
+                id="data_realizada"
                 type="date"
                 name="data_realizada"
                 value={formData.data_realizada}
@@ -235,9 +238,10 @@ function ManutencaoForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Status *</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="status">Status *</label>
               <select
+                id="status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
@@ -252,13 +256,14 @@ function ManutencaoForm() {
           </div>
         </div>
 
-        <div className="form-section">
+        <div className={styles.formSection}>
           <h3>Custos e Detalhes</h3>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>KM Atual</label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="km_atual">KM Atual</label>
               <input
+                id="km_atual"
                 type="number"
                 name="km_atual"
                 value={formData.km_atual}
@@ -267,9 +272,10 @@ function ManutencaoForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Custo (R$)</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="custo">Custo (R$)</label>
               <input
+                id="custo"
                 type="number"
                 step="0.01"
                 name="custo"
@@ -280,10 +286,11 @@ function ManutencaoForm() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Fornecedor/Oficina</label>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="fornecedor">Fornecedor/Oficina</label>
               <input
+                id="fornecedor"
                 type="text"
                 name="fornecedor"
                 value={formData.fornecedor}
@@ -293,9 +300,10 @@ function ManutencaoForm() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Número da Nota Fiscal</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="numero_nota">Número da Nota Fiscal</label>
               <input
+                id="numero_nota"
                 type="text"
                 name="numero_nota"
                 value={formData.numero_nota}
@@ -306,24 +314,26 @@ function ManutencaoForm() {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Arquivo da Nota Fiscal (opcional)</label>
+          <div className={styles.formGroup}>
+            <label htmlFor="arquivo_nota">Arquivo da Nota Fiscal (opcional)</label>
             <input
+              id="arquivo_nota"
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => setArquivoNota(e.target.files[0] || null)}
-              style={{ padding: '8px' }}
+              className={styles.fileInput}
             />
             {arquivoNota && (
-              <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+              <small className={styles.fileHint}>
                 Arquivo selecionado: {arquivoNota.name}
               </small>
             )}
           </div>
 
-          <div className="form-group">
-            <label>Observações</label>
+          <div className={styles.formGroup}>
+            <label htmlFor="observacoes">Observações</label>
             <textarea
+              id="observacoes"
               name="observacoes"
               value={formData.observacoes}
               onChange={handleChange}
@@ -333,33 +343,24 @@ function ManutencaoForm() {
           </div>
         </div>
 
-        <div className="form-actions">
-          <button
+        <div className={styles.formActions}>
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
             onClick={() => navigate('/manutencoes')}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="btn-primary"
+            variant="primary"
             disabled={saving}
           >
             {saving ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Manutenção')}
-          </button>
+          </Button>
         </div>
       </form>
 
-      {/* Documentos Anexos - apenas na edicao */}
-      {isEditing && id && (
-        <div style={{ marginTop: '24px' }}>
-          <DocumentosAnexos
-            entidadeTipo="manutencao"
-            entidadeId={id}
-          />
-        </div>
-      )}
     </div>
   );
 }

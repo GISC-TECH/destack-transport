@@ -1,0 +1,36 @@
+# Container Tor + Privoxy para forçar IP brasileiro no scraper
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends tor tor-geoipdb privoxy curl && rm -rf /var/lib/apt/lists/*
+
+# Configura Tor para escutar na rede interna do Compose.
+# Nao restringir ExitNodes por pais: quando o consenso fica sem uma saida BR
+# utilizavel, o Tor permanece sem circuitos e o scraper nunca alcanca o EGS.
+# MaxCircuitDirtiness alto evita trocar o circuito no meio de um download.
+RUN echo "SocksPort 0.0.0.0:9050" >> /etc/tor/torrc && \
+    echo "MaxCircuitDirtiness 600" >> /etc/tor/torrc && \
+    echo "NewCircuitPeriod 30" >> /etc/tor/torrc && \
+    echo "CircuitBuildTimeout 30" >> /etc/tor/torrc && \
+    echo "LearnCircuitBuildTimeout 1" >> /etc/tor/torrc
+
+# Privoxy: HTTP proxy -> SOCKS5 Tor (Chrome usa HTTP, nao SOCKS5 cru)
+RUN sed -i 's/^listen-address/#listen-address/' /etc/privoxy/config && \
+    echo "listen-address 0.0.0.0:8118" >> /etc/privoxy/config && \
+    echo "forward-socks5t / 127.0.0.1:9050 ." >> /etc/privoxy/config && \
+    echo "keep-alive-timeout 120" >> /etc/privoxy/config && \
+    echo "socket-timeout 120" >> /etc/privoxy/config
+
+EXPOSE 9050 8118
+
+HEALTHCHECK --interval=30s --timeout=15s --start-period=90s --retries=3 \
+  CMD curl -fsS --max-time 12 --proxy http://127.0.0.1:8118 https://app.egssistemas.com.br/login >/dev/null || exit 1
+
+# Aguarda Tor bootstrap minimo antes do Privoxy
+CMD bash -c "tor & \
+  for i in \$(seq 1 60); do \
+    if curl -s --max-time 3 --socks5-hostname 127.0.0.1:9050 https://check.torproject.org/api/ip >/dev/null 2>&1; then \
+      echo '[TOR] bootstrap ok'; break; \
+    fi; \
+    echo \"[TOR] aguardando bootstrap (\$i)...\"; sleep 2; \
+  done; \
+  exec privoxy --no-daemon /etc/privoxy/config"
