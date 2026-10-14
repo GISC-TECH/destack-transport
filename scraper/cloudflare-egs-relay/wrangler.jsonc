@@ -1,0 +1,14 @@
+{
+  "name": "destack-egs-relay",
+  "account_id": "ceaf20f00b786f906489d7269773444e",
+  "main": "entry.js",
+  "compatibility_date": "2026-10-14",
+  "workers_dev": true,
+  "routes": [{ "pattern": "egs-relay.destacktransporte.com", "custom_domain": true }],
+  "placement": { "region": "aws:sa-east-1" },
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": false }
+  },
+  "vars": { "ALLOWED_IPS": "207.180.255.150" }
+}

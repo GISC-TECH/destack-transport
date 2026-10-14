@@ -424,6 +424,12 @@ services:
       - EGS_USERNAME=${EGS_USERNAME:-DESTACK}
       - EGS_PASSWORD=${EGS_PASSWORD:?set EGS_PASSWORD in .env}
       - EGS_ACCESS_KEY=${EGS_ACCESS_KEY:?set EGS_ACCESS_KEY in .env}
+      # Coleta via API interna do EGS (sem Chrome), saindo pelo mesmo proxy BR do Chrome.
+      # Se a API falhar, o coletor Selenium roda como fallback no mesmo job.
+      - EGS_MODE=${EGS_MODE:-api}
+      - EGS_FALLBACK_SELENIUM=${EGS_FALLBACK_SELENIUM:-true}
+      - EGS_HTTP_PROXY=${SCRAPER_CHROME_PROXY_URL:-http://172.23.0.1:18118}
+      - EGS_DERRUBAR_SESSAO=${EGS_DERRUBAR_SESSAO:-true}
       # Destack API
       - DESTACK_API_URL=${DESTACK_API_URL:-http://destack:8000/api}
       - DESTACK_USERNAME=${DESTACK_USERNAME:-admin}

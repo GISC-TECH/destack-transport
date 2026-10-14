@@ -1,0 +1,31 @@
+services:
+  scraper_prod_bridge:
+    platform: linux/amd64
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile.api   # modo API: sem Chrome; use Dockerfile para EGS_MODE=selenium
+    container_name: destack_scraper_prod_bridge
+    restart: unless-stopped
+    init: true
+    pids_limit: 128
+    env_file:
+      - .env.local
+    environment:
+      EGS_BASE_URL: https://app.egssistemas.com.br
+      EGS_LOGIN_URL: https://app.egssistemas.com.br/login
+      DESTACK_API_URL: https://destacktransporte.com/api
+      DAYS_LOOKBACK: 7
+      LOG_LEVEL: INFO
+      EGS_MODE: api
+      # Opcional: proxy HTTP com saida BR quando o IP do host e bloqueado pelo EGS
+      EGS_HTTP_PROXY: ${EGS_HTTP_PROXY:-}
+      SELENIUM_HEADLESS: "true"
+      RUN_ON_START: "false"
+      TZ: America/Sao_Paulo
+    volumes:
+      - scraper_prod_data:/app/data
+      - scraper_prod_logs:/app/logs
+
+volumes:
+  scraper_prod_data:
+  scraper_prod_logs:

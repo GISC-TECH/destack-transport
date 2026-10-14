@@ -85,6 +85,27 @@ docker-compose restart scraper
 | `browser.py` | Selenium WebDriver management with Chrome/Edge fallback |
 | `config.py` | Environment variables and configuration |
 
+## Modo API (padrao, sem Selenium)
+
+`scheduler.py` escolhe o coletor por `EGS_MODE`: `api` (padrao) usa `daily_download_api.py`
++ `egs_api_client.py` (OAuth2 password grant + OData v4 + endpoints de download);
+`selenium` usa o fluxo antigo com Chrome descrito abaixo. Mapeamento validado em
+`docs/egs-api-mapping.md`.
+
+```bash
+python daily_download_api.py 3          # coleta e envia os ultimos 3 dias
+python egs_api_client.py 7              # smoke test: lista e baixa 2 XMLs de cada tipo
+python -m unittest test_egs_api_client  # testes unitarios (sem rede)
+docker build -f Dockerfile.api .        # imagem sem Chrome (~240MB)
+```
+
+Variaveis extras: `EGS_MODE` (`api`|`selenium`), `EGS_RELAY_URL` (Worker Cloudflare em
+`cloudflare-egs-relay/`, obrigatorio onde o EGS bloqueia o IP, ex. Contabo),
+`EGS_DOWNLOAD_BATCH` (ids por requisicao, padrao 150). O token fica em
+`$SCRAPER_STATE_DIR/egs_token.json` e e reusado por 20h (cada login abre uma sessao no EGS).
+`docker-compose.scraper-prod.yml` ja usa `Dockerfile.api`; `docker-compose.contabo.yml`
+continua em `selenium` ate o Worker com suporte ao host `api.` ser publicado.
+
 ## EGS Sistemas Navigation
 
 The EGS system uses AngularJS with DevExpress DataGrid components:

@@ -1,0 +1,8 @@
+# EGS XML Collector - modo API (sem Selenium/Chrome)
+requests==2.33.0
+urllib3==2.7.0
+lxml==6.1.0
+schedule==1.2.2
+python-dotenv==1.2.2
+colorlog==6.9.0
+python-dateutil==2.9.0.post0

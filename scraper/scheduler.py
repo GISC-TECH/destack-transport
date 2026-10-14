@@ -13,10 +13,34 @@ import schedule
 from datetime import datetime
 from pathlib import Path
 
-from daily_download import download_daily_xmls
 from logger_setup import setup_logger
 
 logger = setup_logger('scheduler')
+
+# EGS_MODE=api (padrao): cliente HTTP da API interna do EGS (daily_download_api.py)
+# EGS_MODE=selenium: coletor antigo com Chrome (daily_download.py)
+EGS_MODE = os.getenv('EGS_MODE', 'api').strip().lower()
+
+
+# Com EGS_FALLBACK_SELENIUM=true, uma falha no modo api tenta o coletor Selenium em seguida
+# (so faz sentido em imagens com Chrome, ex. Dockerfile.warp da Contabo).
+EGS_FALLBACK_SELENIUM = os.getenv('EGS_FALLBACK_SELENIUM', 'false').strip().lower() == 'true'
+
+
+def _run_selenium() -> bool:
+    from daily_download import download_daily_xmls
+    return download_daily_xmls()
+
+
+def run_download() -> bool:
+    if EGS_MODE == 'selenium':
+        return _run_selenium()
+    from daily_download_api import download_daily_xmls_api
+    ok = download_daily_xmls_api()
+    if not ok and EGS_FALLBACK_SELENIUM:
+        logger.warning("Modo api falhou; usando o coletor Selenium como fallback")
+        ok = _run_selenium()
+    return ok
 
 # Flag para controle de parada
 running = True
@@ -55,11 +79,11 @@ def job_download():
 
     success = False
     try:
-        success = download_daily_xmls()
+        success = run_download()
         if not success:
             logger.warning("Primeira tentativa falhou — retentando em 120s...")
             time.sleep(120)
-            success = download_daily_xmls()
+            success = run_download()
     except Exception as e:
         logger.error(f"Erro no job: {e}")
         import traceback
@@ -91,6 +115,7 @@ def main():
     logger.info("SCHEDULER DE DOWNLOAD DE XMLs")
     logger.info(f"Iniciado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     logger.info("Intervalo: 6 horas")
+    logger.info(f"Modo de coleta: {EGS_MODE}")
     logger.info("=" * 60)
 
     # Configurar horários de execução (a cada 6 horas)
