@@ -6,8 +6,7 @@ Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
 ### Alterado
 - **Segurança:** Atualizada senha de acesso ao EGS Sistemas
-  - Senha anterior: destack123
-  - Nova senha: destack789
+  - Senha mantida apenas no `.env` do servidor (nao versionar)
   - Container scraper recriado com nova configuração
 - **Infraestrutura:** Rebuild completo do container scraper
   - Atualizado Chrome para versão 145
