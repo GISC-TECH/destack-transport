@@ -205,6 +205,35 @@ class DestackClient:
         logger.info(f"Check exists: {len(all_existing)} existentes, {len(missing)} novas de {len(all_chaves)} total")
         return {'existing': all_existing, 'missing': missing}
 
+    def check_existing_eventos_exatos(self, eventos: List[str], chunk_size: int = 500) -> Optional[set]:
+        """
+        Recebe ["<chave>:<tpEvento>:<nSeqEvento>", ...] e devolve os que ja estao no Destack.
+        Retorna None se a API nao suportar/estiver indisponivel (o chamador envia tudo).
+        """
+        existentes = set()
+        try:
+            for i in range(0, len(eventos), chunk_size):
+                chunk = eventos[i:i + chunk_size]
+                response = self.session.post(
+                    f"{self.base_url}/upload/check_exists/",
+                    json={"chaves": [], "eventos": chunk},
+                    auth=(DESTACK_USERNAME, DESTACK_PASSWORD),
+                    timeout=30,
+                )
+                if response.status_code != 200:
+                    logger.warning(f"check_exists (eventos) HTTP {response.status_code}; enviando todos os eventos")
+                    return None
+                data = response.json()
+                if 'existing_eventos' not in data:
+                    logger.warning("API do Destack sem suporte a checagem de eventos; enviando todos")
+                    return None
+                existentes.update(data['existing_eventos'])
+        except Exception as e:
+            logger.warning(f"Erro na checagem de eventos: {e}; enviando todos")
+            return None
+        logger.info(f"Check eventos: {len(existentes)} existentes de {len(eventos)}")
+        return existentes
+
     def check_existing_eventos(self, chaves: List[str], chunk_size: int = 500) -> set:
         """
         Consulta a API para verificar quais chaves já possuem eventos processados.

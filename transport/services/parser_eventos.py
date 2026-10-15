@@ -474,6 +474,24 @@ def _handle_cancelamento_mdfe(mdfe_doc, evento_info, ret_evento_info, xml_evento
     logger.info(f"INFO: Evento de Cancelamento registrado com sucesso para MDF-e {mdfe_doc.chave} (Protocolo Evento: {retorno_data.get('n_prot_retorno')}).")
     return cancelamento
 
+_UF_POR_CODIGO_IBGE = {
+    '11': 'RO', '12': 'AC', '13': 'AM', '14': 'RR', '15': 'PA', '16': 'AP', '17': 'TO',
+    '21': 'MA', '22': 'PI', '23': 'CE', '24': 'RN', '25': 'PB', '26': 'PE', '27': 'AL',
+    '28': 'SE', '29': 'BA', '31': 'MG', '32': 'ES', '33': 'RJ', '35': 'SP', '41': 'PR',
+    '42': 'SC', '43': 'RS', '50': 'MS', '51': 'MT', '52': 'GO', '53': 'DF',
+}
+
+
+def _uf_sigla(valor):
+    """Converte codigo IBGE da UF (ex. '29') em sigla ('BA'); devolve siglas como estao."""
+    if valor is None:
+        return None
+    valor = str(valor).strip()
+    if len(valor) == 2 and valor.isalpha():
+        return valor.upper()
+    return _UF_POR_CODIGO_IBGE.get(valor)
+
+
 @transaction.atomic
 def _handle_encerramento_mdfe(mdfe_doc, evento_info, ret_evento_info, xml_evento_original):
     """Processa um evento de Encerramento de MDF-e (110112)."""
@@ -483,7 +501,10 @@ def _handle_encerramento_mdfe(mdfe_doc, evento_info, ret_evento_info, xml_evento
 
     dt_enc = parse_date(safe_get(det_evento, 'evEncMDFe.dtEnc'))
     c_mun_enc = safe_get(det_evento, 'evEncMDFe.cMun')
-    uf_enc = safe_get(det_evento, 'evEncMDFe.UF')
+    # Leiaute MDF-e 3.00 usa <cUF> (codigo IBGE); versoes/emissores antigos usam <UF> (sigla).
+    uf_enc = safe_get(det_evento, 'evEncMDFe.UF') or _uf_sigla(safe_get(det_evento, 'evEncMDFe.cUF'))
+    if not uf_enc and c_mun_enc:
+        uf_enc = _uf_sigla(str(c_mun_enc)[:2])
 
     if not dt_enc or not c_mun_enc or not uf_enc:
         raise ValueError("Dados de encerramento (dtEnc, cMun, UF) não encontrados em <evEncMDFe>.")
