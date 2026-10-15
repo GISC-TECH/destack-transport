@@ -93,15 +93,18 @@ docker-compose restart scraper
 `docs/egs-api-mapping.md`.
 
 ```bash
-python daily_download_api.py 3          # coleta e envia os ultimos 3 dias
+python daily_download_api.py 3          # coleta e envia documentos e eventos dos ultimos 3 dias
+python daily_download_api.py --tudo     # carga historica completa (so envia o que falta)
 python egs_api_client.py 7              # smoke test: lista e baixa 2 XMLs de cada tipo
 python -m unittest test_egs_api_client  # testes unitarios (sem rede)
 docker build -f Dockerfile.api .        # imagem sem Chrome (~240MB)
 ```
 
-Variaveis extras: `EGS_MODE` (`api`|`selenium`), `EGS_RELAY_URL` (Worker Cloudflare em
-`cloudflare-egs-relay/`, obrigatorio onde o EGS bloqueia o IP, ex. Contabo),
-`EGS_DOWNLOAD_BATCH` (ids por requisicao, padrao 150). O token fica em
+Variaveis extras: `EGS_MODE` (`api`|`selenium`), `EGS_HTTP_PROXY` (proxy com saida BR;
+na Contabo e o mesmo do Chrome), `EGS_FALLBACK_SELENIUM`, `EGS_DERRUBAR_SESSAO`
+(derruba 1 sessao ociosa quando as 2 licencas estao em uso), `EGS_DOWNLOAD_BATCH`
+(ids por requisicao, padrao 150), `EGS_MDFE_EVENTOS_DIAS` (janela de eventos de MDF-e,
+padrao 30). O relay Cloudflare (`EGS_RELAY_URL`) nao passa no login do EGS. O token fica em
 `$SCRAPER_STATE_DIR/egs_token.json` e e reusado por 20h (cada login abre uma sessao no EGS).
 `docker-compose.scraper-prod.yml` ja usa `Dockerfile.api`; `docker-compose.contabo.yml`
 continua em `selenium` ate o Worker com suporte ao host `api.` ser publicado.

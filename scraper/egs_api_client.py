@@ -248,6 +248,44 @@ class EGSApiClient:
             select='IDMDFE,NUMMDFE,SERIE,DATAEMISSAO,STATUSNOME,CHAVEMDFE,PLACATRACAO,UFINI,UFFIM,CODEMPRESA',
         ))
 
+    # ---------------------------------------------------------------- eventos
+    @staticmethod
+    def _periodo_campo(campo: str, inicio: date, fim: Optional[date]) -> str:
+        fim_excl = (fim or date.today()) + timedelta(days=1)
+        return (f"{campo} ge {inicio.isoformat()}T00:00:00-03:00 and "
+                f"{campo} lt {fim_excl.isoformat()}T00:00:00-03:00")
+
+    def eventos_cte(self, inicio: date, fim: Optional[date] = None) -> List[dict]:
+        """Cancelamentos (CTeCancelamento) e cartas de correcao (CTeCartaCorrecao) registrados no periodo.
+
+        Cada item: {chave, xml, nome}. O XML vem pronto (procEventoCTe) no proprio OData.
+        """
+        eventos = []
+        for row in self.odata_iter(
+            'CTeCancelamento', filter_=self._periodo_campo('DATAHORA', inicio, fim) + ' and CSTATUS eq 135',
+            select='IDENT,CHAVECTE,XMLCANCELAMENTO', orderby='IDENT asc',
+        ):
+            if row.get('XMLCANCELAMENTO'):
+                eventos.append({'chave': row['CHAVECTE'], 'xml': row['XMLCANCELAMENTO'],
+                                'nome': f"CTe{row['CHAVECTE']}_Canc.xml"})
+        for row in self.odata_iter(
+            'CTeCartaCorrecao', filter_=self._periodo_campo('DATACORRECAO', inicio, fim),
+            select='IDENT,CHAVECTE,NROCORRECAO,XMLAUTORIZACAO,STATUSNOME', orderby='IDENT asc',
+        ):
+            if row.get('XMLAUTORIZACAO'):
+                eventos.append({'chave': row['CHAVECTE'], 'xml': row['XMLAUTORIZACAO'],
+                                'nome': f"CTe{row['CHAVECTE']}_CCe{row.get('NROCORRECAO') or 1}.xml"})
+        return eventos
+
+    def eventos_mdfe(self, id_mdfe: int) -> List[dict]:
+        """Eventos de um MDF-e (encerramento, cancelamento, inclusao de condutor...). So os homologados (135)."""
+        r = self._get(f'api/MDFeApi/GetMDFeEventos?IDMDFE={int(id_mdfe)}')
+        return [e for e in (r.json() or []) if int(e.get('CODSTATUS') or 0) == 135]
+
+    def download_eventos_mdfe(self, idents: List[int]) -> Dict[str, bytes]:
+        """procEventoMDFe de cada evento (IDENT de eventos_mdfe). Varios -> zip descompactado."""
+        return self._download('api/MDFeApi/DownloadXmlEvento', {'IDENTArray': list(idents)})
+
     # -------------------------------------------------------------- downloads
     def download_cte_xml(self, ids: List[int]) -> Dict[str, bytes]:
         """Retorna {nome_arquivo: xml_bytes}. Um id -> .xml; varios -> .zip (descompactado aqui)."""

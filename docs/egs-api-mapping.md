@@ -181,6 +181,23 @@ Observacoes:
 - O front limita a 150 ids por requisicao (`TAMANHO_LOTE`) e divide em lotes
   via `commonDownloadCtrl`. Manter esse teto.
 
+## 4.1 Eventos (validado em 2026-10-15)
+
+| Evento | Como listar | XML |
+|--------|-------------|-----|
+| Cancelamento CT-e (110111) | `odata/CTeCancelamento` (`DATAHORA`, `CSTATUS`, `CHAVECTE`) | campo `XMLCANCELAMENTO` (procEventoCTe) |
+| Carta de correcao CT-e (110110) | `odata/CTeCartaCorrecao` (`DATACORRECAO`, `NROCORRECAO`, `CHAVECTE`) | campo `XMLAUTORIZACAO` (procEventoCTe) |
+| Qualquer evento de MDF-e (110112 encerramento, 110111 cancelamento, 110114 condutor...) | `GET api/MDFeApi/GetMDFeEventos?IDMDFE=` (`IDENT`, `TIPOEVENTO`, `SEQEVENTO`, `CODSTATUS`, `XMLENVIO`, `XMLPROC`) | `POST api/MDFeApi/DownloadXmlEvento {"IDENTArray":[...]}` -> `MDFe<chave>_Encerramento.xml` / `_Cancelamento.xml` (procEventoMDFe) |
+
+Nos ultimos 40 dias o EGS tinha 227 encerramentos e 11 cancelamentos de MDF-e. O
+procEventoMDFe do EGS usa o namespace `http://www.portalfiscal.inf.br/MDFe` (maiusculo)
+e o `evEncMDFe` traz `<cUF>` (codigo IBGE), nao `<UF>`. O parser do Destack so aceitava
+`<UF>`, entao nenhum encerramento era registrado; corrigido em
+`transport/services/parser_eventos.py` (`_uf_sigla`).
+
+`POST /api/upload/check_exists/` aceita `"eventos": ["<chave>:<tpEvento>:<nSeqEvento>"]`
+e devolve `existing_eventos`, para o coletor enviar so eventos que faltam.
+
 ## 5. Fluxo implementado no scraper (modo `EGS_MODE=api`)
 
 Arquivos: `scraper/egs_api_client.py` (cliente), `scraper/egs_relay.py` (adapter
@@ -193,10 +210,10 @@ Validacao ponta a ponta em 2026-10-14 contra o Destack local: 2 dias de lookback
 30 CT-e (3 cancelados, cada um com `_Canc.xml`) e 21 MDF-e baixados e enviados,
 0 falhas, 11 s na segunda execucao com tudo ja existente.
 
-Limitacao conhecida: `MDFeApi/DownloadXml` nunca inclui evento de cancelamento ou
-encerramento (MDF-e cancelado vem como `<MDFe>` cru). O modo Selenium tinha a mesma
-limitacao. `DownloadXmlEvento` existe mas exige o objeto do evento de
-`GetMDFeEventos?IDMDFE=`; fica como evolucao.
+Desde 2026-10-15 o coletor envia documentos e eventos que faltam no Destack: CT-e e
+MDF-e por chave; cancelamento e CC-e de CT-e; todos os eventos homologados de MDF-e
+(consulta os manifestos dos ultimos `EGS_MDFE_EVENTOS_DIAS`=30 dias que ainda nao tem
+encerramento/cancelamento no Destack). Carga historica: `python daily_download_api.py --tudo`.
 
 ### Fluxo original proposto
 

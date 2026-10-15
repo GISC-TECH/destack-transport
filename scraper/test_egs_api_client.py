@@ -143,13 +143,22 @@ class ODataEDownloadTests(unittest.TestCase):
         self.assertEqual(body, {'IDMDFE': [1, 2]})
 
 
-class FiltroNovosTests(unittest.TestCase):
-    def test_cte_cancelado_existente_e_rebaixado_mdfe_nao(self):
-        from daily_download_api import _filtrar_novos
-        ctes = [{'CHAVECTE': 'a', 'STATUSNOME': 'AUTORIZADA'}, {'CHAVECTE': 'b', 'STATUSNOME': 'CANCELADO'}, {'CHAVECTE': 'c', 'STATUSNOME': 'AUTORIZADA'}]
-        self.assertEqual([d['CHAVECTE'] for d in _filtrar_novos(ctes, 'CHAVECTE', {'a', 'b'})], ['b', 'c'])
-        mdfes = [{'CHAVEMDFE': 'x', 'STATUSNOME': 'CANCELADO'}, {'CHAVEMDFE': 'y', 'STATUSNOME': 'FINALIZADA'}]
-        self.assertEqual(_filtrar_novos(mdfes, 'CHAVEMDFE', {'x'}), [mdfes[1]])
+class EventoKeyTests(unittest.TestCase):
+    def test_extrai_chave_tipo_sequencia(self):
+        from daily_download_api import evento_key
+        xml = ('<procEventoMDFe><eventoMDFe><infEvento><chMDFe>' + '2' * 44 + '</chMDFe>'
+               '<tpEvento>110112</tpEvento><nSeqEvento>001</nSeqEvento></infEvento></eventoMDFe></procEventoMDFe>')
+        self.assertEqual(evento_key(xml), '2' * 44 + ':110112:1')
+        self.assertIsNone(evento_key('<cteProc/>'))
+
+    def test_eventos_cte_usa_xml_do_odata(self):
+        cli = EGSApiClient('U', 'P', '57226', session=mock.MagicMock())
+        cli.token, cli.url_api = 't', 'https://api.x/EGSAPP3/'
+        canc = {'IDENT': 1, 'CHAVECTE': '3' * 44, 'XMLCANCELAMENTO': '<procEventoCTe/>'}
+        cce = {'IDENT': 2, 'CHAVECTE': '4' * 44, 'NROCORRECAO': 2, 'XMLAUTORIZACAO': '<procEventoCTe/>'}
+        with mock.patch.object(cli, 'odata_iter', side_effect=[iter([canc]), iter([cce, {'CHAVECTE': 'x', 'XMLAUTORIZACAO': None}])]):
+            evts = cli.eventos_cte(date(2026, 10, 1))
+        self.assertEqual([e['nome'] for e in evts], ['CTe' + '3' * 44 + '_Canc.xml', 'CTe' + '4' * 44 + '_CCe2.xml'])
 
 
 class RelayAdapterTests(unittest.TestCase):

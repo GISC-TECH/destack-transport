@@ -921,8 +921,31 @@ class UnifiedUploadViewSet(viewsets.GenericViewSet):
                 )
                 existing.update(evento_chaves)
 
+        # Checagem fina de eventos: ["<chave>:<tpEvento>:<nSeqEvento>", ...]
+        eventos = request.data.get('eventos') or []
+        existing_eventos = []
+        if isinstance(eventos, list) and eventos:
+            pedidos = {}
+            for item in eventos:
+                partes = str(item).split(':')
+                if len(partes) == 3 and len(partes[0]) == 44:
+                    try:
+                        pedidos[(partes[0], partes[1], int(partes[2]))] = item
+                    except ValueError:
+                        continue
+            chaves_evt = list({k[0] for k in pedidos})
+            for i in range(0, len(chaves_evt), chunk_size):
+                rows = DocumentoEvento.objects.filter(
+                    chave_documento__in=chaves_evt[i:i + chunk_size]
+                ).values_list('chave_documento', 'tipo_evento', 'sequencia_evento')
+                for chave_e, tipo_e, seq_e in rows:
+                    item = pedidos.get((chave_e, str(tipo_e), int(seq_e or 1)))
+                    if item:
+                        existing_eventos.append(item)
+
         return Response({
             "existing": list(existing),
             "total_checked": len(chaves),
             "total_existing": len(existing),
+            "existing_eventos": existing_eventos,
         })
